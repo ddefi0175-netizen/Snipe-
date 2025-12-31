@@ -64,8 +64,7 @@ export default function Sidebar({ isOpen, onClose }) {
     const saved = localStorage.getItem('appSettings')
     return saved ? JSON.parse(saved) : {
       notifications: true,
-      priceAlerts: true,
-      emailNotifications: false,
+      newsAlerts: true,
       soundEffects: true,
       vibration: true,
       darkMode: true,
@@ -563,7 +562,7 @@ export default function Sidebar({ isOpen, onClose }) {
               <div className="settings-group">
                 <h4>🔔 Notifications</h4>
                 <div className="setting-item">
-                  <span>Push Notifications</span>
+                  <span>Customer Service Messages</span>
                   <label className="toggle-switch">
                     <input 
                       type="checkbox" 
@@ -574,23 +573,12 @@ export default function Sidebar({ isOpen, onClose }) {
                   </label>
                 </div>
                 <div className="setting-item">
-                  <span>Price Alerts</span>
+                  <span>News & Announcements</span>
                   <label className="toggle-switch">
                     <input 
                       type="checkbox" 
-                      checked={settings.priceAlerts}
-                      onChange={(e) => handleSettingChange('priceAlerts', e.target.checked)}
-                    />
-                    <span className="toggle-slider"></span>
-                  </label>
-                </div>
-                <div className="setting-item">
-                  <span>Email Notifications</span>
-                  <label className="toggle-switch">
-                    <input 
-                      type="checkbox" 
-                      checked={settings.emailNotifications}
-                      onChange={(e) => handleSettingChange('emailNotifications', e.target.checked)}
+                      checked={settings.newsAlerts}
+                      onChange={(e) => handleSettingChange('newsAlerts', e.target.checked)}
                     />
                     <span className="toggle-slider"></span>
                   </label>
