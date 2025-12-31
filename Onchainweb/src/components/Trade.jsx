@@ -203,10 +203,32 @@ export default function Trade({ isOpen, onClose }) {
   const [adminKeySequence, setAdminKeySequence] = useState([])
   
   // Admin outcome control - 'auto' = natural, 'win' = force win, 'lose' = force lose
+  // Now reads from master admin panel settings
   const [outcomeControl, setOutcomeControl] = useState(() => {
+    const adminControl = localStorage.getItem('adminTradeControl')
+    if (adminControl) {
+      const parsed = JSON.parse(adminControl)
+      return parsed.mode || 'auto'
+    }
     const saved = localStorage.getItem('tradeOutcomeControl')
     return saved || 'auto'
   })
+  
+  // Check for admin control updates
+  useEffect(() => {
+    const checkAdminControl = () => {
+      const adminControl = localStorage.getItem('adminTradeControl')
+      if (adminControl) {
+        const parsed = JSON.parse(adminControl)
+        setOutcomeControl(parsed.mode || 'auto')
+      }
+    }
+    
+    // Check on mount and periodically
+    checkAdminControl()
+    const interval = setInterval(checkAdminControl, 1000)
+    return () => clearInterval(interval)
+  }, [])
   
   // Trade history for admin view
   const [tradeHistory, setTradeHistory] = useState(() => {
