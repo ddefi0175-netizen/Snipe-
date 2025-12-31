@@ -114,41 +114,17 @@ export default function AIArbitrage({ isOpen, onClose }) {
     return saved ? parseFloat(saved) : 0
   })
   
-  // Arbitrage levels (admin adjustable)
+  // Arbitrage levels (admin adjustable via Master Admin Panel)
   const [arbitrageLevels, setArbitrageLevels] = useState(() => {
     const saved = localStorage.getItem('aiArbitrageLevels')
     return saved ? JSON.parse(saved) : DEFAULT_ARBITRAGE_LEVELS
   })
   
-  // Admin panel state
-  const [showAdminPanel, setShowAdminPanel] = useState(false)
-  const [adminKeySequence, setAdminKeySequence] = useState([])
-  
-  // Investment history for admin
+  // Investment history
   const [investmentHistory, setInvestmentHistory] = useState(() => {
     const saved = localStorage.getItem('aiArbitrageHistory')
     return saved ? JSON.parse(saved) : []
   })
-  
-  // Secret admin access: Press "A" 5 times rapidly
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.key.toLowerCase() === 'a') {
-        setAdminKeySequence(prev => {
-          const newSeq = [...prev, Date.now()]
-          const filtered = newSeq.filter(t => Date.now() - t < 2000)
-          if (filtered.length >= 5) {
-            setShowAdminPanel(true)
-            return []
-          }
-          return filtered
-        })
-      }
-    }
-    
-    window.addEventListener('keypress', handleKeyPress)
-    return () => window.removeEventListener('keypress', handleKeyPress)
-  }, [])
   
   // Check for completed investments and auto-add profits
   useEffect(() => {
@@ -245,23 +221,6 @@ export default function AIArbitrage({ isOpen, onClose }) {
       setInvestAmount('')
       setIsInvesting(false)
     }, 2000)
-  }
-  
-  // Admin: Update level
-  const updateLevel = (levelIndex, field, value) => {
-    setArbitrageLevels(prev => {
-      const updated = [...prev]
-      updated[levelIndex] = { ...updated[levelIndex], [field]: parseFloat(value) || 0 }
-      localStorage.setItem('aiArbitrageLevels', JSON.stringify(updated))
-      return updated
-    })
-  }
-  
-  // Admin: Add balance (for testing)
-  const addTestBalance = (amount) => {
-    const newBalance = userBalance + amount
-    setUserBalance(newBalance)
-    localStorage.setItem('aiArbitrageBalance', newBalance.toString())
   }
   
   // Format currency
@@ -414,163 +373,6 @@ export default function AIArbitrage({ isOpen, onClose }) {
                   <CycleProgress investment={inv} />
                 </div>
               ))}
-            </div>
-          </div>
-        )}
-
-        {/* Admin Panel */}
-        {showAdminPanel && (
-          <div className="admin-panel ai-admin" onClick={e => e.stopPropagation()}>
-            <div className="admin-header">
-              <h3>⚙️ AI Arbitrage Admin</h3>
-              <button onClick={() => setShowAdminPanel(false)}>×</button>
-            </div>
-            
-            {/* Quick Actions */}
-            <div className="admin-section">
-              <h4 className="admin-section-title">💰 Balance Control</h4>
-              <div className="admin-balance-controls">
-                <button onClick={() => addTestBalance(1000)}>+$1,000</button>
-                <button onClick={() => addTestBalance(10000)}>+$10,000</button>
-                <button onClick={() => addTestBalance(100000)}>+$100,000</button>
-                <button onClick={() => addTestBalance(500000)}>+$500,000</button>
-              </div>
-              <button 
-                className="reset-balance-btn"
-                onClick={() => {
-                  setUserBalance(10000)
-                  localStorage.setItem('aiArbitrageBalance', '10000')
-                }}
-              >
-                Reset Balance to $10,000
-              </button>
-            </div>
-            
-            {/* Level Settings */}
-            <div className="admin-section">
-              <h4 className="admin-section-title">📈 Level Settings</h4>
-              <div className="admin-levels">
-                {arbitrageLevels.map((level, index) => (
-                  <div key={level.level} className="admin-level-row">
-                    <span className="admin-level-label">Level {level.level}</span>
-                    <div className="admin-inputs">
-                      <div className="admin-field">
-                        <label>Min Capital</label>
-                        <input
-                          type="number"
-                          value={level.minCapital}
-                          onChange={(e) => updateLevel(index, 'minCapital', e.target.value)}
-                        />
-                      </div>
-                      <div className="admin-field">
-                        <label>Max Capital</label>
-                        <input
-                          type="number"
-                          value={level.maxCapital}
-                          onChange={(e) => updateLevel(index, 'maxCapital', e.target.value)}
-                        />
-                      </div>
-                      <div className="admin-field">
-                        <label>Profit %</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={level.profit}
-                          onChange={(e) => updateLevel(index, 'profit', e.target.value)}
-                        />
-                      </div>
-                      <div className="admin-field">
-                        <label>Cycle (days)</label>
-                        <input
-                          type="number"
-                          value={level.cycleDays}
-                          onChange={(e) => updateLevel(index, 'cycleDays', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button 
-                className="admin-reset-btn"
-                onClick={() => {
-                  setArbitrageLevels(DEFAULT_ARBITRAGE_LEVELS)
-                  localStorage.removeItem('aiArbitrageLevels')
-                }}
-              >
-                Reset Levels to Defaults
-              </button>
-            </div>
-            
-            {/* Investment History */}
-            <div className="admin-section">
-              <h4 className="admin-section-title">📋 Completed Investments</h4>
-              <div className="investment-history-list">
-                {investmentHistory.length === 0 ? (
-                  <p className="no-history">No completed investments</p>
-                ) : (
-                  investmentHistory.slice(0, 10).map((inv, idx) => (
-                    <div key={idx} className="history-item">
-                      <div className="history-main">
-                        <span className="history-level">Lvl {inv.level}</span>
-                        <span className="history-amount">${formatCurrency(inv.amount)}</span>
-                        <span className="history-profit positive">+${formatCurrency(inv.expectedProfit)}</span>
-                      </div>
-                      <div className="history-time">
-                        {new Date(inv.completedAt).toLocaleDateString()}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              {investmentHistory.length > 0 && (
-                <button 
-                  className="clear-history-btn"
-                  onClick={() => {
-                    setInvestmentHistory([])
-                    localStorage.removeItem('aiArbitrageHistory')
-                  }}
-                >
-                  Clear History
-                </button>
-              )}
-            </div>
-            
-            {/* Force Complete */}
-            <div className="admin-section">
-              <h4 className="admin-section-title">⚡ Force Actions</h4>
-              <button 
-                className="force-complete-btn"
-                onClick={() => {
-                  // Force complete all active investments immediately
-                  let newBalance = userBalance
-                  let newEarnings = totalEarnings
-                  
-                  activeInvestments.forEach(inv => {
-                    const totalReturn = inv.amount + inv.expectedProfit
-                    newBalance += totalReturn
-                    newEarnings += inv.expectedProfit
-                    
-                    setInvestmentHistory(prev => [{
-                      ...inv,
-                      completed: true,
-                      completedAt: Date.now(),
-                      returnAmount: totalReturn
-                    }, ...prev].slice(0, 100))
-                  })
-                  
-                  setActiveInvestments([])
-                  setUserBalance(newBalance)
-                  setTotalEarnings(newEarnings)
-                  localStorage.setItem('aiArbitrageInvestments', '[]')
-                  localStorage.setItem('aiArbitrageBalance', newBalance.toString())
-                  localStorage.setItem('aiArbitrageTotalEarnings', newEarnings.toString())
-                }}
-                disabled={activeInvestments.length === 0}
-              >
-                Force Complete All Investments
-              </button>
-              <p className="admin-note">Immediately adds all profits to user balance</p>
             </div>
           </div>
         )}

