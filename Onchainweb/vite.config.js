@@ -18,4 +18,19 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    // Increase chunk size warning limit (default is 500kB)
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        // Manual chunk splitting for better caching and smaller bundles
+        manualChunks: {
+          // React core libraries
+          'vendor-react': ['react', 'react-dom'],
+          // Ethers.js (Web3 library - large)
+          'vendor-ethers': ['ethers'],
+        },
+      },
+    },
+  },
 })
