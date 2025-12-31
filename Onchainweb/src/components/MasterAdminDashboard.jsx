@@ -53,6 +53,42 @@ export default function MasterAdminDashboard() {
     ]
   })
 
+  // Bonus Programs
+  const [bonusPrograms, setBonusPrograms] = useState(() => {
+    const saved = localStorage.getItem('bonusPrograms')
+    return saved ? JSON.parse(saved) : {
+      welcomeBonus: { enabled: true, amount: 100, description: 'Sign up and complete KYC' },
+      referralBonus: { enabled: true, amount: 50, description: 'Per successful referral' },
+      tradingCashback: { enabled: true, percentage: 20, minTrades: 10, description: 'Up to 20% on trading fees' },
+      stakingBonus: { enabled: true, percentage: 12, description: 'APY on staking' },
+      vipBonus: { 
+        enabled: true, 
+        levels: [
+          { level: 1, minDeposit: 0, bonus: 0, cashback: 5 },
+          { level: 2, minDeposit: 1000, bonus: 50, cashback: 10 },
+          { level: 3, minDeposit: 5000, bonus: 100, cashback: 15 },
+          { level: 4, minDeposit: 10000, bonus: 200, cashback: 20 },
+          { level: 5, minDeposit: 50000, bonus: 500, cashback: 25 },
+        ]
+      },
+      promotionEndDate: '2025-01-31'
+    }
+  })
+
+  // Live Chat Management
+  const [activeChats, setActiveChats] = useState(() => {
+    const saved = localStorage.getItem('activeChats')
+    return saved ? JSON.parse(saved) : []
+  })
+
+  const [chatLogs, setChatLogs] = useState(() => {
+    const saved = localStorage.getItem('customerChatLogs')
+    return saved ? JSON.parse(saved) : []
+  })
+
+  const [selectedChat, setSelectedChat] = useState(null)
+  const [adminReplyMessage, setAdminReplyMessage] = useState('')
+
   // Site Settings
   const [siteSettings, setSiteSettings] = useState(() => {
     const saved = localStorage.getItem('siteSettings')
@@ -85,7 +121,25 @@ export default function MasterAdminDashboard() {
     }
   })
 
+  // Refresh chat data periodically
+  useEffect(() => {
+    const refreshChats = () => {
+      const chats = JSON.parse(localStorage.getItem('activeChats') || '[]')
+      const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]')
+      setActiveChats(chats)
+      setChatLogs(logs)
+    }
+    
+    refreshChats()
+    const interval = setInterval(refreshChats, 3000)
+    return () => clearInterval(interval)
+  }, [])
+
   // Save to localStorage
+  useEffect(() => {
+    localStorage.setItem('bonusPrograms', JSON.stringify(bonusPrograms))
+  }, [bonusPrograms])
+
   useEffect(() => {
     localStorage.setItem('userAgents', JSON.stringify(userAgents))
   }, [userAgents])
@@ -219,6 +273,39 @@ export default function MasterAdminDashboard() {
     )
   }
 
+  // Send admin reply to customer chat
+  const sendAdminReply = (sessionId) => {
+    if (!adminReplyMessage.trim()) return
+    
+    const adminReplies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]')
+    adminReplies.push({
+      id: Date.now(),
+      sessionId: sessionId,
+      message: adminReplyMessage,
+      agentName: 'Support Agent',
+      timestamp: new Date().toISOString(),
+      delivered: false
+    })
+    localStorage.setItem('adminChatReplies', JSON.stringify(adminReplies))
+    
+    // Also save to chat logs
+    const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]')
+    logs.push({
+      id: Date.now(),
+      sessionId: sessionId,
+      type: 'admin',
+      message: adminReplyMessage,
+      agentName: 'Support Agent',
+      timestamp: new Date().toISOString()
+    })
+    localStorage.setItem('customerChatLogs', JSON.stringify(logs))
+    
+    setAdminReplyMessage('')
+    
+    // Refresh chat logs
+    setChatLogs(logs)
+  }
+
   return (
     <div className="master-admin-dashboard">
       {/* Top Navigation */}
@@ -258,12 +345,18 @@ export default function MasterAdminDashboard() {
           <a onClick={() => setActiveSection('deposits')} className={activeSection === 'deposits' ? 'active' : ''}>Deposit</a>
           <a onClick={() => setActiveSection('withdrawals')} className={activeSection === 'withdrawals' ? 'active' : ''}>Withdraw</a>
           <a onClick={() => setActiveSection('trade-options')} className={activeSection === 'trade-options' ? 'active' : ''}>Trade Options</a>
+          <a onClick={() => setActiveSection('bonus-programs')} className={activeSection === 'bonus-programs' ? 'active' : ''}>Bonus Programs</a>
           <a onClick={() => setActiveSection('staking-plans')} className={activeSection === 'staking-plans' ? 'active' : ''}>Staking Plans</a>
           <a onClick={() => setActiveSection('staking-history')} className={activeSection === 'staking-history' ? 'active' : ''}>Staking History</a>
           <a onClick={() => setActiveSection('trade-history')} className={activeSection === 'trade-history' ? 'active' : ''}>Trade History</a>
           <a onClick={() => setActiveSection('balance-history')} className={activeSection === 'balance-history' ? 'active' : ''}>Balance History</a>
           <a onClick={() => setActiveSection('site-settings')} className={activeSection === 'site-settings' ? 'active' : ''}>Site Settings</a>
-          <a onClick={() => setActiveSection('customer-services')} className={activeSection === 'customer-services' ? 'active' : ''}>Customer Services</a>
+          <a onClick={() => setActiveSection('customer-services')} className={activeSection === 'customer-services' ? 'active' : ''}>
+            Customer Services
+            {activeChats.filter(c => c.status === 'waiting_agent' || c.unread > 0).length > 0 && (
+              <span className="nav-badge">{activeChats.filter(c => c.status === 'waiting_agent' || c.unread > 0).length}</span>
+            )}
+          </a>
           <a onClick={handleLogout} className="logout-link">Logout</a>
         </div>
       </nav>

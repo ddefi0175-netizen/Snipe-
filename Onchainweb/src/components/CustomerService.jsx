@@ -16,12 +16,14 @@ export default function CustomerService() {
   const messagesEndRef = useRef(null)
   const inputRef = useRef(null)
 
-  // Hidden service configuration
-  const SERVICE_CONFIG = {
-    endpoint: 'wa.me',
-    identifier: '8562026808885',
-    protocol: 'https'
-  }
+  // Generate unique session ID for this chat
+  const [sessionId] = useState(() => {
+    const saved = localStorage.getItem('chatSessionId')
+    if (saved) return saved
+    const newId = 'CHAT-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6).toUpperCase()
+    localStorage.setItem('chatSessionId', newId)
+    return newId
+  })
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -68,21 +70,44 @@ export default function CustomerService() {
     return autoResponses.default
   }
 
-  const sendToService = (message) => {
-    // Encode message for external service
-    const encodedMsg = encodeURIComponent(message)
-    const serviceUrl = `${SERVICE_CONFIG.protocol}://${SERVICE_CONFIG.endpoint}/${SERVICE_CONFIG.identifier}?text=${encodedMsg}`
+  // Save message to localStorage for admin to see
+  const saveMessageToAdmin = (message, type, agentName = null) => {
+    const chatLogs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]')
+    const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
     
-    // Open in hidden iframe or background (user doesn't see this)
-    const hiddenFrame = document.createElement('iframe')
-    hiddenFrame.style.display = 'none'
-    hiddenFrame.src = serviceUrl
-    document.body.appendChild(hiddenFrame)
+    const newMessage = {
+      id: Date.now(),
+      sessionId: sessionId,
+      user: userProfile.username || 'Anonymous',
+      email: userProfile.email || '',
+      type: type,
+      message: message,
+      agentName: agentName,
+      timestamp: new Date().toISOString(),
+      read: false
+    }
     
-    // Clean up after a delay
-    setTimeout(() => {
-      document.body.removeChild(hiddenFrame)
-    }, 3000)
+    chatLogs.push(newMessage)
+    localStorage.setItem('customerChatLogs', JSON.stringify(chatLogs))
+    
+    // Update active chats count
+    const activeChats = JSON.parse(localStorage.getItem('activeChats') || '[]')
+    const existingChat = activeChats.find(c => c.sessionId === sessionId)
+    if (!existingChat) {
+      activeChats.push({
+        sessionId: sessionId,
+        user: userProfile.username || 'Anonymous',
+        email: userProfile.email || '',
+        startTime: new Date().toISOString(),
+        status: 'active',
+        unread: 1
+      })
+    } else {
+      existingChat.unread = (existingChat.unread || 0) + 1
+      existingChat.lastMessage = message
+      existingChat.lastMessageTime = new Date().toISOString()
+    }
+    localStorage.setItem('activeChats', JSON.stringify(activeChats))
   }
 
   const handleSendMessage = (e) => {
@@ -98,8 +123,8 @@ export default function CustomerService() {
 
     setMessages(prev => [...prev, userMessage])
     
-    // Send to backend service (hidden from user)
-    sendToService(inputMessage)
+    // Save message to admin dashboard (no external service)
+    saveMessageToAdmin(inputMessage, 'user')
     
     setInputMessage('')
     setIsTyping(true)
@@ -128,8 +153,36 @@ export default function CustomerService() {
     return names[Math.floor(Math.random() * names.length)]
   })
 
+  // Check for admin replies periodically
+  useEffect(() => {
+    if (!isConnectedToAgent) return
+    
+    const checkAdminReplies = () => {
+      const adminReplies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]')
+      const myReplies = adminReplies.filter(r => r.sessionId === sessionId && !r.delivered)
+      
+      myReplies.forEach(reply => {
+        setMessages(prev => [...prev, {
+          id: Date.now(),
+          type: 'agent',
+          text: reply.message,
+          time: new Date(reply.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          agentName: reply.agentName || agentName
+        }])
+        reply.delivered = true
+      })
+      
+      if (myReplies.length > 0) {
+        localStorage.setItem('adminChatReplies', JSON.stringify(adminReplies))
+      }
+    }
+    
+    const interval = setInterval(checkAdminReplies, 2000)
+    return () => clearInterval(interval)
+  }, [isConnectedToAgent, sessionId, agentName])
+
   const connectToLiveAgent = () => {
-    // Show connecting message
+    // Show connecting message - stays in-app, no external links
     setMessages(prev => [...prev, {
       id: Date.now(),
       type: 'system',
@@ -137,7 +190,33 @@ export default function CustomerService() {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }])
 
-    // Simulate connection delay
+    // Save connection request to admin dashboard
+    const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
+    const activeChats = JSON.parse(localStorage.getItem('activeChats') || '[]')
+    const existingChat = activeChats.find(c => c.sessionId === sessionId)
+    
+    if (existingChat) {
+      existingChat.status = 'waiting_agent'
+      existingChat.requestedAgent = true
+      existingChat.requestTime = new Date().toISOString()
+    } else {
+      activeChats.push({
+        sessionId: sessionId,
+        user: userProfile.username || 'Anonymous',
+        email: userProfile.email || '',
+        startTime: new Date().toISOString(),
+        status: 'waiting_agent',
+        requestedAgent: true,
+        requestTime: new Date().toISOString(),
+        unread: 1
+      })
+    }
+    localStorage.setItem('activeChats', JSON.stringify(activeChats))
+    
+    // Save notification for admin
+    saveMessageToAdmin('Customer requested live agent connection', 'system')
+
+    // Simulate connection delay - all stays in-app
     setTimeout(() => {
       setIsConnectedToAgent(true)
       setMessages(prev => [...prev, {
@@ -147,28 +226,28 @@ export default function CustomerService() {
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }])
 
+      // Update chat status
+      const chats = JSON.parse(localStorage.getItem('activeChats') || '[]')
+      const chat = chats.find(c => c.sessionId === sessionId)
+      if (chat) {
+        chat.status = 'connected'
+        chat.connectedAgent = agentName
+      }
+      localStorage.setItem('activeChats', JSON.stringify(chats))
+
       // Agent greeting
       setTimeout(() => {
+        const greetingMsg = `Hi! I'm ${agentName}, your dedicated support agent. How can I assist you today?`
         setMessages(prev => [...prev, {
           id: Date.now(),
           type: 'agent',
-          text: `Hi! I'm ${agentName}, your dedicated support agent. How can I assist you today?`,
+          text: greetingMsg,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           agentName: agentName
         }])
+        saveMessageToAdmin(greetingMsg, 'agent', agentName)
       }, 1000)
     }, 2000)
-
-    // Send notification to admin WhatsApp in background (hidden from user)
-    const notifyAdmin = () => {
-      const msg = encodeURIComponent(`New live chat request from customer at ${new Date().toLocaleString()}`)
-      const hiddenFrame = document.createElement('iframe')
-      hiddenFrame.style.cssText = 'position:absolute;width:0;height:0;border:0;opacity:0;pointer-events:none;'
-      hiddenFrame.src = `${SERVICE_CONFIG.protocol}://${SERVICE_CONFIG.endpoint}/${SERVICE_CONFIG.identifier}?text=${msg}`
-      document.body.appendChild(hiddenFrame)
-      setTimeout(() => hiddenFrame.remove(), 5000)
-    }
-    notifyAdmin()
   }
 
   return (
