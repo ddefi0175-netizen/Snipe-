@@ -27,8 +27,6 @@ export default defineConfig({
         manualChunks: {
           // React core libraries
           'vendor-react': ['react', 'react-dom'],
-          // Ethers.js (Web3 library - large)
-          'vendor-ethers': ['ethers'],
         },
       },
     },
