@@ -1,7 +1,22 @@
 import React from 'react'
 
-// Features section removed - content moved to sidebar menu
+const features = [
+  { icon: '🔗' },
+  { icon: '📊' },
+  { icon: '📰' },
+  { icon: '💼' }
+]
 
 export default function Features() {
-  return null
+  return (
+    <section className="container" aria-labelledby="features-heading">
+      <div className="features" role="list">
+        {features.map((f, idx) => (
+          <article key={idx} className="feature-card" role="listitem" tabIndex={0}>
+            <span className="feature-icon">{f.icon}</span>
+          </article>
+        ))}
+      </div>
+    </section>
+  )
 }
