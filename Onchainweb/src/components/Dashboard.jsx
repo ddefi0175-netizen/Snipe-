@@ -183,11 +183,12 @@ function KLineChart({ symbol, name, type, onClose }) {
 }
 
 export default function Dashboard() {
-  const [cryptoData, setCryptoData] = useState([])
-  const [stockData, setStockData] = useState([])
-  const [cryptoNews, setCryptoNews] = useState([])
-  const [stockNews, setStockNews] = useState([])
-  const [loading, setLoading] = useState(true)
+  // Initialize with fallback data immediately for instant load
+  const [cryptoData, setCryptoData] = useState(() => getFallbackCryptoData())
+  const [stockData, setStockData] = useState(() => getStockData())
+  const [cryptoNews, setCryptoNews] = useState(() => getFallbackCryptoNews())
+  const [stockNews, setStockNews] = useState(() => getStockNews())
+  const [loading, setLoading] = useState(false) // Start false since we have fallback data
   const [activeTab, setActiveTab] = useState('crypto')
   const [error, setError] = useState(null)
   const [selectedNews, setSelectedNews] = useState(null)
@@ -195,8 +196,9 @@ export default function Dashboard() {
   const [sortBy, setSortBy] = useState('market_cap')
   const [showAll, setShowAll] = useState(false)
   const [selectedChart, setSelectedChart] = useState(null)
+  const [isLiveData, setIsLiveData] = useState(false)
 
-  // Fetch crypto prices
+  // Fetch live data in background after initial render
   useEffect(() => {
     let mounted = true
     
@@ -205,11 +207,13 @@ export default function Dashboard() {
         const res = await fetch(CRYPTO_API)
         if (!res.ok) throw new Error('Failed to fetch crypto data')
         const data = await res.json()
-        if (mounted) setCryptoData(data)
+        if (mounted) {
+          setCryptoData(data)
+          setIsLiveData(true)
+        }
       } catch (err) {
         console.error('Crypto fetch error:', err)
-        // Use fallback data for demo
-        if (mounted) setCryptoData(getFallbackCryptoData())
+        // Keep using fallback data
       }
     }
 
@@ -218,33 +222,29 @@ export default function Dashboard() {
         const res = await fetch(CRYPTO_NEWS_API)
         if (!res.ok) throw new Error('Failed to fetch news')
         const data = await res.json()
-        if (mounted) setCryptoNews(data.Data?.slice(0, 10) || [])
+        if (mounted && data.Data?.length > 0) {
+          setCryptoNews(data.Data.slice(0, 10))
+        }
       } catch (err) {
         console.error('News fetch error:', err)
-        if (mounted) setCryptoNews(getFallbackCryptoNews())
+        // Keep using fallback news
       }
     }
 
-    // Stock data (comprehensive list)
-    const fetchStocks = () => {
-      if (mounted) {
-        setStockData(getStockData())
-        setStockNews(getStockNews())
-      }
+    // Load live data in background (don't block UI)
+    const loadLiveData = async () => {
+      // Fetch in background without setting loading state
+      fetchCrypto()
+      fetchCryptoNews()
     }
 
-    const loadAll = async () => {
-      setLoading(true)
-      await Promise.all([fetchCrypto(), fetchCryptoNews()])
-      fetchStocks()
-      if (mounted) setLoading(false)
-    }
-
-    loadAll()
-    const interval = setInterval(loadAll, 30000) // Refresh every 30s for live data
+    // Small delay to let the UI render first
+    const timer = setTimeout(loadLiveData, 100)
+    const interval = setInterval(loadLiveData, 30000) // Refresh every 30s for live data
 
     return () => {
       mounted = false
+      clearTimeout(timer)
       clearInterval(interval)
     }
   }, [])
