@@ -1,0 +1,10 @@
+{
+    "buildCommand": "cd Onchainweb && npm install && npm run build",
+    "outputDirectory": "Onchainweb/dist",
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ]
+}
