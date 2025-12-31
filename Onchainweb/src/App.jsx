@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Header from './components/Header.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import Dashboard from './components/Dashboard.jsx'
@@ -10,8 +11,10 @@ import AIArbitrage from './components/AIArbitrage.jsx'
 import Wallet from './components/Wallet.jsx'
 import CustomerService from './components/CustomerService.jsx'
 import AdminPanel from './components/AdminPanel.jsx'
+import MasterAdminDashboard from './components/MasterAdminDashboard.jsx'
 
-export default function App() {
+// Main App Component (Home Page)
+function MainApp() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [tradeOpen, setTradeOpen] = useState(false)
   const [aiArbitrageOpen, setAiArbitrageOpen] = useState(false)
@@ -59,5 +62,17 @@ export default function App() {
       <CustomerService />
       <AdminPanel isOpen={adminPanelOpen} onClose={() => setAdminPanelOpen(false)} />
     </div>
+  )
+}
+
+// Root App with Router
+export default function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainApp />} />
+        <Route path="/master-admin" element={<MasterAdminDashboard />} />
+      </Routes>
+    </Router>
   )
 }
