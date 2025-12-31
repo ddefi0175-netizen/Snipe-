@@ -3,9 +3,8 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  // Base path for GitHub Pages - change 'Snipe' to your repo name
-  // For custom domain or Vercel/Netlify, use '/'
-  base: '/Snipe/',
+  // Base path - use '/' for custom domain or Vercel/Netlify
+  base: '/',
   esbuild: {
     loader: 'jsx',
     include: /src\/.*\.jsx?$/,
