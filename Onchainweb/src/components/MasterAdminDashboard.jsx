@@ -1090,46 +1090,397 @@ export default function MasterAdminDashboard() {
           </div>
         )}
 
-        {/* Customer Services Section */}
-        {activeSection === 'customer-services' && (
+        {/* Bonus Programs Section */}
+        {activeSection === 'bonus-programs' && (
           <div className="admin-section">
             <div className="section-header">
-              <h1>Customer Services</h1>
-              <p>Manage support tickets and inquiries</p>
+              <h1>🎁 Bonus Programs Management</h1>
+              <p>Configure all bonus and reward programs</p>
             </div>
+            
+            <div className="bonus-programs-grid">
+              {/* Welcome Bonus */}
+              <div className="bonus-program-card">
+                <div className="bonus-card-header">
+                  <span className="bonus-emoji">🎉</span>
+                  <h3>Welcome Bonus</h3>
+                  <label className="toggle-switch-small">
+                    <input 
+                      type="checkbox" 
+                      checked={bonusPrograms.welcomeBonus.enabled}
+                      onChange={(e) => setBonusPrograms({
+                        ...bonusPrograms, 
+                        welcomeBonus: {...bonusPrograms.welcomeBonus, enabled: e.target.checked}
+                      })}
+                    />
+                    <span className="toggle-slider-small"></span>
+                  </label>
+                </div>
+                <div className="bonus-card-body">
+                  <div className="bonus-field">
+                    <label>Amount (USDT)</label>
+                    <input 
+                      type="number" 
+                      value={bonusPrograms.welcomeBonus.amount}
+                      onChange={(e) => setBonusPrograms({
+                        ...bonusPrograms, 
+                        welcomeBonus: {...bonusPrograms.welcomeBonus, amount: parseFloat(e.target.value)}
+                      })}
+                    />
+                  </div>
+                  <div className="bonus-field">
+                    <label>Description</label>
+                    <input 
+                      type="text" 
+                      value={bonusPrograms.welcomeBonus.description}
+                      onChange={(e) => setBonusPrograms({
+                        ...bonusPrograms, 
+                        welcomeBonus: {...bonusPrograms.welcomeBonus, description: e.target.value}
+                      })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Referral Bonus */}
+              <div className="bonus-program-card">
+                <div className="bonus-card-header">
+                  <span className="bonus-emoji">👥</span>
+                  <h3>Referral Bonus</h3>
+                  <label className="toggle-switch-small">
+                    <input 
+                      type="checkbox" 
+                      checked={bonusPrograms.referralBonus.enabled}
+                      onChange={(e) => setBonusPrograms({
+                        ...bonusPrograms, 
+                        referralBonus: {...bonusPrograms.referralBonus, enabled: e.target.checked}
+                      })}
+                    />
+                    <span className="toggle-slider-small"></span>
+                  </label>
+                </div>
+                <div className="bonus-card-body">
+                  <div className="bonus-field">
+                    <label>Amount per Referral (USDT)</label>
+                    <input 
+                      type="number" 
+                      value={bonusPrograms.referralBonus.amount}
+                      onChange={(e) => setBonusPrograms({
+                        ...bonusPrograms, 
+                        referralBonus: {...bonusPrograms.referralBonus, amount: parseFloat(e.target.value)}
+                      })}
+                    />
+                  </div>
+                  <div className="bonus-field">
+                    <label>Description</label>
+                    <input 
+                      type="text" 
+                      value={bonusPrograms.referralBonus.description}
+                      onChange={(e) => setBonusPrograms({
+                        ...bonusPrograms, 
+                        referralBonus: {...bonusPrograms.referralBonus, description: e.target.value}
+                      })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Trading Cashback */}
+              <div className="bonus-program-card">
+                <div className="bonus-card-header">
+                  <span className="bonus-emoji">💹</span>
+                  <h3>Trading Cashback</h3>
+                  <label className="toggle-switch-small">
+                    <input 
+                      type="checkbox" 
+                      checked={bonusPrograms.tradingCashback.enabled}
+                      onChange={(e) => setBonusPrograms({
+                        ...bonusPrograms, 
+                        tradingCashback: {...bonusPrograms.tradingCashback, enabled: e.target.checked}
+                      })}
+                    />
+                    <span className="toggle-slider-small"></span>
+                  </label>
+                </div>
+                <div className="bonus-card-body">
+                  <div className="bonus-field">
+                    <label>Cashback Percentage (%)</label>
+                    <input 
+                      type="number" 
+                      value={bonusPrograms.tradingCashback.percentage}
+                      onChange={(e) => setBonusPrograms({
+                        ...bonusPrograms, 
+                        tradingCashback: {...bonusPrograms.tradingCashback, percentage: parseFloat(e.target.value)}
+                      })}
+                    />
+                  </div>
+                  <div className="bonus-field">
+                    <label>Min Trades Required</label>
+                    <input 
+                      type="number" 
+                      value={bonusPrograms.tradingCashback.minTrades}
+                      onChange={(e) => setBonusPrograms({
+                        ...bonusPrograms, 
+                        tradingCashback: {...bonusPrograms.tradingCashback, minTrades: parseInt(e.target.value)}
+                      })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Staking Bonus */}
+              <div className="bonus-program-card">
+                <div className="bonus-card-header">
+                  <span className="bonus-emoji">🔒</span>
+                  <h3>Staking Rewards</h3>
+                  <label className="toggle-switch-small">
+                    <input 
+                      type="checkbox" 
+                      checked={bonusPrograms.stakingBonus.enabled}
+                      onChange={(e) => setBonusPrograms({
+                        ...bonusPrograms, 
+                        stakingBonus: {...bonusPrograms.stakingBonus, enabled: e.target.checked}
+                      })}
+                    />
+                    <span className="toggle-slider-small"></span>
+                  </label>
+                </div>
+                <div className="bonus-card-body">
+                  <div className="bonus-field">
+                    <label>APY Percentage (%)</label>
+                    <input 
+                      type="number" 
+                      value={bonusPrograms.stakingBonus.percentage}
+                      onChange={(e) => setBonusPrograms({
+                        ...bonusPrograms, 
+                        stakingBonus: {...bonusPrograms.stakingBonus, percentage: parseFloat(e.target.value)}
+                      })}
+                    />
+                  </div>
+                  <div className="bonus-field">
+                    <label>Description</label>
+                    <input 
+                      type="text" 
+                      value={bonusPrograms.stakingBonus.description}
+                      onChange={(e) => setBonusPrograms({
+                        ...bonusPrograms, 
+                        stakingBonus: {...bonusPrograms.stakingBonus, description: e.target.value}
+                      })}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* VIP Levels */}
+            <div className="vip-levels-section">
+              <h3>👑 VIP Level Bonuses</h3>
+              <div className="vip-toggle">
+                <label>Enable VIP Program</label>
+                <label className="toggle-switch-small">
+                  <input 
+                    type="checkbox" 
+                    checked={bonusPrograms.vipBonus.enabled}
+                    onChange={(e) => setBonusPrograms({
+                      ...bonusPrograms, 
+                      vipBonus: {...bonusPrograms.vipBonus, enabled: e.target.checked}
+                    })}
+                  />
+                  <span className="toggle-slider-small"></span>
+                </label>
+              </div>
+              <div className="vip-levels-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Level</th>
+                      <th>Min Deposit (USDT)</th>
+                      <th>Bonus (USDT)</th>
+                      <th>Cashback (%)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bonusPrograms.vipBonus.levels.map((level, idx) => (
+                      <tr key={idx}>
+                        <td>Level {level.level}</td>
+                        <td>
+                          <input 
+                            type="number" 
+                            value={level.minDeposit}
+                            onChange={(e) => {
+                              const newLevels = [...bonusPrograms.vipBonus.levels]
+                              newLevels[idx].minDeposit = parseFloat(e.target.value)
+                              setBonusPrograms({
+                                ...bonusPrograms,
+                                vipBonus: {...bonusPrograms.vipBonus, levels: newLevels}
+                              })
+                            }}
+                          />
+                        </td>
+                        <td>
+                          <input 
+                            type="number" 
+                            value={level.bonus}
+                            onChange={(e) => {
+                              const newLevels = [...bonusPrograms.vipBonus.levels]
+                              newLevels[idx].bonus = parseFloat(e.target.value)
+                              setBonusPrograms({
+                                ...bonusPrograms,
+                                vipBonus: {...bonusPrograms.vipBonus, levels: newLevels}
+                              })
+                            }}
+                          />
+                        </td>
+                        <td>
+                          <input 
+                            type="number" 
+                            value={level.cashback}
+                            onChange={(e) => {
+                              const newLevels = [...bonusPrograms.vipBonus.levels]
+                              newLevels[idx].cashback = parseFloat(e.target.value)
+                              setBonusPrograms({
+                                ...bonusPrograms,
+                                vipBonus: {...bonusPrograms.vipBonus, levels: newLevels}
+                              })
+                            }}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Promotion End Date */}
+            <div className="promotion-date-section">
+              <h3>📅 Promotion End Date</h3>
+              <input 
+                type="date" 
+                value={bonusPrograms.promotionEndDate}
+                onChange={(e) => setBonusPrograms({...bonusPrograms, promotionEndDate: e.target.value})}
+              />
+            </div>
+
+            <button className="save-settings-btn" onClick={() => alert('Bonus programs saved!')}>
+              💾 Save All Bonus Settings
+            </button>
+          </div>
+        )}
+
+        {/* Customer Services Section - Enhanced with Live Chat */}
+        {activeSection === 'customer-services' && (
+          <div className="admin-section customer-service-section">
+            <div className="section-header">
+              <h1>💬 Customer Services - Live Chat</h1>
+              <p>Manage live chat sessions and support tickets</p>
+            </div>
+            
             <div className="support-stats">
               <div className="stat-card pending">
-                <span className="stat-number">0</span>
-                <span className="stat-label">Open Tickets</span>
+                <span className="stat-number">{activeChats.filter(c => c.status === 'waiting_agent').length}</span>
+                <span className="stat-label">Waiting for Agent</span>
               </div>
               <div className="stat-card">
-                <span className="stat-number">0</span>
-                <span className="stat-label">In Progress</span>
+                <span className="stat-number">{activeChats.filter(c => c.status === 'connected').length}</span>
+                <span className="stat-label">Active Chats</span>
               </div>
               <div className="stat-card verified">
-                <span className="stat-number">0</span>
+                <span className="stat-number">{activeChats.filter(c => c.status === 'closed').length}</span>
                 <span className="stat-label">Resolved</span>
               </div>
             </div>
-            <div className="data-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>TICKET ID</th>
-                    <th>USER</th>
-                    <th>SUBJECT</th>
-                    <th>PRIORITY</th>
-                    <th>STATUS</th>
-                    <th>CREATED</th>
-                    <th>ACTIONS</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td colSpan="7" className="no-data">No support tickets</td>
-                  </tr>
-                </tbody>
-              </table>
+
+            <div className="live-chat-container">
+              {/* Chat List */}
+              <div className="chat-list">
+                <h3>Active Conversations</h3>
+                {activeChats.length === 0 ? (
+                  <div className="no-chats">No active conversations</div>
+                ) : (
+                  activeChats.map((chat, idx) => (
+                    <div 
+                      key={idx} 
+                      className={`chat-list-item ${selectedChat?.sessionId === chat.sessionId ? 'active' : ''} ${chat.status === 'waiting_agent' ? 'waiting' : ''}`}
+                      onClick={() => setSelectedChat(chat)}
+                    >
+                      <div className="chat-user-info">
+                        <span className="chat-avatar">👤</span>
+                        <div className="chat-details">
+                          <span className="chat-username">{chat.user}</span>
+                          <span className="chat-email">{chat.email || 'No email'}</span>
+                        </div>
+                      </div>
+                      <div className="chat-meta">
+                        <span className={`chat-status-badge ${chat.status}`}>
+                          {chat.status === 'waiting_agent' ? '⏳ Waiting' : 
+                           chat.status === 'connected' ? '🟢 Active' : 
+                           chat.status === 'active' ? '💬 Chat' : '✓ Closed'}
+                        </span>
+                        {chat.unread > 0 && <span className="unread-badge">{chat.unread}</span>}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Chat Window */}
+              <div className="admin-chat-window">
+                {selectedChat ? (
+                  <>
+                    <div className="chat-window-header">
+                      <div className="chat-user-header">
+                        <span className="chat-avatar-large">👤</span>
+                        <div>
+                          <h4>{selectedChat.user}</h4>
+                          <span>{selectedChat.email || 'No email provided'}</span>
+                        </div>
+                      </div>
+                      <div className="chat-actions">
+                        <button className="chat-action-btn" onClick={() => {
+                          const chats = [...activeChats]
+                          const chat = chats.find(c => c.sessionId === selectedChat.sessionId)
+                          if (chat) chat.status = 'closed'
+                          setActiveChats(chats)
+                          localStorage.setItem('activeChats', JSON.stringify(chats))
+                        }}>Close Chat</button>
+                      </div>
+                    </div>
+                    <div className="chat-messages-area">
+                      {chatLogs
+                        .filter(log => log.sessionId === selectedChat.sessionId)
+                        .map((log, idx) => (
+                          <div key={idx} className={`admin-chat-message ${log.type}`}>
+                            <div className="message-content">
+                              <span className="message-sender">
+                                {log.type === 'user' ? selectedChat.user : 
+                                 log.type === 'admin' ? '🎧 Support Agent' : 
+                                 log.type === 'agent' ? `🎧 ${log.agentName || 'Agent'}` : '⚙️ System'}
+                              </span>
+                              <p>{log.message}</p>
+                              <span className="message-time">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                    <div className="admin-reply-area">
+                      <input 
+                        type="text" 
+                        placeholder="Type your reply..." 
+                        value={adminReplyMessage}
+                        onChange={(e) => setAdminReplyMessage(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && sendAdminReply(selectedChat.sessionId)}
+                      />
+                      <button onClick={() => sendAdminReply(selectedChat.sessionId)}>Send</button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="no-chat-selected">
+                    <span>💬</span>
+                    <p>Select a conversation to view messages</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
