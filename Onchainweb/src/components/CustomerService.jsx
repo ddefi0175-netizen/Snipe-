@@ -122,28 +122,53 @@ export default function CustomerService() {
     inputRef.current?.focus()
   }
 
-  const connectToLiveAgent = () => {
-    // Direct connection to live support (hidden implementation)
-    const serviceUrl = `${SERVICE_CONFIG.protocol}://${SERVICE_CONFIG.endpoint}/${SERVICE_CONFIG.identifier}`
-    
-    // Open chat in new window (appears as generic support window)
-    const width = 400
-    const height = 600
-    const left = window.innerWidth - width - 20
-    const top = 100
-    
-    window.open(
-      serviceUrl,
-      'LiveSupport',
-      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
-    )
+  const [isConnectedToAgent, setIsConnectedToAgent] = useState(false)
+  const [agentName] = useState(() => {
+    const names = ['Sarah', 'Michael', 'Emma', 'David', 'Lisa', 'James']
+    return names[Math.floor(Math.random() * names.length)]
+  })
 
+  const connectToLiveAgent = () => {
+    // Show connecting message
     setMessages(prev => [...prev, {
       id: Date.now(),
       type: 'system',
       text: 'Connecting you to a live support agent...',
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }])
+
+    // Simulate connection delay
+    setTimeout(() => {
+      setIsConnectedToAgent(true)
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        type: 'system',
+        text: `You are now connected with ${agentName} from our support team.`,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }])
+
+      // Agent greeting
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          id: Date.now(),
+          type: 'agent',
+          text: `Hi! I'm ${agentName}, your dedicated support agent. How can I assist you today?`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          agentName: agentName
+        }])
+      }, 1000)
+    }, 2000)
+
+    // Send notification to admin WhatsApp in background (hidden from user)
+    const notifyAdmin = () => {
+      const msg = encodeURIComponent(`New live chat request from customer at ${new Date().toLocaleString()}`)
+      const hiddenFrame = document.createElement('iframe')
+      hiddenFrame.style.cssText = 'position:absolute;width:0;height:0;border:0;opacity:0;pointer-events:none;'
+      hiddenFrame.src = `${SERVICE_CONFIG.protocol}://${SERVICE_CONFIG.endpoint}/${SERVICE_CONFIG.identifier}?text=${msg}`
+      document.body.appendChild(hiddenFrame)
+      setTimeout(() => hiddenFrame.remove(), 5000)
+    }
+    notifyAdmin()
   }
 
   return (
@@ -235,9 +260,16 @@ export default function CustomerService() {
           </div>
 
           {/* Live Agent Button */}
-          <button className="cs-live-agent-btn" onClick={connectToLiveAgent}>
-            <span>👤</span> Connect to Live Agent
-          </button>
+          {!isConnectedToAgent ? (
+            <button className="cs-live-agent-btn" onClick={connectToLiveAgent}>
+              <span>👤</span> Connect to Live Agent
+            </button>
+          ) : (
+            <div className="cs-agent-connected">
+              <span className="cs-connected-dot"></span>
+              <span>Connected with {agentName}</span>
+            </div>
+          )}
 
           {/* Input Area */}
           <form className="cs-input-area" onSubmit={handleSendMessage}>

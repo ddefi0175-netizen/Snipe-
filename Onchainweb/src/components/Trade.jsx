@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 
+// CoinGecko API for real prices - same as Dashboard
+const CRYPTO_API = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h'
+
 // Trading levels configuration (can be modified by admin)
 const DEFAULT_TRADING_LEVELS = [
   { level: 1, minCapital: 100, maxCapital: 19999, profit: 18, duration: 180 },
@@ -232,35 +235,82 @@ export default function Trade({ isOpen, onClose }) {
     return () => window.removeEventListener('keypress', handleKeyPress)
   }, [])
   
-  // Simulate real-time price updates
+  // Real CoinGecko prices storage
+  const [coinGeckoPrices, setCoinGeckoPrices] = useState({})
+  
+  // Fetch real prices from CoinGecko API (same as Dashboard)
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        const response = await fetch(CRYPTO_API)
+        if (response.ok) {
+          const data = await response.json()
+          const priceMap = {}
+          data.forEach(coin => {
+            const symbol = coin.symbol.toUpperCase()
+            priceMap[symbol] = {
+              price: coin.current_price,
+              change24h: coin.price_change_percentage_24h
+            }
+          })
+          setCoinGeckoPrices(priceMap)
+        }
+      } catch (error) {
+        console.log('Using fallback prices')
+      }
+    }
+    
+    fetchPrices()
+    // Refresh every 30 seconds
+    const refreshInterval = setInterval(fetchPrices, 30000)
+    return () => clearInterval(refreshInterval)
+  }, [])
+  
+  // Real-time price updates using CoinGecko base price
   useEffect(() => {
     if (!isOpen) return
     
-    // Initial price based on pair
-    const basePrices = {
-      'BTC/USDT': 94500,
-      'ETH/USDT': 3450,
-      'BNB/USDT': 720,
-      'XRP/USDT': 2.35,
-      'SOL/USDT': 205,
-      'ADA/USDT': 1.05,
-      'DOGE/USDT': 0.32,
-      'DOT/USDT': 7.8,
-      'MATIC/USDT': 0.98,
-      'AVAX/USDT': 42.5,
+    // Get symbol without /USDT
+    const symbol = selectedPair.symbol.split('/')[0]
+    
+    // Use CoinGecko price if available, otherwise fallback
+    const fallbackPrices = {
+      'BTC': 94500,
+      'ETH': 3450,
+      'BNB': 720,
+      'XRP': 2.35,
+      'SOL': 205,
+      'ADA': 1.05,
+      'DOGE': 0.32,
+      'DOT': 7.8,
+      'MATIC': 0.98,
+      'AVAX': 42.5,
     }
     
-    let basePrice = basePrices[selectedPair.symbol] || 100
+    let basePrice = coinGeckoPrices[symbol]?.price || fallbackPrices[symbol] || 100
     setCurrentPrice(basePrice)
     setPriceHistory([basePrice])
     
+    // Simulate small price movements around the real price
     const interval = setInterval(() => {
-      const volatility = selectedPair.symbol.includes('BTC') ? 0.0005 : 0.001
-      const change = (Math.random() - 0.5) * 2 * volatility
-      basePrice = basePrice * (1 + change)
+      // Refresh base price from CoinGecko if available
+      const realPrice = coinGeckoPrices[symbol]?.price
+      if (realPrice) {
+        // Small random variation around real price (±0.1%)
+        const variation = (Math.random() - 0.5) * 0.002
+        basePrice = realPrice * (1 + variation)
+      } else {
+        // Fallback simulation
+        const volatility = symbol === 'BTC' ? 0.0003 : 0.0005
+        const change = (Math.random() - 0.5) * 2 * volatility
+        basePrice = basePrice * (1 + change)
+      }
+      
+      const prevPrice = priceHistory[priceHistory.length - 1] || basePrice
+      const changePercent = ((basePrice - prevPrice) / prevPrice) * 100
       
       setCurrentPrice(basePrice)
-      setPriceChange(change * 100)
+      setPriceChange(changePercent)
       setPriceHistory(prev => {
         const newHistory = [...prev, basePrice]
         return newHistory.slice(-100) // Keep last 100 points
@@ -268,7 +318,7 @@ export default function Trade({ isOpen, onClose }) {
     }, 1000)
     
     return () => clearInterval(interval)
-  }, [isOpen, selectedPair])
+  }, [isOpen, selectedPair, coinGeckoPrices])
   
   // Determine available level based on trade amount
   useEffect(() => {
