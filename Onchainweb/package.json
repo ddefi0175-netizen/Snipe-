@@ -1,0 +1,48 @@
+{
+  "name": "onchainweb",
+  "version": "1.0.0",
+  "description": "A Web3 dashboard with live crypto prices from CoinGecko and MetaMask wallet integration using ethers.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "clean": "rm -rf dist node_modules"
+  },
+  "keywords": [
+    "web3",
+    "ethereum",
+    "react",
+    "vite",
+    "coingecko",
+    "metamask",
+    "crypto",
+    "defi"
+  ],
+  "author": "ddefi0175-netizen",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ddefi0175-netizen/Snipe.git"
+  },
+  "homepage": "https://github.com/ddefi0175-netizen/Snipe#readme",
+  "bugs": {
+    "url": "https://github.com/ddefi0175-netizen/Snipe/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "ethers": "^6.16.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "@vitejs/plugin-react": "^5.1.2",
+    "autoprefixer": "^10.4.23",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.18",
+    "vite": "^5.4.21"
+  }
+}
