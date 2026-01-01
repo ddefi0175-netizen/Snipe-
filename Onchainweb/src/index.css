@@ -1429,6 +1429,405 @@ button.news-item:hover {
   box-shadow: 0 4px 20px rgba(249, 115, 22, 0.4);
 }
 
+/* Gmail Registration Styles */
+.register-btn {
+  background: linear-gradient(135deg, #4285f4, #34a853) !important;
+}
+
+.register-btn .sidebar-badge.highlight {
+  background: #ea4335;
+  color: white;
+}
+
+.register-logo {
+  text-align: center;
+  padding: 1.5rem 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.register-logo h3 {
+  margin: 1rem 0 .5rem;
+  font-size: 1.5rem;
+  background: linear-gradient(135deg, #002D72, #00C2FF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.register-logo p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .9rem;
+}
+
+.register-form,
+.verify-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.register-field,
+.verify-field {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+
+.register-field label,
+.verify-field label {
+  font-size: .9rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.gmail-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: .75rem;
+  padding: 0 1rem;
+}
+
+.gmail-input-wrapper svg {
+  color: #ea4335;
+  flex-shrink: 0;
+}
+
+.gmail-input-wrapper .register-input {
+  border: none;
+  background: transparent;
+  padding-left: 0;
+}
+
+.register-input {
+  width: 100%;
+  padding: .875rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: .75rem;
+  color: var(--text);
+  font-size: 1rem;
+  transition: all .2s;
+}
+
+.register-input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(124, 58, 237, 0.1);
+}
+
+.register-error {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: .5rem;
+  padding: .75rem 1rem;
+  color: #ef4444;
+  font-size: .9rem;
+}
+
+.register-btn-primary {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #002D72, #0052CC, #00C2FF);
+  color: white;
+  border: none;
+  border-radius: .75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.register-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 82, 204, 0.4);
+}
+
+.register-terms {
+  text-align: center;
+  font-size: .8rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.verify-sent-info {
+  text-align: center;
+  padding: 1.5rem;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: .75rem;
+}
+
+.verify-icon {
+  font-size: 2.5rem;
+  display: block;
+  margin-bottom: .5rem;
+}
+
+.verify-sent-info p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.verify-sent-info strong {
+  color: var(--text);
+  font-size: 1.1rem;
+}
+
+.verify-input {
+  width: 100%;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: .75rem;
+  color: var(--text);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: .5em;
+  text-align: center;
+  font-family: monospace;
+}
+
+.verify-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.resend-btn,
+.back-btn {
+  width: 100%;
+  padding: .875rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: .75rem;
+  color: var(--text);
+  font-size: .9rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.resend-btn:hover,
+.back-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--accent);
+}
+
+.register-complete {
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.success-icon {
+  margin-bottom: 1rem;
+}
+
+.register-complete h3 {
+  margin: 0 0 .5rem;
+  font-size: 1.5rem;
+  color: #10b981;
+}
+
+.register-complete p {
+  margin: .5rem 0;
+  color: var(--muted);
+}
+
+.success-email {
+  font-size: .9rem !important;
+}
+
+.success-actions {
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  margin-top: 1.5rem;
+}
+
+.success-close-btn {
+  width: 100%;
+  padding: .875rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: .75rem;
+  color: var(--text);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.success-close-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Enhanced KYC Form Styles */
+.kyc-form-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.kyc-form-section:last-of-type {
+  border-bottom: none;
+}
+
+.kyc-form-section h4 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.kyc-field {
+  margin-bottom: 1rem;
+}
+
+.kyc-field:last-child {
+  margin-bottom: 0;
+}
+
+.kyc-field label {
+  display: block;
+  margin-bottom: .5rem;
+  font-size: .9rem;
+  color: var(--muted);
+}
+
+.kyc-input,
+.kyc-select {
+  width: 100%;
+  padding: .875rem 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: .75rem;
+  color: var(--text);
+  font-size: 1rem;
+  transition: all .2s;
+}
+
+.kyc-input:focus,
+.kyc-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: rgba(124, 58, 237, 0.1);
+}
+
+.kyc-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%239aa4b2' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+}
+
+.kyc-select option {
+  background: var(--card);
+  color: var(--text);
+}
+
+.kyc-upload-hint {
+  font-size: .85rem;
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
+
+.kyc-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.kyc-upload-box {
+  position: relative;
+}
+
+.kyc-upload-label {
+  display: block;
+  cursor: pointer;
+}
+
+.upload-title {
+  display: block;
+  margin-bottom: .5rem;
+  font-size: .85rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.kyc-upload-box .upload-area {
+  aspect-ratio: 4/3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.kyc-upload-box .upload-area.has-image {
+  padding: .5rem;
+  border-style: solid;
+  border-color: var(--accent);
+}
+
+.upload-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: .5rem;
+}
+
+.kyc-upload-box .upload-area p {
+  font-size: .85rem;
+  margin: .5rem 0 .25rem;
+}
+
+.kyc-upload-box .upload-area span {
+  font-size: .7rem;
+}
+
+.remove-photo-btn {
+  position: absolute;
+  top: 1.75rem;
+  right: .25rem;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  padding: .25rem .5rem;
+  border-radius: .25rem;
+  font-size: .7rem;
+  cursor: pointer;
+  transition: all .2s;
+}
+
+.remove-photo-btn:hover {
+  background: #ef4444;
+}
+
+.kyc-terms {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border);
+  border-radius: .5rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.kyc-terms p {
+  margin: 0;
+  font-size: .85rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .kyc-upload-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* About Us Modal Styles */
 .about-hero {
   text-align: center;

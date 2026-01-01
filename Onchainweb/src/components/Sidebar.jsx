@@ -3,9 +3,34 @@ import React, { useState, useEffect } from 'react'
 export default function Sidebar({ isOpen, onClose }) {
   const [activeModal, setActiveModal] = useState(null)
   
+  // Gmail Registration States
+  const [registerStep, setRegisterStep] = useState('email') // 'email', 'verify', 'complete'
+  const [registerEmail, setRegisterEmail] = useState('')
+  const [registerUsername, setRegisterUsername] = useState('')
+  const [verificationCode, setVerificationCode] = useState('')
+  const [generatedCode, setGeneratedCode] = useState('')
+  const [registerError, setRegisterError] = useState('')
+  const [isRegistered, setIsRegistered] = useState(() => {
+    return localStorage.getItem('isRegistered') === 'true'
+  })
+
+  // KYC Document States
+  const [kycFullName, setKycFullName] = useState('')
+  const [kycDocType, setKycDocType] = useState('')
+  const [kycDocNumber, setKycDocNumber] = useState('')
+  const [kycFrontPhoto, setKycFrontPhoto] = useState(null)
+  const [kycBackPhoto, setKycBackPhoto] = useState(null)
+  const [kycFrontPreview, setKycFrontPreview] = useState('')
+  const [kycBackPreview, setKycBackPreview] = useState('')
+  
   // Generate random 5-digit UserID
   const generateUserId = () => {
     return Math.floor(10000 + Math.random() * 90000).toString()
+  }
+
+  // Generate 6-digit verification code
+  const generateVerificationCode = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString()
   }
 
   // Profile & Settings state
@@ -26,6 +51,12 @@ export default function Sidebar({ isOpen, onClose }) {
       if (!parsed.address) parsed.address = ''
       if (!parsed.city) parsed.city = ''
       if (!parsed.postalCode) parsed.postalCode = ''
+      // KYC document fields
+      if (!parsed.kycFullName) parsed.kycFullName = ''
+      if (!parsed.kycDocType) parsed.kycDocType = ''
+      if (!parsed.kycDocNumber) parsed.kycDocNumber = ''
+      if (!parsed.kycFrontPhoto) parsed.kycFrontPhoto = ''
+      if (!parsed.kycBackPhoto) parsed.kycBackPhoto = ''
       return parsed
     }
     return {
@@ -43,6 +74,11 @@ export default function Sidebar({ isOpen, onClose }) {
       address: '',
       postalCode: '',
       kycStatus: 'pending',
+      kycFullName: '',
+      kycDocType: '',
+      kycDocNumber: '',
+      kycFrontPhoto: '',
+      kycBackPhoto: '',
       vipLevel: 1,
       joinDate: new Date().toISOString().split('T')[0],
       totalTrades: 0,
@@ -152,6 +188,106 @@ export default function Sidebar({ isOpen, onClose }) {
     }
   }
 
+  // Document type options
+  const documentTypes = [
+    { value: 'id', label: 'National ID Card' },
+    { value: 'passport', label: 'Passport' },
+    { value: 'driver', label: "Driver's License" }
+  ]
+
+  // Handle Gmail Registration
+  const handleSendVerificationCode = () => {
+    if (!registerEmail || !registerEmail.includes('@')) {
+      setRegisterError('Please enter a valid email address')
+      return
+    }
+    if (!registerUsername || registerUsername.length < 3) {
+      setRegisterError('Username must be at least 3 characters')
+      return
+    }
+    
+    // Generate and "send" verification code
+    const code = generateVerificationCode()
+    setGeneratedCode(code)
+    setRegisterError('')
+    setRegisterStep('verify')
+    
+    // Simulate sending email (in real app, this would call an API)
+    console.log(`Verification code ${code} sent to ${registerEmail}`)
+    alert(`Verification code sent to ${registerEmail}\n\nFor demo purposes, your code is: ${code}`)
+  }
+
+  const handleVerifyCode = () => {
+    if (verificationCode === generatedCode) {
+      // Registration successful
+      setProfile(prev => ({
+        ...prev,
+        email: registerEmail,
+        username: registerUsername
+      }))
+      setIsRegistered(true)
+      localStorage.setItem('isRegistered', 'true')
+      setRegisterStep('complete')
+      setRegisterError('')
+    } else {
+      setRegisterError('Invalid verification code. Please try again.')
+    }
+  }
+
+  const handleResendCode = () => {
+    const code = generateVerificationCode()
+    setGeneratedCode(code)
+    alert(`New verification code sent to ${registerEmail}\n\nFor demo purposes, your code is: ${code}`)
+  }
+
+  // Handle KYC Photo Upload
+  const handlePhotoUpload = (e, type) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size must be less than 10MB')
+        return
+      }
+      
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        if (type === 'front') {
+          setKycFrontPhoto(file)
+          setKycFrontPreview(reader.result)
+        } else {
+          setKycBackPhoto(file)
+          setKycBackPreview(reader.result)
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleKycSubmit = () => {
+    if (!kycFullName || !kycDocType || !kycDocNumber) {
+      alert('Please fill in all required fields')
+      return
+    }
+    if (!kycFrontPhoto || !kycBackPhoto) {
+      alert('Please upload both front and back photos of your document')
+      return
+    }
+    
+    // Save KYC data
+    setProfile(prev => ({
+      ...prev,
+      kycFullName,
+      kycDocType,
+      kycDocNumber,
+      kycFrontPhoto: kycFrontPreview,
+      kycBackPhoto: kycBackPreview,
+      kycStatus: 'pending'
+    }))
+    
+    alert('KYC documents submitted successfully!\n\nYour verification is being processed. This usually takes 1-3 business days.')
+    closeModal()
+  }
+
   return (
     <>
       {/* Overlay */}
@@ -225,6 +361,18 @@ export default function Sidebar({ isOpen, onClose }) {
 
           <div className="sidebar-divider"></div>
           <span className="sidebar-section-title">Account</span>
+
+          {/* Gmail Registration Button */}
+          {!isRegistered && (
+            <button onClick={() => openModal('register')} className="sidebar-btn register-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
+              </svg>
+              Register with Gmail
+              <span className="sidebar-badge highlight">New</span>
+            </button>
+          )}
 
           <button onClick={() => openModal('profile')} className="sidebar-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -835,7 +983,7 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* KYC Modal */}
       {activeModal === 'kyc' && (
         <div className="sidebar-modal-overlay" onClick={closeModal}>
-          <div className="sidebar-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="sidebar-modal large" onClick={(e) => e.stopPropagation()}>
             <div className="sidebar-modal-header">
               <h2>🔐 KYC Verification</h2>
               <button onClick={closeModal} className="modal-close-btn">×</button>
@@ -850,51 +998,140 @@ export default function Sidebar({ isOpen, onClose }) {
               
               <p className="kyc-intro">Complete KYC verification to unlock all features including higher withdrawal limits, bonus rewards, and premium features.</p>
 
-              <div className="kyc-steps">
-                <div className="kyc-step completed">
-                  <div className="step-number">✓</div>
-                  <div className="step-content">
-                    <h4>Step 1: Email Verification</h4>
-                    <p>Verify your email address</p>
-                  </div>
+              {/* Personal Information Section */}
+              <div className="kyc-form-section">
+                <h4>📋 Personal Information</h4>
+                
+                <div className="kyc-field">
+                  <label>Full Name (as shown on ID) *</label>
+                  <input 
+                    type="text"
+                    className="kyc-input"
+                    value={kycFullName}
+                    onChange={(e) => setKycFullName(e.target.value)}
+                    placeholder="Enter your full legal name"
+                  />
                 </div>
-                <div className="kyc-step active">
-                  <div className="step-number">2</div>
-                  <div className="step-content">
-                    <h4>Step 2: Identity Verification</h4>
-                    <p>Upload government-issued ID</p>
-                  </div>
+              </div>
+
+              {/* Document Information Section */}
+              <div className="kyc-form-section">
+                <h4>📄 Document Information</h4>
+                
+                <div className="kyc-field">
+                  <label>Document Type *</label>
+                  <select 
+                    className="kyc-select"
+                    value={kycDocType}
+                    onChange={(e) => setKycDocType(e.target.value)}
+                  >
+                    <option value="">Select document type</option>
+                    {documentTypes.map((doc) => (
+                      <option key={doc.value} value={doc.value}>{doc.label}</option>
+                    ))}
+                  </select>
                 </div>
-                <div className="kyc-step">
-                  <div className="step-number">3</div>
-                  <div className="step-content">
-                    <h4>Step 3: Selfie Verification</h4>
-                    <p>Take a selfie holding your ID</p>
-                  </div>
+
+                <div className="kyc-field">
+                  <label>Document ID Number *</label>
+                  <input 
+                    type="text"
+                    className="kyc-input"
+                    value={kycDocNumber}
+                    onChange={(e) => setKycDocNumber(e.target.value)}
+                    placeholder="Enter your document ID number"
+                  />
                 </div>
-                <div className="kyc-step">
-                  <div className="step-number">4</div>
-                  <div className="step-content">
-                    <h4>Step 4: Address Verification</h4>
-                    <p>Upload proof of address</p>
+              </div>
+
+              {/* Document Upload Section */}
+              <div className="kyc-form-section">
+                <h4>📸 Document Photos</h4>
+                <p className="kyc-upload-hint">Please upload clear photos of your document. Make sure all details are visible.</p>
+                
+                <div className="kyc-upload-grid">
+                  {/* Front Photo Upload */}
+                  <div className="kyc-upload-box">
+                    <label className="kyc-upload-label">
+                      <span className="upload-title">Front Side *</span>
+                      <div className={`upload-area ${kycFrontPreview ? 'has-image' : ''}`}>
+                        {kycFrontPreview ? (
+                          <img src={kycFrontPreview} alt="Front of document" className="upload-preview" />
+                        ) : (
+                          <>
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                              <circle cx="8.5" cy="8.5" r="1.5" />
+                              <polyline points="21 15 16 10 5 21" />
+                            </svg>
+                            <p>Click to upload front</p>
+                            <span>JPG, PNG (Max 10MB)</span>
+                          </>
+                        )}
+                      </div>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => handlePhotoUpload(e, 'front')}
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                    {kycFrontPreview && (
+                      <button 
+                        className="remove-photo-btn"
+                        onClick={() => { setKycFrontPhoto(null); setKycFrontPreview(''); }}
+                      >
+                        ✕ Remove
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Back Photo Upload */}
+                  <div className="kyc-upload-box">
+                    <label className="kyc-upload-label">
+                      <span className="upload-title">Back Side *</span>
+                      <div className={`upload-area ${kycBackPreview ? 'has-image' : ''}`}>
+                        {kycBackPreview ? (
+                          <img src={kycBackPreview} alt="Back of document" className="upload-preview" />
+                        ) : (
+                          <>
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                              <circle cx="8.5" cy="8.5" r="1.5" />
+                              <polyline points="21 15 16 10 5 21" />
+                            </svg>
+                            <p>Click to upload back</p>
+                            <span>JPG, PNG (Max 10MB)</span>
+                          </>
+                        )}
+                      </div>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={(e) => handlePhotoUpload(e, 'back')}
+                        style={{ display: 'none' }}
+                      />
+                    </label>
+                    {kycBackPreview && (
+                      <button 
+                        className="remove-photo-btn"
+                        onClick={() => { setKycBackPhoto(null); setKycBackPreview(''); }}
+                      >
+                        ✕ Remove
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
 
-              <div className="kyc-upload">
-                <h4>Upload Documents</h4>
-                <div className="upload-area">
-                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                  <p>Drag & drop files here or click to upload</p>
-                  <span>Supported: JPG, PNG, PDF (Max 10MB)</span>
-                </div>
+              {/* Terms Agreement */}
+              <div className="kyc-terms">
+                <p>By submitting, you confirm that the information provided is accurate and the documents are genuine.</p>
               </div>
 
-              <button className="kyc-submit-btn">Start Verification</button>
+              <button className="kyc-submit-btn" onClick={handleKycSubmit}>
+                ✓ Submit for Verification
+              </button>
             </div>
           </div>
         </div>
@@ -1166,6 +1403,147 @@ export default function Sidebar({ isOpen, onClose }) {
                 <h3>Ready to Start?</h3>
                 <button className="cta-btn" onClick={closeModal}>Get Started Now</button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Gmail Registration Modal */}
+      {activeModal === 'register' && (
+        <div className="sidebar-modal-overlay" onClick={closeModal}>
+          <div className="sidebar-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="sidebar-modal-header">
+              <h2>📧 Register with Gmail</h2>
+              <button onClick={closeModal} className="modal-close-btn">×</button>
+            </div>
+            <div className="sidebar-modal-content">
+              {/* Registration Logo */}
+              <div className="register-logo">
+                <svg width="80" height="80" viewBox="0 0 100 100">
+                  <defs>
+                    <linearGradient id="reg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#002D72" />
+                      <stop offset="50%" stopColor="#0052CC" />
+                      <stop offset="100%" stopColor="#00C2FF" />
+                    </linearGradient>
+                  </defs>
+                  <circle cx="50" cy="50" r="48" fill="url(#reg-gradient)" />
+                  <path d="M25 35 L50 50 L75 35" stroke="white" strokeWidth="4" fill="none" strokeLinecap="round" />
+                  <path d="M25 35 L25 65 L75 65 L75 35" stroke="white" strokeWidth="4" fill="none" strokeLinejoin="round" />
+                  <circle cx="50" cy="50" r="8" fill="white" />
+                </svg>
+                <h3>OnchainWeb</h3>
+                <p>Create your account to start trading</p>
+              </div>
+
+              {registerStep === 'email' && (
+                <div className="register-form">
+                  <div className="register-field">
+                    <label>Username</label>
+                    <input 
+                      type="text"
+                      className="register-input"
+                      value={registerUsername}
+                      onChange={(e) => setRegisterUsername(e.target.value)}
+                      placeholder="Choose a username"
+                    />
+                  </div>
+                  
+                  <div className="register-field">
+                    <label>Gmail Address</label>
+                    <div className="gmail-input-wrapper">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                      </svg>
+                      <input 
+                        type="email"
+                        className="register-input"
+                        value={registerEmail}
+                        onChange={(e) => setRegisterEmail(e.target.value)}
+                        placeholder="your.email@gmail.com"
+                      />
+                    </div>
+                  </div>
+
+                  {registerError && (
+                    <div className="register-error">
+                      <span>⚠️ {registerError}</span>
+                    </div>
+                  )}
+
+                  <button className="register-btn-primary" onClick={handleSendVerificationCode}>
+                    📤 Send Verification Code
+                  </button>
+
+                  <p className="register-terms">
+                    By registering, you agree to our Terms of Service and Privacy Policy
+                  </p>
+                </div>
+              )}
+
+              {registerStep === 'verify' && (
+                <div className="verify-form">
+                  <div className="verify-sent-info">
+                    <span className="verify-icon">📨</span>
+                    <p>Verification code sent to:</p>
+                    <strong>{registerEmail}</strong>
+                  </div>
+
+                  <div className="verify-field">
+                    <label>Enter 6-digit verification code</label>
+                    <input 
+                      type="text"
+                      className="verify-input"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="000000"
+                      maxLength={6}
+                    />
+                  </div>
+
+                  {registerError && (
+                    <div className="register-error">
+                      <span>⚠️ {registerError}</span>
+                    </div>
+                  )}
+
+                  <button className="register-btn-primary" onClick={handleVerifyCode}>
+                    ✓ Verify & Complete Registration
+                  </button>
+
+                  <button className="resend-btn" onClick={handleResendCode}>
+                    📤 Resend Code
+                  </button>
+
+                  <button className="back-btn" onClick={() => { setRegisterStep('email'); setRegisterError(''); }}>
+                    ← Back to Email
+                  </button>
+                </div>
+              )}
+
+              {registerStep === 'complete' && (
+                <div className="register-complete">
+                  <div className="success-icon">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none">
+                      <circle cx="12" cy="12" r="10" fill="#10b981" />
+                      <path d="M8 12l3 3 5-6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <h3>Registration Successful!</h3>
+                  <p>Welcome to OnchainWeb, <strong>{registerUsername}</strong>!</p>
+                  <p className="success-email">Your account is now linked to {registerEmail}</p>
+                  
+                  <div className="success-actions">
+                    <button className="register-btn-primary" onClick={() => { closeModal(); setTimeout(() => openModal('kyc'), 100); }}>
+                      Complete KYC →
+                    </button>
+                    <button className="success-close-btn" onClick={closeModal}>
+                      Start Exploring
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
