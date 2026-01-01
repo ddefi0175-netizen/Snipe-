@@ -89,6 +89,89 @@ export default function MasterAdminDashboard() {
   const [selectedChat, setSelectedChat] = useState(null)
   const [adminReplyMessage, setAdminReplyMessage] = useState('')
 
+  // User Activity Logs - track user actions
+  const [userActivityLogs, setUserActivityLogs] = useState(() => {
+    const saved = localStorage.getItem('userActivityLogs')
+    return saved ? JSON.parse(saved) : [
+      { id: 1, userId: '310738586', userEmail: 'moonmoon17652@gmail.com', action: 'login', details: 'Logged in from Windows device', ip: '154.222.5.198', timestamp: new Date(Date.now() - 3600000).toISOString() },
+      { id: 2, userId: '310738586', userEmail: 'moonmoon17652@gmail.com', action: 'deposit', details: 'Deposited $500 via Crypto', ip: '154.222.5.198', timestamp: new Date(Date.now() - 3000000).toISOString() },
+      { id: 3, userId: '800746508', userEmail: 'mcpathang18@gmail.com', action: 'kyc_submit', details: 'Submitted KYC documents', ip: '72.135.7.50', timestamp: new Date(Date.now() - 2400000).toISOString() },
+      { id: 4, userId: '800746508', userEmail: 'mcpathang18@gmail.com', action: 'trade', details: 'Placed BTC/USDT trade - $200 UP', ip: '72.135.7.50', timestamp: new Date(Date.now() - 1800000).toISOString() },
+      { id: 5, userId: '310738586', userEmail: 'moonmoon17652@gmail.com', action: 'withdrawal', details: 'Requested withdrawal $300 to wallet', ip: '154.222.5.198', timestamp: new Date(Date.now() - 1200000).toISOString() },
+      { id: 6, userId: '800746508', userEmail: 'mcpathang18@gmail.com', action: 'stake', details: 'Staked $1000 in Growth plan', ip: '72.135.7.50', timestamp: new Date(Date.now() - 600000).toISOString() },
+      { id: 7, userId: '310738586', userEmail: 'moonmoon17652@gmail.com', action: 'profile_update', details: 'Updated profile information', ip: '103.240.240.85', timestamp: new Date().toISOString() },
+    ]
+  })
+
+  // Admin Audit Logs - track admin actions
+  const [adminAuditLogs, setAdminAuditLogs] = useState(() => {
+    const saved = localStorage.getItem('adminAuditLogs')
+    return saved ? JSON.parse(saved) : [
+      { id: 1, adminId: 'master', adminName: 'Master Admin', action: 'login', details: 'Admin logged into dashboard', ip: '192.168.1.1', timestamp: new Date(Date.now() - 7200000).toISOString() },
+      { id: 2, adminId: 'master', adminName: 'Master Admin', action: 'balance_update', details: 'Updated user 310738586 balance from $0 to $1000', targetUser: '310738586', ip: '192.168.1.1', timestamp: new Date(Date.now() - 5400000).toISOString() },
+      { id: 3, adminId: 'master', adminName: 'Master Admin', action: 'kyc_approve', details: 'Approved KYC for user 800746508', targetUser: '800746508', ip: '192.168.1.1', timestamp: new Date(Date.now() - 3600000).toISOString() },
+      { id: 4, adminId: 'master', adminName: 'Master Admin', action: 'withdrawal_approve', details: 'Approved withdrawal #W001 for $300', targetUser: '310738586', ip: '192.168.1.1', timestamp: new Date(Date.now() - 1800000).toISOString() },
+      { id: 5, adminId: 'master', adminName: 'Master Admin', action: 'settings_update', details: 'Updated site settings - Trading enabled', ip: '192.168.1.1', timestamp: new Date().toISOString() },
+    ]
+  })
+
+  // Admin Roles Management
+  const [adminRoles, setAdminRoles] = useState(() => {
+    const saved = localStorage.getItem('adminRoles')
+    return saved ? JSON.parse(saved) : [
+      { 
+        id: 1, 
+        username: 'master', 
+        email: 'master@onchainweb.com', 
+        role: 'super_admin', 
+        permissions: ['all'],
+        status: 'active',
+        createdAt: '2024-01-01T00:00:00.000Z',
+        lastLogin: new Date().toISOString()
+      },
+      { 
+        id: 2, 
+        username: 'support_admin', 
+        email: 'support@onchainweb.com', 
+        role: 'support', 
+        permissions: ['view_users', 'manage_chats', 'view_deposits', 'view_withdrawals'],
+        status: 'active',
+        createdAt: '2024-06-01T00:00:00.000Z',
+        lastLogin: new Date(Date.now() - 86400000).toISOString()
+      },
+      { 
+        id: 3, 
+        username: 'finance_admin', 
+        email: 'finance@onchainweb.com', 
+        role: 'finance', 
+        permissions: ['view_users', 'manage_deposits', 'manage_withdrawals', 'view_balance'],
+        status: 'active',
+        createdAt: '2024-06-15T00:00:00.000Z',
+        lastLogin: new Date(Date.now() - 172800000).toISOString()
+      },
+      { 
+        id: 4, 
+        username: 'kyc_admin', 
+        email: 'kyc@onchainweb.com', 
+        role: 'kyc_manager', 
+        permissions: ['view_users', 'manage_kyc'],
+        status: 'inactive',
+        createdAt: '2024-07-01T00:00:00.000Z',
+        lastLogin: null
+      },
+    ]
+  })
+
+  const [newAdmin, setNewAdmin] = useState({
+    username: '',
+    email: '',
+    password: '',
+    role: 'support',
+    permissions: []
+  })
+
+  const [activityFilter, setActivityFilter] = useState('all')
+
   // Site Settings
   const [siteSettings, setSiteSettings] = useState(() => {
     const saved = localStorage.getItem('siteSettings')
@@ -155,6 +238,19 @@ export default function MasterAdminDashboard() {
   useEffect(() => {
     localStorage.setItem('tradeOptions', JSON.stringify(tradeOptions))
   }, [tradeOptions])
+
+  // Save activity logs to localStorage
+  useEffect(() => {
+    localStorage.setItem('userActivityLogs', JSON.stringify(userActivityLogs))
+  }, [userActivityLogs])
+
+  useEffect(() => {
+    localStorage.setItem('adminAuditLogs', JSON.stringify(adminAuditLogs))
+  }, [adminAuditLogs])
+
+  useEffect(() => {
+    localStorage.setItem('adminRoles', JSON.stringify(adminRoles))
+  }, [adminRoles])
 
   // Check authentication on load
   useEffect(() => {
@@ -357,6 +453,16 @@ export default function MasterAdminDashboard() {
               <span className="nav-badge">{activeChats.filter(c => c.status === 'waiting_agent' || c.unread > 0).length}</span>
             )}
           </a>
+          <div className="nav-dropdown">
+            <button className={activeSection.includes('activity') || activeSection === 'admin-roles' ? 'active' : ''}>
+              📊 Activity & Roles ▾
+            </button>
+            <div className="dropdown-content">
+              <a onClick={() => setActiveSection('user-activity')}>User Activity Logs</a>
+              <a onClick={() => setActiveSection('admin-activity')}>Admin Audit Logs</a>
+              <a onClick={() => setActiveSection('admin-roles')}>Admin Roles</a>
+            </div>
+          </div>
           <a onClick={handleLogout} className="logout-link">Logout</a>
         </div>
       </nav>
@@ -1544,6 +1650,538 @@ export default function MasterAdminDashboard() {
                 </label>
               </div>
               <button className="publish-btn">📢 Publish Announcement</button>
+            </div>
+          </div>
+        )}
+
+        {/* User Activity Logs Section */}
+        {activeSection === 'user-activity' && (
+          <div className="admin-section">
+            <div className="section-header">
+              <h1>📊 User Activity Logs</h1>
+              <p>Track and monitor all user actions on the platform</p>
+            </div>
+            
+            <div className="activity-stats">
+              <div className="stat-card">
+                <span className="stat-icon">🔐</span>
+                <div className="stat-info">
+                  <span className="stat-number">{userActivityLogs.filter(l => l.action === 'login').length}</span>
+                  <span className="stat-label">Total Logins</span>
+                </div>
+              </div>
+              <div className="stat-card">
+                <span className="stat-icon">💰</span>
+                <div className="stat-info">
+                  <span className="stat-number">{userActivityLogs.filter(l => l.action === 'deposit').length}</span>
+                  <span className="stat-label">Deposits</span>
+                </div>
+              </div>
+              <div className="stat-card">
+                <span className="stat-icon">📈</span>
+                <div className="stat-info">
+                  <span className="stat-number">{userActivityLogs.filter(l => l.action === 'trade').length}</span>
+                  <span className="stat-label">Trades</span>
+                </div>
+              </div>
+              <div className="stat-card">
+                <span className="stat-icon">🏦</span>
+                <div className="stat-info">
+                  <span className="stat-number">{userActivityLogs.filter(l => l.action === 'withdrawal').length}</span>
+                  <span className="stat-label">Withdrawals</span>
+                </div>
+              </div>
+              <div className="stat-card">
+                <span className="stat-icon">📋</span>
+                <div className="stat-info">
+                  <span className="stat-number">{userActivityLogs.filter(l => l.action === 'kyc_submit').length}</span>
+                  <span className="stat-label">KYC Submissions</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="filter-bar">
+              <div className="filter-group">
+                <label>Filter by Action:</label>
+                <select value={activityFilter} onChange={(e) => setActivityFilter(e.target.value)}>
+                  <option value="all">All Actions</option>
+                  <option value="login">Logins</option>
+                  <option value="deposit">Deposits</option>
+                  <option value="withdrawal">Withdrawals</option>
+                  <option value="trade">Trades</option>
+                  <option value="stake">Staking</option>
+                  <option value="kyc_submit">KYC Submissions</option>
+                  <option value="profile_update">Profile Updates</option>
+                </select>
+              </div>
+              <div className="search-box">
+                <span className="search-icon">🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search by user ID or email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="data-table activity-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>TIMESTAMP</th>
+                    <th>USER ID</th>
+                    <th>EMAIL</th>
+                    <th>ACTION</th>
+                    <th>DETAILS</th>
+                    <th>IP ADDRESS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {userActivityLogs
+                    .filter(log => activityFilter === 'all' || log.action === activityFilter)
+                    .filter(log => 
+                      searchQuery === '' || 
+                      log.userId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      log.userEmail?.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                    .map((log, idx) => (
+                    <tr key={idx}>
+                      <td className="timestamp-cell">{new Date(log.timestamp).toLocaleString()}</td>
+                      <td className="uid-cell">{log.userId}</td>
+                      <td className="email-cell">
+                        <a href={`mailto:${log.userEmail}`}>{log.userEmail}</a>
+                      </td>
+                      <td>
+                        <span className={`action-badge action-${log.action}`}>
+                          {log.action === 'login' && '🔐 Login'}
+                          {log.action === 'deposit' && '💰 Deposit'}
+                          {log.action === 'withdrawal' && '🏦 Withdrawal'}
+                          {log.action === 'trade' && '📈 Trade'}
+                          {log.action === 'stake' && '🔒 Stake'}
+                          {log.action === 'kyc_submit' && '📋 KYC'}
+                          {log.action === 'profile_update' && '👤 Profile'}
+                        </span>
+                      </td>
+                      <td className="details-cell">{log.details}</td>
+                      <td className="ip-cell">{log.ip}</td>
+                    </tr>
+                  ))}
+                  {userActivityLogs.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="no-data">No activity logs yet</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Admin Audit Logs Section */}
+        {activeSection === 'admin-activity' && (
+          <div className="admin-section">
+            <div className="section-header">
+              <h1>🛡️ Admin Audit Logs</h1>
+              <p>Track all administrative actions for security and compliance</p>
+            </div>
+            
+            <div className="activity-stats">
+              <div className="stat-card">
+                <span className="stat-icon">🔐</span>
+                <div className="stat-info">
+                  <span className="stat-number">{adminAuditLogs.filter(l => l.action === 'login').length}</span>
+                  <span className="stat-label">Admin Logins</span>
+                </div>
+              </div>
+              <div className="stat-card">
+                <span className="stat-icon">💵</span>
+                <div className="stat-info">
+                  <span className="stat-number">{adminAuditLogs.filter(l => l.action === 'balance_update').length}</span>
+                  <span className="stat-label">Balance Updates</span>
+                </div>
+              </div>
+              <div className="stat-card">
+                <span className="stat-icon">✅</span>
+                <div className="stat-info">
+                  <span className="stat-number">{adminAuditLogs.filter(l => l.action.includes('approve')).length}</span>
+                  <span className="stat-label">Approvals</span>
+                </div>
+              </div>
+              <div className="stat-card">
+                <span className="stat-icon">⚙️</span>
+                <div className="stat-info">
+                  <span className="stat-number">{adminAuditLogs.filter(l => l.action === 'settings_update').length}</span>
+                  <span className="stat-label">Settings Changes</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="filter-bar">
+              <div className="filter-group">
+                <label>Filter by Action:</label>
+                <select value={activityFilter} onChange={(e) => setActivityFilter(e.target.value)}>
+                  <option value="all">All Actions</option>
+                  <option value="login">Admin Logins</option>
+                  <option value="balance_update">Balance Updates</option>
+                  <option value="kyc_approve">KYC Approvals</option>
+                  <option value="withdrawal_approve">Withdrawal Approvals</option>
+                  <option value="deposit_approve">Deposit Approvals</option>
+                  <option value="settings_update">Settings Changes</option>
+                  <option value="user_block">User Blocks</option>
+                </select>
+              </div>
+              <div className="search-box">
+                <span className="search-icon">🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search by admin name or target user..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="data-table audit-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>TIMESTAMP</th>
+                    <th>ADMIN</th>
+                    <th>ACTION</th>
+                    <th>DETAILS</th>
+                    <th>TARGET USER</th>
+                    <th>IP ADDRESS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {adminAuditLogs
+                    .filter(log => activityFilter === 'all' || log.action === activityFilter)
+                    .filter(log => 
+                      searchQuery === '' || 
+                      log.adminName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      log.targetUser?.toLowerCase().includes(searchQuery.toLowerCase())
+                    )
+                    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+                    .map((log, idx) => (
+                    <tr key={idx}>
+                      <td className="timestamp-cell">{new Date(log.timestamp).toLocaleString()}</td>
+                      <td className="admin-cell">
+                        <span className="admin-badge">👤 {log.adminName}</span>
+                      </td>
+                      <td>
+                        <span className={`audit-action-badge audit-${log.action}`}>
+                          {log.action === 'login' && '🔐 Login'}
+                          {log.action === 'balance_update' && '💵 Balance Update'}
+                          {log.action === 'kyc_approve' && '✅ KYC Approve'}
+                          {log.action === 'kyc_reject' && '❌ KYC Reject'}
+                          {log.action === 'withdrawal_approve' && '✅ Withdrawal Approve'}
+                          {log.action === 'withdrawal_reject' && '❌ Withdrawal Reject'}
+                          {log.action === 'deposit_approve' && '✅ Deposit Approve'}
+                          {log.action === 'settings_update' && '⚙️ Settings Update'}
+                          {log.action === 'user_block' && '🚫 User Block'}
+                          {log.action === 'user_unblock' && '✅ User Unblock'}
+                        </span>
+                      </td>
+                      <td className="details-cell">{log.details}</td>
+                      <td className="target-cell">{log.targetUser || '-'}</td>
+                      <td className="ip-cell">{log.ip}</td>
+                    </tr>
+                  ))}
+                  {adminAuditLogs.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="no-data">No audit logs yet</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Admin Roles Management Section */}
+        {activeSection === 'admin-roles' && (
+          <div className="admin-section">
+            <div className="section-header">
+              <h1>👥 Admin Roles Management</h1>
+              <p>Manage administrator accounts and permissions</p>
+            </div>
+
+            <div className="roles-overview">
+              <div className="stat-card">
+                <span className="stat-icon">👑</span>
+                <div className="stat-info">
+                  <span className="stat-number">{adminRoles.filter(r => r.role === 'super_admin').length}</span>
+                  <span className="stat-label">Super Admins</span>
+                </div>
+              </div>
+              <div className="stat-card">
+                <span className="stat-icon">💼</span>
+                <div className="stat-info">
+                  <span className="stat-number">{adminRoles.filter(r => r.status === 'active').length}</span>
+                  <span className="stat-label">Active Admins</span>
+                </div>
+              </div>
+              <div className="stat-card">
+                <span className="stat-icon">🔴</span>
+                <div className="stat-info">
+                  <span className="stat-number">{adminRoles.filter(r => r.status === 'inactive').length}</span>
+                  <span className="stat-label">Inactive Admins</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="add-admin-section">
+              <h3>➕ Add New Admin</h3>
+              <div className="add-admin-form">
+                <div className="form-row">
+                  <div className="form-field">
+                    <label>Username</label>
+                    <input 
+                      type="text" 
+                      placeholder="Enter username"
+                      value={newAdmin.username}
+                      onChange={(e) => setNewAdmin({...newAdmin, username: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label>Email</label>
+                    <input 
+                      type="email" 
+                      placeholder="Enter email"
+                      value={newAdmin.email}
+                      onChange={(e) => setNewAdmin({...newAdmin, email: e.target.value})}
+                    />
+                  </div>
+                  <div className="form-field">
+                    <label>Password</label>
+                    <input 
+                      type="password" 
+                      placeholder="Enter password"
+                      value={newAdmin.password}
+                      onChange={(e) => setNewAdmin({...newAdmin, password: e.target.value})}
+                    />
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-field">
+                    <label>Role</label>
+                    <select 
+                      value={newAdmin.role}
+                      onChange={(e) => setNewAdmin({...newAdmin, role: e.target.value})}
+                    >
+                      <option value="super_admin">Super Admin (Full Access)</option>
+                      <option value="finance">Finance Manager</option>
+                      <option value="support">Support Agent</option>
+                      <option value="kyc_manager">KYC Manager</option>
+                      <option value="trade_manager">Trade Manager</option>
+                      <option value="viewer">Viewer (Read Only)</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="permissions-section">
+                  <label>Permissions:</label>
+                  <div className="permissions-grid">
+                    {['view_users', 'manage_users', 'view_deposits', 'manage_deposits', 'view_withdrawals', 'manage_withdrawals', 'manage_kyc', 'manage_chats', 'view_balance', 'edit_balance', 'manage_settings', 'view_logs'].map(perm => (
+                      <label key={perm} className="permission-checkbox">
+                        <input 
+                          type="checkbox"
+                          checked={newAdmin.permissions.includes(perm)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setNewAdmin({...newAdmin, permissions: [...newAdmin.permissions, perm]})
+                            } else {
+                              setNewAdmin({...newAdmin, permissions: newAdmin.permissions.filter(p => p !== perm)})
+                            }
+                          }}
+                        />
+                        <span>{perm.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <button 
+                  className="add-admin-btn"
+                  onClick={() => {
+                    if (newAdmin.username && newAdmin.email && newAdmin.password) {
+                      const newAdminEntry = {
+                        id: Date.now(),
+                        ...newAdmin,
+                        status: 'active',
+                        createdAt: new Date().toISOString(),
+                        lastLogin: null
+                      }
+                      setAdminRoles([...adminRoles, newAdminEntry])
+                      setNewAdmin({
+                        username: '',
+                        email: '',
+                        password: '',
+                        role: 'support',
+                        permissions: []
+                      })
+                      // Log admin action
+                      setAdminAuditLogs(prev => [...prev, {
+                        id: Date.now(),
+                        adminId: 'master',
+                        adminName: 'Master Admin',
+                        action: 'admin_create',
+                        details: `Created new admin: ${newAdmin.username} with role ${newAdmin.role}`,
+                        ip: '192.168.1.1',
+                        timestamp: new Date().toISOString()
+                      }])
+                    }
+                  }}
+                >
+                  ➕ Create Admin Account
+                </button>
+              </div>
+            </div>
+
+            <div className="existing-admins">
+              <h3>📋 Existing Administrators</h3>
+              <div className="data-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>USERNAME</th>
+                      <th>EMAIL</th>
+                      <th>ROLE</th>
+                      <th>PERMISSIONS</th>
+                      <th>STATUS</th>
+                      <th>LAST LOGIN</th>
+                      <th>ACTIONS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {adminRoles.map((admin, idx) => (
+                      <tr key={idx}>
+                        <td className="username-cell">
+                          {admin.role === 'super_admin' && <span className="crown">👑</span>}
+                          {admin.username}
+                        </td>
+                        <td className="email-cell">
+                          <a href={`mailto:${admin.email}`}>{admin.email}</a>
+                        </td>
+                        <td>
+                          <span className={`role-badge role-${admin.role}`}>
+                            {admin.role === 'super_admin' && '👑 Super Admin'}
+                            {admin.role === 'finance' && '💰 Finance'}
+                            {admin.role === 'support' && '🎧 Support'}
+                            {admin.role === 'kyc_manager' && '📋 KYC Manager'}
+                            {admin.role === 'trade_manager' && '📈 Trade Manager'}
+                            {admin.role === 'viewer' && '👁️ Viewer'}
+                          </span>
+                        </td>
+                        <td className="permissions-cell">
+                          {admin.permissions.includes('all') ? (
+                            <span className="perm-badge all">Full Access</span>
+                          ) : (
+                            <div className="perm-list">
+                              {admin.permissions.slice(0, 3).map((perm, i) => (
+                                <span key={i} className="perm-badge">{perm.split('_')[0]}</span>
+                              ))}
+                              {admin.permissions.length > 3 && (
+                                <span className="perm-more">+{admin.permissions.length - 3} more</span>
+                              )}
+                            </div>
+                          )}
+                        </td>
+                        <td>
+                          <span className={`status-badge ${admin.status}`}>
+                            {admin.status === 'active' ? '🟢 Active' : '🔴 Inactive'}
+                          </span>
+                        </td>
+                        <td className="timestamp-cell">
+                          {admin.lastLogin ? new Date(admin.lastLogin).toLocaleString() : 'Never'}
+                        </td>
+                        <td>
+                          {admin.role !== 'super_admin' && (
+                            <>
+                              <button 
+                                className="action-btn edit"
+                                onClick={() => {
+                                  // Toggle status
+                                  setAdminRoles(prev => prev.map(a => 
+                                    a.id === admin.id 
+                                      ? {...a, status: a.status === 'active' ? 'inactive' : 'active'}
+                                      : a
+                                  ))
+                                  // Log action
+                                  setAdminAuditLogs(prev => [...prev, {
+                                    id: Date.now(),
+                                    adminId: 'master',
+                                    adminName: 'Master Admin',
+                                    action: admin.status === 'active' ? 'admin_deactivate' : 'admin_activate',
+                                    details: `${admin.status === 'active' ? 'Deactivated' : 'Activated'} admin: ${admin.username}`,
+                                    ip: '192.168.1.1',
+                                    timestamp: new Date().toISOString()
+                                  }])
+                                }}
+                              >
+                                {admin.status === 'active' ? 'Deactivate' : 'Activate'}
+                              </button>
+                              <button 
+                                className="action-btn block"
+                                onClick={() => {
+                                  if (confirm(`Delete admin ${admin.username}?`)) {
+                                    setAdminRoles(prev => prev.filter(a => a.id !== admin.id))
+                                    // Log action
+                                    setAdminAuditLogs(prev => [...prev, {
+                                      id: Date.now(),
+                                      adminId: 'master',
+                                      adminName: 'Master Admin',
+                                      action: 'admin_delete',
+                                      details: `Deleted admin: ${admin.username}`,
+                                      ip: '192.168.1.1',
+                                      timestamp: new Date().toISOString()
+                                    }])
+                                  }
+                                }}
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
+                          {admin.role === 'super_admin' && (
+                            <span className="protected-badge">🔒 Protected</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="role-permissions-legend">
+              <h3>📖 Role Permissions Reference</h3>
+              <div className="legend-grid">
+                <div className="legend-item">
+                  <span className="role-badge role-super_admin">👑 Super Admin</span>
+                  <p>Full system access - can manage all features, users, and settings</p>
+                </div>
+                <div className="legend-item">
+                  <span className="role-badge role-finance">💰 Finance</span>
+                  <p>Manage deposits, withdrawals, and user balances</p>
+                </div>
+                <div className="legend-item">
+                  <span className="role-badge role-support">🎧 Support</span>
+                  <p>Handle customer chats and view user information</p>
+                </div>
+                <div className="legend-item">
+                  <span className="role-badge role-kyc_manager">📋 KYC Manager</span>
+                  <p>Review and approve/reject KYC verification requests</p>
+                </div>
+                <div className="legend-item">
+                  <span className="role-badge role-trade_manager">📈 Trade Manager</span>
+                  <p>Manage trade options and monitor trading activity</p>
+                </div>
+                <div className="legend-item">
+                  <span className="role-badge role-viewer">👁️ Viewer</span>
+                  <p>Read-only access to dashboard and reports</p>
+                </div>
+              </div>
             </div>
           </div>
         )}
