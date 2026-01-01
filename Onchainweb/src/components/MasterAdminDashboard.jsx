@@ -91,6 +91,76 @@ export default function MasterAdminDashboard() {
   const [newMessageAlert, setNewMessageAlert] = useState(false)
   const [lastMessageCount, setLastMessageCount] = useState(0)
 
+  // Currencies Management
+  const [currencies, setCurrencies] = useState(() => {
+    const saved = localStorage.getItem('adminCurrencies')
+    return saved ? JSON.parse(saved) : [
+      { id: 1, name: 'Bitcoin', symbol: 'BTC', icon: '₿', status: 'active', createdAt: '2024-01-01' },
+      { id: 2, name: 'Ethereum', symbol: 'ETH', icon: 'Ξ', status: 'active', createdAt: '2024-01-01' },
+      { id: 3, name: 'Tether', symbol: 'USDT', icon: '₮', status: 'active', createdAt: '2024-01-01' },
+      { id: 4, name: 'BNB', symbol: 'BNB', icon: '⬡', status: 'active', createdAt: '2024-01-01' },
+      { id: 5, name: 'Solana', symbol: 'SOL', icon: '◎', status: 'active', createdAt: '2024-01-01' },
+    ]
+  })
+
+  // Networks Management
+  const [networks, setNetworks] = useState(() => {
+    const saved = localStorage.getItem('adminNetworks')
+    return saved ? JSON.parse(saved) : [
+      { id: 1, name: 'Bitcoin Network', symbol: 'BTC', chainId: '-', confirmations: 3, status: 'active' },
+      { id: 2, name: 'Ethereum (ERC-20)', symbol: 'ETH', chainId: '1', confirmations: 12, status: 'active' },
+      { id: 3, name: 'BNB Smart Chain (BEP-20)', symbol: 'BSC', chainId: '56', confirmations: 15, status: 'active' },
+      { id: 4, name: 'Tron (TRC-20)', symbol: 'TRC20', chainId: '-', confirmations: 20, status: 'active' },
+      { id: 5, name: 'Solana', symbol: 'SOL', chainId: '-', confirmations: 32, status: 'active' },
+      { id: 6, name: 'Polygon', symbol: 'MATIC', chainId: '137', confirmations: 128, status: 'active' },
+    ]
+  })
+
+  // Deposit Wallets/Addresses
+  const [depositWallets, setDepositWallets] = useState(() => {
+    const saved = localStorage.getItem('adminDepositWallets')
+    return saved ? JSON.parse(saved) : [
+      { id: 1, network: 'BTC', address: '', label: 'Bitcoin Wallet', status: 'active' },
+      { id: 2, network: 'ETH', address: '', label: 'Ethereum Wallet', status: 'active' },
+      { id: 3, network: 'BSC', address: '', label: 'BNB Smart Chain Wallet', status: 'active' },
+      { id: 4, network: 'TRC20', address: '', label: 'Tron Wallet', status: 'active' },
+      { id: 5, network: 'SOL', address: '', label: 'Solana Wallet', status: 'active' },
+    ]
+  })
+
+  // Exchange Rates
+  const [exchangeRates, setExchangeRates] = useState(() => {
+    const saved = localStorage.getItem('adminExchangeRates')
+    return saved ? JSON.parse(saved) : [
+      { id: 1, from: 'BTC', to: 'USDT', rate: 42500.00, status: 'active' },
+      { id: 2, from: 'ETH', to: 'USDT', rate: 2250.00, status: 'active' },
+      { id: 3, from: 'BNB', to: 'USDT', rate: 312.50, status: 'active' },
+      { id: 4, from: 'SOL', to: 'USDT', rate: 98.75, status: 'active' },
+      { id: 5, from: 'USDT', to: 'USD', rate: 1.00, status: 'active' },
+    ]
+  })
+
+  // Trading Levels (detailed like the screenshot)
+  const [tradingLevels, setTradingLevels] = useState(() => {
+    const saved = localStorage.getItem('adminTradingLevels')
+    return saved ? JSON.parse(saved) : [
+      { id: 1, name: 'Level-1', countdown: 180, profitPercent: 18.00, minCapital: 200.00, maxCapital: 20000.00, status: 'active' },
+      { id: 2, name: 'Level-2', countdown: 240, profitPercent: 23.00, minCapital: 20001.00, maxCapital: 50000.00, status: 'active' },
+      { id: 3, name: 'Level-3', countdown: 360, profitPercent: 35.00, minCapital: 50001.00, maxCapital: 100000.00, status: 'active' },
+      { id: 4, name: 'Level-4', countdown: 480, profitPercent: 50.00, minCapital: 100001.00, maxCapital: 300000.00, status: 'active' },
+      { id: 5, name: 'Level-5', countdown: 600, profitPercent: 100.00, minCapital: 300001.00, maxCapital: 500000.00, status: 'active' },
+    ]
+  })
+
+  // Form states for creating new items
+  const [newCurrency, setNewCurrency] = useState({ name: '', symbol: '', icon: '' })
+  const [newNetwork, setNewNetwork] = useState({ name: '', symbol: '', chainId: '', confirmations: 12 })
+  const [newWallet, setNewWallet] = useState({ network: '', address: '', label: '' })
+  const [newExchangeRate, setNewExchangeRate] = useState({ from: '', to: 'USDT', rate: 0 })
+  const [newTradingLevel, setNewTradingLevel] = useState({ name: '', countdown: 180, profitPercent: 18, minCapital: 100, maxCapital: 10000 })
+  const [editingTradingLevel, setEditingTradingLevel] = useState(null)
+  const [showCreateModal, setShowCreateModal] = useState(null)
+
   // User Activity Logs - track user actions
   const [userActivityLogs, setUserActivityLogs] = useState(() => {
     const saved = localStorage.getItem('userActivityLogs')
@@ -286,6 +356,27 @@ export default function MasterAdminDashboard() {
     localStorage.setItem('adminRoles', JSON.stringify(adminRoles))
   }, [adminRoles])
 
+  // Save new service management states
+  useEffect(() => {
+    localStorage.setItem('adminCurrencies', JSON.stringify(currencies))
+  }, [currencies])
+
+  useEffect(() => {
+    localStorage.setItem('adminNetworks', JSON.stringify(networks))
+  }, [networks])
+
+  useEffect(() => {
+    localStorage.setItem('adminDepositWallets', JSON.stringify(depositWallets))
+  }, [depositWallets])
+
+  useEffect(() => {
+    localStorage.setItem('adminExchangeRates', JSON.stringify(exchangeRates))
+  }, [exchangeRates])
+
+  useEffect(() => {
+    localStorage.setItem('adminTradingLevels', JSON.stringify(tradingLevels))
+  }, [tradingLevels])
+
   // Check authentication on load
   useEffect(() => {
     const adminSession = localStorage.getItem('masterAdminSession')
@@ -479,10 +570,15 @@ export default function MasterAdminDashboard() {
             </div>
           </div>
           <div className="nav-dropdown">
-            <button className={activeSection === 'service' ? 'active' : ''}>
+            <button className={activeSection.startsWith('service') || activeSection === 'currency' || activeSection === 'create-currency' || activeSection === 'create-network' || activeSection === 'create-wallet' || activeSection === 'exchange-rate' ? 'active' : ''}>
               Service ▾
             </button>
             <div className="dropdown-content">
+              <a onClick={() => setActiveSection('currency')}>Currency</a>
+              <a onClick={() => setActiveSection('create-currency')}>Create Currency</a>
+              <a onClick={() => setActiveSection('create-network')}>Create Network</a>
+              <a onClick={() => setActiveSection('create-wallet')}>Create Wallet</a>
+              <a onClick={() => setActiveSection('exchange-rate')}>Exchange Rate</a>
               <a onClick={() => setActiveSection('notifications')}>Notifications</a>
               <a onClick={() => setActiveSection('announcements')}>Announcements</a>
             </div>
@@ -910,63 +1006,705 @@ export default function MasterAdminDashboard() {
           </div>
         )}
 
-        {/* Trade Options Section */}
+        {/* Trade Options Section - Detailed Table */}
         {activeSection === 'trade-options' && (
           <div className="admin-section">
             <div className="section-header">
               <h1>Trade Options</h1>
-              <p>Configure trading parameters and settings</p>
+              <p>Configure trading levels and parameters</p>
+              <button className="create-new-btn" onClick={() => setShowCreateModal('trading-level')}>
+                + Create New
+              </button>
             </div>
-            <div className="settings-grid">
-              <div className="setting-card">
-                <h3>Minimum Trade Amount</h3>
-                <input
-                  type="number"
-                  value={tradeOptions.minTrade}
-                  onChange={(e) => setTradeOptions({...tradeOptions, minTrade: parseFloat(e.target.value)})}
-                />
-                <span className="unit">USDT</span>
-              </div>
-              <div className="setting-card">
-                <h3>Maximum Trade Amount</h3>
-                <input
-                  type="number"
-                  value={tradeOptions.maxTrade}
-                  onChange={(e) => setTradeOptions({...tradeOptions, maxTrade: parseFloat(e.target.value)})}
-                />
-                <span className="unit">USDT</span>
-              </div>
-              <div className="setting-card">
-                <h3>Default Duration</h3>
-                <input
-                  type="number"
-                  value={tradeOptions.defaultDuration}
-                  onChange={(e) => setTradeOptions({...tradeOptions, defaultDuration: parseInt(e.target.value)})}
-                />
-                <span className="unit">seconds</span>
-              </div>
-              <div className="setting-card">
-                <h3>Win Rate</h3>
-                <input
-                  type="number"
-                  value={tradeOptions.winRate}
-                  onChange={(e) => setTradeOptions({...tradeOptions, winRate: parseFloat(e.target.value)})}
-                />
-                <span className="unit">%</span>
-              </div>
-              <div className="setting-card">
-                <h3>Profit Percentage</h3>
-                <input
-                  type="number"
-                  value={tradeOptions.profitPercentage}
-                  onChange={(e) => setTradeOptions({...tradeOptions, profitPercentage: parseFloat(e.target.value)})}
-                />
-                <span className="unit">%</span>
-              </div>
+
+            <h3 className="subsection-title">Trade Options List</h3>
+            <div className="data-table trade-options-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>OPTION #</th>
+                    <th>NAME</th>
+                    <th>COUNTDOWN (S)</th>
+                    <th>PL %</th>
+                    <th>MIN CAPITAL</th>
+                    <th>MAX CAPITAL</th>
+                    <th>STATUS</th>
+                    <th>ACTION</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tradingLevels.map((level, idx) => (
+                    <tr key={level.id}>
+                      <td>{idx + 1}</td>
+                      <td className="level-name">{level.name}</td>
+                      <td>{level.countdown}</td>
+                      <td>{level.profitPercent.toFixed(2)}%</td>
+                      <td>${level.minCapital.toLocaleString()}</td>
+                      <td>${level.maxCapital.toLocaleString()}</td>
+                      <td>
+                        <span className={`status-badge ${level.status}`}>
+                          {level.status === 'active' ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="action-cell">
+                        <button 
+                          className="action-btn edit"
+                          onClick={() => setEditingTradingLevel(level)}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button 
+                          className="action-btn delete"
+                          onClick={() => {
+                            if (confirm(`Delete ${level.name}?`)) {
+                              setTradingLevels(prev => prev.filter(l => l.id !== level.id))
+                            }
+                          }}
+                        >
+                          🗑️ Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <button className="save-settings-btn" onClick={() => alert('Trade options saved!')}>
-              Save Settings
-            </button>
+
+            {/* Edit Trading Level Modal */}
+            {editingTradingLevel && (
+              <div className="modal-overlay" onClick={() => setEditingTradingLevel(null)}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                  <h2>Edit {editingTradingLevel.name}</h2>
+                  <div className="modal-form">
+                    <div className="form-field">
+                      <label>Name</label>
+                      <input
+                        type="text"
+                        value={editingTradingLevel.name}
+                        onChange={(e) => setEditingTradingLevel({...editingTradingLevel, name: e.target.value})}
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Countdown (Seconds)</label>
+                      <input
+                        type="number"
+                        value={editingTradingLevel.countdown}
+                        onChange={(e) => setEditingTradingLevel({...editingTradingLevel, countdown: parseInt(e.target.value)})}
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Profit Percentage (%)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editingTradingLevel.profitPercent}
+                        onChange={(e) => setEditingTradingLevel({...editingTradingLevel, profitPercent: parseFloat(e.target.value)})}
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Min Capital ($)</label>
+                      <input
+                        type="number"
+                        value={editingTradingLevel.minCapital}
+                        onChange={(e) => setEditingTradingLevel({...editingTradingLevel, minCapital: parseFloat(e.target.value)})}
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Max Capital ($)</label>
+                      <input
+                        type="number"
+                        value={editingTradingLevel.maxCapital}
+                        onChange={(e) => setEditingTradingLevel({...editingTradingLevel, maxCapital: parseFloat(e.target.value)})}
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Status</label>
+                      <select
+                        value={editingTradingLevel.status}
+                        onChange={(e) => setEditingTradingLevel({...editingTradingLevel, status: e.target.value})}
+                      >
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                      </select>
+                    </div>
+                    <div className="modal-actions">
+                      <button 
+                        className="save-btn"
+                        onClick={() => {
+                          setTradingLevels(prev => prev.map(l => l.id === editingTradingLevel.id ? editingTradingLevel : l))
+                          setEditingTradingLevel(null)
+                        }}
+                      >
+                        Save Changes
+                      </button>
+                      <button className="cancel-btn" onClick={() => setEditingTradingLevel(null)}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Create Trading Level Modal */}
+            {showCreateModal === 'trading-level' && (
+              <div className="modal-overlay" onClick={() => setShowCreateModal(null)}>
+                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                  <h2>Create New Trading Level</h2>
+                  <div className="modal-form">
+                    <div className="form-field">
+                      <label>Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., Level-6"
+                        value={newTradingLevel.name}
+                        onChange={(e) => setNewTradingLevel({...newTradingLevel, name: e.target.value})}
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Countdown (Seconds)</label>
+                      <input
+                        type="number"
+                        value={newTradingLevel.countdown}
+                        onChange={(e) => setNewTradingLevel({...newTradingLevel, countdown: parseInt(e.target.value)})}
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Profit Percentage (%)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={newTradingLevel.profitPercent}
+                        onChange={(e) => setNewTradingLevel({...newTradingLevel, profitPercent: parseFloat(e.target.value)})}
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Min Capital ($)</label>
+                      <input
+                        type="number"
+                        value={newTradingLevel.minCapital}
+                        onChange={(e) => setNewTradingLevel({...newTradingLevel, minCapital: parseFloat(e.target.value)})}
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Max Capital ($)</label>
+                      <input
+                        type="number"
+                        value={newTradingLevel.maxCapital}
+                        onChange={(e) => setNewTradingLevel({...newTradingLevel, maxCapital: parseFloat(e.target.value)})}
+                      />
+                    </div>
+                    <div className="modal-actions">
+                      <button 
+                        className="save-btn"
+                        onClick={() => {
+                          if (newTradingLevel.name) {
+                            setTradingLevels(prev => [...prev, {
+                              id: Date.now(),
+                              ...newTradingLevel,
+                              status: 'active'
+                            }])
+                            setNewTradingLevel({ name: '', countdown: 180, profitPercent: 18, minCapital: 100, maxCapital: 10000 })
+                            setShowCreateModal(null)
+                          }
+                        }}
+                      >
+                        Create Level
+                      </button>
+                      <button className="cancel-btn" onClick={() => setShowCreateModal(null)}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Currency List Section */}
+        {activeSection === 'currency' && (
+          <div className="admin-section">
+            <div className="section-header">
+              <h1>💰 Currency Management</h1>
+              <p>View and manage supported currencies</p>
+            </div>
+            <div className="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>ICON</th>
+                    <th>NAME</th>
+                    <th>SYMBOL</th>
+                    <th>STATUS</th>
+                    <th>CREATED</th>
+                    <th>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currencies.map((currency, idx) => (
+                    <tr key={currency.id}>
+                      <td>{idx + 1}</td>
+                      <td className="currency-icon">{currency.icon}</td>
+                      <td>{currency.name}</td>
+                      <td className="symbol-cell">{currency.symbol}</td>
+                      <td>
+                        <span className={`status-badge ${currency.status}`}>
+                          {currency.status === 'active' ? '🟢 Active' : '🔴 Inactive'}
+                        </span>
+                      </td>
+                      <td>{currency.createdAt}</td>
+                      <td>
+                        <button 
+                          className="action-btn edit"
+                          onClick={() => {
+                            const newStatus = currency.status === 'active' ? 'inactive' : 'active'
+                            setCurrencies(prev => prev.map(c => c.id === currency.id ? {...c, status: newStatus} : c))
+                          }}
+                        >
+                          {currency.status === 'active' ? 'Disable' : 'Enable'}
+                        </button>
+                        <button 
+                          className="action-btn delete"
+                          onClick={() => {
+                            if (confirm(`Delete ${currency.name}?`)) {
+                              setCurrencies(prev => prev.filter(c => c.id !== currency.id))
+                            }
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Create Currency Section */}
+        {activeSection === 'create-currency' && (
+          <div className="admin-section">
+            <div className="section-header">
+              <h1>➕ Create Currency</h1>
+              <p>Add a new cryptocurrency to the platform</p>
+            </div>
+            <div className="create-form">
+              <div className="form-field">
+                <label>Currency Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Bitcoin"
+                  value={newCurrency.name}
+                  onChange={(e) => setNewCurrency({...newCurrency, name: e.target.value})}
+                />
+              </div>
+              <div className="form-field">
+                <label>Symbol</label>
+                <input
+                  type="text"
+                  placeholder="e.g., BTC"
+                  value={newCurrency.symbol}
+                  onChange={(e) => setNewCurrency({...newCurrency, symbol: e.target.value.toUpperCase()})}
+                />
+              </div>
+              <div className="form-field">
+                <label>Icon (Emoji or Symbol)</label>
+                <input
+                  type="text"
+                  placeholder="e.g., ₿"
+                  value={newCurrency.icon}
+                  onChange={(e) => setNewCurrency({...newCurrency, icon: e.target.value})}
+                />
+              </div>
+              <button 
+                className="save-btn"
+                onClick={() => {
+                  if (newCurrency.name && newCurrency.symbol) {
+                    setCurrencies(prev => [...prev, {
+                      id: Date.now(),
+                      ...newCurrency,
+                      status: 'active',
+                      createdAt: new Date().toISOString().split('T')[0]
+                    }])
+                    setNewCurrency({ name: '', symbol: '', icon: '' })
+                    alert('Currency created successfully!')
+                  }
+                }}
+              >
+                Create Currency
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Create Network Section */}
+        {activeSection === 'create-network' && (
+          <div className="admin-section">
+            <div className="section-header">
+              <h1>🌐 Create Network</h1>
+              <p>Add a new blockchain network</p>
+            </div>
+            <div className="create-form">
+              <div className="form-field">
+                <label>Network Name</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Ethereum (ERC-20)"
+                  value={newNetwork.name}
+                  onChange={(e) => setNewNetwork({...newNetwork, name: e.target.value})}
+                />
+              </div>
+              <div className="form-field">
+                <label>Symbol</label>
+                <input
+                  type="text"
+                  placeholder="e.g., ETH"
+                  value={newNetwork.symbol}
+                  onChange={(e) => setNewNetwork({...newNetwork, symbol: e.target.value.toUpperCase()})}
+                />
+              </div>
+              <div className="form-field">
+                <label>Chain ID</label>
+                <input
+                  type="text"
+                  placeholder="e.g., 1 for Ethereum"
+                  value={newNetwork.chainId}
+                  onChange={(e) => setNewNetwork({...newNetwork, chainId: e.target.value})}
+                />
+              </div>
+              <div className="form-field">
+                <label>Required Confirmations</label>
+                <input
+                  type="number"
+                  value={newNetwork.confirmations}
+                  onChange={(e) => setNewNetwork({...newNetwork, confirmations: parseInt(e.target.value)})}
+                />
+              </div>
+              <button 
+                className="save-btn"
+                onClick={() => {
+                  if (newNetwork.name && newNetwork.symbol) {
+                    setNetworks(prev => [...prev, {
+                      id: Date.now(),
+                      ...newNetwork,
+                      status: 'active'
+                    }])
+                    setNewNetwork({ name: '', symbol: '', chainId: '', confirmations: 12 })
+                    alert('Network created successfully!')
+                  }
+                }}
+              >
+                Create Network
+              </button>
+            </div>
+            
+            <h3 className="subsection-title">Existing Networks</h3>
+            <div className="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>NAME</th>
+                    <th>SYMBOL</th>
+                    <th>CHAIN ID</th>
+                    <th>CONFIRMATIONS</th>
+                    <th>STATUS</th>
+                    <th>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {networks.map((network, idx) => (
+                    <tr key={network.id}>
+                      <td>{idx + 1}</td>
+                      <td>{network.name}</td>
+                      <td className="symbol-cell">{network.symbol}</td>
+                      <td>{network.chainId}</td>
+                      <td>{network.confirmations}</td>
+                      <td>
+                        <span className={`status-badge ${network.status}`}>
+                          {network.status === 'active' ? '🟢 Active' : '🔴 Inactive'}
+                        </span>
+                      </td>
+                      <td>
+                        <button 
+                          className="action-btn edit"
+                          onClick={() => {
+                            const newStatus = network.status === 'active' ? 'inactive' : 'active'
+                            setNetworks(prev => prev.map(n => n.id === network.id ? {...n, status: newStatus} : n))
+                          }}
+                        >
+                          {network.status === 'active' ? 'Disable' : 'Enable'}
+                        </button>
+                        <button 
+                          className="action-btn delete"
+                          onClick={() => {
+                            if (confirm(`Delete ${network.name}?`)) {
+                              setNetworks(prev => prev.filter(n => n.id !== network.id))
+                            }
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Create Wallet / Deposit Address Section */}
+        {activeSection === 'create-wallet' && (
+          <div className="admin-section">
+            <div className="section-header">
+              <h1>👛 Create Wallet / Deposit Address</h1>
+              <p>Configure deposit wallet addresses for each network</p>
+            </div>
+            <div className="create-form">
+              <div className="form-field">
+                <label>Network</label>
+                <select
+                  value={newWallet.network}
+                  onChange={(e) => setNewWallet({...newWallet, network: e.target.value})}
+                >
+                  <option value="">Select Network</option>
+                  {networks.map(n => (
+                    <option key={n.id} value={n.symbol}>{n.name} ({n.symbol})</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-field">
+                <label>Wallet Address</label>
+                <input
+                  type="text"
+                  placeholder="Enter deposit wallet address"
+                  value={newWallet.address}
+                  onChange={(e) => setNewWallet({...newWallet, address: e.target.value})}
+                />
+              </div>
+              <div className="form-field">
+                <label>Label</label>
+                <input
+                  type="text"
+                  placeholder="e.g., Main BTC Wallet"
+                  value={newWallet.label}
+                  onChange={(e) => setNewWallet({...newWallet, label: e.target.value})}
+                />
+              </div>
+              <button 
+                className="save-btn"
+                onClick={() => {
+                  if (newWallet.network && newWallet.address) {
+                    setDepositWallets(prev => [...prev, {
+                      id: Date.now(),
+                      ...newWallet,
+                      status: 'active'
+                    }])
+                    setNewWallet({ network: '', address: '', label: '' })
+                    alert('Wallet address added successfully!')
+                  }
+                }}
+              >
+                Add Wallet Address
+              </button>
+            </div>
+            
+            <h3 className="subsection-title">Deposit Wallet Addresses</h3>
+            <div className="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>NETWORK</th>
+                    <th>LABEL</th>
+                    <th>ADDRESS</th>
+                    <th>STATUS</th>
+                    <th>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {depositWallets.map((wallet, idx) => (
+                    <tr key={wallet.id}>
+                      <td>{idx + 1}</td>
+                      <td className="symbol-cell">{wallet.network}</td>
+                      <td>{wallet.label}</td>
+                      <td className="address-cell">
+                        <input
+                          type="text"
+                          className="address-input"
+                          value={wallet.address}
+                          placeholder="Enter wallet address"
+                          onChange={(e) => {
+                            setDepositWallets(prev => prev.map(w => 
+                              w.id === wallet.id ? {...w, address: e.target.value} : w
+                            ))
+                          }}
+                        />
+                      </td>
+                      <td>
+                        <span className={`status-badge ${wallet.status}`}>
+                          {wallet.status === 'active' ? '🟢 Active' : '🔴 Inactive'}
+                        </span>
+                      </td>
+                      <td>
+                        <button 
+                          className="action-btn edit"
+                          onClick={() => {
+                            const newStatus = wallet.status === 'active' ? 'inactive' : 'active'
+                            setDepositWallets(prev => prev.map(w => w.id === wallet.id ? {...w, status: newStatus} : w))
+                          }}
+                        >
+                          {wallet.status === 'active' ? 'Disable' : 'Enable'}
+                        </button>
+                        <button 
+                          className="action-btn delete"
+                          onClick={() => {
+                            if (confirm('Delete this wallet?')) {
+                              setDepositWallets(prev => prev.filter(w => w.id !== wallet.id))
+                            }
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Exchange Rate Section */}
+        {activeSection === 'exchange-rate' && (
+          <div className="admin-section">
+            <div className="section-header">
+              <h1>💱 Exchange Rates</h1>
+              <p>Configure currency exchange rates</p>
+            </div>
+            <div className="create-form">
+              <div className="form-row">
+                <div className="form-field">
+                  <label>From Currency</label>
+                  <select
+                    value={newExchangeRate.from}
+                    onChange={(e) => setNewExchangeRate({...newExchangeRate, from: e.target.value})}
+                  >
+                    <option value="">Select Currency</option>
+                    {currencies.map(c => (
+                      <option key={c.id} value={c.symbol}>{c.name} ({c.symbol})</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-field">
+                  <label>To Currency</label>
+                  <select
+                    value={newExchangeRate.to}
+                    onChange={(e) => setNewExchangeRate({...newExchangeRate, to: e.target.value})}
+                  >
+                    <option value="USDT">USDT</option>
+                    <option value="USD">USD</option>
+                    {currencies.map(c => (
+                      <option key={c.id} value={c.symbol}>{c.symbol}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-field">
+                  <label>Rate</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="e.g., 42500.00"
+                    value={newExchangeRate.rate}
+                    onChange={(e) => setNewExchangeRate({...newExchangeRate, rate: parseFloat(e.target.value)})}
+                  />
+                </div>
+              </div>
+              <button 
+                className="save-btn"
+                onClick={() => {
+                  if (newExchangeRate.from && newExchangeRate.rate) {
+                    setExchangeRates(prev => [...prev, {
+                      id: Date.now(),
+                      ...newExchangeRate,
+                      status: 'active'
+                    }])
+                    setNewExchangeRate({ from: '', to: 'USDT', rate: 0 })
+                    alert('Exchange rate added successfully!')
+                  }
+                }}
+              >
+                Add Exchange Rate
+              </button>
+            </div>
+            
+            <h3 className="subsection-title">Current Exchange Rates</h3>
+            <div className="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>FROM</th>
+                    <th>TO</th>
+                    <th>RATE</th>
+                    <th>STATUS</th>
+                    <th>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {exchangeRates.map((rate, idx) => (
+                    <tr key={rate.id}>
+                      <td>{idx + 1}</td>
+                      <td className="symbol-cell">{rate.from}</td>
+                      <td className="symbol-cell">{rate.to}</td>
+                      <td>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="rate-input"
+                          value={rate.rate}
+                          onChange={(e) => {
+                            setExchangeRates(prev => prev.map(r => 
+                              r.id === rate.id ? {...r, rate: parseFloat(e.target.value)} : r
+                            ))
+                          }}
+                        />
+                      </td>
+                      <td>
+                        <span className={`status-badge ${rate.status}`}>
+                          {rate.status === 'active' ? '🟢 Active' : '🔴 Inactive'}
+                        </span>
+                      </td>
+                      <td>
+                        <button 
+                          className="action-btn edit"
+                          onClick={() => {
+                            const newStatus = rate.status === 'active' ? 'inactive' : 'active'
+                            setExchangeRates(prev => prev.map(r => r.id === rate.id ? {...r, status: newStatus} : r))
+                          }}
+                        >
+                          {rate.status === 'active' ? 'Disable' : 'Enable'}
+                        </button>
+                        <button 
+                          className="action-btn delete"
+                          onClick={() => {
+                            if (confirm('Delete this rate?')) {
+                              setExchangeRates(prev => prev.filter(r => r.id !== rate.id))
+                            }
+                          }}
+                        >
+                          Delete
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 

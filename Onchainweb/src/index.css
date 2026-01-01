@@ -9339,3 +9339,392 @@ body {
   font-weight: 600;
   border: 1px solid rgba(234, 179, 8, 0.3);
 }
+
+/* ===============================================
+   MASTER ADMIN MOBILE RESPONSIVE + NEW SECTIONS
+   =============================================== */
+
+/* Mobile Navigation Fix */
+@media (max-width: 1200px) {
+  .master-admin-dashboard .admin-top-nav {
+    padding: 8px 12px;
+    flex-wrap: wrap;
+  }
+
+  .master-admin-dashboard .nav-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    font-size: 12px;
+  }
+
+  .master-admin-dashboard .nav-menu a,
+  .master-admin-dashboard .nav-menu button {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .master-admin-dashboard .nav-dropdown .dropdown-content {
+    min-width: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .master-admin-dashboard {
+    padding-top: 0;
+  }
+
+  .master-admin-dashboard .admin-top-nav {
+    position: relative;
+    flex-direction: column;
+    padding: 10px;
+  }
+
+  .master-admin-dashboard .nav-logo {
+    margin-bottom: 10px;
+  }
+
+  .master-admin-dashboard .nav-menu {
+    width: 100%;
+    justify-content: center;
+    overflow-x: auto;
+    padding-bottom: 5px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .master-admin-dashboard .nav-menu::-webkit-scrollbar {
+    height: 3px;
+  }
+
+  .master-admin-dashboard .nav-menu::-webkit-scrollbar-thumb {
+    background: #7c3aed;
+    border-radius: 3px;
+  }
+
+  .master-admin-dashboard .admin-main-content {
+    padding: 12px;
+  }
+
+  .master-admin-dashboard .section-header {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .master-admin-dashboard .section-header h1 {
+    font-size: 20px;
+  }
+
+  .master-admin-dashboard .data-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .master-admin-dashboard table {
+    min-width: 600px;
+    font-size: 12px;
+  }
+
+  .master-admin-dashboard th,
+  .master-admin-dashboard td {
+    padding: 8px 6px;
+  }
+}
+
+/* Create New Button */
+.create-new-btn {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.create-new-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+}
+
+/* Section Header with Button */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+/* Subsection Title */
+.subsection-title {
+  color: #e5e7eb;
+  font-size: 16px;
+  margin: 30px 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Trade Options Table Styles */
+.trade-options-table {
+  margin-top: 20px;
+}
+
+.trade-options-table table {
+  background: linear-gradient(135deg, #1e293b, #0f172a);
+}
+
+.trade-options-table th {
+  background: #1e3a5f;
+  color: #fff;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.trade-options-table td {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.trade-options-table .level-name {
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.action-cell {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-btn.delete {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.3));
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.action-btn.delete:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.4));
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 1px solid rgba(124, 58, 237, 0.3);
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-content h2 {
+  color: #fff;
+  font-size: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-form .form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.modal-form .form-field label {
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+.modal-form .form-field input,
+.modal-form .form-field select {
+  background: #0f0f1a;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 12px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.modal-form .form-field input:focus,
+.modal-form .form-field select:focus {
+  outline: none;
+  border-color: #7c3aed;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.save-btn {
+  flex: 1;
+  background: linear-gradient(135deg, #7c3aed, #2563eb);
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.save-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+}
+
+.cancel-btn {
+  flex: 1;
+  background: transparent;
+  color: #9ca3af;
+  border: 1px solid #374151;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+/* Create Form Styles */
+.create-form {
+  background: rgba(30, 30, 50, 0.6);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 30px;
+}
+
+.create-form .form-field {
+  margin-bottom: 16px;
+}
+
+.create-form .form-field label {
+  display: block;
+  color: #9ca3af;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.create-form .form-field input,
+.create-form .form-field select {
+  width: 100%;
+  background: #0f0f1a;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 12px;
+  color: #fff;
+  font-size: 14px;
+}
+
+.create-form .form-field input:focus,
+.create-form .form-field select:focus {
+  outline: none;
+  border-color: #7c3aed;
+}
+
+.create-form .form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.create-form .save-btn {
+  margin-top: 10px;
+}
+
+/* Currency & Service Table Styles */
+.currency-icon {
+  font-size: 24px;
+  text-align: center;
+}
+
+.symbol-cell {
+  font-weight: 600;
+  color: #60a5fa;
+  font-family: monospace;
+}
+
+.address-cell {
+  max-width: 300px;
+}
+
+.address-input,
+.rate-input {
+  background: #0f0f1a;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: #fff;
+  font-size: 13px;
+  width: 100%;
+  font-family: monospace;
+}
+
+.address-input:focus,
+.rate-input:focus {
+  outline: none;
+  border-color: #7c3aed;
+}
+
+.rate-input {
+  width: 120px;
+}
+
+/* Mobile adjustments for new sections */
+@media (max-width: 768px) {
+  .create-form {
+    padding: 16px;
+  }
+
+  .create-form .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    padding: 16px;
+    margin: 10px;
+  }
+
+  .action-cell {
+    flex-direction: column;
+  }
+
+  .address-input {
+    font-size: 11px;
+  }
+}
