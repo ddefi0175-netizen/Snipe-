@@ -600,6 +600,7 @@ export default function MasterAdminDashboard() {
                     <th>BALANCE</th>
                     <th>POINTS</th>
                     <th>VIP LEVEL</th>
+                    <th>ROLE</th>
                     <th>KYC STATUS</th>
                     <th>STATUS</th>
                     <th>ACTIONS</th>
@@ -615,6 +616,11 @@ export default function MasterAdminDashboard() {
                       <td>{user.points || 0}</td>
                       <td>Level {user.vipLevel || 1}</td>
                       <td>
+                        <span className={`role-badge role-${user.role || 'user'}`}>
+                          {user.role === 'admin' ? '👑 Admin' : '👤 User'}
+                        </span>
+                      </td>
+                      <td>
                         <span className={`status-badge ${user.kycStatus || 'pending'}`}>
                           {user.kycStatus || 'Pending'}
                         </span>
@@ -625,15 +631,72 @@ export default function MasterAdminDashboard() {
                         </span>
                       </td>
                       <td>
+                        <button 
+                          className={`action-btn ${user.role === 'admin' ? 'demote' : 'promote'}`}
+                          onClick={() => {
+                            const newRole = user.role === 'admin' ? 'user' : 'admin'
+                            const updatedUsers = users.map(u => 
+                              u.id === user.id ? { ...u, role: newRole } : u
+                            )
+                            setUsers(updatedUsers)
+                            localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers))
+                            
+                            // Log the action
+                            setAdminAuditLogs(prev => [...prev, {
+                              id: Date.now(),
+                              adminId: 'master',
+                              adminName: 'Master Admin',
+                              action: newRole === 'admin' ? 'promote_to_admin' : 'demote_to_user',
+                              details: `${newRole === 'admin' ? 'Promoted' : 'Demoted'} user ${user.username} (${user.email}) to ${newRole}`,
+                              targetUser: user.id,
+                              ip: '192.168.1.1',
+                              timestamp: new Date().toISOString()
+                            }])
+                            
+                            // If promoting to admin, also add to adminRoles
+                            if (newRole === 'admin') {
+                              const existingAdmin = adminRoles.find(a => a.email === user.email)
+                              if (!existingAdmin) {
+                                setAdminRoles(prev => [...prev, {
+                                  id: Date.now(),
+                                  username: user.username,
+                                  email: user.email,
+                                  role: 'support',
+                                  permissions: ['view_users', 'manage_chats'],
+                                  status: 'active',
+                                  createdAt: new Date().toISOString(),
+                                  lastLogin: null,
+                                  promotedFrom: 'user'
+                                }])
+                              }
+                            } else {
+                              // If demoting, remove from adminRoles
+                              setAdminRoles(prev => prev.filter(a => a.email !== user.email))
+                            }
+                          }}
+                        >
+                          {user.role === 'admin' ? '⬇️ Demote' : '⬆️ Promote'}
+                        </button>
                         <button className="action-btn edit">Edit</button>
                         <button className="action-btn view">View</button>
-                        <button className="action-btn block">Block</button>
+                        <button 
+                          className="action-btn block"
+                          onClick={() => {
+                            const updatedUsers = users.map(u => 
+                              u.id === user.id ? { ...u, isActive: u.isActive === false ? true : false } : u
+                            )
+                            setUsers(updatedUsers)
+                            localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers))
+                          }}
+                        >
+                          {user.isActive !== false ? 'Block' : 'Unblock'}
+                        </button>
                       </td>
                     </tr>
                   ))}
                   {users.length === 0 && (
                     <tr>
-                      <td colSpan="9" className="no-data">No users registered yet</td>
+                      <td colSpan="10" className="no-data">No users registered yet</td>
                     </tr>
                   )}
                 </tbody>
