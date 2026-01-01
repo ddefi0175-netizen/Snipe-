@@ -88,6 +88,8 @@ export default function MasterAdminDashboard() {
 
   const [selectedChat, setSelectedChat] = useState(null)
   const [adminReplyMessage, setAdminReplyMessage] = useState('')
+  const [newMessageAlert, setNewMessageAlert] = useState(false)
+  const [lastMessageCount, setLastMessageCount] = useState(0)
 
   // User Activity Logs - track user actions
   const [userActivityLogs, setUserActivityLogs] = useState(() => {
@@ -205,18 +207,50 @@ export default function MasterAdminDashboard() {
   })
 
   // Refresh chat data periodically
+  // Refresh chat data periodically with notification system
   useEffect(() => {
     const refreshChats = () => {
       const chats = JSON.parse(localStorage.getItem('activeChats') || '[]')
       const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]')
+      
+      // Check for new messages and trigger notification
+      const userMessages = logs.filter(l => l.type === 'user')
+      if (userMessages.length > lastMessageCount && lastMessageCount > 0 && isAuthenticated) {
+        setNewMessageAlert(true)
+        // Play notification sound
+        try {
+          const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQkAIHPQ3bF3HQkAgLTX15xQGBY=')
+          audio.volume = 0.5
+          audio.play().catch(() => {})
+        } catch (e) {}
+        
+        // Show browser notification if permitted
+        if (Notification.permission === 'granted') {
+          const latestMsg = userMessages[userMessages.length - 1]
+          new Notification('New Customer Message', {
+            body: `${latestMsg.user}: ${latestMsg.message.substring(0, 50)}...`,
+            icon: '💬'
+          })
+        }
+        
+        // Auto-clear alert after 5 seconds
+        setTimeout(() => setNewMessageAlert(false), 5000)
+      }
+      setLastMessageCount(userMessages.length)
+      
       setActiveChats(chats)
       setChatLogs(logs)
     }
     
+    // Request notification permission
+    if (isAuthenticated && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+    
     refreshChats()
-    const interval = setInterval(refreshChats, 3000)
+    const interval = setInterval(refreshChats, 2000) // Faster refresh for real-time feel
     return () => clearInterval(interval)
-  }, [])
+  }, [isAuthenticated, lastMessageCount])
 
   // Save to localStorage
   useEffect(() => {
@@ -404,6 +438,21 @@ export default function MasterAdminDashboard() {
 
   return (
     <div className="master-admin-dashboard">
+      {/* New Message Alert Banner */}
+      {newMessageAlert && (
+        <div className="new-message-alert" onClick={() => {
+          setActiveSection('customer-services')
+          setNewMessageAlert(false)
+        }}>
+          <span className="alert-icon">🔔</span>
+          <span className="alert-text">New customer message received! Click to view.</span>
+          <button className="alert-close" onClick={(e) => {
+            e.stopPropagation()
+            setNewMessageAlert(false)
+          }}>✕</button>
+        </div>
+      )}
+
       {/* Top Navigation */}
       <nav className="admin-top-nav">
         <div className="nav-logo">

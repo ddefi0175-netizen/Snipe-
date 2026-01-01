@@ -153,23 +153,44 @@ export default function CustomerService() {
     return names[Math.floor(Math.random() * names.length)]
   })
 
-  // Check for admin replies periodically
+  // Check for admin replies periodically - ALWAYS check, not just when connected to agent
   useEffect(() => {
-    if (!isConnectedToAgent) return
-    
     const checkAdminReplies = () => {
       const adminReplies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]')
       const myReplies = adminReplies.filter(r => r.sessionId === sessionId && !r.delivered)
       
       myReplies.forEach(reply => {
+        // If not connected to agent yet, auto-connect when admin replies
+        if (!isConnectedToAgent) {
+          setIsConnectedToAgent(true)
+          setMessages(prev => [...prev, {
+            id: Date.now() - 1,
+            type: 'system',
+            text: 'A support agent has joined the conversation.',
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          }])
+        }
+        
         setMessages(prev => [...prev, {
           id: Date.now(),
           type: 'agent',
           text: reply.message,
           time: new Date(reply.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          agentName: reply.agentName || agentName
+          agentName: reply.agentName || 'Support Agent'
         }])
         reply.delivered = true
+        
+        // Play notification sound for user
+        try {
+          const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQkAIHPQ3bF3HQkAgLTX15xQGBY=')
+          audio.volume = 0.3
+          audio.play().catch(() => {})
+        } catch (e) {}
+        
+        // Update unread count if chat window is closed
+        if (!isOpen) {
+          setUnreadCount(prev => prev + 1)
+        }
       })
       
       if (myReplies.length > 0) {
@@ -177,9 +198,11 @@ export default function CustomerService() {
       }
     }
     
+    // Check immediately on mount and then every 2 seconds
+    checkAdminReplies()
     const interval = setInterval(checkAdminReplies, 2000)
     return () => clearInterval(interval)
-  }, [isConnectedToAgent, sessionId, agentName])
+  }, [sessionId, isConnectedToAgent, isOpen])
 
   const connectToLiveAgent = () => {
     // Show connecting message - stays in-app, no external links
