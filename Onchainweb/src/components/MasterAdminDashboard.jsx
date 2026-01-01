@@ -1,62 +1,117 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+
+// Lazy localStorage helper to avoid blocking initial render
+const getFromStorage = (key, defaultValue) => {
+  try {
+    const saved = localStorage.getItem(key)
+    return saved ? JSON.parse(saved) : defaultValue
+  } catch (e) {
+    return defaultValue
+  }
+}
 
 export default function MasterAdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isDataLoaded, setIsDataLoaded] = useState(false)
   const [loginData, setLoginData] = useState({ username: '', password: '' })
   const [loginError, setLoginError] = useState('')
   const [activeSection, setActiveSection] = useState('user-agents')
   const [searchQuery, setSearchQuery] = useState('')
   
-  // User Management States
-  const [users, setUsers] = useState(() => {
-    const saved = localStorage.getItem('registeredUsers')
-    return saved ? JSON.parse(saved) : []
-  })
+  // User Management States - lazy loaded after auth
+  const [users, setUsers] = useState([])
   
-  // User Agents/Sessions tracking
-  const [userAgents, setUserAgents] = useState(() => {
-    const saved = localStorage.getItem('userAgents')
-    return saved ? JSON.parse(saved) : [
+  // User Agents/Sessions tracking - lazy loaded
+  const [userAgents, setUserAgents] = useState([])
+
+  // Deposits data - lazy loaded
+  const [deposits, setDeposits] = useState([])
+
+  // Withdrawals data - lazy loaded
+  const [withdrawals, setWithdrawals] = useState([])
+
+  // Trade History - lazy loaded
+  const [tradeHistory, setTradeHistory] = useState([])
+
+  // Staking Plans - lazy loaded
+  const [stakingPlans, setStakingPlans] = useState([])
+
+  // Bonus Programs - lazy loaded
+  const [bonusPrograms, setBonusPrograms] = useState({})
+
+  // Live Chat Management - lazy loaded
+  const [activeChats, setActiveChats] = useState([])
+
+  const [chatLogs, setChatLogs] = useState([])
+
+  const [selectedChat, setSelectedChat] = useState(null)
+  const [adminReplyMessage, setAdminReplyMessage] = useState('')
+  const [newMessageAlert, setNewMessageAlert] = useState(false)
+  const [lastMessageCount, setLastMessageCount] = useState(0)
+
+  // Currencies Management - lazy loaded
+  const [currencies, setCurrencies] = useState([])
+
+  // Networks Management - lazy loaded
+  const [networks, setNetworks] = useState([])
+
+  // Deposit Wallets/Addresses - lazy loaded
+  const [depositWallets, setDepositWallets] = useState([])
+
+  // Exchange Rates - lazy loaded
+  const [exchangeRates, setExchangeRates] = useState([])
+
+  // Trading Levels - lazy loaded
+  const [tradingLevels, setTradingLevels] = useState([])
+
+  // Form states for creating new items
+  const [newCurrency, setNewCurrency] = useState({ name: '', symbol: '', icon: '' })
+  const [newNetwork, setNewNetwork] = useState({ name: '', symbol: '', chainId: '', confirmations: 12 })
+  const [newWallet, setNewWallet] = useState({ network: '', address: '', label: '' })
+  const [newExchangeRate, setNewExchangeRate] = useState({ from: '', to: 'USDT', rate: 0 })
+  const [newTradingLevel, setNewTradingLevel] = useState({ name: '', countdown: 180, profitPercent: 18, minCapital: 100, maxCapital: 10000 })
+  const [editingTradingLevel, setEditingTradingLevel] = useState(null)
+  const [showCreateModal, setShowCreateModal] = useState(null)
+
+  // User Activity Logs - lazy loaded
+  const [userActivityLogs, setUserActivityLogs] = useState([])
+
+  // Admin Audit Logs - lazy loaded
+  const [adminAuditLogs, setAdminAuditLogs] = useState([])
+
+  // Admin Roles Management - lazy loaded
+  const [adminRoles, setAdminRoles] = useState([])
+
+  const [newAdmin, setNewAdmin] = useState({
+    username: '',
+    email: '',
+    password: '',
+    role: 'support',
+    permissions: []
+  })
+
+  const [activityFilter, setActivityFilter] = useState('all')
+
+  // Site Settings - lazy loaded
+  const [siteSettings, setSiteSettings] = useState({})
+
+  // Trade Options Settings - lazy loaded
+  const [tradeOptions, setTradeOptions] = useState({})
+
+  // Default data for initial load
+  const defaultData = useMemo(() => ({
+    userAgents: [
       { uid: '310738586', email: 'moonmoon17652@gmail.com', active: true, device: 'Windows', ip: '154.222.5.198', lastSeen: new Date().toISOString() },
       { uid: '800746508', email: 'mcpathang18@gmail.com', active: true, device: 'iOS', ip: '72.135.7.50', lastSeen: new Date().toISOString() },
-      { uid: '800746508', email: 'mcpathang18@gmail.com', active: true, device: 'iOS', ip: '72.135.7.50', lastSeen: new Date().toISOString() },
-      { uid: '310738586', email: 'moonmoon17652@gmail.com', active: true, device: 'Windows', ip: '103.240.240.85', lastSeen: new Date().toISOString() },
-    ]
-  })
-
-  // Deposits data
-  const [deposits, setDeposits] = useState(() => {
-    const saved = localStorage.getItem('adminDeposits')
-    return saved ? JSON.parse(saved) : []
-  })
-
-  // Withdrawals data
-  const [withdrawals, setWithdrawals] = useState(() => {
-    const saved = localStorage.getItem('adminWithdrawals')
-    return saved ? JSON.parse(saved) : []
-  })
-
-  // Trade History
-  const [tradeHistory, setTradeHistory] = useState(() => {
-    const saved = localStorage.getItem('tradeHistory')
-    return saved ? JSON.parse(saved) : []
-  })
-
-  // Staking Plans
-  const [stakingPlans, setStakingPlans] = useState(() => {
-    const saved = localStorage.getItem('stakingPlans')
-    return saved ? JSON.parse(saved) : [
+    ],
+    stakingPlans: [
       { id: 1, name: 'Starter', minAmount: 100, maxAmount: 1000, duration: 30, apy: 8, active: true },
       { id: 2, name: 'Growth', minAmount: 1000, maxAmount: 10000, duration: 60, apy: 12, active: true },
       { id: 3, name: 'Premium', minAmount: 10000, maxAmount: 100000, duration: 90, apy: 18, active: true },
       { id: 4, name: 'VIP', minAmount: 100000, maxAmount: 1000000, duration: 180, apy: 25, active: true },
-    ]
-  })
-
-  // Bonus Programs
-  const [bonusPrograms, setBonusPrograms] = useState(() => {
-    const saved = localStorage.getItem('bonusPrograms')
-    return saved ? JSON.parse(saved) : {
+    ],
+    bonusPrograms: {
       welcomeBonus: { enabled: true, amount: 100, description: 'Sign up and complete KYC' },
       referralBonus: { enabled: true, amount: 50, description: 'Per successful referral' },
       tradingCashback: { enabled: true, percentage: 20, minTrades: 10, description: 'Up to 20% on trading fees' },
@@ -72,182 +127,54 @@ export default function MasterAdminDashboard() {
         ]
       },
       promotionEndDate: '2025-01-31'
-    }
-  })
-
-  // Live Chat Management
-  const [activeChats, setActiveChats] = useState(() => {
-    const saved = localStorage.getItem('activeChats')
-    return saved ? JSON.parse(saved) : []
-  })
-
-  const [chatLogs, setChatLogs] = useState(() => {
-    const saved = localStorage.getItem('customerChatLogs')
-    return saved ? JSON.parse(saved) : []
-  })
-
-  const [selectedChat, setSelectedChat] = useState(null)
-  const [adminReplyMessage, setAdminReplyMessage] = useState('')
-  const [newMessageAlert, setNewMessageAlert] = useState(false)
-  const [lastMessageCount, setLastMessageCount] = useState(0)
-
-  // Currencies Management
-  const [currencies, setCurrencies] = useState(() => {
-    const saved = localStorage.getItem('adminCurrencies')
-    return saved ? JSON.parse(saved) : [
+    },
+    currencies: [
       { id: 1, name: 'Bitcoin', symbol: 'BTC', icon: '₿', status: 'active', createdAt: '2024-01-01' },
       { id: 2, name: 'Ethereum', symbol: 'ETH', icon: 'Ξ', status: 'active', createdAt: '2024-01-01' },
       { id: 3, name: 'Tether', symbol: 'USDT', icon: '₮', status: 'active', createdAt: '2024-01-01' },
       { id: 4, name: 'BNB', symbol: 'BNB', icon: '⬡', status: 'active', createdAt: '2024-01-01' },
       { id: 5, name: 'Solana', symbol: 'SOL', icon: '◎', status: 'active', createdAt: '2024-01-01' },
-    ]
-  })
-
-  // Networks Management
-  const [networks, setNetworks] = useState(() => {
-    const saved = localStorage.getItem('adminNetworks')
-    return saved ? JSON.parse(saved) : [
+    ],
+    networks: [
       { id: 1, name: 'Bitcoin Network', symbol: 'BTC', chainId: '-', confirmations: 3, status: 'active' },
       { id: 2, name: 'Ethereum (ERC-20)', symbol: 'ETH', chainId: '1', confirmations: 12, status: 'active' },
       { id: 3, name: 'BNB Smart Chain (BEP-20)', symbol: 'BSC', chainId: '56', confirmations: 15, status: 'active' },
       { id: 4, name: 'Tron (TRC-20)', symbol: 'TRC20', chainId: '-', confirmations: 20, status: 'active' },
       { id: 5, name: 'Solana', symbol: 'SOL', chainId: '-', confirmations: 32, status: 'active' },
       { id: 6, name: 'Polygon', symbol: 'MATIC', chainId: '137', confirmations: 128, status: 'active' },
-    ]
-  })
-
-  // Deposit Wallets/Addresses
-  const [depositWallets, setDepositWallets] = useState(() => {
-    const saved = localStorage.getItem('adminDepositWallets')
-    return saved ? JSON.parse(saved) : [
+    ],
+    depositWallets: [
       { id: 1, network: 'BTC', address: '', label: 'Bitcoin Wallet', status: 'active' },
       { id: 2, network: 'ETH', address: '', label: 'Ethereum Wallet', status: 'active' },
       { id: 3, network: 'BSC', address: '', label: 'BNB Smart Chain Wallet', status: 'active' },
       { id: 4, network: 'TRC20', address: '', label: 'Tron Wallet', status: 'active' },
       { id: 5, network: 'SOL', address: '', label: 'Solana Wallet', status: 'active' },
-    ]
-  })
-
-  // Exchange Rates
-  const [exchangeRates, setExchangeRates] = useState(() => {
-    const saved = localStorage.getItem('adminExchangeRates')
-    return saved ? JSON.parse(saved) : [
+    ],
+    exchangeRates: [
       { id: 1, from: 'BTC', to: 'USDT', rate: 42500.00, status: 'active' },
       { id: 2, from: 'ETH', to: 'USDT', rate: 2250.00, status: 'active' },
       { id: 3, from: 'BNB', to: 'USDT', rate: 312.50, status: 'active' },
       { id: 4, from: 'SOL', to: 'USDT', rate: 98.75, status: 'active' },
       { id: 5, from: 'USDT', to: 'USD', rate: 1.00, status: 'active' },
-    ]
-  })
-
-  // Trading Levels (detailed like the screenshot)
-  const [tradingLevels, setTradingLevels] = useState(() => {
-    const saved = localStorage.getItem('adminTradingLevels')
-    return saved ? JSON.parse(saved) : [
+    ],
+    tradingLevels: [
       { id: 1, name: 'Level-1', countdown: 180, profitPercent: 18.00, minCapital: 200.00, maxCapital: 20000.00, status: 'active' },
       { id: 2, name: 'Level-2', countdown: 240, profitPercent: 23.00, minCapital: 20001.00, maxCapital: 50000.00, status: 'active' },
       { id: 3, name: 'Level-3', countdown: 360, profitPercent: 35.00, minCapital: 50001.00, maxCapital: 100000.00, status: 'active' },
       { id: 4, name: 'Level-4', countdown: 480, profitPercent: 50.00, minCapital: 100001.00, maxCapital: 300000.00, status: 'active' },
       { id: 5, name: 'Level-5', countdown: 600, profitPercent: 100.00, minCapital: 300001.00, maxCapital: 500000.00, status: 'active' },
-    ]
-  })
-
-  // Form states for creating new items
-  const [newCurrency, setNewCurrency] = useState({ name: '', symbol: '', icon: '' })
-  const [newNetwork, setNewNetwork] = useState({ name: '', symbol: '', chainId: '', confirmations: 12 })
-  const [newWallet, setNewWallet] = useState({ network: '', address: '', label: '' })
-  const [newExchangeRate, setNewExchangeRate] = useState({ from: '', to: 'USDT', rate: 0 })
-  const [newTradingLevel, setNewTradingLevel] = useState({ name: '', countdown: 180, profitPercent: 18, minCapital: 100, maxCapital: 10000 })
-  const [editingTradingLevel, setEditingTradingLevel] = useState(null)
-  const [showCreateModal, setShowCreateModal] = useState(null)
-
-  // User Activity Logs - track user actions
-  const [userActivityLogs, setUserActivityLogs] = useState(() => {
-    const saved = localStorage.getItem('userActivityLogs')
-    return saved ? JSON.parse(saved) : [
+    ],
+    userActivityLogs: [
       { id: 1, userId: '310738586', userEmail: 'moonmoon17652@gmail.com', action: 'login', details: 'Logged in from Windows device', ip: '154.222.5.198', timestamp: new Date(Date.now() - 3600000).toISOString() },
       { id: 2, userId: '310738586', userEmail: 'moonmoon17652@gmail.com', action: 'deposit', details: 'Deposited $500 via Crypto', ip: '154.222.5.198', timestamp: new Date(Date.now() - 3000000).toISOString() },
-      { id: 3, userId: '800746508', userEmail: 'mcpathang18@gmail.com', action: 'kyc_submit', details: 'Submitted KYC documents', ip: '72.135.7.50', timestamp: new Date(Date.now() - 2400000).toISOString() },
-      { id: 4, userId: '800746508', userEmail: 'mcpathang18@gmail.com', action: 'trade', details: 'Placed BTC/USDT trade - $200 UP', ip: '72.135.7.50', timestamp: new Date(Date.now() - 1800000).toISOString() },
-      { id: 5, userId: '310738586', userEmail: 'moonmoon17652@gmail.com', action: 'withdrawal', details: 'Requested withdrawal $300 to wallet', ip: '154.222.5.198', timestamp: new Date(Date.now() - 1200000).toISOString() },
-      { id: 6, userId: '800746508', userEmail: 'mcpathang18@gmail.com', action: 'stake', details: 'Staked $1000 in Growth plan', ip: '72.135.7.50', timestamp: new Date(Date.now() - 600000).toISOString() },
-      { id: 7, userId: '310738586', userEmail: 'moonmoon17652@gmail.com', action: 'profile_update', details: 'Updated profile information', ip: '103.240.240.85', timestamp: new Date().toISOString() },
-    ]
-  })
-
-  // Admin Audit Logs - track admin actions
-  const [adminAuditLogs, setAdminAuditLogs] = useState(() => {
-    const saved = localStorage.getItem('adminAuditLogs')
-    return saved ? JSON.parse(saved) : [
+    ],
+    adminAuditLogs: [
       { id: 1, adminId: 'master', adminName: 'Master Admin', action: 'login', details: 'Admin logged into dashboard', ip: '192.168.1.1', timestamp: new Date(Date.now() - 7200000).toISOString() },
-      { id: 2, adminId: 'master', adminName: 'Master Admin', action: 'balance_update', details: 'Updated user 310738586 balance from $0 to $1000', targetUser: '310738586', ip: '192.168.1.1', timestamp: new Date(Date.now() - 5400000).toISOString() },
-      { id: 3, adminId: 'master', adminName: 'Master Admin', action: 'kyc_approve', details: 'Approved KYC for user 800746508', targetUser: '800746508', ip: '192.168.1.1', timestamp: new Date(Date.now() - 3600000).toISOString() },
-      { id: 4, adminId: 'master', adminName: 'Master Admin', action: 'withdrawal_approve', details: 'Approved withdrawal #W001 for $300', targetUser: '310738586', ip: '192.168.1.1', timestamp: new Date(Date.now() - 1800000).toISOString() },
-      { id: 5, adminId: 'master', adminName: 'Master Admin', action: 'settings_update', details: 'Updated site settings - Trading enabled', ip: '192.168.1.1', timestamp: new Date().toISOString() },
-    ]
-  })
-
-  // Admin Roles Management
-  const [adminRoles, setAdminRoles] = useState(() => {
-    const saved = localStorage.getItem('adminRoles')
-    return saved ? JSON.parse(saved) : [
-      { 
-        id: 1, 
-        username: 'master', 
-        email: 'master@onchainweb.com', 
-        role: 'super_admin', 
-        permissions: ['all'],
-        status: 'active',
-        createdAt: '2024-01-01T00:00:00.000Z',
-        lastLogin: new Date().toISOString()
-      },
-      { 
-        id: 2, 
-        username: 'support_admin', 
-        email: 'support@onchainweb.com', 
-        role: 'support', 
-        permissions: ['view_users', 'manage_chats', 'view_deposits', 'view_withdrawals'],
-        status: 'active',
-        createdAt: '2024-06-01T00:00:00.000Z',
-        lastLogin: new Date(Date.now() - 86400000).toISOString()
-      },
-      { 
-        id: 3, 
-        username: 'finance_admin', 
-        email: 'finance@onchainweb.com', 
-        role: 'finance', 
-        permissions: ['view_users', 'manage_deposits', 'manage_withdrawals', 'view_balance'],
-        status: 'active',
-        createdAt: '2024-06-15T00:00:00.000Z',
-        lastLogin: new Date(Date.now() - 172800000).toISOString()
-      },
-      { 
-        id: 4, 
-        username: 'kyc_admin', 
-        email: 'kyc@onchainweb.com', 
-        role: 'kyc_manager', 
-        permissions: ['view_users', 'manage_kyc'],
-        status: 'inactive',
-        createdAt: '2024-07-01T00:00:00.000Z',
-        lastLogin: null
-      },
-    ]
-  })
-
-  const [newAdmin, setNewAdmin] = useState({
-    username: '',
-    email: '',
-    password: '',
-    role: 'support',
-    permissions: []
-  })
-
-  const [activityFilter, setActivityFilter] = useState('all')
-
-  // Site Settings
-  const [siteSettings, setSiteSettings] = useState(() => {
-    const saved = localStorage.getItem('siteSettings')
-    return saved ? JSON.parse(saved) : {
+    ],
+    adminRoles: [
+      { id: 1, username: 'master', email: 'master@onchainweb.com', role: 'super_admin', permissions: ['all'], status: 'active', createdAt: '2024-01-01T00:00:00.000Z', lastLogin: new Date().toISOString() },
+    ],
+    siteSettings: {
       siteName: 'OnchainWeb',
       siteUrl: 'https://onchainweb.app',
       supportEmail: 'support@onchainweb.com',
@@ -261,31 +188,80 @@ export default function MasterAdminDashboard() {
       withdrawalFee: 1,
       referralBonus: 50,
       welcomeBonus: 100,
-    }
-  })
-
-  // Trade Options Settings
-  const [tradeOptions, setTradeOptions] = useState(() => {
-    const saved = localStorage.getItem('tradeOptions')
-    return saved ? JSON.parse(saved) : {
+    },
+    tradeOptions: {
       minTrade: 10,
       maxTrade: 50000,
       defaultDuration: 60,
       winRate: 50,
       profitPercentage: 85,
     }
-  })
+  }), [])
 
-  // Refresh chat data periodically
-  // Refresh chat data periodically with notification system
+  // Load all data after authentication - single batch load
+  const loadAllData = useCallback(() => {
+    // Use requestAnimationFrame to not block UI
+    requestAnimationFrame(() => {
+      setUsers(getFromStorage('registeredUsers', []))
+      setUserAgents(getFromStorage('userAgents', defaultData.userAgents))
+      setDeposits(getFromStorage('adminDeposits', []))
+      setWithdrawals(getFromStorage('adminWithdrawals', []))
+      setTradeHistory(getFromStorage('tradeHistory', []))
+      setStakingPlans(getFromStorage('stakingPlans', defaultData.stakingPlans))
+      setBonusPrograms(getFromStorage('bonusPrograms', defaultData.bonusPrograms))
+      setActiveChats(getFromStorage('activeChats', []))
+      setChatLogs(getFromStorage('customerChatLogs', []))
+      setCurrencies(getFromStorage('adminCurrencies', defaultData.currencies))
+      setNetworks(getFromStorage('adminNetworks', defaultData.networks))
+      setDepositWallets(getFromStorage('adminDepositWallets', defaultData.depositWallets))
+      setExchangeRates(getFromStorage('adminExchangeRates', defaultData.exchangeRates))
+      setTradingLevels(getFromStorage('adminTradingLevels', defaultData.tradingLevels))
+      setUserActivityLogs(getFromStorage('userActivityLogs', defaultData.userActivityLogs))
+      setAdminAuditLogs(getFromStorage('adminAuditLogs', defaultData.adminAuditLogs))
+      setAdminRoles(getFromStorage('adminRoles', defaultData.adminRoles))
+      setSiteSettings(getFromStorage('siteSettings', defaultData.siteSettings))
+      setTradeOptions(getFromStorage('tradeOptions', defaultData.tradeOptions))
+      setIsDataLoaded(true)
+    })
+  }, [defaultData])
+
+  // Check authentication on load - fast initial check
   useEffect(() => {
+    const checkAuth = () => {
+      try {
+        const adminSession = localStorage.getItem('masterAdminSession')
+        if (adminSession) {
+          const session = JSON.parse(adminSession)
+          if (Date.now() - session.timestamp < 24 * 60 * 60 * 1000) {
+            setIsAuthenticated(true)
+          }
+        }
+      } catch (e) {
+        console.error('Auth check error:', e)
+      }
+      setIsLoading(false)
+    }
+    checkAuth()
+  }, [])
+
+  // Load data only after successful authentication
+  useEffect(() => {
+    if (isAuthenticated && !isDataLoaded) {
+      loadAllData()
+    }
+  }, [isAuthenticated, isDataLoaded, loadAllData])
+
+  // Refresh chat data periodically - reduced frequency (5 seconds instead of 2)
+  useEffect(() => {
+    if (!isAuthenticated || !isDataLoaded) return
+
     const refreshChats = () => {
-      const chats = JSON.parse(localStorage.getItem('activeChats') || '[]')
-      const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]')
+      const chats = getFromStorage('activeChats', [])
+      const logs = getFromStorage('customerChatLogs', [])
       
       // Check for new messages and trigger notification
       const userMessages = logs.filter(l => l.type === 'user')
-      if (userMessages.length > lastMessageCount && lastMessageCount > 0 && isAuthenticated) {
+      if (userMessages.length > lastMessageCount && lastMessageCount > 0) {
         setNewMessageAlert(true)
         // Play notification sound
         try {
@@ -295,7 +271,7 @@ export default function MasterAdminDashboard() {
         } catch (e) {}
         
         // Show browser notification if permitted
-        if (Notification.permission === 'granted') {
+        if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
           const latestMsg = userMessages[userMessages.length - 1]
           new Notification('New Customer Message', {
             body: `${latestMsg.user}: ${latestMsg.message.substring(0, 50)}...`,
@@ -313,86 +289,102 @@ export default function MasterAdminDashboard() {
     }
     
     // Request notification permission
-    if (isAuthenticated && Notification.permission === 'default') {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
       Notification.requestPermission()
     }
     
     refreshChats()
-    const interval = setInterval(refreshChats, 2000) // Faster refresh for real-time feel
+    const interval = setInterval(refreshChats, 5000) // Slower refresh for mobile performance
     return () => clearInterval(interval)
-  }, [isAuthenticated, lastMessageCount])
+  }, [isAuthenticated, isDataLoaded, lastMessageCount])
 
-  // Save to localStorage
+  // Save to localStorage - only when data is loaded and changed
   useEffect(() => {
-    localStorage.setItem('bonusPrograms', JSON.stringify(bonusPrograms))
-  }, [bonusPrograms])
-
-  useEffect(() => {
-    localStorage.setItem('userAgents', JSON.stringify(userAgents))
-  }, [userAgents])
+    if (isDataLoaded && Object.keys(bonusPrograms).length > 0) {
+      localStorage.setItem('bonusPrograms', JSON.stringify(bonusPrograms))
+    }
+  }, [bonusPrograms, isDataLoaded])
 
   useEffect(() => {
-    localStorage.setItem('stakingPlans', JSON.stringify(stakingPlans))
-  }, [stakingPlans])
+    if (isDataLoaded && userAgents.length > 0) {
+      localStorage.setItem('userAgents', JSON.stringify(userAgents))
+    }
+  }, [userAgents, isDataLoaded])
 
   useEffect(() => {
-    localStorage.setItem('siteSettings', JSON.stringify(siteSettings))
-  }, [siteSettings])
+    if (isDataLoaded && stakingPlans.length > 0) {
+      localStorage.setItem('stakingPlans', JSON.stringify(stakingPlans))
+    }
+  }, [stakingPlans, isDataLoaded])
 
   useEffect(() => {
-    localStorage.setItem('tradeOptions', JSON.stringify(tradeOptions))
-  }, [tradeOptions])
+    if (isDataLoaded && Object.keys(siteSettings).length > 0) {
+      localStorage.setItem('siteSettings', JSON.stringify(siteSettings))
+    }
+  }, [siteSettings, isDataLoaded])
+
+  useEffect(() => {
+    if (isDataLoaded && Object.keys(tradeOptions).length > 0) {
+      localStorage.setItem('tradeOptions', JSON.stringify(tradeOptions))
+    }
+  }, [tradeOptions, isDataLoaded])
 
   // Save activity logs to localStorage
   useEffect(() => {
-    localStorage.setItem('userActivityLogs', JSON.stringify(userActivityLogs))
-  }, [userActivityLogs])
+    if (isDataLoaded && userActivityLogs.length > 0) {
+      localStorage.setItem('userActivityLogs', JSON.stringify(userActivityLogs))
+    }
+  }, [userActivityLogs, isDataLoaded])
 
   useEffect(() => {
-    localStorage.setItem('adminAuditLogs', JSON.stringify(adminAuditLogs))
-  }, [adminAuditLogs])
+    if (isDataLoaded && adminAuditLogs.length > 0) {
+      localStorage.setItem('adminAuditLogs', JSON.stringify(adminAuditLogs))
+    }
+  }, [adminAuditLogs, isDataLoaded])
 
   useEffect(() => {
-    localStorage.setItem('adminRoles', JSON.stringify(adminRoles))
-  }, [adminRoles])
+    if (isDataLoaded && adminRoles.length > 0) {
+      localStorage.setItem('adminRoles', JSON.stringify(adminRoles))
+    }
+  }, [adminRoles, isDataLoaded])
 
   // Save new service management states
   useEffect(() => {
-    localStorage.setItem('adminCurrencies', JSON.stringify(currencies))
-  }, [currencies])
-
-  useEffect(() => {
-    localStorage.setItem('adminNetworks', JSON.stringify(networks))
-  }, [networks])
-
-  useEffect(() => {
-    localStorage.setItem('adminDepositWallets', JSON.stringify(depositWallets))
-  }, [depositWallets])
-
-  useEffect(() => {
-    localStorage.setItem('adminExchangeRates', JSON.stringify(exchangeRates))
-  }, [exchangeRates])
-
-  useEffect(() => {
-    localStorage.setItem('adminTradingLevels', JSON.stringify(tradingLevels))
-  }, [tradingLevels])
-
-  // Check authentication on load
-  useEffect(() => {
-    const adminSession = localStorage.getItem('masterAdminSession')
-    if (adminSession) {
-      const session = JSON.parse(adminSession)
-      if (Date.now() - session.timestamp < 24 * 60 * 60 * 1000) {
-        setIsAuthenticated(true)
-      }
+    if (isDataLoaded && currencies.length > 0) {
+      localStorage.setItem('adminCurrencies', JSON.stringify(currencies))
     }
-  }, [])
+  }, [currencies, isDataLoaded])
+
+  useEffect(() => {
+    if (isDataLoaded && networks.length > 0) {
+      localStorage.setItem('adminNetworks', JSON.stringify(networks))
+    }
+  }, [networks, isDataLoaded])
+
+  useEffect(() => {
+    if (isDataLoaded && depositWallets.length > 0) {
+      localStorage.setItem('adminDepositWallets', JSON.stringify(depositWallets))
+    }
+  }, [depositWallets, isDataLoaded])
+
+  useEffect(() => {
+    if (isDataLoaded && exchangeRates.length > 0) {
+      localStorage.setItem('adminExchangeRates', JSON.stringify(exchangeRates))
+    }
+  }, [exchangeRates, isDataLoaded])
+
+  useEffect(() => {
+    if (isDataLoaded && tradingLevels.length > 0) {
+      localStorage.setItem('adminTradingLevels', JSON.stringify(tradingLevels))
+    }
+  }, [tradingLevels, isDataLoaded])
 
   const handleLogin = (e) => {
     e.preventDefault()
     // Master credentials
     if (loginData.username === 'master' && loginData.password === 'OnchainWeb2025!') {
       setIsAuthenticated(true)
+      setIsDataLoaded(false) // Reset to trigger data load
       setLoginError('')
       localStorage.setItem('masterAdminSession', JSON.stringify({
         username: loginData.username,
@@ -405,6 +397,7 @@ export default function MasterAdminDashboard() {
 
   const handleLogout = () => {
     setIsAuthenticated(false)
+    setIsDataLoaded(false)
     localStorage.removeItem('masterAdminSession')
   }
 
@@ -447,6 +440,38 @@ export default function MasterAdminDashboard() {
     localStorage.setItem('adminDeposits', JSON.stringify(
       deposits.map(d => d.id === id ? { ...d, status: action } : d)
     ))
+  }
+
+  // Show loading spinner during initial auth check
+  if (isLoading) {
+    return (
+      <div className="master-admin-login">
+        <div className="login-container">
+          <div className="loading-spinner">
+            <svg width="50" height="50" viewBox="0 0 50 50" className="spin-animation">
+              <circle cx="25" cy="25" r="20" fill="none" stroke="#7c3aed" strokeWidth="4" strokeDasharray="80 40" />
+            </svg>
+          </div>
+          <p style={{ color: '#9ca3af', marginTop: '16px' }}>Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show loading after login while data loads
+  if (isAuthenticated && !isDataLoaded) {
+    return (
+      <div className="master-admin-login">
+        <div className="login-container">
+          <div className="loading-spinner">
+            <svg width="50" height="50" viewBox="0 0 50 50" className="spin-animation">
+              <circle cx="25" cy="25" r="20" fill="none" stroke="#7c3aed" strokeWidth="4" strokeDasharray="80 40" />
+            </svg>
+          </div>
+          <p style={{ color: '#9ca3af', marginTop: '16px' }}>Loading dashboard...</p>
+        </div>
+      </div>
+    )
   }
 
   if (!isAuthenticated) {

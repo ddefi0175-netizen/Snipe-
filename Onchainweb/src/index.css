@@ -9728,3 +9728,61 @@ body {
     font-size: 11px;
   }
 }
+
+/* Loading Spinner Animation */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.spin-animation {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile optimizations for Master Admin Login */
+.master-admin-login {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.master-admin-login .login-container {
+  width: 100%;
+  max-width: 400px;
+  padding: 30px 20px;
+}
+
+@media (max-width: 480px) {
+  .master-admin-login .login-container {
+    padding: 20px 15px;
+  }
+
+  .master-admin-login .login-container h1 {
+    font-size: 22px;
+  }
+
+  .master-admin-login .login-field input {
+    padding: 12px;
+    font-size: 16px;
+    /* Prevents iOS zoom on input focus */
+  }
+
+  .master-admin-login .login-btn {
+    padding: 14px;
+    font-size: 16px;
+  }
+}
