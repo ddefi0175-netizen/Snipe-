@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import Header from './components/Header.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import Dashboard from './components/Dashboard.jsx'
@@ -9,36 +9,14 @@ import Trade from './components/Trade.jsx'
 import AIArbitrage from './components/AIArbitrage.jsx'
 import Wallet from './components/Wallet.jsx'
 import CustomerService from './components/CustomerService.jsx'
-import AdminPanel from './components/AdminPanel.jsx'
 
 // Main App Component (Home Page)
+// Note: Admin access is only available via /master-admin route
 export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [tradeOpen, setTradeOpen] = useState(false)
   const [aiArbitrageOpen, setAiArbitrageOpen] = useState(false)
   const [walletOpen, setWalletOpen] = useState(false)
-  const [adminPanelOpen, setAdminPanelOpen] = useState(false)
-  const [keySequence, setKeySequence] = useState([])
-
-  // Secret admin access: Press "M" 5 times rapidly for Master Admin Panel
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.key.toLowerCase() === 'm') {
-        setKeySequence(prev => {
-          const now = Date.now()
-          const newSequence = [...prev.filter(t => now - t < 2000), now]
-          if (newSequence.length >= 5) {
-            setAdminPanelOpen(true)
-            return []
-          }
-          return newSequence
-        })
-      }
-    }
-    
-    window.addEventListener('keypress', handleKeyPress)
-    return () => window.removeEventListener('keypress', handleKeyPress)
-  }, [])
 
   return (
     <div className="app-root" lang="en">
@@ -49,8 +27,8 @@ export default function App() {
         <Features />
       </main>
       <Footer />
-      <BottomNav 
-        onTradeClick={() => setTradeOpen(true)} 
+      <BottomNav
+        onTradeClick={() => setTradeOpen(true)}
         onAIClick={() => setAiArbitrageOpen(true)}
         onWalletClick={() => setWalletOpen(true)}
       />
@@ -58,7 +36,6 @@ export default function App() {
       <AIArbitrage isOpen={aiArbitrageOpen} onClose={() => setAiArbitrageOpen(false)} />
       <Wallet isOpen={walletOpen} onClose={() => setWalletOpen(false)} />
       <CustomerService />
-      <AdminPanel isOpen={adminPanelOpen} onClose={() => setAdminPanelOpen(false)} />
     </div>
   )
 }
