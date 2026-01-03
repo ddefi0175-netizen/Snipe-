@@ -661,32 +661,80 @@ export default function MasterAdminDashboard() {
             <button type="submit" className="login-btn">Login</button>
           </form>
 
-          {/* Show available admin accounts for debugging */}
-          {storedAdmins.length > 0 && (
+          {/* Quick admin creation - if user enters new username/password */}
+          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+            <button
+              type="button"
+              onClick={() => {
+                if (!loginData.username || !loginData.password) {
+                  alert('Enter username and password first, then click this button to create a new admin account')
+                  return
+                }
+                const newAdmin = {
+                  id: Date.now(),
+                  username: loginData.username.trim(),
+                  email: loginData.username.trim() + '@admin.local',
+                  password: loginData.password,
+                  role: 'admin',
+                  permissions: ['dashboard', 'users', 'deposits', 'withdrawals', 'kyc', 'live_trades', 'ai_arbitrage', 'balances', 'customer_service', 'staking', 'settings', 'logs'],
+                  status: 'active',
+                  createdAt: new Date().toISOString(),
+                  lastLogin: null
+                }
+                const currentAdmins = JSON.parse(localStorage.getItem('adminRoles') || '[]')
+                // Check if username exists
+                if (currentAdmins.some(a => a.username?.toLowerCase() === loginData.username.toLowerCase())) {
+                  alert('Username already exists! Try logging in or use a different username.')
+                  return
+                }
+                currentAdmins.push(newAdmin)
+                localStorage.setItem('adminRoles', JSON.stringify(currentAdmins))
+                alert(`✅ Admin "${loginData.username}" created!\n\nNow click Login to access the dashboard.`)
+              }}
+              style={{ padding: '8px 16px', fontSize: '12px', background: 'transparent', border: '1px solid #444', borderRadius: '6px', color: '#888', cursor: 'pointer' }}
+            >
+              Create New Admin Account
+            </button>
+          </div>
+
+          {/* Show available admin accounts */}
+          {storedAdmins.filter(a => a.role !== 'super_admin').length > 0 && (
             <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '12px' }}>
-              <p style={{ color: '#888', marginBottom: '10px' }}>Available Admin Accounts ({storedAdmins.length}):</p>
+              <p style={{ color: '#888', marginBottom: '10px' }}>Saved Admin Accounts:</p>
               {storedAdmins.filter(a => a.role !== 'super_admin').map((admin, idx) => (
                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', marginBottom: '5px' }}>
                   <span style={{ color: '#aaa' }}>
-                    👤 {admin.username} ({admin.status})
+                    👤 {admin.username} ({admin.status}) {admin.password ? '🔑' : '⚠️ no password'}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newPassword = prompt(`Reset password for ${admin.username}?\nEnter new password:`)
-                      if (newPassword && newPassword.trim()) {
-                        const updated = storedAdmins.map(a =>
-                          a.id === admin.id ? { ...a, password: newPassword.trim() } : a
-                        )
-                        localStorage.setItem('adminRoles', JSON.stringify(updated))
-                        alert(`Password reset for ${admin.username}!\n\nNew password: ${newPassword.trim()}\n\nTry logging in now.`)
-                        window.location.reload()
-                      }
-                    }}
-                    style={{ padding: '4px 8px', fontSize: '11px', background: '#7c3aed', border: 'none', borderRadius: '4px', color: '#fff', cursor: 'pointer' }}
-                  >
-                    Reset Password
-                  </button>
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginData({ username: admin.username, password: admin.password || '' })
+                        alert(`Credentials loaded!\nUsername: ${admin.username}\nPassword: ${admin.password ? '(loaded)' : '(none)'}\n\nClick Login now.`)
+                      }}
+                      style={{ padding: '4px 8px', fontSize: '11px', background: '#22c55e', border: 'none', borderRadius: '4px', color: '#fff', cursor: 'pointer', marginRight: '5px' }}
+                    >
+                      Quick Login
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newPassword = prompt(`Reset password for ${admin.username}:`)
+                        if (newPassword && newPassword.trim()) {
+                          const updated = storedAdmins.map(a =>
+                            a.id === admin.id ? { ...a, password: newPassword.trim() } : a
+                          )
+                          localStorage.setItem('adminRoles', JSON.stringify(updated))
+                          alert(`Password reset!\nNew password: ${newPassword.trim()}`)
+                          window.location.reload()
+                        }
+                      }}
+                      style={{ padding: '4px 8px', fontSize: '11px', background: '#7c3aed', border: 'none', borderRadius: '4px', color: '#fff', cursor: 'pointer' }}
+                    >
+                      Reset PW
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
