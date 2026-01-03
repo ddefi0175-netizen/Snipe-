@@ -74,7 +74,7 @@ export default function CustomerService() {
   const saveMessageToAdmin = (message, type, agentName = null) => {
     const chatLogs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]')
     const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
-    
+
     const newMessage = {
       id: Date.now(),
       sessionId: sessionId,
@@ -86,10 +86,10 @@ export default function CustomerService() {
       timestamp: new Date().toISOString(),
       read: false
     }
-    
+
     chatLogs.push(newMessage)
     localStorage.setItem('customerChatLogs', JSON.stringify(chatLogs))
-    
+
     // Update active chats count
     const activeChats = JSON.parse(localStorage.getItem('activeChats') || '[]')
     const existingChat = activeChats.find(c => c.sessionId === sessionId)
@@ -122,10 +122,10 @@ export default function CustomerService() {
     }
 
     setMessages(prev => [...prev, userMessage])
-    
+
     // Save message to admin dashboard (no external service)
     saveMessageToAdmin(inputMessage, 'user')
-    
+
     setInputMessage('')
     setIsTyping(true)
 
@@ -158,7 +158,7 @@ export default function CustomerService() {
     const checkAdminReplies = () => {
       const adminReplies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]')
       const myReplies = adminReplies.filter(r => r.sessionId === sessionId && !r.delivered)
-      
+
       myReplies.forEach(reply => {
         // If not connected to agent yet, auto-connect when admin replies
         if (!isConnectedToAgent) {
@@ -170,7 +170,7 @@ export default function CustomerService() {
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }])
         }
-        
+
         setMessages(prev => [...prev, {
           id: Date.now(),
           type: 'agent',
@@ -179,28 +179,28 @@ export default function CustomerService() {
           agentName: reply.agentName || 'Support Agent'
         }])
         reply.delivered = true
-        
+
         // Play notification sound for user
         try {
           const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQkAIHPQ3bF3HQkAgLTX15xQGBY=')
           audio.volume = 0.3
-          audio.play().catch(() => {})
-        } catch (e) {}
-        
+          audio.play().catch(() => { })
+        } catch (e) { }
+
         // Update unread count if chat window is closed
         if (!isOpen) {
           setUnreadCount(prev => prev + 1)
         }
       })
-      
+
       if (myReplies.length > 0) {
         localStorage.setItem('adminChatReplies', JSON.stringify(adminReplies))
       }
     }
-    
-    // Check immediately on mount and then every 2 seconds
+
+    // Check immediately on mount and then every 1 second for real-time responses
     checkAdminReplies()
-    const interval = setInterval(checkAdminReplies, 2000)
+    const interval = setInterval(checkAdminReplies, 1000)
     return () => clearInterval(interval)
   }, [sessionId, isConnectedToAgent, isOpen])
 
@@ -217,7 +217,7 @@ export default function CustomerService() {
     const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
     const activeChats = JSON.parse(localStorage.getItem('activeChats') || '[]')
     const existingChat = activeChats.find(c => c.sessionId === sessionId)
-    
+
     if (existingChat) {
       existingChat.status = 'waiting_agent'
       existingChat.requestedAgent = true
@@ -235,7 +235,7 @@ export default function CustomerService() {
       })
     }
     localStorage.setItem('activeChats', JSON.stringify(activeChats))
-    
+
     // Save notification for admin
     saveMessageToAdmin('Customer requested live agent connection', 'system')
 
@@ -276,7 +276,7 @@ export default function CustomerService() {
   return (
     <>
       {/* Floating Chat Button */}
-      <button 
+      <button
         className="cs-floating-btn"
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Customer Support"
@@ -320,8 +320,8 @@ export default function CustomerService() {
           {/* Messages Area */}
           <div className="cs-messages">
             {messages.map((msg) => (
-              <div 
-                key={msg.id} 
+              <div
+                key={msg.id}
                 className={`cs-message cs-message-${msg.type}`}
               >
                 {msg.type === 'agent' && (
@@ -333,7 +333,7 @@ export default function CustomerService() {
                 </div>
               </div>
             ))}
-            
+
             {isTyping && (
               <div className="cs-message cs-message-agent">
                 <div className="cs-agent-avatar">🎧</div>
@@ -344,14 +344,14 @@ export default function CustomerService() {
                 </div>
               </div>
             )}
-            
+
             <div ref={messagesEndRef} />
           </div>
 
           {/* Quick Replies */}
           <div className="cs-quick-replies">
             {quickReplies.map((reply, index) => (
-              <button 
+              <button
                 key={index}
                 className="cs-quick-btn"
                 onClick={() => handleQuickReply(reply)}

@@ -272,7 +272,7 @@ export default function MasterAdminDashboard() {
     }
   }, [isAuthenticated, isDataLoaded, loadAllData])
 
-  // Refresh chat data periodically - reduced frequency (5 seconds instead of 2)
+  // Refresh chat data periodically - real-time updates (1 second)
   useEffect(() => {
     if (!isAuthenticated || !isDataLoaded) return
 
@@ -315,7 +315,7 @@ export default function MasterAdminDashboard() {
     }
 
     refreshChats()
-    const interval = setInterval(refreshChats, 5000) // Slower refresh for mobile performance
+    const interval = setInterval(refreshChats, 1000) // Real-time refresh every 1 second
     return () => clearInterval(interval)
   }, [isAuthenticated, isDataLoaded, lastMessageCount])
 
