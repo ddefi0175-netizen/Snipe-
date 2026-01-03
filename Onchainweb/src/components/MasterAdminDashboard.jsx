@@ -451,23 +451,38 @@ export default function MasterAdminDashboard() {
       return
     }
 
-    // Check admin accounts
+    // Check admin accounts from localStorage directly (not state, which may not be loaded yet)
     const savedAdminRoles = JSON.parse(localStorage.getItem('adminRoles') || '[]')
-    console.log('Checking admin login for:', loginData.username)
-    console.log('Available admins:', savedAdminRoles.map(a => ({ username: a.username, email: a.email, status: a.status, hasPassword: !!a.password })))
+    console.log('Login attempt:', loginData.username)
+    console.log('Stored admins:', savedAdminRoles.map(a => ({
+      username: a.username,
+      email: a.email,
+      status: a.status,
+      hasPassword: !!a.password,
+      passwordLength: a.password?.length
+    })))
 
-    const adminUser = savedAdminRoles.find(
-      admin => {
-        const usernameMatch = admin.username?.toLowerCase() === loginData.username?.toLowerCase()
-        const emailMatch = admin.email?.toLowerCase() === loginData.username?.toLowerCase()
-        const passwordMatch = admin.password === loginData.password
-        const isActive = admin.status === 'active'
-        console.log(`Checking admin ${admin.username}:`, { usernameMatch, emailMatch, passwordMatch, isActive })
-        return (usernameMatch || emailMatch) && passwordMatch && isActive
-      }
-    )
+    const adminUser = savedAdminRoles.find(admin => {
+      // Case-insensitive username/email match
+      const usernameMatch = admin.username?.toLowerCase() === loginData.username?.toLowerCase()
+      const emailMatch = admin.email?.toLowerCase() === loginData.username?.toLowerCase()
+      const passwordMatch = admin.password === loginData.password
+      const isActive = admin.status === 'active'
+
+      console.log(`Checking ${admin.username}:`, {
+        usernameMatch,
+        emailMatch,
+        passwordMatch,
+        isActive,
+        enteredPassword: loginData.password,
+        storedPassword: admin.password?.substring(0, 3) + '***'
+      })
+
+      return (usernameMatch || emailMatch) && passwordMatch && isActive
+    })
 
     if (adminUser) {
+      console.log('Login successful for:', adminUser.username)
       setIsAuthenticated(true)
       setIsDataLoaded(false)
       setLoginError('')
@@ -487,6 +502,7 @@ export default function MasterAdminDashboard() {
       return
     }
 
+    console.log('Login failed - no matching admin found')
     setLoginError('Invalid credentials or account inactive')
   }
 
@@ -3326,11 +3342,12 @@ export default function MasterAdminDashboard() {
                         alert('Please select at least one permission for the admin')
                         return
                       }
+                      const passwordToSave = newAdmin.password.trim()
                       const newAdminEntry = {
                         id: Date.now(),
-                        username: newAdmin.username,
-                        email: newAdmin.email,
-                        password: newAdmin.password,
+                        username: newAdmin.username.trim(),
+                        email: newAdmin.email.trim().toLowerCase(),
+                        password: passwordToSave,
                         role: 'admin',
                         permissions: newAdmin.permissions,
                         status: 'active',
@@ -3341,6 +3358,13 @@ export default function MasterAdminDashboard() {
                       setAdminRoles(updatedAdmins)
                       // Save immediately to localStorage
                       localStorage.setItem('adminRoles', JSON.stringify(updatedAdmins))
+
+                      // Verify it was saved
+                      const verification = JSON.parse(localStorage.getItem('adminRoles') || '[]')
+                      const savedAdmin = verification.find(a => a.username === newAdminEntry.username)
+                      console.log('Admin saved verification:', savedAdmin ? 'SUCCESS' : 'FAILED', savedAdmin)
+
+                      const savedPassword = newAdmin.password
                       setNewAdmin({
                         username: '',
                         email: '',
@@ -3354,11 +3378,11 @@ export default function MasterAdminDashboard() {
                         adminId: 'master',
                         adminName: 'Master Admin',
                         action: 'admin_create',
-                        details: `Created new admin: ${newAdmin.username} with permissions: ${newAdmin.permissions.join(', ')}`,
+                        details: `Created new admin: ${newAdminEntry.username} with permissions: ${newAdminEntry.permissions.join(', ')}`,
                         ip: '192.168.1.1',
                         timestamp: new Date().toISOString()
                       }])
-                      alert(`Admin account "${newAdmin.username}" created successfully!\n\nLogin credentials:\nUsername: ${newAdmin.username}\nPassword: (the password you entered)`)
+                      alert(`✅ Admin account created successfully!\n\n📝 Login Credentials:\n━━━━━━━━━━━━━━━━━━━━\nUsername: ${newAdminEntry.username}\nEmail: ${newAdminEntry.email}\nPassword: ${savedPassword}\n━━━━━━━━━━━━━━━━━━━━\n\nYou can now logout and login with these credentials.`)
                     } else {
                       alert('Please fill in username, email, and password')
                     }
