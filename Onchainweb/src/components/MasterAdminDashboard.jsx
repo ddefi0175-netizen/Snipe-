@@ -18,10 +18,10 @@ export default function MasterAdminDashboard() {
   const [loginError, setLoginError] = useState('')
   const [activeSection, setActiveSection] = useState('user-agents')
   const [searchQuery, setSearchQuery] = useState('')
-  
+
   // User Management States - lazy loaded after auth
   const [users, setUsers] = useState([])
-  
+
   // User Agents/Sessions tracking - lazy loaded
   const [userAgents, setUserAgents] = useState([])
 
@@ -99,6 +99,9 @@ export default function MasterAdminDashboard() {
   // Trade Options Settings - lazy loaded
   const [tradeOptions, setTradeOptions] = useState({})
 
+  // Active Trades - for real-time trade control
+  const [activeTrades, setActiveTrades] = useState([])
+
   // Default data for initial load
   const defaultData = useMemo(() => ({
     userAgents: [
@@ -116,8 +119,8 @@ export default function MasterAdminDashboard() {
       referralBonus: { enabled: true, amount: 50, description: 'Per successful referral' },
       tradingCashback: { enabled: true, percentage: 20, minTrades: 10, description: 'Up to 20% on trading fees' },
       stakingBonus: { enabled: true, percentage: 12, description: 'APY on staking' },
-      vipBonus: { 
-        enabled: true, 
+      vipBonus: {
+        enabled: true,
         levels: [
           { level: 1, minDeposit: 0, bonus: 0, cashback: 5 },
           { level: 2, minDeposit: 1000, bonus: 50, cashback: 10 },
@@ -221,9 +224,27 @@ export default function MasterAdminDashboard() {
       setAdminRoles(getFromStorage('adminRoles', defaultData.adminRoles))
       setSiteSettings(getFromStorage('siteSettings', defaultData.siteSettings))
       setTradeOptions(getFromStorage('tradeOptions', defaultData.tradeOptions))
+      setActiveTrades(getFromStorage('activeTrades', []))
       setIsDataLoaded(true)
     })
   }, [defaultData])
+
+  // Refresh active trades in real-time
+  useEffect(() => {
+    if (!isAuthenticated || !isDataLoaded) return
+
+    const refreshActiveTrades = () => {
+      const trades = getFromStorage('activeTrades', [])
+      // Filter out expired trades
+      const now = Date.now()
+      const validTrades = trades.filter(t => t.endTime > now || t.status === 'active')
+      setActiveTrades(validTrades)
+    }
+
+    refreshActiveTrades()
+    const interval = setInterval(refreshActiveTrades, 1000) // Real-time updates
+    return () => clearInterval(interval)
+  }, [isAuthenticated, isDataLoaded])
 
   // Check authentication on load - fast initial check
   useEffect(() => {
@@ -258,7 +279,7 @@ export default function MasterAdminDashboard() {
     const refreshChats = () => {
       const chats = getFromStorage('activeChats', [])
       const logs = getFromStorage('customerChatLogs', [])
-      
+
       // Check for new messages and trigger notification
       const userMessages = logs.filter(l => l.type === 'user')
       if (userMessages.length > lastMessageCount && lastMessageCount > 0) {
@@ -267,9 +288,9 @@ export default function MasterAdminDashboard() {
         try {
           const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQkAIHPQ3bF3HQkAgLTX15xQGBY=')
           audio.volume = 0.5
-          audio.play().catch(() => {})
-        } catch (e) {}
-        
+          audio.play().catch(() => { })
+        } catch (e) { }
+
         // Show browser notification if permitted
         if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
           const latestMsg = userMessages[userMessages.length - 1]
@@ -278,21 +299,21 @@ export default function MasterAdminDashboard() {
             icon: '💬'
           })
         }
-        
+
         // Auto-clear alert after 5 seconds
         setTimeout(() => setNewMessageAlert(false), 5000)
       }
       setLastMessageCount(userMessages.length)
-      
+
       setActiveChats(chats)
       setChatLogs(logs)
     }
-    
+
     // Request notification permission
     if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
       Notification.requestPermission()
     }
-    
+
     refreshChats()
     const interval = setInterval(refreshChats, 5000) // Slower refresh for mobile performance
     return () => clearInterval(interval)
@@ -388,11 +409,41 @@ export default function MasterAdminDashboard() {
       setLoginError('')
       localStorage.setItem('masterAdminSession', JSON.stringify({
         username: loginData.username,
+        role: 'master',
         timestamp: Date.now()
       }))
-    } else {
-      setLoginError('Invalid credentials')
+      return
     }
+
+    // Check admin accounts
+    const savedAdminRoles = JSON.parse(localStorage.getItem('adminRoles') || '[]')
+    const adminUser = savedAdminRoles.find(
+      admin => (admin.username === loginData.username || admin.email === loginData.username)
+        && admin.password === loginData.password
+        && admin.status === 'active'
+    )
+
+    if (adminUser) {
+      setIsAuthenticated(true)
+      setIsDataLoaded(false)
+      setLoginError('')
+      // Update last login time
+      const updatedAdmins = savedAdminRoles.map(admin =>
+        admin.id === adminUser.id
+          ? { ...admin, lastLogin: new Date().toISOString() }
+          : admin
+      )
+      localStorage.setItem('adminRoles', JSON.stringify(updatedAdmins))
+      localStorage.setItem('masterAdminSession', JSON.stringify({
+        username: adminUser.username,
+        role: adminUser.role,
+        permissions: adminUser.permissions,
+        timestamp: Date.now()
+      }))
+      return
+    }
+
+    setLoginError('Invalid credentials or account inactive')
   }
 
   const handleLogout = () => {
@@ -404,8 +455,8 @@ export default function MasterAdminDashboard() {
   // Filter function for search
   const filterData = (data, query) => {
     if (!query) return data
-    return data.filter(item => 
-      Object.values(item).some(val => 
+    return data.filter(item =>
+      Object.values(item).some(val =>
         String(val).toLowerCase().includes(query.toLowerCase())
       )
     )
@@ -413,10 +464,10 @@ export default function MasterAdminDashboard() {
 
   // Update user balance
   const updateUserBalance = (userId, newBalance) => {
-    setUsers(prev => prev.map(user => 
+    setUsers(prev => prev.map(user =>
       user.id === userId ? { ...user, balance: parseFloat(newBalance) } : user
     ))
-    const updatedUsers = users.map(user => 
+    const updatedUsers = users.map(user =>
       user.id === userId ? { ...user, balance: parseFloat(newBalance) } : user
     )
     localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers))
@@ -424,7 +475,7 @@ export default function MasterAdminDashboard() {
 
   // Approve/Reject withdrawal
   const handleWithdrawalAction = (id, action) => {
-    setWithdrawals(prev => prev.map(w => 
+    setWithdrawals(prev => prev.map(w =>
       w.id === id ? { ...w, status: action } : w
     ))
     localStorage.setItem('adminWithdrawals', JSON.stringify(
@@ -434,7 +485,7 @@ export default function MasterAdminDashboard() {
 
   // Approve/Reject deposit
   const handleDepositAction = (id, action) => {
-    setDeposits(prev => prev.map(d => 
+    setDeposits(prev => prev.map(d =>
       d.id === id ? { ...d, status: action } : d
     ))
     localStorage.setItem('adminDeposits', JSON.stringify(
@@ -522,7 +573,7 @@ export default function MasterAdminDashboard() {
   // Send admin reply to customer chat
   const sendAdminReply = (sessionId) => {
     if (!adminReplyMessage.trim()) return
-    
+
     const adminReplies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]')
     adminReplies.push({
       id: Date.now(),
@@ -533,7 +584,7 @@ export default function MasterAdminDashboard() {
       delivered: false
     })
     localStorage.setItem('adminChatReplies', JSON.stringify(adminReplies))
-    
+
     // Also save to chat logs
     const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]')
     logs.push({
@@ -545,9 +596,9 @@ export default function MasterAdminDashboard() {
       timestamp: new Date().toISOString()
     })
     localStorage.setItem('customerChatLogs', JSON.stringify(logs))
-    
+
     setAdminReplyMessage('')
-    
+
     // Refresh chat logs
     setChatLogs(logs)
   }
@@ -610,7 +661,14 @@ export default function MasterAdminDashboard() {
           </div>
           <a onClick={() => setActiveSection('deposits')} className={activeSection === 'deposits' ? 'active' : ''}>Deposit</a>
           <a onClick={() => setActiveSection('withdrawals')} className={activeSection === 'withdrawals' ? 'active' : ''}>Withdraw</a>
+          <a onClick={() => setActiveSection('live-trades')} className={activeSection === 'live-trades' ? 'active' : ''}>
+            🔴 Live Trades
+            {activeTrades.length > 0 && (
+              <span className="nav-badge live">{activeTrades.length}</span>
+            )}
+          </a>
           <a onClick={() => setActiveSection('trade-options')} className={activeSection === 'trade-options' ? 'active' : ''}>Trade Options</a>
+          <a onClick={() => setActiveSection('ai-arbitrage')} className={activeSection === 'ai-arbitrage' ? 'active' : ''}>AI Arbitrage</a>
           <a onClick={() => setActiveSection('bonus-programs')} className={activeSection === 'bonus-programs' ? 'active' : ''}>Bonus Programs</a>
           <a onClick={() => setActiveSection('staking-plans')} className={activeSection === 'staking-plans' ? 'active' : ''}>Staking Plans</a>
           <a onClick={() => setActiveSection('staking-history')} className={activeSection === 'staking-history' ? 'active' : ''}>Staking History</a>
@@ -752,16 +810,16 @@ export default function MasterAdminDashboard() {
                         </span>
                       </td>
                       <td>
-                        <button 
+                        <button
                           className={`action-btn ${user.role === 'admin' ? 'demote' : 'promote'}`}
                           onClick={() => {
                             const newRole = user.role === 'admin' ? 'user' : 'admin'
-                            const updatedUsers = users.map(u => 
+                            const updatedUsers = users.map(u =>
                               u.id === user.id ? { ...u, role: newRole } : u
                             )
                             setUsers(updatedUsers)
                             localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers))
-                            
+
                             // Log the action
                             setAdminAuditLogs(prev => [...prev, {
                               id: Date.now(),
@@ -773,7 +831,7 @@ export default function MasterAdminDashboard() {
                               ip: '192.168.1.1',
                               timestamp: new Date().toISOString()
                             }])
-                            
+
                             // If promoting to admin, also add to adminRoles
                             if (newRole === 'admin') {
                               const existingAdmin = adminRoles.find(a => a.email === user.email)
@@ -800,10 +858,10 @@ export default function MasterAdminDashboard() {
                         </button>
                         <button className="action-btn edit">Edit</button>
                         <button className="action-btn view">View</button>
-                        <button 
+                        <button
                           className="action-btn block"
                           onClick={() => {
-                            const updatedUsers = users.map(u => 
+                            const updatedUsers = users.map(u =>
                               u.id === user.id ? { ...u, isActive: u.isActive === false ? true : false } : u
                             )
                             setUsers(updatedUsers)
@@ -1072,13 +1130,13 @@ export default function MasterAdminDashboard() {
                         </span>
                       </td>
                       <td className="action-cell">
-                        <button 
+                        <button
                           className="action-btn edit"
                           onClick={() => setEditingTradingLevel(level)}
                         >
                           ✏️ Edit
                         </button>
-                        <button 
+                        <button
                           className="action-btn delete"
                           onClick={() => {
                             if (confirm(`Delete ${level.name}?`)) {
@@ -1106,7 +1164,7 @@ export default function MasterAdminDashboard() {
                       <input
                         type="text"
                         value={editingTradingLevel.name}
-                        onChange={(e) => setEditingTradingLevel({...editingTradingLevel, name: e.target.value})}
+                        onChange={(e) => setEditingTradingLevel({ ...editingTradingLevel, name: e.target.value })}
                       />
                     </div>
                     <div className="form-field">
@@ -1114,7 +1172,7 @@ export default function MasterAdminDashboard() {
                       <input
                         type="number"
                         value={editingTradingLevel.countdown}
-                        onChange={(e) => setEditingTradingLevel({...editingTradingLevel, countdown: parseInt(e.target.value)})}
+                        onChange={(e) => setEditingTradingLevel({ ...editingTradingLevel, countdown: parseInt(e.target.value) })}
                       />
                     </div>
                     <div className="form-field">
@@ -1123,7 +1181,7 @@ export default function MasterAdminDashboard() {
                         type="number"
                         step="0.01"
                         value={editingTradingLevel.profitPercent}
-                        onChange={(e) => setEditingTradingLevel({...editingTradingLevel, profitPercent: parseFloat(e.target.value)})}
+                        onChange={(e) => setEditingTradingLevel({ ...editingTradingLevel, profitPercent: parseFloat(e.target.value) })}
                       />
                     </div>
                     <div className="form-field">
@@ -1131,7 +1189,7 @@ export default function MasterAdminDashboard() {
                       <input
                         type="number"
                         value={editingTradingLevel.minCapital}
-                        onChange={(e) => setEditingTradingLevel({...editingTradingLevel, minCapital: parseFloat(e.target.value)})}
+                        onChange={(e) => setEditingTradingLevel({ ...editingTradingLevel, minCapital: parseFloat(e.target.value) })}
                       />
                     </div>
                     <div className="form-field">
@@ -1139,21 +1197,21 @@ export default function MasterAdminDashboard() {
                       <input
                         type="number"
                         value={editingTradingLevel.maxCapital}
-                        onChange={(e) => setEditingTradingLevel({...editingTradingLevel, maxCapital: parseFloat(e.target.value)})}
+                        onChange={(e) => setEditingTradingLevel({ ...editingTradingLevel, maxCapital: parseFloat(e.target.value) })}
                       />
                     </div>
                     <div className="form-field">
                       <label>Status</label>
                       <select
                         value={editingTradingLevel.status}
-                        onChange={(e) => setEditingTradingLevel({...editingTradingLevel, status: e.target.value})}
+                        onChange={(e) => setEditingTradingLevel({ ...editingTradingLevel, status: e.target.value })}
                       >
                         <option value="active">Active</option>
                         <option value="inactive">Inactive</option>
                       </select>
                     </div>
                     <div className="modal-actions">
-                      <button 
+                      <button
                         className="save-btn"
                         onClick={() => {
                           setTradingLevels(prev => prev.map(l => l.id === editingTradingLevel.id ? editingTradingLevel : l))
@@ -1183,7 +1241,7 @@ export default function MasterAdminDashboard() {
                         type="text"
                         placeholder="e.g., Level-6"
                         value={newTradingLevel.name}
-                        onChange={(e) => setNewTradingLevel({...newTradingLevel, name: e.target.value})}
+                        onChange={(e) => setNewTradingLevel({ ...newTradingLevel, name: e.target.value })}
                       />
                     </div>
                     <div className="form-field">
@@ -1191,7 +1249,7 @@ export default function MasterAdminDashboard() {
                       <input
                         type="number"
                         value={newTradingLevel.countdown}
-                        onChange={(e) => setNewTradingLevel({...newTradingLevel, countdown: parseInt(e.target.value)})}
+                        onChange={(e) => setNewTradingLevel({ ...newTradingLevel, countdown: parseInt(e.target.value) })}
                       />
                     </div>
                     <div className="form-field">
@@ -1200,7 +1258,7 @@ export default function MasterAdminDashboard() {
                         type="number"
                         step="0.01"
                         value={newTradingLevel.profitPercent}
-                        onChange={(e) => setNewTradingLevel({...newTradingLevel, profitPercent: parseFloat(e.target.value)})}
+                        onChange={(e) => setNewTradingLevel({ ...newTradingLevel, profitPercent: parseFloat(e.target.value) })}
                       />
                     </div>
                     <div className="form-field">
@@ -1208,7 +1266,7 @@ export default function MasterAdminDashboard() {
                       <input
                         type="number"
                         value={newTradingLevel.minCapital}
-                        onChange={(e) => setNewTradingLevel({...newTradingLevel, minCapital: parseFloat(e.target.value)})}
+                        onChange={(e) => setNewTradingLevel({ ...newTradingLevel, minCapital: parseFloat(e.target.value) })}
                       />
                     </div>
                     <div className="form-field">
@@ -1216,11 +1274,11 @@ export default function MasterAdminDashboard() {
                       <input
                         type="number"
                         value={newTradingLevel.maxCapital}
-                        onChange={(e) => setNewTradingLevel({...newTradingLevel, maxCapital: parseFloat(e.target.value)})}
+                        onChange={(e) => setNewTradingLevel({ ...newTradingLevel, maxCapital: parseFloat(e.target.value) })}
                       />
                     </div>
                     <div className="modal-actions">
-                      <button 
+                      <button
                         className="save-btn"
                         onClick={() => {
                           if (newTradingLevel.name) {
@@ -1281,16 +1339,16 @@ export default function MasterAdminDashboard() {
                       </td>
                       <td>{currency.createdAt}</td>
                       <td>
-                        <button 
+                        <button
                           className="action-btn edit"
                           onClick={() => {
                             const newStatus = currency.status === 'active' ? 'inactive' : 'active'
-                            setCurrencies(prev => prev.map(c => c.id === currency.id ? {...c, status: newStatus} : c))
+                            setCurrencies(prev => prev.map(c => c.id === currency.id ? { ...c, status: newStatus } : c))
                           }}
                         >
                           {currency.status === 'active' ? 'Disable' : 'Enable'}
                         </button>
-                        <button 
+                        <button
                           className="action-btn delete"
                           onClick={() => {
                             if (confirm(`Delete ${currency.name}?`)) {
@@ -1323,7 +1381,7 @@ export default function MasterAdminDashboard() {
                   type="text"
                   placeholder="e.g., Bitcoin"
                   value={newCurrency.name}
-                  onChange={(e) => setNewCurrency({...newCurrency, name: e.target.value})}
+                  onChange={(e) => setNewCurrency({ ...newCurrency, name: e.target.value })}
                 />
               </div>
               <div className="form-field">
@@ -1332,7 +1390,7 @@ export default function MasterAdminDashboard() {
                   type="text"
                   placeholder="e.g., BTC"
                   value={newCurrency.symbol}
-                  onChange={(e) => setNewCurrency({...newCurrency, symbol: e.target.value.toUpperCase()})}
+                  onChange={(e) => setNewCurrency({ ...newCurrency, symbol: e.target.value.toUpperCase() })}
                 />
               </div>
               <div className="form-field">
@@ -1341,10 +1399,10 @@ export default function MasterAdminDashboard() {
                   type="text"
                   placeholder="e.g., ₿"
                   value={newCurrency.icon}
-                  onChange={(e) => setNewCurrency({...newCurrency, icon: e.target.value})}
+                  onChange={(e) => setNewCurrency({ ...newCurrency, icon: e.target.value })}
                 />
               </div>
-              <button 
+              <button
                 className="save-btn"
                 onClick={() => {
                   if (newCurrency.name && newCurrency.symbol) {
@@ -1379,7 +1437,7 @@ export default function MasterAdminDashboard() {
                   type="text"
                   placeholder="e.g., Ethereum (ERC-20)"
                   value={newNetwork.name}
-                  onChange={(e) => setNewNetwork({...newNetwork, name: e.target.value})}
+                  onChange={(e) => setNewNetwork({ ...newNetwork, name: e.target.value })}
                 />
               </div>
               <div className="form-field">
@@ -1388,7 +1446,7 @@ export default function MasterAdminDashboard() {
                   type="text"
                   placeholder="e.g., ETH"
                   value={newNetwork.symbol}
-                  onChange={(e) => setNewNetwork({...newNetwork, symbol: e.target.value.toUpperCase()})}
+                  onChange={(e) => setNewNetwork({ ...newNetwork, symbol: e.target.value.toUpperCase() })}
                 />
               </div>
               <div className="form-field">
@@ -1397,7 +1455,7 @@ export default function MasterAdminDashboard() {
                   type="text"
                   placeholder="e.g., 1 for Ethereum"
                   value={newNetwork.chainId}
-                  onChange={(e) => setNewNetwork({...newNetwork, chainId: e.target.value})}
+                  onChange={(e) => setNewNetwork({ ...newNetwork, chainId: e.target.value })}
                 />
               </div>
               <div className="form-field">
@@ -1405,10 +1463,10 @@ export default function MasterAdminDashboard() {
                 <input
                   type="number"
                   value={newNetwork.confirmations}
-                  onChange={(e) => setNewNetwork({...newNetwork, confirmations: parseInt(e.target.value)})}
+                  onChange={(e) => setNewNetwork({ ...newNetwork, confirmations: parseInt(e.target.value) })}
                 />
               </div>
-              <button 
+              <button
                 className="save-btn"
                 onClick={() => {
                   if (newNetwork.name && newNetwork.symbol) {
@@ -1425,7 +1483,7 @@ export default function MasterAdminDashboard() {
                 Create Network
               </button>
             </div>
-            
+
             <h3 className="subsection-title">Existing Networks</h3>
             <div className="data-table">
               <table>
@@ -1454,16 +1512,16 @@ export default function MasterAdminDashboard() {
                         </span>
                       </td>
                       <td>
-                        <button 
+                        <button
                           className="action-btn edit"
                           onClick={() => {
                             const newStatus = network.status === 'active' ? 'inactive' : 'active'
-                            setNetworks(prev => prev.map(n => n.id === network.id ? {...n, status: newStatus} : n))
+                            setNetworks(prev => prev.map(n => n.id === network.id ? { ...n, status: newStatus } : n))
                           }}
                         >
                           {network.status === 'active' ? 'Disable' : 'Enable'}
                         </button>
-                        <button 
+                        <button
                           className="action-btn delete"
                           onClick={() => {
                             if (confirm(`Delete ${network.name}?`)) {
@@ -1494,7 +1552,7 @@ export default function MasterAdminDashboard() {
                 <label>Network</label>
                 <select
                   value={newWallet.network}
-                  onChange={(e) => setNewWallet({...newWallet, network: e.target.value})}
+                  onChange={(e) => setNewWallet({ ...newWallet, network: e.target.value })}
                 >
                   <option value="">Select Network</option>
                   {networks.map(n => (
@@ -1508,7 +1566,7 @@ export default function MasterAdminDashboard() {
                   type="text"
                   placeholder="Enter deposit wallet address"
                   value={newWallet.address}
-                  onChange={(e) => setNewWallet({...newWallet, address: e.target.value})}
+                  onChange={(e) => setNewWallet({ ...newWallet, address: e.target.value })}
                 />
               </div>
               <div className="form-field">
@@ -1517,10 +1575,10 @@ export default function MasterAdminDashboard() {
                   type="text"
                   placeholder="e.g., Main BTC Wallet"
                   value={newWallet.label}
-                  onChange={(e) => setNewWallet({...newWallet, label: e.target.value})}
+                  onChange={(e) => setNewWallet({ ...newWallet, label: e.target.value })}
                 />
               </div>
-              <button 
+              <button
                 className="save-btn"
                 onClick={() => {
                   if (newWallet.network && newWallet.address) {
@@ -1537,7 +1595,7 @@ export default function MasterAdminDashboard() {
                 Add Wallet Address
               </button>
             </div>
-            
+
             <h3 className="subsection-title">Deposit Wallet Addresses</h3>
             <div className="data-table">
               <table>
@@ -1564,8 +1622,8 @@ export default function MasterAdminDashboard() {
                           value={wallet.address}
                           placeholder="Enter wallet address"
                           onChange={(e) => {
-                            setDepositWallets(prev => prev.map(w => 
-                              w.id === wallet.id ? {...w, address: e.target.value} : w
+                            setDepositWallets(prev => prev.map(w =>
+                              w.id === wallet.id ? { ...w, address: e.target.value } : w
                             ))
                           }}
                         />
@@ -1576,16 +1634,16 @@ export default function MasterAdminDashboard() {
                         </span>
                       </td>
                       <td>
-                        <button 
+                        <button
                           className="action-btn edit"
                           onClick={() => {
                             const newStatus = wallet.status === 'active' ? 'inactive' : 'active'
-                            setDepositWallets(prev => prev.map(w => w.id === wallet.id ? {...w, status: newStatus} : w))
+                            setDepositWallets(prev => prev.map(w => w.id === wallet.id ? { ...w, status: newStatus } : w))
                           }}
                         >
                           {wallet.status === 'active' ? 'Disable' : 'Enable'}
                         </button>
-                        <button 
+                        <button
                           className="action-btn delete"
                           onClick={() => {
                             if (confirm('Delete this wallet?')) {
@@ -1617,7 +1675,7 @@ export default function MasterAdminDashboard() {
                   <label>From Currency</label>
                   <select
                     value={newExchangeRate.from}
-                    onChange={(e) => setNewExchangeRate({...newExchangeRate, from: e.target.value})}
+                    onChange={(e) => setNewExchangeRate({ ...newExchangeRate, from: e.target.value })}
                   >
                     <option value="">Select Currency</option>
                     {currencies.map(c => (
@@ -1629,7 +1687,7 @@ export default function MasterAdminDashboard() {
                   <label>To Currency</label>
                   <select
                     value={newExchangeRate.to}
-                    onChange={(e) => setNewExchangeRate({...newExchangeRate, to: e.target.value})}
+                    onChange={(e) => setNewExchangeRate({ ...newExchangeRate, to: e.target.value })}
                   >
                     <option value="USDT">USDT</option>
                     <option value="USD">USD</option>
@@ -1645,11 +1703,11 @@ export default function MasterAdminDashboard() {
                     step="0.01"
                     placeholder="e.g., 42500.00"
                     value={newExchangeRate.rate}
-                    onChange={(e) => setNewExchangeRate({...newExchangeRate, rate: parseFloat(e.target.value)})}
+                    onChange={(e) => setNewExchangeRate({ ...newExchangeRate, rate: parseFloat(e.target.value) })}
                   />
                 </div>
               </div>
-              <button 
+              <button
                 className="save-btn"
                 onClick={() => {
                   if (newExchangeRate.from && newExchangeRate.rate) {
@@ -1666,7 +1724,7 @@ export default function MasterAdminDashboard() {
                 Add Exchange Rate
               </button>
             </div>
-            
+
             <h3 className="subsection-title">Current Exchange Rates</h3>
             <div className="data-table">
               <table>
@@ -1693,8 +1751,8 @@ export default function MasterAdminDashboard() {
                           className="rate-input"
                           value={rate.rate}
                           onChange={(e) => {
-                            setExchangeRates(prev => prev.map(r => 
-                              r.id === rate.id ? {...r, rate: parseFloat(e.target.value)} : r
+                            setExchangeRates(prev => prev.map(r =>
+                              r.id === rate.id ? { ...r, rate: parseFloat(e.target.value) } : r
                             ))
                           }}
                         />
@@ -1705,16 +1763,16 @@ export default function MasterAdminDashboard() {
                         </span>
                       </td>
                       <td>
-                        <button 
+                        <button
                           className="action-btn edit"
                           onClick={() => {
                             const newStatus = rate.status === 'active' ? 'inactive' : 'active'
-                            setExchangeRates(prev => prev.map(r => r.id === rate.id ? {...r, status: newStatus} : r))
+                            setExchangeRates(prev => prev.map(r => r.id === rate.id ? { ...r, status: newStatus } : r))
                           }}
                         >
                           {rate.status === 'active' ? 'Disable' : 'Enable'}
                         </button>
-                        <button 
+                        <button
                           className="action-btn delete"
                           onClick={() => {
                             if (confirm('Delete this rate?')) {
@@ -1854,6 +1912,227 @@ export default function MasterAdminDashboard() {
           </div>
         )}
 
+        {/* Live Trades Control Section */}
+        {activeSection === 'live-trades' && (
+          <div className="admin-section">
+            <div className="section-header">
+              <h1>🔴 Live Trades Control</h1>
+              <p>Monitor and control active binary trades in real-time</p>
+            </div>
+
+            {activeTrades.length === 0 ? (
+              <div className="no-active-trades">
+                <div className="no-trades-icon">📊</div>
+                <h3>No Active Trades</h3>
+                <p>When users place binary trades, they will appear here in real-time.</p>
+                <p>You can set win/lose outcomes for each trade before it expires.</p>
+              </div>
+            ) : (
+              <div className="live-trades-grid">
+                {activeTrades.map((trade) => {
+                  const now = Date.now()
+                  const timeLeft = Math.max(0, Math.floor((trade.endTime - now) / 1000))
+                  const progress = Math.min(100, ((now - trade.startTime) / (trade.endTime - trade.startTime)) * 100)
+                  const mins = Math.floor(timeLeft / 60)
+                  const secs = timeLeft % 60
+
+                  return (
+                    <div key={trade.id} className={`live-trade-card ${trade.adminOutcome !== 'pending' ? 'decided' : ''}`}>
+                      <div className="live-trade-header">
+                        <div className="trade-user-info">
+                          <span className="user-avatar">👤</span>
+                          <div>
+                            <div className="user-email">{trade.userEmail}</div>
+                            <div className="user-id">ID: {trade.userId}</div>
+                          </div>
+                        </div>
+                        <div className={`trade-direction-badge ${trade.direction}`}>
+                          {trade.direction === 'up' ? '📈 UP' : '📉 DOWN'}
+                        </div>
+                      </div>
+
+                      <div className="live-trade-details">
+                        <div className="trade-detail">
+                          <span className="detail-label">Pair</span>
+                          <span className="detail-value">{trade.pair}</span>
+                        </div>
+                        <div className="trade-detail">
+                          <span className="detail-label">Amount</span>
+                          <span className="detail-value">${trade.amount?.toLocaleString()}</span>
+                        </div>
+                        <div className="trade-detail">
+                          <span className="detail-label">Entry Price</span>
+                          <span className="detail-value">${trade.entryPrice?.toFixed(2)}</span>
+                        </div>
+                        <div className="trade-detail">
+                          <span className="detail-label">Level</span>
+                          <span className="detail-value">Level {trade.level}</span>
+                        </div>
+                        <div className="trade-detail">
+                          <span className="detail-label">Profit %</span>
+                          <span className="detail-value positive">+{trade.profitPercent}%</span>
+                        </div>
+                        <div className="trade-detail">
+                          <span className="detail-label">Potential Win</span>
+                          <span className="detail-value positive">+${(trade.amount * trade.profitPercent / 100).toFixed(2)}</span>
+                        </div>
+                      </div>
+
+                      <div className="live-trade-countdown">
+                        <div className="countdown-bar">
+                          <div className="countdown-fill" style={{ width: `${100 - progress}%` }}></div>
+                        </div>
+                        <div className="countdown-time">
+                          <span className={timeLeft < 30 ? 'urgent' : ''}>
+                            {mins}:{secs.toString().padStart(2, '0')}
+                          </span>
+                          <span className="countdown-label">remaining</span>
+                        </div>
+                      </div>
+
+                      <div className="live-trade-actions">
+                        {trade.adminOutcome === 'pending' ? (
+                          <>
+                            <button
+                              className="outcome-btn win"
+                              onClick={() => {
+                                const trades = JSON.parse(localStorage.getItem('activeTrades') || '[]')
+                                const updated = trades.map(t =>
+                                  t.id === trade.id ? { ...t, adminOutcome: 'win' } : t
+                                )
+                                localStorage.setItem('activeTrades', JSON.stringify(updated))
+                                setActiveTrades(updated)
+                              }}
+                            >
+                              ✅ Set WIN
+                            </button>
+                            <button
+                              className="outcome-btn lose"
+                              onClick={() => {
+                                const trades = JSON.parse(localStorage.getItem('activeTrades') || '[]')
+                                const updated = trades.map(t =>
+                                  t.id === trade.id ? { ...t, adminOutcome: 'lose' } : t
+                                )
+                                localStorage.setItem('activeTrades', JSON.stringify(updated))
+                                setActiveTrades(updated)
+                              }}
+                            >
+                              ❌ Set LOSE
+                            </button>
+                          </>
+                        ) : (
+                          <div className={`outcome-decided ${trade.adminOutcome}`}>
+                            {trade.adminOutcome === 'win' ? '✅ Will WIN' : '❌ Will LOSE'}
+                            <button
+                              className="reset-outcome-btn"
+                              onClick={() => {
+                                const trades = JSON.parse(localStorage.getItem('activeTrades') || '[]')
+                                const updated = trades.map(t =>
+                                  t.id === trade.id ? { ...t, adminOutcome: 'pending' } : t
+                                )
+                                localStorage.setItem('activeTrades', JSON.stringify(updated))
+                                setActiveTrades(updated)
+                              }}
+                            >
+                              Reset
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* AI Arbitrage Control Section */}
+        {activeSection === 'ai-arbitrage' && (
+          <div className="admin-section">
+            <div className="section-header">
+              <h1>🤖 AI Arbitrage Management</h1>
+              <p>Manage AI arbitrage levels and monitor active investments</p>
+            </div>
+
+            <div className="ai-arbitrage-admin">
+              <h3>📊 Arbitrage Levels Configuration</h3>
+              <div className="data-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>LEVEL</th>
+                      <th>MIN CAPITAL</th>
+                      <th>MAX CAPITAL</th>
+                      <th>PROFIT %</th>
+                      <th>CYCLE DAYS</th>
+                      <th>STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { level: 1, minCapital: 1000, maxCapital: 30000, profit: 0.9, cycleDays: 2 },
+                      { level: 2, minCapital: 30001, maxCapital: 50000, profit: 2, cycleDays: 5 },
+                      { level: 3, minCapital: 50001, maxCapital: 300000, profit: 3.5, cycleDays: 7 },
+                      { level: 4, minCapital: 300001, maxCapital: 500000, profit: 15, cycleDays: 15 },
+                      { level: 5, minCapital: 500001, maxCapital: 999999999, profit: 20, cycleDays: 30 },
+                    ].map((level) => (
+                      <tr key={level.level}>
+                        <td><span className="level-badge">Level {level.level}</span></td>
+                        <td>${level.minCapital.toLocaleString()}</td>
+                        <td>{level.maxCapital >= 999999999 ? '∞' : `$${level.maxCapital.toLocaleString()}`}</td>
+                        <td className="positive">+{level.profit}%</td>
+                        <td>{level.cycleDays} days</td>
+                        <td><span className="status-badge active">Active</span></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <h3 style={{ marginTop: '30px' }}>📈 Active AI Investments</h3>
+              <div className="data-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>USER</th>
+                      <th>AMOUNT</th>
+                      <th>LEVEL</th>
+                      <th>PROFIT</th>
+                      <th>START DATE</th>
+                      <th>END DATE</th>
+                      <th>STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(() => {
+                      const investments = JSON.parse(localStorage.getItem('aiArbitrageInvestments') || '[]')
+                      if (investments.length === 0) {
+                        return (
+                          <tr>
+                            <td colSpan="7" className="no-data">No active AI arbitrage investments</td>
+                          </tr>
+                        )
+                      }
+                      return investments.map((inv, idx) => (
+                        <tr key={idx}>
+                          <td>User</td>
+                          <td>${inv.amount?.toLocaleString()}</td>
+                          <td>Level {inv.level}</td>
+                          <td className="positive">+{inv.profit}%</td>
+                          <td>{new Date(inv.startTime).toLocaleDateString()}</td>
+                          <td>{new Date(inv.endTime).toLocaleDateString()}</td>
+                          <td><span className="status-badge active">Active</span></td>
+                        </tr>
+                      ))
+                    })()}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Trade History Section */}
         {activeSection === 'trade-history' && (
           <div className="admin-section">
@@ -1952,7 +2231,7 @@ export default function MasterAdminDashboard() {
                   <input
                     type="text"
                     value={siteSettings.siteName}
-                    onChange={(e) => setSiteSettings({...siteSettings, siteName: e.target.value})}
+                    onChange={(e) => setSiteSettings({ ...siteSettings, siteName: e.target.value })}
                   />
                 </div>
                 <div className="setting-row">
@@ -1960,7 +2239,7 @@ export default function MasterAdminDashboard() {
                   <input
                     type="text"
                     value={siteSettings.siteUrl}
-                    onChange={(e) => setSiteSettings({...siteSettings, siteUrl: e.target.value})}
+                    onChange={(e) => setSiteSettings({ ...siteSettings, siteUrl: e.target.value })}
                   />
                 </div>
                 <div className="setting-row">
@@ -1968,7 +2247,7 @@ export default function MasterAdminDashboard() {
                   <input
                     type="email"
                     value={siteSettings.supportEmail}
-                    onChange={(e) => setSiteSettings({...siteSettings, supportEmail: e.target.value})}
+                    onChange={(e) => setSiteSettings({ ...siteSettings, supportEmail: e.target.value })}
                   />
                 </div>
               </div>
@@ -1980,7 +2259,7 @@ export default function MasterAdminDashboard() {
                   <input
                     type="checkbox"
                     checked={siteSettings.maintenanceMode}
-                    onChange={(e) => setSiteSettings({...siteSettings, maintenanceMode: e.target.checked})}
+                    onChange={(e) => setSiteSettings({ ...siteSettings, maintenanceMode: e.target.checked })}
                   />
                 </div>
                 <div className="toggle-row">
@@ -1988,7 +2267,7 @@ export default function MasterAdminDashboard() {
                   <input
                     type="checkbox"
                     checked={siteSettings.registrationEnabled}
-                    onChange={(e) => setSiteSettings({...siteSettings, registrationEnabled: e.target.checked})}
+                    onChange={(e) => setSiteSettings({ ...siteSettings, registrationEnabled: e.target.checked })}
                   />
                 </div>
                 <div className="toggle-row">
@@ -1996,7 +2275,7 @@ export default function MasterAdminDashboard() {
                   <input
                     type="checkbox"
                     checked={siteSettings.depositEnabled}
-                    onChange={(e) => setSiteSettings({...siteSettings, depositEnabled: e.target.checked})}
+                    onChange={(e) => setSiteSettings({ ...siteSettings, depositEnabled: e.target.checked })}
                   />
                 </div>
                 <div className="toggle-row">
@@ -2004,7 +2283,7 @@ export default function MasterAdminDashboard() {
                   <input
                     type="checkbox"
                     checked={siteSettings.withdrawalEnabled}
-                    onChange={(e) => setSiteSettings({...siteSettings, withdrawalEnabled: e.target.checked})}
+                    onChange={(e) => setSiteSettings({ ...siteSettings, withdrawalEnabled: e.target.checked })}
                   />
                 </div>
                 <div className="toggle-row">
@@ -2012,7 +2291,7 @@ export default function MasterAdminDashboard() {
                   <input
                     type="checkbox"
                     checked={siteSettings.tradingEnabled}
-                    onChange={(e) => setSiteSettings({...siteSettings, tradingEnabled: e.target.checked})}
+                    onChange={(e) => setSiteSettings({ ...siteSettings, tradingEnabled: e.target.checked })}
                   />
                 </div>
               </div>
@@ -2024,7 +2303,7 @@ export default function MasterAdminDashboard() {
                   <input
                     type="number"
                     value={siteSettings.minWithdrawal}
-                    onChange={(e) => setSiteSettings({...siteSettings, minWithdrawal: parseFloat(e.target.value)})}
+                    onChange={(e) => setSiteSettings({ ...siteSettings, minWithdrawal: parseFloat(e.target.value) })}
                   />
                 </div>
                 <div className="setting-row">
@@ -2032,7 +2311,7 @@ export default function MasterAdminDashboard() {
                   <input
                     type="number"
                     value={siteSettings.maxWithdrawal}
-                    onChange={(e) => setSiteSettings({...siteSettings, maxWithdrawal: parseFloat(e.target.value)})}
+                    onChange={(e) => setSiteSettings({ ...siteSettings, maxWithdrawal: parseFloat(e.target.value) })}
                   />
                 </div>
                 <div className="setting-row">
@@ -2040,7 +2319,7 @@ export default function MasterAdminDashboard() {
                   <input
                     type="number"
                     value={siteSettings.withdrawalFee}
-                    onChange={(e) => setSiteSettings({...siteSettings, withdrawalFee: parseFloat(e.target.value)})}
+                    onChange={(e) => setSiteSettings({ ...siteSettings, withdrawalFee: parseFloat(e.target.value) })}
                   />
                 </div>
               </div>
@@ -2052,7 +2331,7 @@ export default function MasterAdminDashboard() {
                   <input
                     type="number"
                     value={siteSettings.welcomeBonus}
-                    onChange={(e) => setSiteSettings({...siteSettings, welcomeBonus: parseFloat(e.target.value)})}
+                    onChange={(e) => setSiteSettings({ ...siteSettings, welcomeBonus: parseFloat(e.target.value) })}
                   />
                 </div>
                 <div className="setting-row">
@@ -2060,7 +2339,7 @@ export default function MasterAdminDashboard() {
                   <input
                     type="number"
                     value={siteSettings.referralBonus}
-                    onChange={(e) => setSiteSettings({...siteSettings, referralBonus: parseFloat(e.target.value)})}
+                    onChange={(e) => setSiteSettings({ ...siteSettings, referralBonus: parseFloat(e.target.value) })}
                   />
                 </div>
               </div>
@@ -2078,7 +2357,7 @@ export default function MasterAdminDashboard() {
               <h1>🎁 Bonus Programs Management</h1>
               <p>Configure all bonus and reward programs</p>
             </div>
-            
+
             <div className="bonus-programs-grid">
               {/* Welcome Bonus */}
               <div className="bonus-program-card">
@@ -2086,12 +2365,12 @@ export default function MasterAdminDashboard() {
                   <span className="bonus-emoji">🎉</span>
                   <h3>Welcome Bonus</h3>
                   <label className="toggle-switch-small">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={bonusPrograms.welcomeBonus.enabled}
                       onChange={(e) => setBonusPrograms({
-                        ...bonusPrograms, 
-                        welcomeBonus: {...bonusPrograms.welcomeBonus, enabled: e.target.checked}
+                        ...bonusPrograms,
+                        welcomeBonus: { ...bonusPrograms.welcomeBonus, enabled: e.target.checked }
                       })}
                     />
                     <span className="toggle-slider-small"></span>
@@ -2100,23 +2379,23 @@ export default function MasterAdminDashboard() {
                 <div className="bonus-card-body">
                   <div className="bonus-field">
                     <label>Amount (USDT)</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       value={bonusPrograms.welcomeBonus.amount}
                       onChange={(e) => setBonusPrograms({
-                        ...bonusPrograms, 
-                        welcomeBonus: {...bonusPrograms.welcomeBonus, amount: parseFloat(e.target.value)}
+                        ...bonusPrograms,
+                        welcomeBonus: { ...bonusPrograms.welcomeBonus, amount: parseFloat(e.target.value) }
                       })}
                     />
                   </div>
                   <div className="bonus-field">
                     <label>Description</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={bonusPrograms.welcomeBonus.description}
                       onChange={(e) => setBonusPrograms({
-                        ...bonusPrograms, 
-                        welcomeBonus: {...bonusPrograms.welcomeBonus, description: e.target.value}
+                        ...bonusPrograms,
+                        welcomeBonus: { ...bonusPrograms.welcomeBonus, description: e.target.value }
                       })}
                     />
                   </div>
@@ -2129,12 +2408,12 @@ export default function MasterAdminDashboard() {
                   <span className="bonus-emoji">👥</span>
                   <h3>Referral Bonus</h3>
                   <label className="toggle-switch-small">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={bonusPrograms.referralBonus.enabled}
                       onChange={(e) => setBonusPrograms({
-                        ...bonusPrograms, 
-                        referralBonus: {...bonusPrograms.referralBonus, enabled: e.target.checked}
+                        ...bonusPrograms,
+                        referralBonus: { ...bonusPrograms.referralBonus, enabled: e.target.checked }
                       })}
                     />
                     <span className="toggle-slider-small"></span>
@@ -2143,23 +2422,23 @@ export default function MasterAdminDashboard() {
                 <div className="bonus-card-body">
                   <div className="bonus-field">
                     <label>Amount per Referral (USDT)</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       value={bonusPrograms.referralBonus.amount}
                       onChange={(e) => setBonusPrograms({
-                        ...bonusPrograms, 
-                        referralBonus: {...bonusPrograms.referralBonus, amount: parseFloat(e.target.value)}
+                        ...bonusPrograms,
+                        referralBonus: { ...bonusPrograms.referralBonus, amount: parseFloat(e.target.value) }
                       })}
                     />
                   </div>
                   <div className="bonus-field">
                     <label>Description</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={bonusPrograms.referralBonus.description}
                       onChange={(e) => setBonusPrograms({
-                        ...bonusPrograms, 
-                        referralBonus: {...bonusPrograms.referralBonus, description: e.target.value}
+                        ...bonusPrograms,
+                        referralBonus: { ...bonusPrograms.referralBonus, description: e.target.value }
                       })}
                     />
                   </div>
@@ -2172,12 +2451,12 @@ export default function MasterAdminDashboard() {
                   <span className="bonus-emoji">💹</span>
                   <h3>Trading Cashback</h3>
                   <label className="toggle-switch-small">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={bonusPrograms.tradingCashback.enabled}
                       onChange={(e) => setBonusPrograms({
-                        ...bonusPrograms, 
-                        tradingCashback: {...bonusPrograms.tradingCashback, enabled: e.target.checked}
+                        ...bonusPrograms,
+                        tradingCashback: { ...bonusPrograms.tradingCashback, enabled: e.target.checked }
                       })}
                     />
                     <span className="toggle-slider-small"></span>
@@ -2186,23 +2465,23 @@ export default function MasterAdminDashboard() {
                 <div className="bonus-card-body">
                   <div className="bonus-field">
                     <label>Cashback Percentage (%)</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       value={bonusPrograms.tradingCashback.percentage}
                       onChange={(e) => setBonusPrograms({
-                        ...bonusPrograms, 
-                        tradingCashback: {...bonusPrograms.tradingCashback, percentage: parseFloat(e.target.value)}
+                        ...bonusPrograms,
+                        tradingCashback: { ...bonusPrograms.tradingCashback, percentage: parseFloat(e.target.value) }
                       })}
                     />
                   </div>
                   <div className="bonus-field">
                     <label>Min Trades Required</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       value={bonusPrograms.tradingCashback.minTrades}
                       onChange={(e) => setBonusPrograms({
-                        ...bonusPrograms, 
-                        tradingCashback: {...bonusPrograms.tradingCashback, minTrades: parseInt(e.target.value)}
+                        ...bonusPrograms,
+                        tradingCashback: { ...bonusPrograms.tradingCashback, minTrades: parseInt(e.target.value) }
                       })}
                     />
                   </div>
@@ -2215,12 +2494,12 @@ export default function MasterAdminDashboard() {
                   <span className="bonus-emoji">🔒</span>
                   <h3>Staking Rewards</h3>
                   <label className="toggle-switch-small">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={bonusPrograms.stakingBonus.enabled}
                       onChange={(e) => setBonusPrograms({
-                        ...bonusPrograms, 
-                        stakingBonus: {...bonusPrograms.stakingBonus, enabled: e.target.checked}
+                        ...bonusPrograms,
+                        stakingBonus: { ...bonusPrograms.stakingBonus, enabled: e.target.checked }
                       })}
                     />
                     <span className="toggle-slider-small"></span>
@@ -2229,23 +2508,23 @@ export default function MasterAdminDashboard() {
                 <div className="bonus-card-body">
                   <div className="bonus-field">
                     <label>APY Percentage (%)</label>
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       value={bonusPrograms.stakingBonus.percentage}
                       onChange={(e) => setBonusPrograms({
-                        ...bonusPrograms, 
-                        stakingBonus: {...bonusPrograms.stakingBonus, percentage: parseFloat(e.target.value)}
+                        ...bonusPrograms,
+                        stakingBonus: { ...bonusPrograms.stakingBonus, percentage: parseFloat(e.target.value) }
                       })}
                     />
                   </div>
                   <div className="bonus-field">
                     <label>Description</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       value={bonusPrograms.stakingBonus.description}
                       onChange={(e) => setBonusPrograms({
-                        ...bonusPrograms, 
-                        stakingBonus: {...bonusPrograms.stakingBonus, description: e.target.value}
+                        ...bonusPrograms,
+                        stakingBonus: { ...bonusPrograms.stakingBonus, description: e.target.value }
                       })}
                     />
                   </div>
@@ -2259,12 +2538,12 @@ export default function MasterAdminDashboard() {
               <div className="vip-toggle">
                 <label>Enable VIP Program</label>
                 <label className="toggle-switch-small">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     checked={bonusPrograms.vipBonus.enabled}
                     onChange={(e) => setBonusPrograms({
-                      ...bonusPrograms, 
-                      vipBonus: {...bonusPrograms.vipBonus, enabled: e.target.checked}
+                      ...bonusPrograms,
+                      vipBonus: { ...bonusPrograms.vipBonus, enabled: e.target.checked }
                     })}
                   />
                   <span className="toggle-slider-small"></span>
@@ -2285,43 +2564,43 @@ export default function MasterAdminDashboard() {
                       <tr key={idx}>
                         <td>Level {level.level}</td>
                         <td>
-                          <input 
-                            type="number" 
+                          <input
+                            type="number"
                             value={level.minDeposit}
                             onChange={(e) => {
                               const newLevels = [...bonusPrograms.vipBonus.levels]
                               newLevels[idx].minDeposit = parseFloat(e.target.value)
                               setBonusPrograms({
                                 ...bonusPrograms,
-                                vipBonus: {...bonusPrograms.vipBonus, levels: newLevels}
+                                vipBonus: { ...bonusPrograms.vipBonus, levels: newLevels }
                               })
                             }}
                           />
                         </td>
                         <td>
-                          <input 
-                            type="number" 
+                          <input
+                            type="number"
                             value={level.bonus}
                             onChange={(e) => {
                               const newLevels = [...bonusPrograms.vipBonus.levels]
                               newLevels[idx].bonus = parseFloat(e.target.value)
                               setBonusPrograms({
                                 ...bonusPrograms,
-                                vipBonus: {...bonusPrograms.vipBonus, levels: newLevels}
+                                vipBonus: { ...bonusPrograms.vipBonus, levels: newLevels }
                               })
                             }}
                           />
                         </td>
                         <td>
-                          <input 
-                            type="number" 
+                          <input
+                            type="number"
                             value={level.cashback}
                             onChange={(e) => {
                               const newLevels = [...bonusPrograms.vipBonus.levels]
                               newLevels[idx].cashback = parseFloat(e.target.value)
                               setBonusPrograms({
                                 ...bonusPrograms,
-                                vipBonus: {...bonusPrograms.vipBonus, levels: newLevels}
+                                vipBonus: { ...bonusPrograms.vipBonus, levels: newLevels }
                               })
                             }}
                           />
@@ -2336,10 +2615,10 @@ export default function MasterAdminDashboard() {
             {/* Promotion End Date */}
             <div className="promotion-date-section">
               <h3>📅 Promotion End Date</h3>
-              <input 
-                type="date" 
+              <input
+                type="date"
                 value={bonusPrograms.promotionEndDate}
-                onChange={(e) => setBonusPrograms({...bonusPrograms, promotionEndDate: e.target.value})}
+                onChange={(e) => setBonusPrograms({ ...bonusPrograms, promotionEndDate: e.target.value })}
               />
             </div>
 
@@ -2356,7 +2635,7 @@ export default function MasterAdminDashboard() {
               <h1>💬 Customer Services - Live Chat</h1>
               <p>Manage live chat sessions and support tickets</p>
             </div>
-            
+
             <div className="support-stats">
               <div className="stat-card pending">
                 <span className="stat-number">{activeChats.filter(c => c.status === 'waiting_agent').length}</span>
@@ -2380,8 +2659,8 @@ export default function MasterAdminDashboard() {
                   <div className="no-chats">No active conversations</div>
                 ) : (
                   activeChats.map((chat, idx) => (
-                    <div 
-                      key={idx} 
+                    <div
+                      key={idx}
                       className={`chat-list-item ${selectedChat?.sessionId === chat.sessionId ? 'active' : ''} ${chat.status === 'waiting_agent' ? 'waiting' : ''}`}
                       onClick={() => setSelectedChat(chat)}
                     >
@@ -2394,9 +2673,9 @@ export default function MasterAdminDashboard() {
                       </div>
                       <div className="chat-meta">
                         <span className={`chat-status-badge ${chat.status}`}>
-                          {chat.status === 'waiting_agent' ? '⏳ Waiting' : 
-                           chat.status === 'connected' ? '🟢 Active' : 
-                           chat.status === 'active' ? '💬 Chat' : '✓ Closed'}
+                          {chat.status === 'waiting_agent' ? '⏳ Waiting' :
+                            chat.status === 'connected' ? '🟢 Active' :
+                              chat.status === 'active' ? '💬 Chat' : '✓ Closed'}
                         </span>
                         {chat.unread > 0 && <span className="unread-badge">{chat.unread}</span>}
                       </div>
@@ -2434,9 +2713,9 @@ export default function MasterAdminDashboard() {
                           <div key={idx} className={`admin-chat-message ${log.type}`}>
                             <div className="message-content">
                               <span className="message-sender">
-                                {log.type === 'user' ? selectedChat.user : 
-                                 log.type === 'admin' ? '🎧 Support Agent' : 
-                                 log.type === 'agent' ? `🎧 ${log.agentName || 'Agent'}` : '⚙️ System'}
+                                {log.type === 'user' ? selectedChat.user :
+                                  log.type === 'admin' ? '🎧 Support Agent' :
+                                    log.type === 'agent' ? `🎧 ${log.agentName || 'Agent'}` : '⚙️ System'}
                               </span>
                               <p>{log.message}</p>
                               <span className="message-time">{new Date(log.timestamp).toLocaleTimeString()}</span>
@@ -2445,9 +2724,9 @@ export default function MasterAdminDashboard() {
                         ))}
                     </div>
                     <div className="admin-reply-area">
-                      <input 
-                        type="text" 
-                        placeholder="Type your reply..." 
+                      <input
+                        type="text"
+                        placeholder="Type your reply..."
                         value={adminReplyMessage}
                         onChange={(e) => setAdminReplyMessage(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && sendAdminReply(selectedChat.sessionId)}
@@ -2536,7 +2815,7 @@ export default function MasterAdminDashboard() {
               <h1>📊 User Activity Logs</h1>
               <p>Track and monitor all user actions on the platform</p>
             </div>
-            
+
             <div className="activity-stats">
               <div className="stat-card">
                 <span className="stat-icon">🔐</span>
@@ -2615,34 +2894,34 @@ export default function MasterAdminDashboard() {
                 <tbody>
                   {userActivityLogs
                     .filter(log => activityFilter === 'all' || log.action === activityFilter)
-                    .filter(log => 
-                      searchQuery === '' || 
+                    .filter(log =>
+                      searchQuery === '' ||
                       log.userId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                       log.userEmail?.toLowerCase().includes(searchQuery.toLowerCase())
                     )
                     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
                     .map((log, idx) => (
-                    <tr key={idx}>
-                      <td className="timestamp-cell">{new Date(log.timestamp).toLocaleString()}</td>
-                      <td className="uid-cell">{log.userId}</td>
-                      <td className="email-cell">
-                        <a href={`mailto:${log.userEmail}`}>{log.userEmail}</a>
-                      </td>
-                      <td>
-                        <span className={`action-badge action-${log.action}`}>
-                          {log.action === 'login' && '🔐 Login'}
-                          {log.action === 'deposit' && '💰 Deposit'}
-                          {log.action === 'withdrawal' && '🏦 Withdrawal'}
-                          {log.action === 'trade' && '📈 Trade'}
-                          {log.action === 'stake' && '🔒 Stake'}
-                          {log.action === 'kyc_submit' && '📋 KYC'}
-                          {log.action === 'profile_update' && '👤 Profile'}
-                        </span>
-                      </td>
-                      <td className="details-cell">{log.details}</td>
-                      <td className="ip-cell">{log.ip}</td>
-                    </tr>
-                  ))}
+                      <tr key={idx}>
+                        <td className="timestamp-cell">{new Date(log.timestamp).toLocaleString()}</td>
+                        <td className="uid-cell">{log.userId}</td>
+                        <td className="email-cell">
+                          <a href={`mailto:${log.userEmail}`}>{log.userEmail}</a>
+                        </td>
+                        <td>
+                          <span className={`action-badge action-${log.action}`}>
+                            {log.action === 'login' && '🔐 Login'}
+                            {log.action === 'deposit' && '💰 Deposit'}
+                            {log.action === 'withdrawal' && '🏦 Withdrawal'}
+                            {log.action === 'trade' && '📈 Trade'}
+                            {log.action === 'stake' && '🔒 Stake'}
+                            {log.action === 'kyc_submit' && '📋 KYC'}
+                            {log.action === 'profile_update' && '👤 Profile'}
+                          </span>
+                        </td>
+                        <td className="details-cell">{log.details}</td>
+                        <td className="ip-cell">{log.ip}</td>
+                      </tr>
+                    ))}
                   {userActivityLogs.length === 0 && (
                     <tr>
                       <td colSpan="6" className="no-data">No activity logs yet</td>
@@ -2661,7 +2940,7 @@ export default function MasterAdminDashboard() {
               <h1>🛡️ Admin Audit Logs</h1>
               <p>Track all administrative actions for security and compliance</p>
             </div>
-            
+
             <div className="activity-stats">
               <div className="stat-card">
                 <span className="stat-icon">🔐</span>
@@ -2733,37 +3012,37 @@ export default function MasterAdminDashboard() {
                 <tbody>
                   {adminAuditLogs
                     .filter(log => activityFilter === 'all' || log.action === activityFilter)
-                    .filter(log => 
-                      searchQuery === '' || 
+                    .filter(log =>
+                      searchQuery === '' ||
                       log.adminName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                       log.targetUser?.toLowerCase().includes(searchQuery.toLowerCase())
                     )
                     .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
                     .map((log, idx) => (
-                    <tr key={idx}>
-                      <td className="timestamp-cell">{new Date(log.timestamp).toLocaleString()}</td>
-                      <td className="admin-cell">
-                        <span className="admin-badge">👤 {log.adminName}</span>
-                      </td>
-                      <td>
-                        <span className={`audit-action-badge audit-${log.action}`}>
-                          {log.action === 'login' && '🔐 Login'}
-                          {log.action === 'balance_update' && '💵 Balance Update'}
-                          {log.action === 'kyc_approve' && '✅ KYC Approve'}
-                          {log.action === 'kyc_reject' && '❌ KYC Reject'}
-                          {log.action === 'withdrawal_approve' && '✅ Withdrawal Approve'}
-                          {log.action === 'withdrawal_reject' && '❌ Withdrawal Reject'}
-                          {log.action === 'deposit_approve' && '✅ Deposit Approve'}
-                          {log.action === 'settings_update' && '⚙️ Settings Update'}
-                          {log.action === 'user_block' && '🚫 User Block'}
-                          {log.action === 'user_unblock' && '✅ User Unblock'}
-                        </span>
-                      </td>
-                      <td className="details-cell">{log.details}</td>
-                      <td className="target-cell">{log.targetUser || '-'}</td>
-                      <td className="ip-cell">{log.ip}</td>
-                    </tr>
-                  ))}
+                      <tr key={idx}>
+                        <td className="timestamp-cell">{new Date(log.timestamp).toLocaleString()}</td>
+                        <td className="admin-cell">
+                          <span className="admin-badge">👤 {log.adminName}</span>
+                        </td>
+                        <td>
+                          <span className={`audit-action-badge audit-${log.action}`}>
+                            {log.action === 'login' && '🔐 Login'}
+                            {log.action === 'balance_update' && '💵 Balance Update'}
+                            {log.action === 'kyc_approve' && '✅ KYC Approve'}
+                            {log.action === 'kyc_reject' && '❌ KYC Reject'}
+                            {log.action === 'withdrawal_approve' && '✅ Withdrawal Approve'}
+                            {log.action === 'withdrawal_reject' && '❌ Withdrawal Reject'}
+                            {log.action === 'deposit_approve' && '✅ Deposit Approve'}
+                            {log.action === 'settings_update' && '⚙️ Settings Update'}
+                            {log.action === 'user_block' && '🚫 User Block'}
+                            {log.action === 'user_unblock' && '✅ User Unblock'}
+                          </span>
+                        </td>
+                        <td className="details-cell">{log.details}</td>
+                        <td className="target-cell">{log.targetUser || '-'}</td>
+                        <td className="ip-cell">{log.ip}</td>
+                      </tr>
+                    ))}
                   {adminAuditLogs.length === 0 && (
                     <tr>
                       <td colSpan="6" className="no-data">No audit logs yet</td>
@@ -2813,38 +3092,38 @@ export default function MasterAdminDashboard() {
                 <div className="form-row">
                   <div className="form-field">
                     <label>Username</label>
-                    <input 
-                      type="text" 
+                    <input
+                      type="text"
                       placeholder="Enter username"
                       value={newAdmin.username}
-                      onChange={(e) => setNewAdmin({...newAdmin, username: e.target.value})}
+                      onChange={(e) => setNewAdmin({ ...newAdmin, username: e.target.value })}
                     />
                   </div>
                   <div className="form-field">
                     <label>Email</label>
-                    <input 
-                      type="email" 
+                    <input
+                      type="email"
                       placeholder="Enter email"
                       value={newAdmin.email}
-                      onChange={(e) => setNewAdmin({...newAdmin, email: e.target.value})}
+                      onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
                     />
                   </div>
                   <div className="form-field">
                     <label>Password</label>
-                    <input 
-                      type="password" 
+                    <input
+                      type="password"
                       placeholder="Enter password"
                       value={newAdmin.password}
-                      onChange={(e) => setNewAdmin({...newAdmin, password: e.target.value})}
+                      onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
                     />
                   </div>
                 </div>
                 <div className="form-row">
                   <div className="form-field">
                     <label>Role</label>
-                    <select 
+                    <select
                       value={newAdmin.role}
-                      onChange={(e) => setNewAdmin({...newAdmin, role: e.target.value})}
+                      onChange={(e) => setNewAdmin({ ...newAdmin, role: e.target.value })}
                     >
                       <option value="super_admin">Super Admin (Full Access)</option>
                       <option value="finance">Finance Manager</option>
@@ -2860,14 +3139,14 @@ export default function MasterAdminDashboard() {
                   <div className="permissions-grid">
                     {['view_users', 'manage_users', 'view_deposits', 'manage_deposits', 'view_withdrawals', 'manage_withdrawals', 'manage_kyc', 'manage_chats', 'view_balance', 'edit_balance', 'manage_settings', 'view_logs'].map(perm => (
                       <label key={perm} className="permission-checkbox">
-                        <input 
+                        <input
                           type="checkbox"
                           checked={newAdmin.permissions.includes(perm)}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setNewAdmin({...newAdmin, permissions: [...newAdmin.permissions, perm]})
+                              setNewAdmin({ ...newAdmin, permissions: [...newAdmin.permissions, perm] })
                             } else {
-                              setNewAdmin({...newAdmin, permissions: newAdmin.permissions.filter(p => p !== perm)})
+                              setNewAdmin({ ...newAdmin, permissions: newAdmin.permissions.filter(p => p !== perm) })
                             }
                           }}
                         />
@@ -2876,7 +3155,7 @@ export default function MasterAdminDashboard() {
                     ))}
                   </div>
                 </div>
-                <button 
+                <button
                   className="add-admin-btn"
                   onClick={() => {
                     if (newAdmin.username && newAdmin.email && newAdmin.password) {
@@ -2973,13 +3252,13 @@ export default function MasterAdminDashboard() {
                         <td>
                           {admin.role !== 'super_admin' && (
                             <>
-                              <button 
+                              <button
                                 className="action-btn edit"
                                 onClick={() => {
                                   // Toggle status
-                                  setAdminRoles(prev => prev.map(a => 
-                                    a.id === admin.id 
-                                      ? {...a, status: a.status === 'active' ? 'inactive' : 'active'}
+                                  setAdminRoles(prev => prev.map(a =>
+                                    a.id === admin.id
+                                      ? { ...a, status: a.status === 'active' ? 'inactive' : 'active' }
                                       : a
                                   ))
                                   // Log action
@@ -2996,7 +3275,7 @@ export default function MasterAdminDashboard() {
                               >
                                 {admin.status === 'active' ? 'Deactivate' : 'Activate'}
                               </button>
-                              <button 
+                              <button
                                 className="action-btn block"
                                 onClick={() => {
                                   if (confirm(`Delete admin ${admin.username}?`)) {

