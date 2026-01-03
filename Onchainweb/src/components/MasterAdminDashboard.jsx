@@ -87,7 +87,7 @@ export default function MasterAdminDashboard() {
     username: '',
     email: '',
     password: '',
-    role: 'support',
+    role: 'admin',
     permissions: []
   })
 
@@ -3066,14 +3066,14 @@ export default function MasterAdminDashboard() {
               <div className="stat-card">
                 <span className="stat-icon">👑</span>
                 <div className="stat-info">
-                  <span className="stat-number">{adminRoles.filter(r => r.role === 'super_admin').length}</span>
-                  <span className="stat-label">Super Admins</span>
+                  <span className="stat-number">1</span>
+                  <span className="stat-label">Master Account</span>
                 </div>
               </div>
               <div className="stat-card">
-                <span className="stat-icon">💼</span>
+                <span className="stat-icon">👤</span>
                 <div className="stat-info">
-                  <span className="stat-number">{adminRoles.filter(r => r.status === 'active').length}</span>
+                  <span className="stat-number">{adminRoles.filter(r => r.role === 'admin' && r.status === 'active').length}</span>
                   <span className="stat-label">Active Admins</span>
                 </div>
               </div>
@@ -3082,6 +3082,13 @@ export default function MasterAdminDashboard() {
                 <div className="stat-info">
                   <span className="stat-number">{adminRoles.filter(r => r.status === 'inactive').length}</span>
                   <span className="stat-label">Inactive Admins</span>
+                </div>
+              </div>
+              <div className="stat-card">
+                <span className="stat-icon">📊</span>
+                <div className="stat-info">
+                  <span className="stat-number">{adminRoles.length}</span>
+                  <span className="stat-label">Total Admins</span>
                 </div>
               </div>
             </div>
@@ -3121,57 +3128,82 @@ export default function MasterAdminDashboard() {
                 <div className="form-row">
                   <div className="form-field">
                     <label>Role</label>
-                    <select
-                      value={newAdmin.role}
-                      onChange={(e) => setNewAdmin({ ...newAdmin, role: e.target.value })}
-                    >
-                      <option value="super_admin">Super Admin (Full Access)</option>
-                      <option value="finance">Finance Manager</option>
-                      <option value="support">Support Agent</option>
-                      <option value="kyc_manager">KYC Manager</option>
-                      <option value="trade_manager">Trade Manager</option>
-                      <option value="viewer">Viewer (Read Only)</option>
-                    </select>
+                    <div className="role-info">
+                      <span className="role-badge role-admin">👤 Admin</span>
+                      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', marginTop: '8px' }}>Admins can access the dashboard. Use permissions below to control what they can manage.</p>
+                    </div>
                   </div>
                 </div>
                 <div className="permissions-section">
-                  <label>Permissions:</label>
+                  <label>Admin Permissions (Select what this admin can manage):</label>
                   <div className="permissions-grid">
-                    {['view_users', 'manage_users', 'view_deposits', 'manage_deposits', 'view_withdrawals', 'manage_withdrawals', 'manage_kyc', 'manage_chats', 'view_balance', 'edit_balance', 'manage_settings', 'view_logs'].map(perm => (
-                      <label key={perm} className="permission-checkbox">
+                    {[
+                      { key: 'dashboard', label: '📊 View Dashboard' },
+                      { key: 'users', label: '👥 Manage Users' },
+                      { key: 'deposits', label: '💰 Manage Deposits' },
+                      { key: 'withdrawals', label: '🏦 Manage Withdrawals' },
+                      { key: 'kyc', label: '📋 Manage KYC' },
+                      { key: 'live_trades', label: '🔴 Control Live Trades' },
+                      { key: 'ai_arbitrage', label: '🤖 Manage AI Arbitrage' },
+                      { key: 'balances', label: '💵 Edit User Balances' },
+                      { key: 'customer_service', label: '💬 Customer Service Chat' },
+                      { key: 'staking', label: '🔒 Manage Staking' },
+                      { key: 'settings', label: '⚙️ Site Settings' },
+                      { key: 'logs', label: '📝 View Activity Logs' },
+                    ].map(perm => (
+                      <label key={perm.key} className="permission-checkbox">
                         <input
                           type="checkbox"
-                          checked={newAdmin.permissions.includes(perm)}
+                          checked={newAdmin.permissions.includes(perm.key)}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setNewAdmin({ ...newAdmin, permissions: [...newAdmin.permissions, perm] })
+                              setNewAdmin({ ...newAdmin, permissions: [...newAdmin.permissions, perm.key] })
                             } else {
-                              setNewAdmin({ ...newAdmin, permissions: newAdmin.permissions.filter(p => p !== perm) })
+                              setNewAdmin({ ...newAdmin, permissions: newAdmin.permissions.filter(p => p !== perm.key) })
                             }
                           }}
                         />
-                        <span>{perm.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                        <span>{perm.label}</span>
                       </label>
                     ))}
                   </div>
+                  <button
+                    type="button"
+                    className="select-all-btn"
+                    onClick={() => setNewAdmin({ ...newAdmin, permissions: ['dashboard', 'users', 'deposits', 'withdrawals', 'kyc', 'live_trades', 'ai_arbitrage', 'balances', 'customer_service', 'staking', 'settings', 'logs'] })}
+                    style={{ marginTop: '10px', padding: '8px 16px', background: 'rgba(124, 58, 237, 0.3)', border: '1px solid #7c3aed', borderRadius: '6px', color: '#fff', cursor: 'pointer' }}
+                  >
+                    Select All Permissions
+                  </button>
                 </div>
                 <button
                   className="add-admin-btn"
                   onClick={() => {
                     if (newAdmin.username && newAdmin.email && newAdmin.password) {
+                      if (newAdmin.permissions.length === 0) {
+                        alert('Please select at least one permission for the admin')
+                        return
+                      }
                       const newAdminEntry = {
                         id: Date.now(),
-                        ...newAdmin,
+                        username: newAdmin.username,
+                        email: newAdmin.email,
+                        password: newAdmin.password,
+                        role: 'admin',
+                        permissions: newAdmin.permissions,
                         status: 'active',
                         createdAt: new Date().toISOString(),
                         lastLogin: null
                       }
-                      setAdminRoles([...adminRoles, newAdminEntry])
+                      const updatedAdmins = [...adminRoles, newAdminEntry]
+                      setAdminRoles(updatedAdmins)
+                      // Save immediately to localStorage
+                      localStorage.setItem('adminRoles', JSON.stringify(updatedAdmins))
                       setNewAdmin({
                         username: '',
                         email: '',
                         password: '',
-                        role: 'support',
+                        role: 'admin',
                         permissions: []
                       })
                       // Log admin action
@@ -3180,10 +3212,13 @@ export default function MasterAdminDashboard() {
                         adminId: 'master',
                         adminName: 'Master Admin',
                         action: 'admin_create',
-                        details: `Created new admin: ${newAdmin.username} with role ${newAdmin.role}`,
+                        details: `Created new admin: ${newAdmin.username} with permissions: ${newAdmin.permissions.join(', ')}`,
                         ip: '192.168.1.1',
                         timestamp: new Date().toISOString()
                       }])
+                      alert(`Admin account "${newAdmin.username}" created successfully!\n\nLogin credentials:\nUsername: ${newAdmin.username}\nPassword: (the password you entered)`)
+                    } else {
+                      alert('Please fill in username, email, and password')
                     }
                   }}
                 >
@@ -3219,21 +3254,20 @@ export default function MasterAdminDashboard() {
                         </td>
                         <td>
                           <span className={`role-badge role-${admin.role}`}>
+                            {admin.role === 'admin' && '👤 Admin'}
                             {admin.role === 'super_admin' && '👑 Super Admin'}
-                            {admin.role === 'finance' && '💰 Finance'}
-                            {admin.role === 'support' && '🎧 Support'}
-                            {admin.role === 'kyc_manager' && '📋 KYC Manager'}
-                            {admin.role === 'trade_manager' && '📈 Trade Manager'}
-                            {admin.role === 'viewer' && '👁️ Viewer'}
+                            {!['admin', 'super_admin'].includes(admin.role) && `👤 ${admin.role}`}
                           </span>
                         </td>
                         <td className="permissions-cell">
-                          {admin.permissions.includes('all') ? (
+                          {admin.permissions.length === 12 ? (
                             <span className="perm-badge all">Full Access</span>
+                          ) : admin.permissions.length === 0 ? (
+                            <span className="perm-badge none">No Permissions</span>
                           ) : (
                             <div className="perm-list">
                               {admin.permissions.slice(0, 3).map((perm, i) => (
-                                <span key={i} className="perm-badge">{perm.split('_')[0]}</span>
+                                <span key={i} className="perm-badge">{perm}</span>
                               ))}
                               {admin.permissions.length > 3 && (
                                 <span className="perm-more">+{admin.permissions.length - 3} more</span>
@@ -3250,56 +3284,53 @@ export default function MasterAdminDashboard() {
                           {admin.lastLogin ? new Date(admin.lastLogin).toLocaleString() : 'Never'}
                         </td>
                         <td>
-                          {admin.role !== 'super_admin' && (
-                            <>
-                              <button
-                                className="action-btn edit"
-                                onClick={() => {
-                                  // Toggle status
-                                  setAdminRoles(prev => prev.map(a =>
-                                    a.id === admin.id
-                                      ? { ...a, status: a.status === 'active' ? 'inactive' : 'active' }
-                                      : a
-                                  ))
-                                  // Log action
-                                  setAdminAuditLogs(prev => [...prev, {
-                                    id: Date.now(),
-                                    adminId: 'master',
-                                    adminName: 'Master Admin',
-                                    action: admin.status === 'active' ? 'admin_deactivate' : 'admin_activate',
-                                    details: `${admin.status === 'active' ? 'Deactivated' : 'Activated'} admin: ${admin.username}`,
-                                    ip: '192.168.1.1',
-                                    timestamp: new Date().toISOString()
-                                  }])
-                                }}
-                              >
-                                {admin.status === 'active' ? 'Deactivate' : 'Activate'}
-                              </button>
-                              <button
-                                className="action-btn block"
-                                onClick={() => {
-                                  if (confirm(`Delete admin ${admin.username}?`)) {
-                                    setAdminRoles(prev => prev.filter(a => a.id !== admin.id))
-                                    // Log action
-                                    setAdminAuditLogs(prev => [...prev, {
-                                      id: Date.now(),
-                                      adminId: 'master',
-                                      adminName: 'Master Admin',
-                                      action: 'admin_delete',
-                                      details: `Deleted admin: ${admin.username}`,
-                                      ip: '192.168.1.1',
-                                      timestamp: new Date().toISOString()
-                                    }])
-                                  }
-                                }}
-                              >
-                                Delete
-                              </button>
-                            </>
-                          )}
-                          {admin.role === 'super_admin' && (
-                            <span className="protected-badge">🔒 Protected</span>
-                          )}
+                          <button
+                            className="action-btn edit"
+                            onClick={() => {
+                              // Toggle status
+                              const updated = adminRoles.map(a =>
+                                a.id === admin.id
+                                  ? { ...a, status: a.status === 'active' ? 'inactive' : 'active' }
+                                  : a
+                              )
+                              setAdminRoles(updated)
+                              localStorage.setItem('adminRoles', JSON.stringify(updated))
+                              // Log action
+                              setAdminAuditLogs(prev => [...prev, {
+                                id: Date.now(),
+                                adminId: 'master',
+                                adminName: 'Master Admin',
+                                action: admin.status === 'active' ? 'admin_deactivate' : 'admin_activate',
+                                details: `${admin.status === 'active' ? 'Deactivated' : 'Activated'} admin: ${admin.username}`,
+                                ip: '192.168.1.1',
+                                timestamp: new Date().toISOString()
+                              }])
+                            }}
+                          >
+                            {admin.status === 'active' ? 'Deactivate' : 'Activate'}
+                          </button>
+                          <button
+                            className="action-btn block"
+                            onClick={() => {
+                              if (confirm(`Delete admin ${admin.username}?`)) {
+                                const updated = adminRoles.filter(a => a.id !== admin.id)
+                                setAdminRoles(updated)
+                                localStorage.setItem('adminRoles', JSON.stringify(updated))
+                                // Log action
+                                setAdminAuditLogs(prev => [...prev, {
+                                  id: Date.now(),
+                                  adminId: 'master',
+                                  adminName: 'Master Admin',
+                                  action: 'admin_delete',
+                                  details: `Deleted admin: ${admin.username}`,
+                                  ip: '192.168.1.1',
+                                  timestamp: new Date().toISOString()
+                                }])
+                              }
+                            }}
+                          >
+                            Delete
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -3309,31 +3340,36 @@ export default function MasterAdminDashboard() {
             </div>
 
             <div className="role-permissions-legend">
-              <h3>📖 Role Permissions Reference</h3>
+              <h3>📖 Role Hierarchy</h3>
               <div className="legend-grid">
                 <div className="legend-item">
-                  <span className="role-badge role-super_admin">👑 Super Admin</span>
-                  <p>Full system access - can manage all features, users, and settings</p>
+                  <span className="role-badge role-master">👑 Master</span>
+                  <p>Full system access - can manage all features, create admins, and control all settings. Only one master account exists.</p>
                 </div>
                 <div className="legend-item">
-                  <span className="role-badge role-finance">💰 Finance</span>
-                  <p>Manage deposits, withdrawals, and user balances</p>
+                  <span className="role-badge role-admin">👤 Admin</span>
+                  <p>Access to dashboard features based on permissions assigned by Master. Can manage users, trades, and other functions as permitted.</p>
                 </div>
                 <div className="legend-item">
-                  <span className="role-badge role-support">🎧 Support</span>
-                  <p>Handle customer chats and view user information</p>
+                  <span className="role-badge role-user">👤 User</span>
+                  <p>Regular platform users who can trade, deposit, withdraw, and use platform features.</p>
                 </div>
-                <div className="legend-item">
-                  <span className="role-badge role-kyc_manager">📋 KYC Manager</span>
-                  <p>Review and approve/reject KYC verification requests</p>
-                </div>
-                <div className="legend-item">
-                  <span className="role-badge role-trade_manager">📈 Trade Manager</span>
-                  <p>Manage trade options and monitor trading activity</p>
-                </div>
-                <div className="legend-item">
-                  <span className="role-badge role-viewer">👁️ Viewer</span>
-                  <p>Read-only access to dashboard and reports</p>
+              </div>
+              <div className="permissions-reference" style={{ marginTop: '20px' }}>
+                <h4>Available Permissions:</h4>
+                <div className="perm-list" style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+                  <span className="perm-badge">📊 Dashboard</span>
+                  <span className="perm-badge">👥 Users</span>
+                  <span className="perm-badge">💰 Deposits</span>
+                  <span className="perm-badge">🏦 Withdrawals</span>
+                  <span className="perm-badge">📋 KYC</span>
+                  <span className="perm-badge">🔴 Live Trades</span>
+                  <span className="perm-badge">🤖 AI Arbitrage</span>
+                  <span className="perm-badge">💵 Balances</span>
+                  <span className="perm-badge">💬 Customer Service</span>
+                  <span className="perm-badge">🔒 Staking</span>
+                  <span className="perm-badge">⚙️ Settings</span>
+                  <span className="perm-badge">📝 Logs</span>
                 </div>
               </div>
             </div>
