@@ -618,6 +618,9 @@ export default function MasterAdminDashboard() {
   }
 
   if (!isAuthenticated) {
+    // Get stored admins for debugging
+    const storedAdmins = JSON.parse(localStorage.getItem('adminRoles') || '[]')
+
     return (
       <div className="master-admin-login">
         <div className="login-container">
@@ -657,6 +660,37 @@ export default function MasterAdminDashboard() {
             {loginError && <div className="login-error">{loginError}</div>}
             <button type="submit" className="login-btn">Login</button>
           </form>
+
+          {/* Show available admin accounts for debugging */}
+          {storedAdmins.length > 0 && (
+            <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '12px' }}>
+              <p style={{ color: '#888', marginBottom: '10px' }}>Available Admin Accounts ({storedAdmins.length}):</p>
+              {storedAdmins.filter(a => a.role !== 'super_admin').map((admin, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', marginBottom: '5px' }}>
+                  <span style={{ color: '#aaa' }}>
+                    👤 {admin.username} ({admin.status})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newPassword = prompt(`Reset password for ${admin.username}?\nEnter new password:`)
+                      if (newPassword && newPassword.trim()) {
+                        const updated = storedAdmins.map(a =>
+                          a.id === admin.id ? { ...a, password: newPassword.trim() } : a
+                        )
+                        localStorage.setItem('adminRoles', JSON.stringify(updated))
+                        alert(`Password reset for ${admin.username}!\n\nNew password: ${newPassword.trim()}\n\nTry logging in now.`)
+                        window.location.reload()
+                      }
+                    }}
+                    style={{ padding: '4px 8px', fontSize: '11px', background: '#7c3aed', border: 'none', borderRadius: '4px', color: '#fff', cursor: 'pointer' }}
+                  >
+                    Reset Password
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     )
