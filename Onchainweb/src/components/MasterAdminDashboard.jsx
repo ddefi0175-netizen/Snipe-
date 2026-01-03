@@ -221,7 +221,22 @@ export default function MasterAdminDashboard() {
       setTradingLevels(getFromStorage('adminTradingLevels', defaultData.tradingLevels))
       setUserActivityLogs(getFromStorage('userActivityLogs', defaultData.userActivityLogs))
       setAdminAuditLogs(getFromStorage('adminAuditLogs', defaultData.adminAuditLogs))
-      setAdminRoles(getFromStorage('adminRoles', defaultData.adminRoles))
+
+      // Load admin roles and migrate old roles to 'admin'
+      const loadedAdminRoles = getFromStorage('adminRoles', defaultData.adminRoles)
+      const migratedRoles = loadedAdminRoles.map(admin => {
+        // Migrate old roles to 'admin'
+        if (admin.role && !['admin', 'master', 'super_admin'].includes(admin.role)) {
+          return { ...admin, role: 'admin' }
+        }
+        return admin
+      })
+      // Save migrated roles if any changes
+      if (JSON.stringify(loadedAdminRoles) !== JSON.stringify(migratedRoles)) {
+        localStorage.setItem('adminRoles', JSON.stringify(migratedRoles))
+      }
+      setAdminRoles(migratedRoles)
+
       setSiteSettings(getFromStorage('siteSettings', defaultData.siteSettings))
       setTradeOptions(getFromStorage('tradeOptions', defaultData.tradeOptions))
       setActiveTrades(getFromStorage('activeTrades', []))
@@ -417,10 +432,18 @@ export default function MasterAdminDashboard() {
 
     // Check admin accounts
     const savedAdminRoles = JSON.parse(localStorage.getItem('adminRoles') || '[]')
+    console.log('Checking admin login for:', loginData.username)
+    console.log('Available admins:', savedAdminRoles.map(a => ({ username: a.username, email: a.email, status: a.status, hasPassword: !!a.password })))
+
     const adminUser = savedAdminRoles.find(
-      admin => (admin.username === loginData.username || admin.email === loginData.username)
-        && admin.password === loginData.password
-        && admin.status === 'active'
+      admin => {
+        const usernameMatch = admin.username?.toLowerCase() === loginData.username?.toLowerCase()
+        const emailMatch = admin.email?.toLowerCase() === loginData.username?.toLowerCase()
+        const passwordMatch = admin.password === loginData.password
+        const isActive = admin.status === 'active'
+        console.log(`Checking admin ${admin.username}:`, { usernameMatch, emailMatch, passwordMatch, isActive })
+        return (usernameMatch || emailMatch) && passwordMatch && isActive
+      }
     )
 
     if (adminUser) {
@@ -3260,9 +3283,9 @@ export default function MasterAdminDashboard() {
                           </span>
                         </td>
                         <td className="permissions-cell">
-                          {admin.permissions.length === 12 ? (
+                          {admin.permissions?.length === 12 ? (
                             <span className="perm-badge all">Full Access</span>
-                          ) : admin.permissions.length === 0 ? (
+                          ) : !admin.permissions || admin.permissions.length === 0 ? (
                             <span className="perm-badge none">No Permissions</span>
                           ) : (
                             <div className="perm-list">
@@ -3284,6 +3307,34 @@ export default function MasterAdminDashboard() {
                           {admin.lastLogin ? new Date(admin.lastLogin).toLocaleString() : 'Never'}
                         </td>
                         <td>
+                          <button
+                            className="action-btn view"
+                            onClick={() => {
+                              alert(`Admin: ${admin.username}\nEmail: ${admin.email}\nPassword: ${admin.password || '(not set)'}\nRole: ${admin.role}\nStatus: ${admin.status}`)
+                            }}
+                            style={{ background: '#3b82f6' }}
+                          >
+                            View
+                          </button>
+                          <button
+                            className="action-btn edit"
+                            onClick={() => {
+                              const newPassword = prompt(`Enter new password for ${admin.username}:`, '')
+                              if (newPassword && newPassword.trim()) {
+                                const updated = adminRoles.map(a =>
+                                  a.id === admin.id
+                                    ? { ...a, password: newPassword.trim(), role: 'admin' }
+                                    : a
+                                )
+                                setAdminRoles(updated)
+                                localStorage.setItem('adminRoles', JSON.stringify(updated))
+                                alert(`Password updated for ${admin.username}`)
+                              }
+                            }}
+                            style={{ background: '#f59e0b' }}
+                          >
+                            Reset PW
+                          </button>
                           <button
                             className="action-btn edit"
                             onClick={() => {
