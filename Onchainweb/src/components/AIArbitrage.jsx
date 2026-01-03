@@ -22,7 +22,7 @@ const AI_STRATEGIES = [
 function CycleProgress({ investment }) {
   const [progress, setProgress] = useState(0)
   const [timeLeft, setTimeLeft] = useState('')
-  
+
   useEffect(() => {
     const updateProgress = () => {
       const now = Date.now()
@@ -32,13 +32,13 @@ function CycleProgress({ investment }) {
       const elapsed = now - start
       const pct = Math.min(100, (elapsed / total) * 100)
       setProgress(pct)
-      
+
       // Calculate time left
       const remaining = Math.max(0, end - now)
       const days = Math.floor(remaining / (1000 * 60 * 60 * 24))
       const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
       const mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60))
-      
+
       if (days > 0) {
         setTimeLeft(`${days}d ${hours}h`)
       } else if (hours > 0) {
@@ -47,17 +47,17 @@ function CycleProgress({ investment }) {
         setTimeLeft(`${mins}m`)
       }
     }
-    
+
     updateProgress()
     const interval = setInterval(updateProgress, 60000) // Update every minute
     return () => clearInterval(interval)
   }, [investment])
-  
+
   return (
     <div className="cycle-progress">
       <div className="cycle-progress-bar">
-        <div 
-          className="cycle-progress-fill" 
+        <div
+          className="cycle-progress-fill"
           style={{ width: `${progress}%` }}
         />
       </div>
@@ -95,37 +95,37 @@ export default function AIArbitrage({ isOpen, onClose }) {
   const [investAmount, setInvestAmount] = useState('')
   const [selectedLevel, setSelectedLevel] = useState(null)
   const [isInvesting, setIsInvesting] = useState(false)
-  
+
   // Active investments
   const [activeInvestments, setActiveInvestments] = useState(() => {
     const saved = localStorage.getItem('aiArbitrageInvestments')
     return saved ? JSON.parse(saved) : []
   })
-  
+
   // User balance (simulated)
   const [userBalance, setUserBalance] = useState(() => {
     const saved = localStorage.getItem('aiArbitrageBalance')
     return saved ? parseFloat(saved) : 10000
   })
-  
+
   // Completed earnings
   const [totalEarnings, setTotalEarnings] = useState(() => {
     const saved = localStorage.getItem('aiArbitrageTotalEarnings')
     return saved ? parseFloat(saved) : 0
   })
-  
+
   // Arbitrage levels (admin adjustable via Master Admin Panel)
   const [arbitrageLevels, setArbitrageLevels] = useState(() => {
     const saved = localStorage.getItem('aiArbitrageLevels')
     return saved ? JSON.parse(saved) : DEFAULT_ARBITRAGE_LEVELS
   })
-  
+
   // Investment history
   const [investmentHistory, setInvestmentHistory] = useState(() => {
     const saved = localStorage.getItem('aiArbitrageHistory')
     return saved ? JSON.parse(saved) : []
   })
-  
+
   // Check for completed investments and auto-add profits
   useEffect(() => {
     const checkCompletedInvestments = () => {
@@ -133,7 +133,7 @@ export default function AIArbitrage({ isOpen, onClose }) {
       let hasCompleted = false
       let newBalance = userBalance
       let newEarnings = totalEarnings
-      
+
       const updatedInvestments = activeInvestments.filter(inv => {
         if (now >= inv.endTime && !inv.completed) {
           // Investment completed - add capital + profit to balance
@@ -141,7 +141,7 @@ export default function AIArbitrage({ isOpen, onClose }) {
           newBalance += totalReturn
           newEarnings += inv.expectedProfit
           hasCompleted = true
-          
+
           // Add to history
           setInvestmentHistory(prev => {
             const updated = [{
@@ -153,12 +153,12 @@ export default function AIArbitrage({ isOpen, onClose }) {
             localStorage.setItem('aiArbitrageHistory', JSON.stringify(updated))
             return updated
           })
-          
+
           return false // Remove from active
         }
         return true
       })
-      
+
       if (hasCompleted) {
         setActiveInvestments(updatedInvestments)
         setUserBalance(newBalance)
@@ -168,33 +168,66 @@ export default function AIArbitrage({ isOpen, onClose }) {
         localStorage.setItem('aiArbitrageTotalEarnings', newEarnings.toString())
       }
     }
-    
+
     checkCompletedInvestments()
     const interval = setInterval(checkCompletedInvestments, 60000) // Check every minute
     return () => clearInterval(interval)
   }, [activeInvestments, userBalance, totalEarnings])
-  
+
   // Determine level based on amount
   useEffect(() => {
     const amount = parseFloat(investAmount) || 0
     const level = arbitrageLevels.find(l => amount >= l.minCapital && amount <= l.maxCapital)
     setSelectedLevel(level || null)
   }, [investAmount, arbitrageLevels])
-  
+
+  // Get current user info
+  const getCurrentUser = () => {
+    // Check for logged in user
+    const currentUser = localStorage.getItem('currentUser')
+    if (currentUser) {
+      const user = JSON.parse(currentUser)
+      return {
+        id: user.id || user.email || 'guest',
+        email: user.email || '',
+        name: user.username || user.name || user.email?.split('@')[0] || 'User'
+      }
+    }
+
+    // Check registered users
+    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]')
+    if (registeredUsers.length > 0) {
+      const user = registeredUsers[0]
+      return {
+        id: user.id || user.email || 'guest',
+        email: user.email || '',
+        name: user.username || user.name || user.email?.split('@')[0] || 'User'
+      }
+    }
+
+    return { id: 'guest', email: '', name: 'Guest' }
+  }
+
   // Start investment
   const startInvestment = () => {
     const amount = parseFloat(investAmount)
     if (!selectedLevel || amount > userBalance) return
-    
+
     setIsInvesting(true)
-    
+
     setTimeout(() => {
       const now = Date.now()
       const cycleDuration = selectedLevel.cycleDays * 24 * 60 * 60 * 1000
       const expectedProfit = amount * (selectedLevel.profit / 100)
-      
+
+      // Get current user info
+      const user = getCurrentUser()
+
       const newInvestment = {
         id: `inv_${now}`,
+        userId: user.id,
+        userEmail: user.email,
+        userName: user.name,
         amount: amount,
         level: selectedLevel.level,
         profit: selectedLevel.profit,
@@ -205,24 +238,24 @@ export default function AIArbitrage({ isOpen, onClose }) {
         strategy: AI_STRATEGIES[Math.floor(Math.random() * AI_STRATEGIES.length)].name,
         completed: false
       }
-      
+
       // Deduct from balance
       const newBalance = userBalance - amount
       setUserBalance(newBalance)
       localStorage.setItem('aiArbitrageBalance', newBalance.toString())
-      
+
       // Add to active investments
       setActiveInvestments(prev => {
         const updated = [newInvestment, ...prev]
         localStorage.setItem('aiArbitrageInvestments', JSON.stringify(updated))
         return updated
       })
-      
+
       setInvestAmount('')
       setIsInvesting(false)
     }, 2000)
   }
-  
+
   // Format currency
   const formatCurrency = (amount) => {
     return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -275,7 +308,7 @@ export default function AIArbitrage({ isOpen, onClose }) {
           <h3>Investment Levels</h3>
           <div className="ai-levels-grid">
             {arbitrageLevels.map((level) => (
-              <div 
+              <div
                 key={level.level}
                 className={`ai-level-card ${selectedLevel?.level === level.level ? 'active' : ''}`}
               >
@@ -325,8 +358,8 @@ export default function AIArbitrage({ isOpen, onClose }) {
               <div className="ai-error-msg">Insufficient balance</div>
             )}
           </div>
-          
-          <button 
+
+          <button
             className="ai-invest-btn"
             onClick={startInvestment}
             disabled={!selectedLevel || parseFloat(investAmount) > userBalance || isInvesting}

@@ -74,6 +74,10 @@ export default function MasterAdminDashboard() {
   const [editingTradingLevel, setEditingTradingLevel] = useState(null)
   const [showCreateModal, setShowCreateModal] = useState(null)
 
+  // User Edit Modal
+  const [editingUser, setEditingUser] = useState(null)
+  const [editUserForm, setEditUserForm] = useState({ balance: '', points: '', vipLevel: '' })
+
   // User Activity Logs - lazy loaded
   const [userActivityLogs, setUserActivityLogs] = useState([])
 
@@ -101,6 +105,9 @@ export default function MasterAdminDashboard() {
 
   // Active Trades - for real-time trade control
   const [activeTrades, setActiveTrades] = useState([])
+
+  // AI Arbitrage Investments - for real-time updates
+  const [aiInvestments, setAiInvestments] = useState([])
 
   // Default data for initial load
   const defaultData = useMemo(() => ({
@@ -258,6 +265,20 @@ export default function MasterAdminDashboard() {
 
     refreshActiveTrades()
     const interval = setInterval(refreshActiveTrades, 1000) // Real-time updates
+    return () => clearInterval(interval)
+  }, [isAuthenticated, isDataLoaded])
+
+  // Refresh AI investments in real-time
+  useEffect(() => {
+    if (!isAuthenticated || !isDataLoaded) return
+
+    const refreshAiInvestments = () => {
+      const investments = getFromStorage('aiArbitrageInvestments', [])
+      setAiInvestments(investments)
+    }
+
+    refreshAiInvestments()
+    const interval = setInterval(refreshAiInvestments, 2000) // Real-time updates every 2s
     return () => clearInterval(interval)
   }, [isAuthenticated, isDataLoaded])
 
@@ -494,6 +515,38 @@ export default function MasterAdminDashboard() {
       user.id === userId ? { ...user, balance: parseFloat(newBalance) } : user
     )
     localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers))
+  }
+
+  // Save edited user
+  const saveEditedUser = () => {
+    if (!editingUser) return
+
+    const updates = {
+      balance: parseFloat(editUserForm.balance) || editingUser.balance || 0,
+      points: parseInt(editUserForm.points) || editingUser.points || 0,
+      vipLevel: parseInt(editUserForm.vipLevel) || editingUser.vipLevel || 1
+    }
+
+    const updatedUsers = users.map(user =>
+      user.id === editingUser.id ? { ...user, ...updates } : user
+    )
+    setUsers(updatedUsers)
+    localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers))
+
+    // Log the action
+    setAdminAuditLogs(prev => [...prev, {
+      id: Date.now(),
+      adminId: 'master',
+      adminName: 'Master Admin',
+      action: 'balance_update',
+      details: `Updated ${editingUser.username}: Balance $${updates.balance}, Points ${updates.points}, VIP Level ${updates.vipLevel}`,
+      targetUser: editingUser.id,
+      ip: '192.168.1.1',
+      timestamp: new Date().toISOString()
+    }])
+
+    setEditingUser(null)
+    setEditUserForm({ balance: '', points: '', vipLevel: '' })
   }
 
   // Approve/Reject withdrawal
@@ -879,7 +932,19 @@ export default function MasterAdminDashboard() {
                         >
                           {user.role === 'admin' ? '⬇️ Demote' : '⬆️ Promote'}
                         </button>
-                        <button className="action-btn edit">Edit</button>
+                        <button
+                          className="action-btn edit"
+                          onClick={() => {
+                            setEditingUser(user)
+                            setEditUserForm({
+                              balance: user.balance?.toString() || '0',
+                              points: user.points?.toString() || '0',
+                              vipLevel: user.vipLevel?.toString() || '1'
+                            })
+                          }}
+                        >
+                          ✏️ Edit
+                        </button>
                         <button className="action-btn view">View</button>
                         <button
                           className="action-btn block"
@@ -904,6 +969,62 @@ export default function MasterAdminDashboard() {
                 </tbody>
               </table>
             </div>
+
+            {/* Edit User Modal */}
+            {editingUser && (
+              <div className="modal-overlay" onClick={() => setEditingUser(null)}>
+                <div className="modal-content" onClick={e => e.stopPropagation()}>
+                  <div className="modal-header">
+                    <h2>Edit User: {editingUser.username}</h2>
+                    <button className="close-btn" onClick={() => setEditingUser(null)}>×</button>
+                  </div>
+                  <div className="modal-body">
+                    <div className="form-group">
+                      <label>Email</label>
+                      <input type="text" value={editingUser.email} disabled className="form-input disabled" />
+                    </div>
+                    <div className="form-group">
+                      <label>Balance (USD)</label>
+                      <input
+                        type="number"
+                        value={editUserForm.balance}
+                        onChange={e => setEditUserForm(prev => ({ ...prev, balance: e.target.value }))}
+                        className="form-input"
+                        placeholder="Enter balance"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Points</label>
+                      <input
+                        type="number"
+                        value={editUserForm.points}
+                        onChange={e => setEditUserForm(prev => ({ ...prev, points: e.target.value }))}
+                        className="form-input"
+                        placeholder="Enter points"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>VIP Level (1-5)</label>
+                      <select
+                        value={editUserForm.vipLevel}
+                        onChange={e => setEditUserForm(prev => ({ ...prev, vipLevel: e.target.value }))}
+                        className="form-input"
+                      >
+                        <option value="1">Level 1</option>
+                        <option value="2">Level 2</option>
+                        <option value="3">Level 3</option>
+                        <option value="4">Level 4</option>
+                        <option value="5">Level 5</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button className="btn-secondary" onClick={() => setEditingUser(null)}>Cancel</button>
+                    <button className="btn-primary" onClick={saveEditedUser}>Save Changes</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -2128,27 +2249,25 @@ export default function MasterAdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {(() => {
-                      const investments = JSON.parse(localStorage.getItem('aiArbitrageInvestments') || '[]')
-                      if (investments.length === 0) {
-                        return (
-                          <tr>
-                            <td colSpan="7" className="no-data">No active AI arbitrage investments</td>
-                          </tr>
-                        )
-                      }
-                      return investments.map((inv, idx) => (
+                    {aiInvestments.length === 0 ? (
+                      <tr>
+                        <td colSpan="7" className="no-data">No active AI arbitrage investments</td>
+                      </tr>
+                    ) : (
+                      aiInvestments.map((inv, idx) => (
                         <tr key={idx}>
-                          <td>User</td>
+                          <td>{inv.userName || inv.userEmail || 'User'}</td>
                           <td>${inv.amount?.toLocaleString()}</td>
                           <td>Level {inv.level}</td>
                           <td className="positive">+{inv.profit}%</td>
                           <td>{new Date(inv.startTime).toLocaleDateString()}</td>
                           <td>{new Date(inv.endTime).toLocaleDateString()}</td>
-                          <td><span className="status-badge active">Active</span></td>
+                          <td><span className={`status-badge ${inv.completed ? 'completed' : 'active'}`}>
+                            {inv.completed ? 'Completed' : 'Active'}
+                          </span></td>
                         </tr>
                       ))
-                    })()}
+                    )}
                   </tbody>
                 </table>
               </div>
