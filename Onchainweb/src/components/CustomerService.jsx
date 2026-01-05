@@ -1,4 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { 
+  saveChatMessage, 
+  saveActiveChat, 
+  updateActiveChat,
+  subscribeToAdminReplies, 
+  markReplyDelivered,
+  isFirebaseEnabled 
+} from '../lib/firebase.js'
 
 export default function CustomerService() {
   const [isOpen, setIsOpen] = useState(false)
@@ -70,14 +78,12 @@ export default function CustomerService() {
     return autoResponses.default
   }
 
-  // Save message to localStorage for admin to see - REAL TIME
-  const saveMessageToAdmin = (message, type, agentName = null) => {
-    const chatLogs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]')
+  // Save message to Firebase/localStorage for admin to see - REAL TIME
+  const saveMessageToAdmin = async (message, type, agentName = null) => {
     const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
     const walletAddress = localStorage.getItem('walletAddress') || ''
 
     const newMessage = {
-      id: Date.now(),
       sessionId: sessionId,
       user: userProfile.username || 'Anonymous',
       userId: userProfile.userId || '',
@@ -90,37 +96,24 @@ export default function CustomerService() {
       read: false
     }
 
-    chatLogs.push(newMessage)
-    localStorage.setItem('customerChatLogs', JSON.stringify(chatLogs))
+    // Save message to Firebase
+    await saveChatMessage(newMessage)
 
-    // Update active chats with more details
-    const activeChats = JSON.parse(localStorage.getItem('activeChats') || '[]')
-    const existingChat = activeChats.find(c => c.sessionId === sessionId)
-    if (!existingChat) {
-      activeChats.push({
-        sessionId: sessionId,
-        user: userProfile.username || 'Anonymous',
-        userId: userProfile.userId || '',
-        email: userProfile.email || '',
-        wallet: walletAddress,
-        startTime: new Date().toISOString(),
-        status: 'active',
-        unread: 1,
-        lastMessage: message,
-        lastMessageTime: new Date().toISOString()
-      })
-    } else {
-      if (type === 'user') {
-        existingChat.unread = (existingChat.unread || 0) + 1
-      }
-      existingChat.lastMessage = message
-      existingChat.lastMessageTime = new Date().toISOString()
-      existingChat.status = existingChat.status === 'closed' ? 'active' : existingChat.status
+    // Update active chat
+    const chatData = {
+      sessionId: sessionId,
+      user: userProfile.username || 'Anonymous',
+      userId: userProfile.userId || '',
+      email: userProfile.email || '',
+      wallet: walletAddress,
+      startTime: new Date().toISOString(),
+      status: 'active',
+      unread: type === 'user' ? 1 : 0,
+      lastMessage: message,
+      lastMessageTime: new Date().toISOString()
     }
-    localStorage.setItem('activeChats', JSON.stringify(activeChats))
     
-    // Trigger storage event for cross-tab sync
-    window.dispatchEvent(new Event('storage'))
+    await saveActiveChat(chatData)
   }
 
   const handleSendMessage = (e) => {
@@ -166,13 +159,10 @@ export default function CustomerService() {
     return names[Math.floor(Math.random() * names.length)]
   })
 
-  // Check for admin replies periodically - ALWAYS check, not just when connected to agent
+  // Subscribe to admin replies using Firebase - REAL TIME across all devices
   useEffect(() => {
-    const checkAdminReplies = () => {
-      const adminReplies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]')
-      const myReplies = adminReplies.filter(r => r.sessionId === sessionId && !r.delivered)
-
-      myReplies.forEach(reply => {
+    const unsubscribe = subscribeToAdminReplies(sessionId, (replies) => {
+      replies.forEach(async (reply) => {
         // If not connected to agent yet, auto-connect when admin replies
         if (!isConnectedToAgent) {
           setIsConnectedToAgent(true)
@@ -191,7 +181,9 @@ export default function CustomerService() {
           time: new Date(reply.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           agentName: reply.agentName || 'Support Agent'
         }])
-        reply.delivered = true
+
+        // Mark reply as delivered in Firebase
+        await markReplyDelivered(reply.id, reply.firebaseKey)
 
         // Play notification sound for user
         try {
@@ -205,19 +197,14 @@ export default function CustomerService() {
           setUnreadCount(prev => prev + 1)
         }
       })
+    })
 
-      if (myReplies.length > 0) {
-        localStorage.setItem('adminChatReplies', JSON.stringify(adminReplies))
-      }
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe()
     }
-
-    // Check immediately on mount and then every 1 second for real-time responses
-    checkAdminReplies()
-    const interval = setInterval(checkAdminReplies, 1000)
-    return () => clearInterval(interval)
   }, [sessionId, isConnectedToAgent, isOpen])
 
-  const connectToLiveAgent = () => {
+  const connectToLiveAgent = async () => {
     // Show connecting message - stays in-app, no external links
     setMessages(prev => [...prev, {
       id: Date.now(),
@@ -226,34 +213,20 @@ export default function CustomerService() {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }])
 
-    // Save connection request to admin dashboard
+    // Save connection request to Firebase
     const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
-    const activeChats = JSON.parse(localStorage.getItem('activeChats') || '[]')
-    const existingChat = activeChats.find(c => c.sessionId === sessionId)
-
-    if (existingChat) {
-      existingChat.status = 'waiting_agent'
-      existingChat.requestedAgent = true
-      existingChat.requestTime = new Date().toISOString()
-    } else {
-      activeChats.push({
-        sessionId: sessionId,
-        user: userProfile.username || 'Anonymous',
-        email: userProfile.email || '',
-        startTime: new Date().toISOString(),
-        status: 'waiting_agent',
-        requestedAgent: true,
-        requestTime: new Date().toISOString(),
-        unread: 1
-      })
-    }
-    localStorage.setItem('activeChats', JSON.stringify(activeChats))
+    
+    await updateActiveChat(sessionId, {
+      status: 'waiting_agent',
+      requestedAgent: true,
+      requestTime: new Date().toISOString()
+    })
 
     // Save notification for admin
-    saveMessageToAdmin('Customer requested live agent connection', 'system')
+    await saveMessageToAdmin('Customer requested live agent connection', 'system')
 
     // Simulate connection delay - all stays in-app
-    setTimeout(() => {
+    setTimeout(async () => {
       setIsConnectedToAgent(true)
       setMessages(prev => [...prev, {
         id: Date.now(),
@@ -262,17 +235,14 @@ export default function CustomerService() {
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }])
 
-      // Update chat status
-      const chats = JSON.parse(localStorage.getItem('activeChats') || '[]')
-      const chat = chats.find(c => c.sessionId === sessionId)
-      if (chat) {
-        chat.status = 'connected'
-        chat.connectedAgent = agentName
-      }
-      localStorage.setItem('activeChats', JSON.stringify(chats))
+      // Update chat status in Firebase
+      await updateActiveChat(sessionId, {
+        status: 'connected',
+        connectedAgent: agentName
+      })
 
       // Agent greeting
-      setTimeout(() => {
+      setTimeout(async () => {
         const greetingMsg = `Hi! I'm ${agentName}, your dedicated support agent. How can I assist you today?`
         setMessages(prev => [...prev, {
           id: Date.now(),
@@ -281,7 +251,7 @@ export default function CustomerService() {
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           agentName: agentName
         }])
-        saveMessageToAdmin(greetingMsg, 'agent', agentName)
+        await saveMessageToAdmin(greetingMsg, 'agent', agentName)
       }, 1000)
     }, 2000)
   }

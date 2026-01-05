@@ -1,4 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { 
+  subscribeToChatMessages, 
+  subscribeToActiveChats, 
+  saveAdminReply,
+  updateActiveChat,
+  saveChatMessage,
+  isFirebaseEnabled 
+} from '../lib/firebase.js'
 
 // Lazy localStorage helper to avoid blocking initial render
 const getFromStorage = (key, defaultValue) => {
@@ -319,14 +327,31 @@ export default function MasterAdminDashboard() {
     }
   }, [isAuthenticated, isDataLoaded, loadAllData])
 
-  // Refresh chat data periodically - real-time updates (500ms for faster response)
+  // Subscribe to Firebase real-time chat data
   useEffect(() => {
     if (!isAuthenticated || !isDataLoaded) return
 
-    const refreshChats = () => {
-      const chats = getFromStorage('activeChats', [])
-      const logs = getFromStorage('customerChatLogs', [])
+    let unsubscribeChats = () => {}
+    let unsubscribeLogs = () => {}
 
+    // Request notification permission
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission()
+    }
+
+    // Subscribe to active chats (real-time from Firebase)
+    unsubscribeChats = subscribeToActiveChats((chats) => {
+      setActiveChats(chats)
+      
+      // Auto-select chat if there's a waiting customer and no chat selected
+      if (!selectedChat && chats.some(c => c.status === 'waiting_agent')) {
+        const waitingChat = chats.find(c => c.status === 'waiting_agent')
+        if (waitingChat) setSelectedChat(waitingChat)
+      }
+    })
+
+    // Subscribe to chat logs (real-time from Firebase)
+    unsubscribeLogs = subscribeToChatMessages((logs) => {
       // Check for new messages and trigger notification
       const userMessages = logs.filter(l => l.type === 'user')
       if (userMessages.length > lastMessageCount && lastMessageCount > 0) {
@@ -342,7 +367,7 @@ export default function MasterAdminDashboard() {
         if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
           const latestMsg = userMessages[userMessages.length - 1]
           new Notification('🔔 New Customer Message', {
-            body: `${latestMsg.user}: ${latestMsg.message.substring(0, 50)}...`,
+            body: `${latestMsg.user}: ${latestMsg.message?.substring(0, 50) || ''}...`,
             icon: '💬',
             tag: 'customer-message',
             requireInteraction: true
@@ -353,32 +378,12 @@ export default function MasterAdminDashboard() {
         setTimeout(() => setNewMessageAlert(false), 10000)
       }
       setLastMessageCount(userMessages.length)
-
-      setActiveChats(chats)
       setChatLogs(logs)
-      
-      // Auto-select chat if there's a waiting customer and no chat selected
-      if (!selectedChat && chats.some(c => c.status === 'waiting_agent')) {
-        const waitingChat = chats.find(c => c.status === 'waiting_agent')
-        if (waitingChat) setSelectedChat(waitingChat)
-      }
-    }
+    })
 
-    // Request notification permission
-    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-      Notification.requestPermission()
-    }
-
-    refreshChats()
-    const interval = setInterval(refreshChats, 500) // Real-time refresh every 500ms
-    
-    // Also listen for storage events (cross-tab sync)
-    const handleStorage = () => refreshChats()
-    window.addEventListener('storage', handleStorage)
-    
     return () => {
-      clearInterval(interval)
-      window.removeEventListener('storage', handleStorage)
+      if (typeof unsubscribeChats === 'function') unsubscribeChats()
+      if (typeof unsubscribeLogs === 'function') unsubscribeLogs()
     }
   }, [isAuthenticated, isDataLoaded, lastMessageCount, selectedChat])
 
@@ -737,36 +742,33 @@ export default function MasterAdminDashboard() {
   }
 
   // Send admin reply to customer chat
-  const sendAdminReply = (sessionId) => {
+  const sendAdminReply = async (sessionId) => {
     if (!adminReplyMessage.trim()) return
 
-    const adminReplies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]')
-    adminReplies.push({
+    const replyData = {
       id: Date.now(),
       sessionId: sessionId,
       message: adminReplyMessage,
       agentName: 'Support Agent',
       timestamp: new Date().toISOString(),
       delivered: false
-    })
-    localStorage.setItem('adminChatReplies', JSON.stringify(adminReplies))
+    }
 
-    // Also save to chat logs
-    const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]')
-    logs.push({
-      id: Date.now(),
+    // Save admin reply to Firebase (user will receive it via subscription)
+    await saveAdminReply(replyData)
+
+    // Also save to chat logs via Firebase
+    const logEntry = {
+      id: Date.now() + 1,
       sessionId: sessionId,
       type: 'admin',
       message: adminReplyMessage,
       agentName: 'Support Agent',
       timestamp: new Date().toISOString()
-    })
-    localStorage.setItem('customerChatLogs', JSON.stringify(logs))
+    }
+    await saveChatMessage(logEntry)
 
     setAdminReplyMessage('')
-
-    // Refresh chat logs
-    setChatLogs(logs)
   }
 
   return (

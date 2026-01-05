@@ -27,36 +27,36 @@ function PromoCarousel() {
       title: "Welcome to OnchainWeb",
       subtitle: "Your Gateway to Decentralized Trading",
       description: "Trade crypto, stocks, and more with advanced tools and real-time data",
-      icon: "🌐",
-      gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+      image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80",
+      gradient: "linear-gradient(135deg, rgba(102,126,234,0.85) 0%, rgba(118,75,162,0.85) 100%)"
     },
     {
       title: "AI-Powered Trading",
       subtitle: "Smart Arbitrage Detection",
       description: "Let our AI find the best trading opportunities across multiple markets",
-      icon: "🤖",
-      gradient: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)"
+      image: "https://images.unsplash.com/photo-1518186285589-2f7649de83e0?w=800&q=80",
+      gradient: "linear-gradient(135deg, rgba(17,153,142,0.85) 0%, rgba(56,239,125,0.85) 100%)"
     },
     {
       title: "Secure & Transparent",
       subtitle: "Your Assets, Your Control",
       description: "Non-custodial trading with full transparency and blockchain security",
-      icon: "🔒",
-      gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
+      image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&q=80",
+      gradient: "linear-gradient(135deg, rgba(79,172,254,0.85) 0%, rgba(0,242,254,0.85) 100%)"
     },
     {
       title: "24/7 Global Markets",
       subtitle: "Trade Anytime, Anywhere",
       description: "Access crypto and stock markets around the clock with live updates",
-      icon: "🌍",
-      gradient: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
+      image: "https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&q=80",
+      gradient: "linear-gradient(135deg, rgba(250,112,154,0.85) 0%, rgba(254,225,64,0.85) 100%)"
     },
     {
       title: "New: Binary Options",
       subtitle: "Predict & Profit",
       description: "Simple up/down predictions with 60-second to 1-hour expiry times",
-      icon: "📊",
-      gradient: "linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)"
+      image: "https://images.unsplash.com/photo-1642790106117-e829e14a795f?w=800&q=80",
+      gradient: "linear-gradient(135deg, rgba(161,140,209,0.85) 0%, rgba(251,194,235,0.85) 100%)"
     }
   ]
 
@@ -74,10 +74,13 @@ function PromoCarousel() {
           <div 
             key={index} 
             className="promo-slide"
-            style={{ background: promo.gradient }}
+            style={{ 
+              backgroundImage: `${promo.gradient}, url(${promo.image})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center'
+            }}
           >
             <div className="promo-content">
-              <span className="promo-icon">{promo.icon}</span>
               <h2 className="promo-title">{promo.title}</h2>
               <h3 className="promo-subtitle">{promo.subtitle}</h3>
               <p className="promo-description">{promo.description}</p>
