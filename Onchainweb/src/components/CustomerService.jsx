@@ -70,16 +70,19 @@ export default function CustomerService() {
     return autoResponses.default
   }
 
-  // Save message to localStorage for admin to see
+  // Save message to localStorage for admin to see - REAL TIME
   const saveMessageToAdmin = (message, type, agentName = null) => {
     const chatLogs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]')
     const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
+    const walletAddress = localStorage.getItem('walletAddress') || ''
 
     const newMessage = {
       id: Date.now(),
       sessionId: sessionId,
       user: userProfile.username || 'Anonymous',
+      userId: userProfile.userId || '',
       email: userProfile.email || '',
+      wallet: walletAddress,
       type: type,
       message: message,
       agentName: agentName,
@@ -90,24 +93,34 @@ export default function CustomerService() {
     chatLogs.push(newMessage)
     localStorage.setItem('customerChatLogs', JSON.stringify(chatLogs))
 
-    // Update active chats count
+    // Update active chats with more details
     const activeChats = JSON.parse(localStorage.getItem('activeChats') || '[]')
     const existingChat = activeChats.find(c => c.sessionId === sessionId)
     if (!existingChat) {
       activeChats.push({
         sessionId: sessionId,
         user: userProfile.username || 'Anonymous',
+        userId: userProfile.userId || '',
         email: userProfile.email || '',
+        wallet: walletAddress,
         startTime: new Date().toISOString(),
         status: 'active',
-        unread: 1
+        unread: 1,
+        lastMessage: message,
+        lastMessageTime: new Date().toISOString()
       })
     } else {
-      existingChat.unread = (existingChat.unread || 0) + 1
+      if (type === 'user') {
+        existingChat.unread = (existingChat.unread || 0) + 1
+      }
       existingChat.lastMessage = message
       existingChat.lastMessageTime = new Date().toISOString()
+      existingChat.status = existingChat.status === 'closed' ? 'active' : existingChat.status
     }
     localStorage.setItem('activeChats', JSON.stringify(activeChats))
+    
+    // Trigger storage event for cross-tab sync
+    window.dispatchEvent(new Event('storage'))
   }
 
   const handleSendMessage = (e) => {

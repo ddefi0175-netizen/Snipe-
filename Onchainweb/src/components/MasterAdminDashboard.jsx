@@ -319,7 +319,7 @@ export default function MasterAdminDashboard() {
     }
   }, [isAuthenticated, isDataLoaded, loadAllData])
 
-  // Refresh chat data periodically - real-time updates (1 second)
+  // Refresh chat data periodically - real-time updates (500ms for faster response)
   useEffect(() => {
     if (!isAuthenticated || !isDataLoaded) return
 
@@ -341,19 +341,27 @@ export default function MasterAdminDashboard() {
         // Show browser notification if permitted
         if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
           const latestMsg = userMessages[userMessages.length - 1]
-          new Notification('New Customer Message', {
+          new Notification('🔔 New Customer Message', {
             body: `${latestMsg.user}: ${latestMsg.message.substring(0, 50)}...`,
-            icon: '💬'
+            icon: '💬',
+            tag: 'customer-message',
+            requireInteraction: true
           })
         }
 
-        // Auto-clear alert after 5 seconds
-        setTimeout(() => setNewMessageAlert(false), 5000)
+        // Auto-clear alert after 10 seconds
+        setTimeout(() => setNewMessageAlert(false), 10000)
       }
       setLastMessageCount(userMessages.length)
 
       setActiveChats(chats)
       setChatLogs(logs)
+      
+      // Auto-select chat if there's a waiting customer and no chat selected
+      if (!selectedChat && chats.some(c => c.status === 'waiting_agent')) {
+        const waitingChat = chats.find(c => c.status === 'waiting_agent')
+        if (waitingChat) setSelectedChat(waitingChat)
+      }
     }
 
     // Request notification permission
@@ -362,9 +370,17 @@ export default function MasterAdminDashboard() {
     }
 
     refreshChats()
-    const interval = setInterval(refreshChats, 1000) // Real-time refresh every 1 second
-    return () => clearInterval(interval)
-  }, [isAuthenticated, isDataLoaded, lastMessageCount])
+    const interval = setInterval(refreshChats, 500) // Real-time refresh every 500ms
+    
+    // Also listen for storage events (cross-tab sync)
+    const handleStorage = () => refreshChats()
+    window.addEventListener('storage', handleStorage)
+    
+    return () => {
+      clearInterval(interval)
+      window.removeEventListener('storage', handleStorage)
+    }
+  }, [isAuthenticated, isDataLoaded, lastMessageCount, selectedChat])
 
   // Save to localStorage - only when data is loaded and changed
   useEffect(() => {
@@ -3057,42 +3073,70 @@ export default function MasterAdminDashboard() {
           <div className="admin-section customer-service-section">
             <div className="section-header">
               <h1>💬 Customer Services - Live Chat</h1>
-              <p>Manage live chat sessions and support tickets</p>
+              <p>Manage live chat sessions and support tickets in real-time</p>
+              <div className="live-indicator">
+                <span className="live-dot"></span>
+                <span>Live - Auto-refreshing every 500ms</span>
+              </div>
             </div>
 
             <div className="support-stats">
               <div className="stat-card pending">
                 <span className="stat-number">{activeChats.filter(c => c.status === 'waiting_agent').length}</span>
-                <span className="stat-label">Waiting for Agent</span>
+                <span className="stat-label">⏳ Waiting for Agent</span>
               </div>
               <div className="stat-card">
-                <span className="stat-number">{activeChats.filter(c => c.status === 'connected').length}</span>
-                <span className="stat-label">Active Chats</span>
+                <span className="stat-number">{activeChats.filter(c => c.status === 'active' || c.status === 'connected').length}</span>
+                <span className="stat-label">💬 Active Chats</span>
               </div>
               <div className="stat-card verified">
                 <span className="stat-number">{activeChats.filter(c => c.status === 'closed').length}</span>
-                <span className="stat-label">Resolved</span>
+                <span className="stat-label">✓ Resolved</span>
+              </div>
+              <div className="stat-card total">
+                <span className="stat-number">{chatLogs.filter(l => l.type === 'user').length}</span>
+                <span className="stat-label">📨 Total Messages</span>
               </div>
             </div>
 
             <div className="live-chat-container">
               {/* Chat List */}
               <div className="chat-list">
-                <h3>Active Conversations</h3>
+                <h3>Active Conversations ({activeChats.length})</h3>
                 {activeChats.length === 0 ? (
-                  <div className="no-chats">No active conversations</div>
+                  <div className="no-chats">
+                    <span className="no-chats-icon">💬</span>
+                    <p>No active conversations</p>
+                    <small>Messages will appear here when users start chatting</small>
+                  </div>
                 ) : (
-                  activeChats.map((chat, idx) => (
+                  activeChats.sort((a, b) => {
+                    // Sort by waiting first, then by last message time
+                    if (a.status === 'waiting_agent' && b.status !== 'waiting_agent') return -1
+                    if (b.status === 'waiting_agent' && a.status !== 'waiting_agent') return 1
+                    return new Date(b.lastMessageTime || b.startTime) - new Date(a.lastMessageTime || a.startTime)
+                  }).map((chat, idx) => (
                     <div
                       key={idx}
-                      className={`chat-list-item ${selectedChat?.sessionId === chat.sessionId ? 'active' : ''} ${chat.status === 'waiting_agent' ? 'waiting' : ''}`}
-                      onClick={() => setSelectedChat(chat)}
+                      className={`chat-list-item ${selectedChat?.sessionId === chat.sessionId ? 'active' : ''} ${chat.status === 'waiting_agent' ? 'waiting' : ''} ${chat.unread > 0 ? 'has-unread' : ''}`}
+                      onClick={() => {
+                        setSelectedChat(chat)
+                        // Mark as read
+                        const chats = [...activeChats]
+                        const c = chats.find(x => x.sessionId === chat.sessionId)
+                        if (c) c.unread = 0
+                        setActiveChats(chats)
+                        localStorage.setItem('activeChats', JSON.stringify(chats))
+                      }}
                     >
                       <div className="chat-user-info">
                         <span className="chat-avatar">👤</span>
                         <div className="chat-details">
                           <span className="chat-username">{chat.user}</span>
-                          <span className="chat-email">{chat.email || 'No email'}</span>
+                          <span className="chat-email">{chat.email || chat.wallet?.slice(0, 10) + '...' || 'No email'}</span>
+                          {chat.lastMessage && (
+                            <span className="chat-preview">{chat.lastMessage.substring(0, 30)}...</span>
+                          )}
                         </div>
                       </div>
                       <div className="chat-meta">
@@ -3101,7 +3145,8 @@ export default function MasterAdminDashboard() {
                             chat.status === 'connected' ? '🟢 Active' :
                               chat.status === 'active' ? '💬 Chat' : '✓ Closed'}
                         </span>
-                        {chat.unread > 0 && <span className="unread-badge">{chat.unread}</span>}
+                        {chat.unread > 0 && <span className="unread-badge pulse">{chat.unread}</span>}
+                        <span className="chat-time">{chat.lastMessageTime ? new Date(chat.lastMessageTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</span>
                       </div>
                     </div>
                   ))
@@ -3117,11 +3162,19 @@ export default function MasterAdminDashboard() {
                         <span className="chat-avatar-large">👤</span>
                         <div>
                           <h4>{selectedChat.user}</h4>
-                          <span>{selectedChat.email || 'No email provided'}</span>
+                          <span>{selectedChat.email || selectedChat.wallet || 'No contact info'}</span>
+                          <small>Session: {selectedChat.sessionId}</small>
                         </div>
                       </div>
                       <div className="chat-actions">
-                        <button className="chat-action-btn" onClick={() => {
+                        <button className="chat-action-btn connect" onClick={() => {
+                          const chats = [...activeChats]
+                          const chat = chats.find(c => c.sessionId === selectedChat.sessionId)
+                          if (chat) chat.status = 'connected'
+                          setActiveChats(chats)
+                          localStorage.setItem('activeChats', JSON.stringify(chats))
+                        }}>🟢 Connect</button>
+                        <button className="chat-action-btn close" onClick={() => {
                           const chats = [...activeChats]
                           const chat = chats.find(c => c.sessionId === selectedChat.sessionId)
                           if (chat) chat.status = 'closed'
@@ -3130,38 +3183,51 @@ export default function MasterAdminDashboard() {
                         }}>Close Chat</button>
                       </div>
                     </div>
-                    <div className="chat-messages-area">
+                    <div className="chat-messages-area" id="admin-chat-messages">
                       {chatLogs
                         .filter(log => log.sessionId === selectedChat.sessionId)
+                        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
                         .map((log, idx) => (
                           <div key={idx} className={`admin-chat-message ${log.type}`}>
                             <div className="message-content">
                               <span className="message-sender">
-                                {log.type === 'user' ? selectedChat.user :
+                                {log.type === 'user' ? `👤 ${selectedChat.user}` :
                                   log.type === 'admin' ? '🎧 Support Agent' :
                                     log.type === 'agent' ? `🎧 ${log.agentName || 'Agent'}` : '⚙️ System'}
                               </span>
                               <p>{log.message}</p>
-                              <span className="message-time">{new Date(log.timestamp).toLocaleTimeString()}</span>
+                              <span className="message-time">{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
                             </div>
                           </div>
                         ))}
+                      <div id="chat-messages-end"></div>
                     </div>
                     <div className="admin-reply-area">
                       <input
                         type="text"
-                        placeholder="Type your reply..."
+                        placeholder="Type your reply to customer..."
                         value={adminReplyMessage}
                         onChange={(e) => setAdminReplyMessage(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && sendAdminReply(selectedChat.sessionId)}
+                        autoFocus
                       />
-                      <button onClick={() => sendAdminReply(selectedChat.sessionId)}>Send</button>
+                      <button onClick={() => sendAdminReply(selectedChat.sessionId)} disabled={!adminReplyMessage.trim()}>
+                        📤 Send
+                      </button>
+                    </div>
+                    <div className="quick-replies-admin">
+                      <span>Quick:</span>
+                      <button onClick={() => setAdminReplyMessage('Hello! How can I help you today?')}>Greeting</button>
+                      <button onClick={() => setAdminReplyMessage('Thank you for contacting us. Let me check that for you.')}>Checking</button>
+                      <button onClick={() => setAdminReplyMessage('Your request has been processed. Is there anything else I can help with?')}>Done</button>
+                      <button onClick={() => setAdminReplyMessage('Please provide more details so I can assist you better.')}>More Info</button>
                     </div>
                   </>
                 ) : (
                   <div className="no-chat-selected">
                     <span>💬</span>
                     <p>Select a conversation to view messages</p>
+                    <small>Click on a chat from the list to start responding</small>
                   </div>
                 )}
               </div>
