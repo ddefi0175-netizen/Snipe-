@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import { useWallet } from '../lib/wallet.jsx'
 
+// Backend API base URL
+const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:4000/api';
+
 // Generate a unique 5-digit numeric ID for Real account
 function generateRealAccountId() {
   return Math.floor(10000 + Math.random() * 90000).toString()
@@ -23,7 +26,7 @@ function generateCustomerId(address) {
 export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, onHowItWorksClick }) {
   const { providerAvailable, connect, disconnect, address, balance } = useWallet()
   const [profileOpen, setProfileOpen] = useState(false)
-  const [notifications, setNotifications] = useState(3)
+  const [notifications, setNotifications] = useState([])
   const [darkMode, setDarkMode] = useState(true)
   const [showNotifications, setShowNotifications] = useState(false)
 
@@ -57,7 +60,7 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (!e.target.closest('.profile-container')) {
+      if (!e.target.closest('.profile-container') && !e.target.closest('.notification-btn') && !e.target.closest('.notifications-dropdown')) {
         setProfileOpen(false)
         setShowNotifications(false)
       }
@@ -65,6 +68,18 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
     document.addEventListener('click', handleClickOutside)
     return () => document.removeEventListener('click', handleClickOutside)
   }, [])
+
+  // Fetch notifications from backend
+  useEffect(() => {
+    if (!address) {
+      setNotifications([])
+      return
+    }
+    fetch(`${API_BASE}/notifications/${address}`)
+      .then(res => res.json())
+      .then(data => setNotifications(Array.isArray(data) ? data : []))
+      .catch(() => setNotifications([]))
+  }, [address, showNotifications])
 
   const handleViewProfile = () => {
     alert(`Customer Profile\n\nReal Account ID: ${realAccountId}\nWallet: ${address || 'Not connected'}\nBalance: ${balance ? Number(balance).toFixed(4) + ' ETH' : 'N/A'}`)
@@ -127,9 +142,19 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
     window.location.reload();
   }
 
-  const clearNotifications = () => {
-    setNotifications(0)
-    setShowNotifications(false)
+  // Mark all notifications as read
+  const clearNotifications = async () => {
+    try {
+      await Promise.all(
+        notifications.filter(n => !n.read).map(n =>
+          fetch(`${API_BASE}/notifications/${n._id}/read`, { method: 'PATCH' })
+        )
+      )
+      setNotifications(notifications.map(n => ({ ...n, read: true })))
+      setShowNotifications(false)
+    } catch {
+      // ignore
+    }
   }
 
   return (
@@ -195,18 +220,20 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
           )}
         </nav>
 
-        {/* Notification Bell */}
-        <button 
-          className="notification-btn"
-          onClick={handleNotifications}
-          aria-label="Notifications"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-          </svg>
-          {notifications > 0 && <span className="notification-badge">{notifications}</span>}
-        </button>
+        {/* Notification Bell (only if unread notifications) */}
+        {address && notifications.some(n => !n.read) && (
+          <button 
+            className="notification-btn"
+            onClick={handleNotifications}
+            aria-label="Notifications"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            <span className="notification-badge">{notifications.filter(n => !n.read).length}</span>
+          </button>
+        )}
 
         {/* Notifications Dropdown */}
         {showNotifications && (
@@ -216,27 +243,16 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
               <button onClick={clearNotifications}>Clear all</button>
             </div>
             <div className="notifications-list">
-              <div className="notification-item">
-                <span className="notification-icon">📈</span>
-                <div>
-                  <p>BTC price up 2.5%</p>
-                  <span className="notification-time">5 min ago</span>
+              {notifications.length === 0 && <div className="notification-item">No notifications.</div>}
+              {notifications.map((n) => (
+                <div className={`notification-item${n.read ? ' read' : ''}`} key={n._id}>
+                  <span className="notification-icon">🔔</span>
+                  <div>
+                    <p>{n.message}</p>
+                    <span className="notification-time">{new Date(n.createdAt).toLocaleString()}</span>
+                  </div>
                 </div>
-              </div>
-              <div className="notification-item">
-                <span className="notification-icon">🔔</span>
-                <div>
-                  <p>New feature: Stock tracking</p>
-                  <span className="notification-time">1 hour ago</span>
-                </div>
-              </div>
-              <div className="notification-item">
-                <span className="notification-icon">💰</span>
-                <div>
-                  <p>Welcome to OnchainWeb!</p>
-                  <span className="notification-time">Today</span>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         )}
