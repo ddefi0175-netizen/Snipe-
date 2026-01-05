@@ -18,6 +18,7 @@ export default function MasterAdminDashboard() {
   const [loginError, setLoginError] = useState('')
   const [activeSection, setActiveSection] = useState('user-agents')
   const [searchQuery, setSearchQuery] = useState('')
+  const [isMasterAccount, setIsMasterAccount] = useState(false)
 
   // User Management States - lazy loaded after auth
   const [users, setUsers] = useState([])
@@ -83,6 +84,12 @@ export default function MasterAdminDashboard() {
 
   // Admin Audit Logs - lazy loaded
   const [adminAuditLogs, setAdminAuditLogs] = useState([])
+
+  // VIP Unlock Requests - lazy loaded
+  const [vipRequests, setVipRequests] = useState([])
+
+  // Pending Deposits from WalletActions
+  const [pendingDeposits, setPendingDeposits] = useState([])
 
   // Admin Roles Management - lazy loaded
   const [adminRoles, setAdminRoles] = useState([])
@@ -247,6 +254,9 @@ export default function MasterAdminDashboard() {
       setSiteSettings(getFromStorage('siteSettings', defaultData.siteSettings))
       setTradeOptions(getFromStorage('tradeOptions', defaultData.tradeOptions))
       setActiveTrades(getFromStorage('activeTrades', []))
+      // VIP Requests and Pending Deposits from WalletActions
+      setVipRequests(getFromStorage('adminVIPRequests', []))
+      setPendingDeposits(getFromStorage('adminPendingDeposits', []))
       setIsDataLoaded(true)
     })
   }, [defaultData])
@@ -291,6 +301,7 @@ export default function MasterAdminDashboard() {
           const session = JSON.parse(adminSession)
           if (Date.now() - session.timestamp < 24 * 60 * 60 * 1000) {
             setIsAuthenticated(true)
+            setIsMasterAccount(session.role === 'master')
           }
         }
       } catch (e) {
@@ -448,6 +459,7 @@ export default function MasterAdminDashboard() {
         role: 'master',
         timestamp: Date.now()
       }))
+      setIsMasterAccount(true)
       return
     }
 
@@ -661,42 +673,6 @@ export default function MasterAdminDashboard() {
             <button type="submit" className="login-btn">Login</button>
           </form>
 
-          {/* Quick admin creation - if user enters new username/password */}
-          <div style={{ marginTop: '20px', textAlign: 'center' }}>
-            <button
-              type="button"
-              onClick={() => {
-                if (!loginData.username || !loginData.password) {
-                  alert('Enter username and password first, then click this button to create a new admin account')
-                  return
-                }
-                const newAdmin = {
-                  id: Date.now(),
-                  username: loginData.username.trim(),
-                  email: loginData.username.trim() + '@admin.local',
-                  password: loginData.password,
-                  role: 'admin',
-                  permissions: ['dashboard', 'users', 'deposits', 'withdrawals', 'kyc', 'live_trades', 'ai_arbitrage', 'balances', 'customer_service', 'staking', 'settings', 'logs'],
-                  status: 'active',
-                  createdAt: new Date().toISOString(),
-                  lastLogin: null
-                }
-                const currentAdmins = JSON.parse(localStorage.getItem('adminRoles') || '[]')
-                // Check if username exists
-                if (currentAdmins.some(a => a.username?.toLowerCase() === loginData.username.toLowerCase())) {
-                  alert('Username already exists! Try logging in or use a different username.')
-                  return
-                }
-                currentAdmins.push(newAdmin)
-                localStorage.setItem('adminRoles', JSON.stringify(currentAdmins))
-                alert(`✅ Admin "${loginData.username}" created!\n\nNow click Login to access the dashboard.`)
-              }}
-              style={{ padding: '8px 16px', fontSize: '12px', background: 'transparent', border: '1px solid #444', borderRadius: '6px', color: '#888', cursor: 'pointer' }}
-            >
-              Create New Admin Account
-            </button>
-          </div>
-
           {/* Show available admin accounts */}
           {storedAdmins.filter(a => a.role !== 'super_admin').length > 0 && (
             <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '12px' }}>
@@ -835,6 +811,18 @@ export default function MasterAdminDashboard() {
           </div>
           <a onClick={() => setActiveSection('deposits')} className={activeSection === 'deposits' ? 'active' : ''}>Deposit</a>
           <a onClick={() => setActiveSection('withdrawals')} className={activeSection === 'withdrawals' ? 'active' : ''}>Withdraw</a>
+          <a onClick={() => setActiveSection('vip-requests')} className={activeSection === 'vip-requests' ? 'active' : ''}>
+            👑 VIP Requests
+            {vipRequests.filter(v => v.status === 'pending').length > 0 && (
+              <span className="nav-badge">{vipRequests.filter(v => v.status === 'pending').length}</span>
+            )}
+          </a>
+          <a onClick={() => setActiveSection('pending-deposits')} className={activeSection === 'pending-deposits' ? 'active' : ''}>
+            💰 Pending Deposits
+            {pendingDeposits.filter(d => d.status === 'pending').length > 0 && (
+              <span className="nav-badge">{pendingDeposits.filter(d => d.status === 'pending').length}</span>
+            )}
+          </a>
           <a onClick={() => setActiveSection('live-trades')} className={activeSection === 'live-trades' ? 'active' : ''}>
             🔴 Live Trades
             {activeTrades.length > 0 && (
@@ -844,8 +832,8 @@ export default function MasterAdminDashboard() {
           <a onClick={() => setActiveSection('trade-options')} className={activeSection === 'trade-options' ? 'active' : ''}>Trade Options</a>
           <a onClick={() => setActiveSection('ai-arbitrage')} className={activeSection === 'ai-arbitrage' ? 'active' : ''}>AI Arbitrage</a>
           <a onClick={() => setActiveSection('bonus-programs')} className={activeSection === 'bonus-programs' ? 'active' : ''}>Bonus Programs</a>
-          <a onClick={() => setActiveSection('staking-plans')} className={activeSection === 'staking-plans' ? 'active' : ''}>Staking Plans</a>
-          <a onClick={() => setActiveSection('staking-history')} className={activeSection === 'staking-history' ? 'active' : ''}>Staking History</a>
+          <a onClick={() => setActiveSection('staking-plans')} className={activeSection === 'staking-plans' ? 'active' : ''}>AI Arbitrage Plans</a>
+          <a onClick={() => setActiveSection('staking-history')} className={activeSection === 'staking-history' ? 'active' : ''}>AI Arbitrage History</a>
           <a onClick={() => setActiveSection('trade-history')} className={activeSection === 'trade-history' ? 'active' : ''}>Trade History</a>
           <a onClick={() => setActiveSection('balance-history')} className={activeSection === 'balance-history' ? 'active' : ''}>Balance History</a>
           <a onClick={() => setActiveSection('site-settings')} className={activeSection === 'site-settings' ? 'active' : ''}>Site Settings</a>
@@ -1323,6 +1311,202 @@ export default function MasterAdminDashboard() {
                   {withdrawals.length === 0 && (
                     <tr>
                       <td colSpan="8" className="no-data">No withdrawal requests</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* VIP Requests Section */}
+        {activeSection === 'vip-requests' && (
+          <div className="admin-section">
+            <div className="section-header">
+              <h1>👑 VIP Unlock Requests</h1>
+              <p>Manage VIP access unlock fee payments</p>
+            </div>
+            <div className="withdrawal-stats">
+              <div className="stat-card pending">
+                <span className="stat-number">{vipRequests.filter(v => v.status === 'pending').length}</span>
+                <span className="stat-label">Pending</span>
+              </div>
+              <div className="stat-card verified">
+                <span className="stat-number">{vipRequests.filter(v => v.status === 'approved').length}</span>
+                <span className="stat-label">Approved</span>
+              </div>
+              <div className="stat-card rejected">
+                <span className="stat-number">{vipRequests.filter(v => v.status === 'rejected').length}</span>
+                <span className="stat-label">Rejected</span>
+              </div>
+              <div className="stat-card total">
+                <span className="stat-number">${vipRequests.filter(v => v.status === 'approved').reduce((sum, v) => sum + (v.fee || 0), 0).toLocaleString()}</span>
+                <span className="stat-label">Total VIP Fees</span>
+              </div>
+            </div>
+            <div className="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>WALLET</th>
+                    <th>FEE PAID</th>
+                    <th>TX HASH</th>
+                    <th>DATE</th>
+                    <th>STATUS</th>
+                    <th>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {vipRequests.map((request, idx) => (
+                    <tr key={idx}>
+                      <td>{request.id}</td>
+                      <td className="address-cell">{request.wallet?.slice(0, 10)}...{request.wallet?.slice(-6)}</td>
+                      <td className="amount-cell">${request.fee?.toLocaleString()}</td>
+                      <td className="address-cell">{request.txHash?.slice(0, 12)}...</td>
+                      <td>{new Date(request.timestamp).toLocaleString()}</td>
+                      <td>
+                        <span className={`status-badge ${request.status}`}>
+                          {request.status}
+                        </span>
+                      </td>
+                      <td>
+                        {request.status === 'pending' && (
+                          <>
+                            <button className="action-btn approve" onClick={() => {
+                              setVipRequests(prev => prev.map(v => 
+                                v.id === request.id ? { ...v, status: 'approved' } : v
+                              ))
+                              localStorage.setItem('adminVIPRequests', JSON.stringify(
+                                vipRequests.map(v => v.id === request.id ? { ...v, status: 'approved' } : v)
+                              ))
+                              // Update user's VIP status
+                              const vipStatus = { unlocked: true, feePaid: request.fee, pendingApproval: false }
+                              localStorage.setItem('vipUnlockStatus', JSON.stringify(vipStatus))
+                              alert('VIP access approved!')
+                            }}>Approve</button>
+                            <button className="action-btn reject" onClick={() => {
+                              setVipRequests(prev => prev.map(v => 
+                                v.id === request.id ? { ...v, status: 'rejected' } : v
+                              ))
+                              localStorage.setItem('adminVIPRequests', JSON.stringify(
+                                vipRequests.map(v => v.id === request.id ? { ...v, status: 'rejected' } : v)
+                              ))
+                              alert('VIP request rejected')
+                            }}>Reject</button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {vipRequests.length === 0 && (
+                    <tr>
+                      <td colSpan="7" className="no-data">No VIP unlock requests</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Pending Deposits Section */}
+        {activeSection === 'pending-deposits' && (
+          <div className="admin-section">
+            <div className="section-header">
+              <h1>💰 Pending Deposits</h1>
+              <p>Approve or reject user deposit requests from wallet actions</p>
+            </div>
+            <div className="withdrawal-stats">
+              <div className="stat-card pending">
+                <span className="stat-number">{pendingDeposits.filter(d => d.status === 'pending').length}</span>
+                <span className="stat-label">Pending</span>
+              </div>
+              <div className="stat-card verified">
+                <span className="stat-number">{pendingDeposits.filter(d => d.status === 'confirmed').length}</span>
+                <span className="stat-label">Confirmed</span>
+              </div>
+              <div className="stat-card rejected">
+                <span className="stat-number">{pendingDeposits.filter(d => d.status === 'rejected').length}</span>
+                <span className="stat-label">Rejected</span>
+              </div>
+              <div className="stat-card total">
+                <span className="stat-number">${pendingDeposits.filter(d => d.status === 'confirmed').reduce((sum, d) => sum + (d.amount || 0), 0).toLocaleString()}</span>
+                <span className="stat-label">Total Confirmed</span>
+              </div>
+            </div>
+            <div className="data-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>TOKEN</th>
+                    <th>AMOUNT</th>
+                    <th>WALLET</th>
+                    <th>TX HASH</th>
+                    <th>DATE</th>
+                    <th>STATUS</th>
+                    <th>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingDeposits.map((deposit, idx) => (
+                    <tr key={idx}>
+                      <td>{deposit.id}</td>
+                      <td>{deposit.token}</td>
+                      <td className="amount-cell">${deposit.amount?.toLocaleString()}</td>
+                      <td className="address-cell">{deposit.from?.slice(0, 10)}...{deposit.from?.slice(-6)}</td>
+                      <td className="address-cell">{deposit.txHash?.slice(0, 12)}...</td>
+                      <td>{new Date(deposit.timestamp).toLocaleString()}</td>
+                      <td>
+                        <span className={`status-badge ${deposit.status}`}>
+                          {deposit.status}
+                        </span>
+                      </td>
+                      <td>
+                        {deposit.status === 'pending' && (
+                          <>
+                            <button className="action-btn approve" onClick={() => {
+                              // Confirm the deposit - add to user balance
+                              const walletData = JSON.parse(localStorage.getItem('walletData') || '{"balance":0}')
+                              walletData.balance = (walletData.balance || 0) + deposit.amount
+                              walletData.totalDeposits = (walletData.totalDeposits || 0) + deposit.amount
+                              localStorage.setItem('walletData', JSON.stringify(walletData))
+                              
+                              // Update deposit status
+                              setPendingDeposits(prev => prev.map(d => 
+                                d.id === deposit.id ? { ...d, status: 'confirmed' } : d
+                              ))
+                              localStorage.setItem('adminPendingDeposits', JSON.stringify(
+                                pendingDeposits.map(d => d.id === deposit.id ? { ...d, status: 'confirmed' } : d)
+                              ))
+                              
+                              // Update user deposits list too
+                              const userDeposits = JSON.parse(localStorage.getItem('userDeposits') || '[]')
+                              const updatedUserDeposits = userDeposits.map(d => 
+                                d.id === deposit.id ? { ...d, status: 'confirmed' } : d
+                              )
+                              localStorage.setItem('userDeposits', JSON.stringify(updatedUserDeposits))
+                              
+                              alert(`Deposit of $${deposit.amount} ${deposit.token} confirmed!`)
+                            }}>Confirm</button>
+                            <button className="action-btn reject" onClick={() => {
+                              setPendingDeposits(prev => prev.map(d => 
+                                d.id === deposit.id ? { ...d, status: 'rejected' } : d
+                              ))
+                              localStorage.setItem('adminPendingDeposits', JSON.stringify(
+                                pendingDeposits.map(d => d.id === deposit.id ? { ...d, status: 'rejected' } : d)
+                              ))
+                              alert('Deposit rejected')
+                            }}>Reject</button>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {pendingDeposits.length === 0 && (
+                    <tr>
+                      <td colSpan="8" className="no-data">No pending deposits</td>
                     </tr>
                   )}
                 </tbody>
@@ -2037,8 +2221,8 @@ export default function MasterAdminDashboard() {
         {activeSection === 'staking-plans' && (
           <div className="admin-section">
             <div className="section-header">
-              <h1>Staking Plans</h1>
-              <p>Configure staking plans and APY rates</p>
+              <h1>AI Arbitrage Plans</h1>
+              <p>Configure AI Arbitrage investment plans and profit rates</p>
             </div>
             <div className="staking-plans-grid">
               {stakingPlans.map((plan, idx) => (
@@ -2123,12 +2307,12 @@ export default function MasterAdminDashboard() {
           </div>
         )}
 
-        {/* Staking History Section */}
+        {/* AI Arbitrage History Section */}
         {activeSection === 'staking-history' && (
           <div className="admin-section">
             <div className="section-header">
-              <h1>Staking History</h1>
-              <p>View all staking transactions</p>
+              <h1>AI Arbitrage History</h1>
+              <p>View all AI Arbitrage investment transactions</p>
             </div>
             <div className="data-table">
               <table>
@@ -3333,6 +3517,8 @@ export default function MasterAdminDashboard() {
               </div>
             </div>
 
+            {/* Only Master account can create new admins */}
+            {isMasterAccount && (
             <div className="add-admin-section">
               <h3>➕ Add New Admin</h3>
               <div className="add-admin-form">
@@ -3474,6 +3660,7 @@ export default function MasterAdminDashboard() {
                 </button>
               </div>
             </div>
+            )}
 
             <div className="existing-admins">
               <h3>📋 Existing Administrators</h3>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 
-export default function Sidebar({ isOpen, onClose }) {
+export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick, onDemoClick, onC2CClick, onBorrowClick, onWalletActionsClick }) {
   const [activeModal, setActiveModal] = useState(null)
   
   // Gmail Registration States
@@ -360,6 +360,57 @@ export default function Sidebar({ isOpen, onClose }) {
           </button>
 
           <div className="sidebar-divider"></div>
+          <span className="sidebar-section-title">Trading</span>
+
+          <button onClick={onFuturesClick} className="sidebar-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+              <polyline points="16 7 22 7 22 13" />
+            </svg>
+            Futures Trading
+            <span className="sidebar-badge highlight">New</span>
+          </button>
+
+          <button onClick={onBinaryClick} className="sidebar-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            Binary Options
+            <span className="sidebar-badge highlight">New</span>
+          </button>
+
+          <button onClick={onC2CClick} className="sidebar-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            P2P Trading
+            <span className="sidebar-badge highlight">New</span>
+          </button>
+
+          <button onClick={onBorrowClick} className="sidebar-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            Borrow & Lend
+            <span className="sidebar-badge highlight">New</span>
+          </button>
+
+          <button onClick={onDemoClick} className="sidebar-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+              <line x1="8" y1="21" x2="16" y2="21" />
+              <line x1="12" y1="17" x2="12" y2="21" />
+            </svg>
+            Demo Trading
+            <span className="sidebar-badge">🎮</span>
+          </button>
+
+          <div className="sidebar-divider"></div>
           <span className="sidebar-section-title">Account</span>
 
           {/* Gmail Registration Button */}
@@ -401,6 +452,16 @@ export default function Sidebar({ isOpen, onClose }) {
             </svg>
             Bonus & Rewards
             <span className="sidebar-badge">New</span>
+          </button>
+
+          <button onClick={onWalletActionsClick} className="sidebar-btn wallet-actions">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+              <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+              <path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z" />
+            </svg>
+            Deposit / VIP
+            <span className="sidebar-badge highlight">💰</span>
           </button>
 
           <button onClick={() => openModal('settings')} className="sidebar-btn">

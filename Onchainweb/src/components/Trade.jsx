@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import CandlestickChart from './CandlestickChart'
 
 // CoinGecko API for real prices - same as Dashboard
 const CRYPTO_API = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h'
@@ -533,7 +534,12 @@ export default function Trade({ isOpen, onClose }) {
           <div className="current-price">
             ${formatPrice(currentPrice)}
           </div>
-          <PriceChart pair={selectedPair} prices={priceHistory} />
+          <CandlestickChart 
+            symbol={selectedPair.symbol}
+            currentPrice={currentPrice}
+            height={250}
+            showToolbar={true}
+          />
         </div>
 
         {/* Trading Levels */}
