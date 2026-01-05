@@ -79,12 +79,9 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
       kycDocNumber: '',
       kycFrontPhoto: '',
       kycBackPhoto: '',
-      vipLevel: 1,
       joinDate: new Date().toISOString().split('T')[0],
       totalTrades: 0,
-      totalProfit: 0,
-      referralCode: 'OCW' + Math.random().toString(36).substr(2, 6).toUpperCase(),
-      referralCount: 0
+      totalProfit: 0
     }
   })
 
@@ -169,14 +166,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
   // Gender options
   const genderOptions = ['Male', 'Female', 'Other', 'Prefer not to say']
 
-  // Admin-configurable bonus data
-  const bonusData = {
-    welcomeBonus: '100 USDT',
-    referralBonus: '50 USDT per referral',
-    tradingBonus: 'Up to 20% cashback',
-    stakingRewards: '12% APY on staking',
-    promotionEnd: 'January 31, 2025'
-  }
+
 
   const handleSettingChange = (key, value) => {
     setSettings(prev => ({ ...prev, [key]: value }))
@@ -186,10 +176,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
     setProfile(prev => ({ ...prev, [key]: value }))
   }
 
-  const getVIPBadge = (level) => {
-    const badges = ['🥉', '🥈', '🥇', '💎', '👑']
-    return badges[Math.min(level - 1, 4)]
-  }
+
 
   const getKYCStatusColor = (status) => {
     switch(status) {
@@ -316,7 +303,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
           <div className="profile-avatar-section">
             <div className="profile-avatar-large">
               <span>{profile.avatar}</span>
-              <span className="profile-vip-badge">{getVIPBadge(profile.vipLevel)}</span>
+
             </div>
             <div className="profile-info">
               <h3 className="profile-username">{getDisplayName()}</h3>
@@ -331,7 +318,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
                    profile.kycStatus === 'pending' ? 'Pending KYC' : 'Not Verified'}
                 </span>
               </div>
-              <span className="profile-vip-level">VIP Level {profile.vipLevel}</span>
+
             </div>
           </div>
           <span className="profile-edit-icon">✏️</span>
@@ -348,7 +335,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
         
         <nav className="sidebar-nav">
           <div className="sidebar-divider"></div>
-          <span className="sidebar-section-title">Trading</span>
+
 
           <button onClick={onFuturesClick} className="sidebar-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -356,7 +343,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
               <polyline points="16 7 22 7 22 13" />
             </svg>
             Futures Trading
-            <span className="sidebar-badge highlight">New</span>
+
           </button>
 
           <button onClick={onBinaryClick} className="sidebar-btn">
@@ -365,7 +352,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
               <polyline points="12 6 12 12 16 14" />
             </svg>
             Binary Options
-            <span className="sidebar-badge highlight">New</span>
+
           </button>
 
           <button onClick={onC2CClick} className="sidebar-btn">
@@ -376,7 +363,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
             P2P Trading
-            <span className="sidebar-badge highlight">New</span>
+
           </button>
 
           <button onClick={onBorrowClick} className="sidebar-btn">
@@ -385,11 +372,11 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
             </svg>
             Borrow & Lend
-            <span className="sidebar-badge highlight">New</span>
+
           </button>
 
           <div className="sidebar-divider"></div>
-          <span className="sidebar-section-title">Account</span>
+
 
           {/* Gmail Registration Button */}
           {!isRegistered && (
@@ -399,7 +386,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
                 <polyline points="22,6 12,13 2,6" />
               </svg>
               Register with Gmail
-              <span className="sidebar-badge highlight">New</span>
+
             </button>
           )}
 
@@ -429,7 +416,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
               <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
             </svg>
             Bonus & Rewards
-            <span className="sidebar-badge">New</span>
+
           </button>
 
           <button onClick={onWalletActionsClick} className="sidebar-btn wallet-actions">
@@ -439,7 +426,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
               <path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z" />
             </svg>
             Deposit / VIP
-            <span className="sidebar-badge highlight">💰</span>
+
           </button>
 
           <button onClick={() => openModal('settings')} className="sidebar-btn">
@@ -459,7 +446,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
           </button>
 
           <div className="sidebar-divider"></div>
-          <span className="sidebar-section-title">Support</span>
+
 
           <button onClick={() => openModal('help')} className="sidebar-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -664,11 +651,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
               <div className="profile-group">
                 <h4 className="profile-group-title">📊 Account Statistics</h4>
                 <div className="profile-stats-grid">
-                  <div className="profile-stat-card">
-                    <span className="stat-icon">🏆</span>
-                    <span className="stat-value">{getVIPBadge(profile.vipLevel)} Level {profile.vipLevel}</span>
-                    <span className="stat-label">VIP Status</span>
-                  </div>
+
                   <div className="profile-stat-card">
                     <span className="stat-icon">📅</span>
                     <span className="stat-value">{profile.joinDate}</span>
@@ -712,22 +695,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
               </div>
 
               {/* Referral Code */}
-              <div className="profile-referral">
-                <h4>🎁 Your Referral Code</h4>
-                <div className="referral-box">
-                  <span className="referral-code-text">{profile.referralCode}</span>
-                  <button 
-                    className="copy-btn-small"
-                    onClick={() => {
-                      navigator.clipboard.writeText(profile.referralCode)
-                      alert('Referral code copied!')
-                    }}
-                  >
-                    📋 Copy
-                  </button>
-                </div>
-                <p className="referral-hint">Share your code to earn bonus rewards!</p>
-              </div>
+
 
               <button className="save-profile-btn" onClick={closeModal}>
                 💾 Save Profile
@@ -1176,63 +1144,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
         </div>
       )}
 
-      {/* Bonus Modal */}
-      {activeModal === 'bonus' && (
-        <div className="sidebar-modal-overlay" onClick={closeModal}>
-          <div className="sidebar-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="sidebar-modal-header">
-              <h2>🎁 Bonus & Rewards</h2>
-              <button onClick={closeModal} className="modal-close-btn">×</button>
-            </div>
-            <div className="sidebar-modal-content">
-              <div className="bonus-banner">
-                <span className="bonus-tag">LIMITED TIME OFFER</span>
-                <h3>Welcome Bonus Package</h3>
-                <p>New users get up to <strong>{bonusData.welcomeBonus}</strong> in rewards!</p>
-                <p className="bonus-expires">Offer ends: {bonusData.promotionEnd}</p>
-              </div>
 
-              <div className="bonus-grid">
-                <div className="bonus-card">
-                  <span className="bonus-icon">🎉</span>
-                  <h4>Welcome Bonus</h4>
-                  <p className="bonus-value">{bonusData.welcomeBonus}</p>
-                  <p>Sign up and complete KYC</p>
-                </div>
-                <div className="bonus-card">
-                  <span className="bonus-icon">👥</span>
-                  <h4>Referral Bonus</h4>
-                  <p className="bonus-value">{bonusData.referralBonus}</p>
-                  <p>Invite friends to earn</p>
-                </div>
-                <div className="bonus-card">
-                  <span className="bonus-icon">💹</span>
-                  <h4>Trading Rewards</h4>
-                  <p className="bonus-value">{bonusData.tradingBonus}</p>
-                  <p>On all trading fees</p>
-                </div>
-                <div className="bonus-card">
-                  <span className="bonus-icon">🔒</span>
-                  <h4>Staking Rewards</h4>
-                  <p className="bonus-value">{bonusData.stakingRewards}</p>
-                  <p>Earn passive income</p>
-                </div>
-              </div>
-
-              <div className="referral-section">
-                <h4>Your Referral Code</h4>
-                <div className="referral-code">
-                  <span>{profile.referralCode}</span>
-                  <button onClick={() => { navigator.clipboard.writeText(profile.referralCode); alert('Copied!'); }}>Copy</button>
-                </div>
-                <p>Share your code and earn rewards when friends sign up!</p>
-              </div>
-
-              <button className="claim-bonus-btn">Claim Your Bonus</button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* About Us Modal */}
       {activeModal === 'about' && (

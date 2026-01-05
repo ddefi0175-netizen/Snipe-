@@ -117,12 +117,14 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
   }
 
   const handleLogout = () => {
-    if (address) {
-      disconnect()
-    }
-    sessionStorage.removeItem('guestId')
-    setProfileOpen(false)
-    alert('You have been logged out.')
+    // Remove wallet connection info from localStorage
+    localStorage.removeItem('walletConnected');
+    localStorage.removeItem('walletAddress');
+    localStorage.removeItem('walletType');
+    sessionStorage.removeItem('guestId');
+    setProfileOpen(false);
+    alert('You have been logged out.');
+    window.location.reload();
   }
 
   const clearNotifications = () => {
@@ -180,9 +182,7 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
       <div className="header-right">
         {/* Wallet Connection */}
         <nav aria-label="Primary" className="wallet-nav">
-          {!providerAvailable ? (
-            <span className="sub wallet-status">No wallet</span>
-          ) : address ? (
+          {address ? (
             <span className="sub wallet-status connected">{shortAddr}</span>
           ) : (
             <button
@@ -269,7 +269,7 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
                 <div className="profile-info">
                   <span className="profile-name">{address ? 'User' : 'Guest'}</span>
                   <span className="profile-customer-id">Real ID: {realAccountId}</span>
-                  <span className="profile-address">{shortAddr || 'Wallet not connected'}</span>
+                  {shortAddr && <span className="profile-address">{shortAddr}</span>}
                 </div>
               </div>
 

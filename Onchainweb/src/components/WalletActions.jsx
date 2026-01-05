@@ -495,9 +495,11 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
             
             <div className="wa-wallet-display">
               <span className="wallet-label">Connected Wallet:</span>
-              <span className="wallet-address">
-                {walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : 'Not connected'}
-              </span>
+              {walletAddress && (
+                <span className="wallet-address">
+                  {`${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`}
+                </span>
+              )}
             </div>
 
             <button 
