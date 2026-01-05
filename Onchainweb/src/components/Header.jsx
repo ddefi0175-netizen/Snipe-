@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useWallet } from '../lib/wallet.jsx'
 
+// Generate a unique 5-digit numeric ID for Real account
+function generateRealAccountId() {
+  return Math.floor(10000 + Math.random() * 90000).toString()
+}
+
 // Generate a unique customer ID based on address or session
 function generateCustomerId(address) {
   if (address) {
@@ -15,7 +20,7 @@ function generateCustomerId(address) {
   return guestId
 }
 
-export default function Header({ onMenuToggle }) {
+export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, onHowItWorksClick }) {
   const { providerAvailable, connect, disconnect, address, balance } = useWallet()
   const [profileOpen, setProfileOpen] = useState(false)
   const [notifications, setNotifications] = useState(3)
@@ -24,6 +29,30 @@ export default function Header({ onMenuToggle }) {
 
   const shortAddr = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : null
   const customerId = generateCustomerId(address)
+
+  // Real Account ID - auto-set on wallet connect, persist across sessions
+  const [realAccountId] = useState(() => {
+    // Check if user has existing real account ID
+    const savedId = localStorage.getItem('realAccountId')
+    if (savedId && /^\d{5}$/.test(savedId)) return savedId
+    
+    // Generate new 5-digit numeric ID
+    const newId = generateRealAccountId()
+    localStorage.setItem('realAccountId', newId)
+    return newId
+  })
+
+  // Auto-set real account ID when wallet connects
+  useEffect(() => {
+    if (address) {
+      // Store the wallet-associated real account ID
+      const walletAccounts = JSON.parse(localStorage.getItem('walletAccounts') || '{}')
+      if (!walletAccounts[address]) {
+        walletAccounts[address] = realAccountId
+        localStorage.setItem('walletAccounts', JSON.stringify(walletAccounts))
+      }
+    }
+  }, [address, realAccountId])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -38,7 +67,22 @@ export default function Header({ onMenuToggle }) {
   }, [])
 
   const handleViewProfile = () => {
-    alert(`Customer Profile\n\nID: ${customerId}\nWallet: ${address || 'Not connected'}\nBalance: ${balance ? Number(balance).toFixed(4) + ' ETH' : 'N/A'}`)
+    alert(`Customer Profile\n\nReal Account ID: ${realAccountId}\nWallet: ${address || 'Not connected'}\nBalance: ${balance ? Number(balance).toFixed(4) + ' ETH' : 'N/A'}`)
+    setProfileOpen(false)
+  }
+
+  const handleAboutUs = () => {
+    if (onAboutClick) onAboutClick()
+    setProfileOpen(false)
+  }
+
+  const handleWhitepaper = () => {
+    if (onWhitepaperClick) onWhitepaperClick()
+    setProfileOpen(false)
+  }
+
+  const handleHowItWorks = () => {
+    if (onHowItWorksClick) onHowItWorksClick()
     setProfileOpen(false)
   }
 
@@ -214,7 +258,7 @@ export default function Header({ onMenuToggle }) {
           {/* Profile Dropdown */}
           {profileOpen && (
             <div className="profile-dropdown">
-              {/* Profile Header with Customer ID */}
+              {/* Profile Header with Real Account ID */}
               <div className="profile-header">
                 <div className="profile-avatar">
                   <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -224,82 +268,40 @@ export default function Header({ onMenuToggle }) {
                 </div>
                 <div className="profile-info">
                   <span className="profile-name">{address ? 'User' : 'Guest'}</span>
-                  <span className="profile-customer-id">ID: {customerId}</span>
+                  <span className="profile-customer-id">Real ID: {realAccountId}</span>
                   <span className="profile-address">{shortAddr || 'Wallet not connected'}</span>
                 </div>
               </div>
 
-              {/* Profile Menu Items */}
+              {/* Profile Menu Items - Simplified */}
               <div className="profile-menu">
-                <button onClick={handleViewProfile}>
+                <button onClick={handleAboutUs}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="8" r="4" />
-                    <path d="M4 20c0-4 4-6 8-6s8 2 8 6" />
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 16v-4M12 8h.01" />
                   </svg>
-                  View Profile
+                  About Us
                 </button>
                 
-                <button onClick={handleEditProfile}>
+                <button onClick={handleWhitepaper}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
                   </svg>
-                  Edit Profile
+                  White Paper
                 </button>
 
-                <button onClick={handleWatchlist}>
+                <button onClick={handleHowItWorks}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                    <polygon points="23 7 16 12 23 17 23 7" />
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
                   </svg>
-                  My Watchlist
-                </button>
-
-                <button onClick={handleTransactionHistory}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                  </svg>
-                  Transaction History
+                  How It Works
                 </button>
 
                 <div className="profile-divider"></div>
-
-                <button onClick={handleSettings}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                  </svg>
-                  Settings
-                </button>
-
-                <button onClick={handleHelp}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                  </svg>
-                  Help & Support
-                </button>
-
-                <div className="profile-divider"></div>
-
-                {address ? (
-                  <button onClick={() => { disconnect(); setProfileOpen(false); }} className="disconnect-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />
-                      <line x1="12" y1="2" x2="12" y2="12" />
-                    </svg>
-                    Disconnect Wallet
-                  </button>
-                ) : (
-                  <button onClick={() => { connect().catch(() => {}); setProfileOpen(false); }} className="connect-wallet-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="2" y="4" width="20" height="16" rx="2" />
-                      <path d="M22 10H2" />
-                    </svg>
-                    Connect Wallet
-                  </button>
-                )}
 
                 <button onClick={handleLogout} className="logout-btn">
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

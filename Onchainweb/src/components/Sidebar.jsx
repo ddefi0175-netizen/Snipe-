@@ -23,7 +23,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
   const [kycFrontPreview, setKycFrontPreview] = useState('')
   const [kycBackPreview, setKycBackPreview] = useState('')
   
-  // Generate random 5-digit UserID
+  // Generate random 5-digit UserID (numbers only)
   const generateUserId = () => {
     return Math.floor(10000 + Math.random() * 90000).toString()
   }
@@ -38,8 +38,8 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
     const saved = localStorage.getItem('userProfile')
     if (saved) {
       const parsed = JSON.parse(saved)
-      // Ensure userId exists for existing profiles
-      if (!parsed.userId) {
+      // Ensure userId exists and is 5-digit numeric for existing profiles
+      if (!parsed.userId || !/^\d{5}$/.test(parsed.userId)) {
         parsed.userId = generateUserId()
       }
       // Ensure KYC name fields exist
@@ -87,6 +87,18 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
       referralCount: 0
     }
   })
+
+  // Also sync userId with realAccountId in localStorage
+  useEffect(() => {
+    const realAccountId = localStorage.getItem('realAccountId')
+    if (realAccountId && /^\d{5}$/.test(realAccountId) && realAccountId !== profile.userId) {
+      // Sync profile userId with realAccountId
+      setProfile(prev => ({ ...prev, userId: realAccountId }))
+    } else if (profile.userId && /^\d{5}$/.test(profile.userId)) {
+      // Set realAccountId from profile userId
+      localStorage.setItem('realAccountId', profile.userId)
+    }
+  }, [profile.userId])
 
   // Get display name (KYC name if available, otherwise username)
   const getDisplayName = () => {
@@ -335,30 +347,6 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
         </div>
         
         <nav className="sidebar-nav">
-          <button onClick={() => openModal('about')} className="sidebar-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 16v-4M12 8h.01" />
-            </svg>
-            About Us
-          </button>
-          <button onClick={() => openModal('whitepaper')} className="sidebar-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-              <polyline points="14 2 14 8 20 8" />
-              <line x1="16" y1="13" x2="8" y2="13" />
-              <line x1="16" y1="17" x2="8" y2="17" />
-            </svg>
-            White Paper
-          </button>
-          <button onClick={() => openModal('howto')} className="sidebar-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <polygon points="23 7 16 12 23 17 23 7" />
-              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
-            </svg>
-            How It Works
-          </button>
-
           <div className="sidebar-divider"></div>
           <span className="sidebar-section-title">Trading</span>
 
@@ -398,16 +386,6 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
             </svg>
             Borrow & Lend
             <span className="sidebar-badge highlight">New</span>
-          </button>
-
-          <button onClick={onDemoClick} className="sidebar-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-              <line x1="8" y1="21" x2="16" y2="21" />
-              <line x1="12" y1="17" x2="12" y2="21" />
-            </svg>
-            Demo Trading
-            <span className="sidebar-badge">🎮</span>
           </button>
 
           <div className="sidebar-divider"></div>
