@@ -289,13 +289,22 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
       return
     }
     
+    let backendSuccess = false
     try {
       // Get wallet address for user identification
       const wallet = localStorage.getItem('walletAddress')
       if (wallet) {
-        // Submit KYC to backend
-        const user = await userAPI.getByWallet(wallet).catch(() => null)
+        // First try to get existing user, if not found create one
+        let user = await userAPI.getByWallet(wallet).catch(() => null)
+        
+        if (!user) {
+          // User doesn't exist in backend, create them first
+          console.log('User not found in backend, creating...')
+          user = await userAPI.loginByWallet(wallet, profile.username, profile.email)
+        }
+        
         if (user && user._id) {
+          // Submit KYC to backend
           await userAPI.submitKYC(user._id, {
             fullName: kycFullName,
             docType: kycDocType,
@@ -303,6 +312,8 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
             frontPhoto: kycFrontPreview,
             backPhoto: kycBackPreview
           })
+          backendSuccess = true
+          console.log('KYC submitted to backend successfully')
         }
       }
     } catch (error) {
@@ -321,7 +332,11 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
       kycSubmittedAt: new Date().toISOString()
     }))
     
-    alert('KYC documents submitted successfully!\n\nYour verification is pending review. You will be notified once approved.')
+    if (backendSuccess) {
+      alert('✅ KYC documents submitted successfully!\n\nYour verification is pending review.\nThis is now visible to admin in any browser.')
+    } else {
+      alert('⚠️ KYC saved locally.\n\nNote: Could not sync to server. Admin may not see this submission.')
+    }
   }
 
   // Handle Screenshot Upload

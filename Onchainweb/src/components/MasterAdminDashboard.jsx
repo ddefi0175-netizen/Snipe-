@@ -357,6 +357,32 @@ export default function MasterAdminDashboard() {
     }
   }, [isAuthenticated, isDataLoaded, loadAllData])
 
+  // Periodic refresh of backend data (every 30 seconds)
+  useEffect(() => {
+    if (!isAuthenticated || !isDataLoaded) return
+
+    const refreshBackendData = async () => {
+      try {
+        // Refresh users from backend
+        const backendUsers = await userAPI.getAll()
+        if (Array.isArray(backendUsers) && backendUsers.length > 0) {
+          setUsers(backendUsers)
+        }
+        // Refresh uploads from backend
+        const backendUploads = await uploadAPI.getAll()
+        if (Array.isArray(backendUploads)) {
+          setPendingDeposits(backendUploads.filter(u => u.status === 'pending'))
+          setDeposits(backendUploads)
+        }
+      } catch (error) {
+        console.log('Background refresh error:', error)
+      }
+    }
+
+    const interval = setInterval(refreshBackendData, 30000) // Refresh every 30 seconds
+    return () => clearInterval(interval)
+  }, [isAuthenticated, isDataLoaded])
+
   // Subscribe to Firebase real-time chat data
   useEffect(() => {
     if (!isAuthenticated || !isDataLoaded) return
