@@ -831,48 +831,18 @@ export default function MasterAdminDashboard() {
             <button type="submit" className="login-btn">Login</button>
           </form>
 
-          {/* Show available admin accounts */}
-          {storedAdmins.filter(a => a.role !== 'super_admin').length > 0 && (
-            <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', fontSize: '12px' }}>
-              <p style={{ color: '#888', marginBottom: '10px' }}>Saved Admin Accounts:</p>
-              {storedAdmins.filter(a => a.role !== 'super_admin').map((admin, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px', background: 'rgba(0,0,0,0.2)', borderRadius: '4px', marginBottom: '5px' }}>
-                  <span style={{ color: '#aaa' }}>
-                    👤 {admin.username} ({admin.status}) {admin.password ? '🔑' : '⚠️ no password'}
-                  </span>
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLoginData({ username: admin.username, password: admin.password || '' })
-                        alert(`Credentials loaded!\nUsername: ${admin.username}\nPassword: ${admin.password ? '(loaded)' : '(none)'}\n\nClick Login now.`)
-                      }}
-                      style={{ padding: '4px 8px', fontSize: '11px', background: '#22c55e', border: 'none', borderRadius: '4px', color: '#fff', cursor: 'pointer', marginRight: '5px' }}
-                    >
-                      Quick Login
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const newPassword = prompt(`Reset password for ${admin.username}:`)
-                        if (newPassword && newPassword.trim()) {
-                          const updated = storedAdmins.map(a =>
-                            a.id === admin.id ? { ...a, password: newPassword.trim() } : a
-                          )
-                          localStorage.setItem('adminRoles', JSON.stringify(updated))
-                          alert(`Password reset!\nNew password: ${newPassword.trim()}`)
-                          window.location.reload()
-                        }
-                      }}
-                      style={{ padding: '4px 8px', fontSize: '11px', background: '#7c3aed', border: 'none', borderRadius: '4px', color: '#fff', cursor: 'pointer' }}
-                    >
-                      Reset PW
-                    </button>
-                  </div>
-                </div>
-              ))}
+          {/* Admin Account Info */}
+          <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', fontSize: '12px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+            <p style={{ color: '#60a5fa', marginBottom: '8px', fontWeight: 'bold' }}>📋 Available Accounts:</p>
+            <div style={{ color: '#94a3b8', lineHeight: '1.6' }}>
+              <p>👑 <strong>Master:</strong> master</p>
+              <p>👤 <strong>Admin:</strong> newadmin / NewAdmin2026!</p>
+              <p>👤 <strong>Admin:</strong> admin2 / Admin123!</p>
             </div>
-          )}
+            <p style={{ color: '#64748b', marginTop: '10px', fontSize: '11px' }}>
+              ℹ️ Admin accounts are stored in the cloud database.
+            </p>
+          </div>
         </div>
       </div>
     )
