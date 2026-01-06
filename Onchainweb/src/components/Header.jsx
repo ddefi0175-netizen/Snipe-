@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useWallet } from '../lib/wallet.jsx'
-
-// Backend API base URL
-const API_BASE = process.env.REACT_APP_API_BASE || 'http://localhost:4000/api';
+import { notificationAPI } from '../lib/api.js'
 
 // Generate a unique 5-digit numeric ID for Real account
 function generateRealAccountId() {
@@ -75,8 +73,7 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
       setNotifications([])
       return
     }
-    fetch(`${API_BASE}/notifications/${address}`)
-      .then(res => res.json())
+    notificationAPI.getByUserId(address)
       .then(data => setNotifications(Array.isArray(data) ? data : []))
       .catch(() => setNotifications([]))
   }, [address, showNotifications])
