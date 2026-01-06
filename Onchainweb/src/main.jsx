@@ -46,6 +46,7 @@ createRoot(document.getElementById('root')).render(
           <Routes>
             <Route path="/" element={<MainApp />} />
             <Route path="/admin" element={<AdminPanel isOpen={true} onClose={() => window.location.href = '/'} />} />
+            <Route path="/master" element={<MasterAdminDashboard />} />
             <Route path="/master-admin" element={<MasterAdminDashboard />} />
           </Routes>
         </Suspense>
