@@ -356,15 +356,28 @@ export default function MasterAdminDashboard() {
     const checkAuth = () => {
       try {
         const adminSession = localStorage.getItem('masterAdminSession')
-        if (adminSession) {
+        const adminToken = localStorage.getItem('adminToken')
+        
+        // Must have both session AND token to be authenticated
+        if (adminSession && adminToken) {
           const session = JSON.parse(adminSession)
           if (Date.now() - session.timestamp < 24 * 60 * 60 * 1000) {
             setIsAuthenticated(true)
             setIsMasterAccount(session.role === 'master')
+          } else {
+            // Session expired, clear everything
+            localStorage.removeItem('masterAdminSession')
+            localStorage.removeItem('adminToken')
           }
+        } else {
+          // Missing token or session, clear both
+          localStorage.removeItem('masterAdminSession')
+          localStorage.removeItem('adminToken')
         }
       } catch (e) {
         console.error('Auth check error:', e)
+        localStorage.removeItem('masterAdminSession')
+        localStorage.removeItem('adminToken')
       }
       setIsLoading(false)
     }
@@ -570,7 +583,7 @@ export default function MasterAdminDashboard() {
         setIsAuthenticated(true)
         setIsDataLoaded(false) // Reset to trigger data load
         setIsMasterAccount(response.user.role === 'master')
-        console.log('[LOGIN] Success! Role:', response.user.role)
+        console.log('[LOGIN] Success! Role:', response.user.role, 'Token stored:', !!localStorage.getItem('adminToken'))
         return
       } else {
         console.log('[LOGIN] Response missing success or token')
@@ -581,13 +594,24 @@ export default function MasterAdminDashboard() {
       console.error('[LOGIN] Backend error:', error.message)
       // Fallback to hardcoded master credentials if backend fails
       if (loginData.username === 'master' && loginData.password === 'OnchainWeb2025!') {
-        setIsAuthenticated(true)
-        setIsDataLoaded(false)
+        // Generate a fallback token for local operations
+        const fallbackToken = 'fallback-master-' + Date.now()
+        localStorage.setItem('adminToken', fallbackToken)
         localStorage.setItem('masterAdminSession', JSON.stringify({
           username: loginData.username,
           role: 'master',
+          permissions: {
+            manageUsers: true,
+            manageBalances: true,
+            manageKYC: true,
+            manageTrades: true,
+            viewReports: true,
+            createAdmins: true
+          },
           timestamp: Date.now()
         }))
+        setIsAuthenticated(true)
+        setIsDataLoaded(false)
         setIsMasterAccount(true)
         console.log('[LOGIN] Fallback master login successful')
         return
