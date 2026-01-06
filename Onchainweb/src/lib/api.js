@@ -317,6 +317,12 @@ export const authAPI = {
     method: 'PATCH',
     body: JSON.stringify({ newPassword }),
   }),
+  
+  // Assign users to admin (master only)
+  assignUsersToAdmin: (adminId, userIds) => apiCall(`/auth/admin/${adminId}/assign`, {
+    method: 'PATCH',
+    body: JSON.stringify({ userIds }),
+  }),
 };
 
 // Export base URL for direct use if needed

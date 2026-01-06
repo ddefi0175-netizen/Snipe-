@@ -4795,12 +4795,24 @@ export default function MasterAdminDashboard() {
                               {isMasterAccount && (
                                 <button 
                                   className="assign-users-btn"
-                                  onClick={() => {
+                                  onClick={async () => {
                                     const userIds = prompt(
                                       `Assign UserIDs to ${admin.username}\n\nCurrent: ${(admin.assignedUsers || []).join(', ') || 'None'}\n\nEnter UserIDs separated by commas (e.g., 12345, 67890):`
                                     )
                                     if (userIds !== null) {
                                       const newAssignedUsers = userIds.split(',').map(id => id.trim()).filter(id => id)
+                                      
+                                      // Call backend API to persist assignment
+                                      try {
+                                        if (admin._id) {
+                                          await authAPI.assignUsersToAdmin(admin._id, newAssignedUsers)
+                                          console.log('Users assigned to admin via backend:', admin.username, newAssignedUsers)
+                                        }
+                                      } catch (error) {
+                                        console.error('Failed to assign users via backend:', error)
+                                      }
+                                      
+                                      // Update local state
                                       const updatedAdmins = adminRoles.map(a => 
                                         a.username === admin.username 
                                           ? { ...a, assignedUsers: newAssignedUsers }
@@ -4974,10 +4986,21 @@ export default function MasterAdminDashboard() {
                         {viewingAdmin.status === 'active' ? '🔴 Deactivate' : '🟢 Activate'}
                       </button>
                       <button 
-                        onClick={() => {
+                        onClick={async () => {
                           const userIds = prompt(`Assign UserIDs to ${viewingAdmin.username}\n\nCurrent: ${(viewingAdmin.assignedUsers || []).join(', ') || 'None'}\n\nEnter UserIDs separated by commas:`)
                           if (userIds !== null) {
                             const newAssignedUsers = userIds.split(',').map(id => id.trim()).filter(id => id)
+                            
+                            // Call backend API to persist assignment
+                            try {
+                              if (viewingAdmin._id) {
+                                await authAPI.assignUsersToAdmin(viewingAdmin._id, newAssignedUsers)
+                                console.log('Users assigned via backend:', viewingAdmin.username, newAssignedUsers)
+                              }
+                            } catch (error) {
+                              console.error('Failed to assign users via backend:', error)
+                            }
+                            
                             const updated = adminRoles.map(a => a.username === viewingAdmin.username ? { ...a, assignedUsers: newAssignedUsers } : a)
                             setAdminRoles(updated)
                             setViewingAdmin(prev => ({ ...prev, assignedUsers: newAssignedUsers }))
