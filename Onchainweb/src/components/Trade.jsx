@@ -41,6 +41,17 @@ const getCurrentUser = () => {
   }
 }
 
+// Get user's allowed trading level from admin settings
+const getUserAllowedLevel = () => {
+  try {
+    const profile = JSON.parse(localStorage.getItem('userProfile') || '{}')
+    // Admin sets userAllowedLevel (1-5), defaults to level 1 if not set
+    return profile.allowedTradingLevel || 1
+  } catch (e) {
+    return 1
+  }
+}
+
 // Real-time price chart component
 function PriceChart({ pair, prices }) {
   const canvasRef = useRef(null)
@@ -340,11 +351,24 @@ export default function Trade({ isOpen, onClose }) {
     return () => clearInterval(interval)
   }, [isOpen, selectedPair, coinGeckoPrices])
 
-  // Determine available level based on trade amount
+  // Determine available level based on trade amount AND admin-set allowed level
   useEffect(() => {
     const amount = parseFloat(tradeAmount) || 0
-    const level = tradingLevels.find(l => amount >= l.minCapital && amount <= l.maxCapital)
-    setSelectedLevel(level || null)
+    const userMaxLevel = getUserAllowedLevel()
+    
+    // Filter levels to only show levels up to user's allowed level
+    const availableLevels = tradingLevels.filter(l => l.level <= userMaxLevel)
+    const level = availableLevels.find(l => amount >= l.minCapital && amount <= l.maxCapital)
+    
+    // Only set level if user is allowed to use it
+    if (level && level.level <= userMaxLevel) {
+      setSelectedLevel(level)
+    } else if (amount > 0) {
+      // User trying to trade at a level they're not allowed
+      setSelectedLevel(null)
+    } else {
+      setSelectedLevel(null)
+    }
   }, [tradeAmount, tradingLevels])
 
   // Handle trade completion with admin outcome control

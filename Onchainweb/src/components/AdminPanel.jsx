@@ -199,7 +199,8 @@ export default function AdminPanel({ isOpen, onClose }) {
         totalWithdrawals: wallet.totalWithdrawals || 0,
         tradeCount: trades.length,
         aiInvestmentCount: aiInvestments.length,
-        lastActive: new Date().toISOString()
+        lastActive: new Date().toISOString(),
+        allowedTradingLevel: profile.allowedTradingLevel || 1
       })
     }
     
@@ -780,6 +781,23 @@ export default function AdminPanel({ isOpen, onClose }) {
                                 <option value="3">Level 3</option>
                                 <option value="4">Level 4</option>
                                 <option value="5">Level 5</option>
+                              </select>
+                            </div>
+
+                            <div className="action-group">
+                              <label>Trading Level:</label>
+                              <select onChange={e => {
+                                const profile = JSON.parse(localStorage.getItem('userProfile') || '{}')
+                                profile.allowedTradingLevel = parseInt(e.target.value)
+                                localStorage.setItem('userProfile', JSON.stringify(profile))
+                                alert(`Trading level set to ${e.target.value} for user ${user.id}`)
+                                loadAllUsers()
+                              }} defaultValue={user.allowedTradingLevel || 1}>
+                                <option value="1">Level 1 ($100-$19,999)</option>
+                                <option value="2">Level 2 ($20,000-$30,000)</option>
+                                <option value="3">Level 3 ($30,001-$50,000)</option>
+                                <option value="4">Level 4 ($50,001-$100,000)</option>
+                                <option value="5">Level 5 ($100,001+)</option>
                               </select>
                             </div>
 

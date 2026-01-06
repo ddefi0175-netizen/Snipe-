@@ -9,6 +9,12 @@ const DEFAULT_ARBITRAGE_LEVELS = [
   { level: 5, minCapital: 500001, maxCapital: 999999999, profit: 20, cycleDays: 30 },
 ]
 
+// Get user's allowed arbitrage level (admin-controlled)
+const getUserAllowedArbitrageLevel = () => {
+  const profile = JSON.parse(localStorage.getItem('userProfile') || '{}')
+  return profile.allowedTradingLevel || 1
+}
+
 // AI Strategy descriptions
 const AI_STRATEGIES = [
   { name: 'Cross-Exchange Arbitrage', icon: '🔄', desc: 'Exploits price differences across exchanges' },
@@ -174,10 +180,12 @@ export default function AIArbitrage({ isOpen, onClose }) {
     return () => clearInterval(interval)
   }, [activeInvestments, userBalance, totalEarnings])
 
-  // Determine level based on amount
+  // Determine level based on amount (respects admin-controlled max level)
   useEffect(() => {
     const amount = parseFloat(investAmount) || 0
-    const level = arbitrageLevels.find(l => amount >= l.minCapital && amount <= l.maxCapital)
+    const userMaxLevel = getUserAllowedArbitrageLevel()
+    const availableLevels = arbitrageLevels.filter(l => l.level <= userMaxLevel)
+    const level = availableLevels.find(l => amount >= l.minCapital && amount <= l.maxCapital)
     setSelectedLevel(level || null)
   }, [investAmount, arbitrageLevels])
 
@@ -307,7 +315,7 @@ export default function AIArbitrage({ isOpen, onClose }) {
         <div className="ai-levels-section">
           <h3>Investment Levels</h3>
           <div className="ai-levels-grid">
-            {arbitrageLevels.map((level) => (
+            {arbitrageLevels.filter(level => level.level <= getUserAllowedArbitrageLevel()).map((level) => (
               <div
                 key={level.level}
                 className={`ai-level-card ${selectedLevel?.level === level.level ? 'active' : ''}`}
