@@ -194,6 +194,51 @@ export const uploadAPI = {
   }),
 };
 
+// ============== STAKING API ==============
+export const stakingAPI = {
+  // Get all stakes (admin)
+  getAll: (filters = {}) => {
+    const params = new URLSearchParams(filters).toString();
+    return apiCall(`/staking${params ? '?' + params : ''}`);
+  },
+  
+  // Get active stakes
+  getActive: () => apiCall('/staking/active'),
+  
+  // Get staking statistics
+  getStats: () => apiCall('/staking/stats'),
+  
+  // Get stakes by user
+  getByUser: (userId) => apiCall(`/staking/user/${userId}`),
+  
+  // Create stake
+  create: (stakeData) => apiCall('/staking', {
+    method: 'POST',
+    body: JSON.stringify(stakeData),
+  }),
+  
+  // Claim earnings
+  claim: (id) => apiCall(`/staking/${id}/claim`, {
+    method: 'PATCH',
+  }),
+  
+  // Withdraw stake
+  withdraw: (id) => apiCall(`/staking/${id}/withdraw`, {
+    method: 'PATCH',
+  }),
+  
+  // Update stake (admin)
+  update: (id, data) => apiCall(`/staking/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+  
+  // Delete stake
+  delete: (id) => apiCall(`/staking/${id}`, {
+    method: 'DELETE',
+  }),
+};
+
 // ============== TRADE API ==============
 export const tradeAPI = {
   // Get all trades (admin)

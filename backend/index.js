@@ -37,6 +37,7 @@ app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/uploads', require('./routes/uploads'));
 app.use('/api/trades', require('./routes/trades'));
+app.use('/api/staking', require('./routes/staking'));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
