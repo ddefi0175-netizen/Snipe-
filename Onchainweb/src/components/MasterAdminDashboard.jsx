@@ -605,6 +605,9 @@ export default function MasterAdminDashboard() {
     }
   }, [tradingLevels, isDataLoaded])
 
+  // Loading state for login
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
+  
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoginError('')
@@ -626,10 +629,11 @@ export default function MasterAdminDashboard() {
       return
     }
     
-    setLoginError('Connecting to server...')
+    setIsLoggingIn(true)
     
     try {
       // Call backend API for authentication
+      console.log('[LOGIN] Calling authAPI.login...')
       const response = await authAPI.login(loginData.username, loginData.password)
       
       console.log('[LOGIN] Backend response:', response)
@@ -684,6 +688,8 @@ export default function MasterAdminDashboard() {
       }
       setLoginError(error.message || 'Invalid credentials. Check username/password.')
       return
+    } finally {
+      setIsLoggingIn(false)
     }
   }
 
@@ -926,7 +932,9 @@ export default function MasterAdminDashboard() {
               />
             </div>
             {loginError && <div className="login-error">{loginError}</div>}
-            <button type="submit" className="login-btn">Login</button>
+            <button type="submit" className="login-btn" disabled={isLoggingIn}>
+              {isLoggingIn ? 'Connecting to server...' : 'Login'}
+            </button>
           </form>
 
           {/* Admin Account Info */}

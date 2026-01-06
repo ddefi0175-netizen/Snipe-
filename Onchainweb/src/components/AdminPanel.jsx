@@ -207,6 +207,9 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     }
   }
   
+  // Loading state for login
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
+  
   // Handle login via backend API
   const handleLogin = async () => {
     setLoginError('')
@@ -216,16 +219,28 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       return
     }
     
-    setLoginError('Connecting to server...')
+    setIsLoggingIn(true)
     
     try {
+      // Create abort controller for timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 second timeout
+      
+      console.log('[AdminPanel] Attempting login for:', loginUsername)
+      console.log('[AdminPanel] API URL:', `${API_BASE}/auth/login`)
+      
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: loginUsername, password: loginPassword })
+        body: JSON.stringify({ username: loginUsername, password: loginPassword }),
+        signal: controller.signal
       })
       
+      clearTimeout(timeoutId)
+      console.log('[AdminPanel] Response status:', response.status)
+      
       const data = await response.json()
+      console.log('[AdminPanel] Response data:', data)
       
       if (response.ok && data.success) {
         // Store token in localStorage
@@ -237,12 +252,19 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         setCurrentAdmin(data.user)
         setLoginUsername('')
         setLoginPassword('')
+        console.log('[AdminPanel] Login successful!')
       } else {
         setLoginError(data.error || 'Invalid username or password')
       }
     } catch (error) {
-      console.error('Login error:', error)
-      setLoginError('Connection error. Server may be starting up, please try again in a few seconds.')
+      console.error('[AdminPanel] Login error:', error)
+      if (error.name === 'AbortError') {
+        setLoginError('Request timed out. Server may be starting, please wait 30 seconds and try again.')
+      } else {
+        setLoginError('Connection error: ' + error.message)
+      }
+    } finally {
+      setIsLoggingIn(false)
     }
   }
   
@@ -642,8 +664,8 @@ export default function AdminPanel({ isOpen = true, onClose }) {
               
               {loginError && <div className="login-error">{loginError}</div>}
               
-              <button className="admin-login-btn" onClick={handleLogin}>
-                Login
+              <button className="admin-login-btn" onClick={handleLogin} disabled={isLoggingIn}>
+                {isLoggingIn ? 'Connecting...' : 'Login'}
               </button>
             </div>
             
