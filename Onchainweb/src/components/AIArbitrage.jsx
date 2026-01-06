@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
+import { tradeAPI } from '../lib/api'
 
 // Default AI Arbitrage levels configuration
 const DEFAULT_ARBITRAGE_LEVELS = [
@@ -217,19 +218,20 @@ export default function AIArbitrage({ isOpen, onClose }) {
   }
 
   // Start investment
-  const startInvestment = () => {
+  const startInvestment = async () => {
     const amount = parseFloat(investAmount)
     if (!selectedLevel || amount > userBalance) return
 
     setIsInvesting(true)
 
-    setTimeout(() => {
+    setTimeout(async () => {
       const now = Date.now()
       const cycleDuration = selectedLevel.cycleDays * 24 * 60 * 60 * 1000
       const expectedProfit = amount * (selectedLevel.profit / 100)
 
       // Get current user info
       const user = getCurrentUser()
+      const wallet = localStorage.getItem('walletAddress') || ''
 
       const newInvestment = {
         id: `inv_${now}`,
@@ -245,6 +247,25 @@ export default function AIArbitrage({ isOpen, onClose }) {
         endTime: now + cycleDuration,
         strategy: AI_STRATEGIES[Math.floor(Math.random() * AI_STRATEGIES.length)].name,
         completed: false
+      }
+
+      // Sync to backend
+      try {
+        const backendTrade = await tradeAPI.create({
+          userId: wallet || user.id,
+          username: user.name,
+          type: 'arbitrage',
+          level: selectedLevel.level,
+          levelName: `Level ${selectedLevel.level}`,
+          amount: amount,
+          expectedProfit: expectedProfit,
+          profitPercent: selectedLevel.profit,
+          duration: selectedLevel.cycleDays * 24 * 60 * 60 // in seconds
+        })
+        newInvestment.backendId = backendTrade._id
+        console.log('AI Arbitrage investment synced to backend:', backendTrade.tradeId)
+      } catch (error) {
+        console.error('Failed to sync investment to backend:', error)
       }
 
       // Deduct from balance

@@ -28,6 +28,23 @@ const UserSchema = new mongoose.Schema({
   
   // Trade Control (admin sets for this user)
   tradeMode: { type: String, enum: ['auto', 'win', 'lose'], default: 'auto' },
+  presetTradeResult: { type: String, enum: ['', 'win', 'lose'], default: '' }, // Next trade forced result
+  
+  // Withdrawal settings
+  withdrawEnabled: { type: Boolean, default: true },
+  withdrawPassword: { type: String, default: '' },
+  
+  // Deposit addresses (per user, set by admin)
+  depositAddressUSDT: { type: String, default: '' },  // TRC20
+  depositAddressERC20: { type: String, default: '' }, // ERC20
+  depositAddressBTC: { type: String, default: '' },
+  depositAddressETH: { type: String, default: '' },
+  
+  // Activity counts
+  depositCount: { type: Number, default: 0 },
+  withdrawCount: { type: Number, default: 0 },
+  tradeCount: { type: Number, default: 0 },
+  stakeCount: { type: Number, default: 0 },
   
   // Activity tracking
   lastLogin: { type: Date, default: Date.now },
@@ -36,6 +53,7 @@ const UserSchema = new mongoose.Schema({
   ipAddress: { type: String, default: '' },
   userAgent: { type: String, default: '' },
   device: { type: String, default: '' },
+  referralCode: { type: String, default: '' },
   
   // Admin assignment (which admin manages this user)
   assignedAdmin: { type: String, default: '' }

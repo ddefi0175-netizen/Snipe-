@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import CandlestickChart from './CandlestickChart'
+import { tradeAPI, userAPI } from '../lib/api'
 
 // Binary Options Trading - Time-based Up/Down Predictions
 export default function BinaryOptions({ isOpen, onClose }) {
@@ -87,6 +88,17 @@ export default function BinaryOptions({ isOpen, onClose }) {
               completedAt: new Date().toISOString()
             })
 
+            // Sync completion to backend
+            if (trade.backendId) {
+              tradeAPI.complete(
+                trade.backendId, 
+                won ? 'win' : 'lose', 
+                currentPrice, 
+                won ? trade.amount * payoutRate : -trade.amount,
+                won ? trade.amount * (1 + payoutRate) : 0
+              ).catch(err => console.error('Failed to sync trade completion:', err))
+            }
+
             if (won) {
               setBalance(b => b + trade.amount * (1 + payoutRate))
             }
@@ -106,7 +118,7 @@ export default function BinaryOptions({ isOpen, onClose }) {
   }, [prices])
 
   // Place trade
-  const placeTrade = (direction) => {
+  const placeTrade = async (direction) => {
     if (!amount || parseFloat(amount) <= 0) {
       alert('Please enter a valid amount')
       return
@@ -118,6 +130,9 @@ export default function BinaryOptions({ isOpen, onClose }) {
       return
     }
 
+    const wallet = localStorage.getItem('walletAddress') || ''
+    const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
+    
     const newTrade = {
       id: Date.now(),
       pair: selectedPair,
@@ -128,6 +143,26 @@ export default function BinaryOptions({ isOpen, onClose }) {
       expiryTime: Date.now() + (duration * 1000),
       remaining: duration * 1000,
       potentialPayout: tradeAmount * (1 + payoutRate)
+    }
+
+    // Sync to backend
+    try {
+      const backendTrade = await tradeAPI.create({
+        userId: wallet,
+        username: userProfile.username || '',
+        type: 'binary',
+        pair: selectedPair,
+        direction: direction,
+        entryPrice: prices[selectedPair].price,
+        duration: duration,
+        amount: tradeAmount,
+        profitPercent: payoutRate * 100,
+        expectedProfit: tradeAmount * payoutRate
+      })
+      newTrade.backendId = backendTrade._id
+      console.log('Trade synced to backend:', backendTrade.tradeId)
+    } catch (error) {
+      console.error('Failed to sync trade to backend:', error)
     }
 
     setActiveTrades([...activeTrades, newTrade])

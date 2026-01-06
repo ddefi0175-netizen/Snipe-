@@ -194,6 +194,52 @@ export const uploadAPI = {
   }),
 };
 
+// ============== TRADE API ==============
+export const tradeAPI = {
+  // Get all trades (admin)
+  getAll: (filters = {}) => {
+    const params = new URLSearchParams(filters).toString();
+    return apiCall(`/trades${params ? '?' + params : ''}`);
+  },
+  
+  // Get active trades
+  getActive: () => apiCall('/trades/active'),
+  
+  // Get trade statistics
+  getStats: () => apiCall('/trades/stats'),
+  
+  // Get trades by user
+  getByUser: (userId) => apiCall(`/trades/user/${userId}`),
+  
+  // Create trade (user places trade)
+  create: (tradeData) => apiCall('/trades', {
+    method: 'POST',
+    body: JSON.stringify(tradeData),
+  }),
+  
+  // Complete/settle trade
+  complete: (id, result, exitPrice, profit, payout) => apiCall(`/trades/${id}/complete`, {
+    method: 'PATCH',
+    body: JSON.stringify({ result, exitPrice, profit, payout }),
+  }),
+  
+  // Admin force trade result
+  forceResult: (id, forcedResult) => apiCall(`/trades/${id}/force`, {
+    method: 'PATCH',
+    body: JSON.stringify({ forcedResult }),
+  }),
+  
+  // Cancel trade
+  cancel: (id) => apiCall(`/trades/${id}/cancel`, {
+    method: 'PATCH',
+  }),
+  
+  // Delete trade
+  delete: (id) => apiCall(`/trades/${id}`, {
+    method: 'DELETE',
+  }),
+};
+
 // ============== AUTH API ==============
 export const authAPI = {
   // Login

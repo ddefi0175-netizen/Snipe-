@@ -36,7 +36,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/uploads', require('./routes/uploads'));
-// TODO: uploads, admin/master routes
+app.use('/api/trades', require('./routes/trades'));
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

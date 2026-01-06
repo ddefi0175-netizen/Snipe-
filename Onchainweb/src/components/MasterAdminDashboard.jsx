@@ -7,7 +7,7 @@ import {
   saveChatMessage,
   isFirebaseEnabled 
 } from '../lib/firebase.js'
-import { userAPI, uploadAPI, authAPI } from '../lib/api.js'
+import { userAPI, uploadAPI, authAPI, tradeAPI } from '../lib/api.js'
 
 // Lazy localStorage helper to avoid blocking initial render
 const getFromStorage = (key, defaultValue) => {
@@ -87,6 +87,10 @@ export default function MasterAdminDashboard() {
   // User Edit Modal
   const [editingUser, setEditingUser] = useState(null)
   const [editUserForm, setEditUserForm] = useState({ balance: '', points: '', vipLevel: '' })
+  
+  // User Detail View Modal
+  const [viewingUser, setViewingUser] = useState(null)
+  const [userDetailTab, setUserDetailTab] = useState('overview')
 
   // User Activity Logs - lazy loaded
   const [userActivityLogs, setUserActivityLogs] = useState([])
@@ -1054,12 +1058,12 @@ export default function MasterAdminDashboard() {
           </div>
         )}
 
-        {/* All Users Section */}
+        {/* All Users Section - Enhanced User Management */}
         {activeSection === 'users' && (
           <div className="admin-section">
             <div className="section-header">
-              <h1>All Users <span style={{ fontSize: '14px', color: '#888' }}>({users.length} total)</span></h1>
-              <p>Manage user accounts and balances - Real-time data from MongoDB</p>
+              <h1>User Management</h1>
+              <p>Manage and monitor all users in the system</p>
               <button 
                 onClick={async () => {
                   try {
@@ -1088,92 +1092,145 @@ export default function MasterAdminDashboard() {
                 🔄 Refresh Users from Database
               </button>
             </div>
-            <div className="search-box">
-              <span className="search-icon">🔍</span>
-              <input
-                type="text"
-                placeholder="Search users..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
+            
+            {/* Search and Filter */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', background: '#1e293b', padding: '20px', borderRadius: '12px' }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ color: '#94a3b8', marginBottom: '8px', display: 'block' }}>Search Users</label>
+                <div className="search-box" style={{ margin: 0 }}>
+                  <span className="search-icon">🔍</span>
+                  <input
+                    type="text"
+                    placeholder="Search by email, IP address, or UID"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
+                <label style={{ color: '#94a3b8', marginBottom: '8px' }}>Filter By</label>
+                <button style={{ padding: '10px 20px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>Active Users</button>
+                <select style={{ padding: '10px 20px', background: '#374151', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+                  <option value="default">Default</option>
+                  <option value="balance">By Balance</option>
+                  <option value="recent">Recent</option>
+                  <option value="frozen">Frozen</option>
+                </select>
+              </div>
             </div>
-            <div className="data-table">
+
+            {/* Users Table */}
+            <div className="data-table" style={{ background: '#0f172a', borderRadius: '12px', overflow: 'hidden' }}>
               <table>
                 <thead>
-                  <tr>
-                    <th>USER ID</th>
-                    <th>WALLET</th>
-                    <th>USERNAME</th>
+                  <tr style={{ background: '#1e293b' }}>
+                    <th>NAME</th>
                     <th>EMAIL</th>
-                    <th>BALANCE</th>
-                    <th>POINTS</th>
-                    <th>VIP LEVEL</th>
-                    <th>KYC STATUS</th>
-                    <th>LAST LOGIN</th>
+                    <th>IP ADDRESS</th>
+                    <th>ACTIVE</th>
+                    <th>ROLE</th>
+                    <th>REFERRAL</th>
+                    <th>CREDIT SCORE</th>
+                    <th>TRADING</th>
+                    <th>WITHDRAW</th>
                     <th>ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filterData(users, searchQuery).map((user, idx) => (
-                    <tr key={user._id || idx}>
-                      <td>{user.userId || user.id || '-'}</td>
-                      <td title={user.wallet} style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {user.wallet ? `${user.wallet.substring(0, 6)}...${user.wallet.slice(-4)}` : '-'}
-                      </td>
-                      <td>{user.username || 'N/A'}</td>
-                      <td><a href={`mailto:${user.email}`}>{user.email || '-'}</a></td>
-                      <td>${(user.balance || 0).toLocaleString()}</td>
-                      <td>{user.points || 0}</td>
-                      <td>Level {user.vipLevel || 1}</td>
+                    <tr key={user._id || idx} style={{ borderBottom: '1px solid #1e293b' }}>
+                      <td style={{ fontWeight: 'bold' }}>{user.username || user.userId || 'N/A'}</td>
+                      <td><a href={`mailto:${user.email}`} style={{ color: '#3b82f6' }}>{user.email || '-'}</a></td>
+                      <td style={{ fontFamily: 'monospace', color: '#94a3b8' }}>{user.ipAddress || '0.0.0.0'}</td>
                       <td>
-                        <span className={`status-badge ${user.kycStatus || 'none'}`}>
-                          {user.kycStatus === 'verified' ? '✅ Verified' : 
-                           user.kycStatus === 'pending' ? '⏳ Pending' :
-                           user.kycStatus === 'rejected' ? '❌ Rejected' : '⚪ None'}
+                        <span style={{ 
+                          padding: '4px 12px', 
+                          borderRadius: '20px', 
+                          background: user.frozen ? '#dc2626' : '#10b981', 
+                          color: '#fff',
+                          fontSize: '12px'
+                        }}>
+                          {user.frozen ? 'Frozen' : 'Active'}
                         </span>
                       </td>
-                      <td style={{ fontSize: '12px' }}>
-                        {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}
+                      <td>
+                        <span style={{ 
+                          padding: '4px 12px', 
+                          borderRadius: '20px', 
+                          background: user.role === 'admin' ? '#3b82f6' : '#374151', 
+                          color: '#fff',
+                          fontSize: '12px'
+                        }}>
+                          {user.role || 'none'}
+                        </span>
+                      </td>
+                      <td style={{ fontFamily: 'monospace' }}>{user.referralCode || '-'}</td>
+                      <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{user.creditScore || 100}</td>
+                      <td>
+                        <button 
+                          style={{ 
+                            padding: '4px 12px', 
+                            borderRadius: '8px', 
+                            background: user.tradeMode === 'lose' ? '#dc2626' : '#10b981', 
+                            color: '#fff',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '12px'
+                          }}
+                          onClick={async () => {
+                            const newMode = user.tradeMode === 'win' ? 'lose' : user.tradeMode === 'lose' ? 'auto' : 'win'
+                            try {
+                              if (user._id) await userAPI.setTradeMode(user._id, newMode)
+                              setUsers(prev => prev.map(u => u._id === user._id ? { ...u, tradeMode: newMode } : u))
+                            } catch (err) { alert('Error: ' + err.message) }
+                          }}
+                        >
+                          {user.tradeMode === 'win' ? 'Win' : user.tradeMode === 'lose' ? 'Lose' : 'Enable'}
+                        </button>
                       </td>
                       <td>
-                        <button
-                          className="action-btn edit"
-                          onClick={() => {
-                            setEditingUser(user)
-                            setEditUserForm({
-                              balance: user.balance || 0,
-                              points: user.points || 0,
-                              vipLevel: user.vipLevel || 1
-                            })
+                        <button 
+                          style={{ 
+                            padding: '4px 12px', 
+                            borderRadius: '8px', 
+                            background: user.withdrawEnabled === false ? '#dc2626' : '#10b981', 
+                            color: '#fff',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '12px'
                           }}
-                          style={{ marginRight: '4px', padding: '4px 8px', fontSize: '12px' }}
-                        >
-                          ✏️ Edit
-                        </button>
-                        <button
-                          className={`action-btn ${user.frozen ? 'unfreeze' : 'freeze'}`}
                           onClick={async () => {
                             try {
-                              if (user._id) {
-                                await userAPI.setFrozen(user._id, !user.frozen)
-                              }
-                              setUsers(prev => prev.map(u =>
-                                (u._id === user._id || u.id === user.id) ? { ...u, frozen: !u.frozen } : u
-                              ))
-                            } catch (error) {
-                              alert('Failed to update user: ' + error.message)
-                            }
+                              const newVal = !user.withdrawEnabled
+                              if (user._id) await userAPI.update(user._id, { withdrawEnabled: newVal })
+                              setUsers(prev => prev.map(u => u._id === user._id ? { ...u, withdrawEnabled: newVal } : u))
+                            } catch (err) { alert('Error: ' + err.message) }
                           }}
-                          style={{ padding: '4px 8px', fontSize: '12px' }}
                         >
-                          {user.frozen ? '🔓 Unfreeze' : '🔒 Freeze'}
+                          {user.withdrawEnabled === false ? 'Frozen' : 'Unfreeze'}
+                        </button>
+                      </td>
+                      <td>
+                        <button 
+                          style={{ 
+                            padding: '8px 16px', 
+                            borderRadius: '8px', 
+                            background: '#3b82f6', 
+                            color: '#fff',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontWeight: 'bold'
+                          }}
+                          onClick={() => setViewingUser(user)}
+                        >
+                          View Details
                         </button>
                       </td>
                     </tr>
                   ))}
                   {users.length === 0 && (
                     <tr>
-                      <td colSpan="9" className="no-data">
+                      <td colSpan="10" className="no-data">
                         No users found. Users will appear here automatically when they connect their wallet.
                       </td>
                     </tr>
@@ -1181,6 +1238,306 @@ export default function MasterAdminDashboard() {
                 </tbody>
               </table>
             </div>
+
+            {/* User Detail View Modal */}
+            {viewingUser && (
+              <div className="modal-overlay" onClick={() => setViewingUser(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '20px', overflow: 'auto' }}>
+                <div onClick={e => e.stopPropagation()} style={{ background: '#0f172a', borderRadius: '16px', width: '100%', maxWidth: '1000px', marginTop: '20px' }}>
+                  
+                  {/* User Header */}
+                  <div style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', padding: '30px', borderRadius: '16px 16px 0 0', textAlign: 'center', position: 'relative' }}>
+                    <button onClick={() => setViewingUser(null)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer', borderRadius: '50%', width: '40px', height: '40px' }}>×</button>
+                    <h2 style={{ color: '#fff', fontSize: '28px', margin: 0 }}>{viewingUser.username || 'User'}</h2>
+                    <p style={{ color: 'rgba(255,255,255,0.8)', margin: '5px 0 0 0' }}>{viewingUser.email || '-'}</p>
+                  </div>
+
+                  {/* User Stats */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: '#1e293b', margin: '20px', borderRadius: '12px', overflow: 'hidden' }}>
+                    <div style={{ background: '#0f172a', padding: '20px' }}>
+                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '5px' }}>UID</div>
+                      <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>{viewingUser.userId || viewingUser._id?.slice(-10) || '-'}</div>
+                    </div>
+                    <div style={{ background: '#0f172a', padding: '20px' }}>
+                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '5px' }}>Withdrawable</div>
+                      <div style={{ color: viewingUser.withdrawEnabled === false ? '#dc2626' : '#10b981', fontSize: '18px', fontWeight: 'bold' }}>{viewingUser.withdrawEnabled === false ? 'Frozen' : 'Unfreeze'}</div>
+                    </div>
+                    <div style={{ background: '#0f172a', padding: '20px' }}>
+                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '5px' }}>Withdraw Times</div>
+                      <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>{viewingUser.withdrawCount || 0}</div>
+                    </div>
+                    <div style={{ background: '#0f172a', padding: '20px' }}>
+                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '5px' }}>Deposit Times</div>
+                      <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>{viewingUser.depositCount || 0}</div>
+                    </div>
+                    <div style={{ background: '#0f172a', padding: '20px' }}>
+                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '5px' }}>Trade Times</div>
+                      <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>{viewingUser.tradeCount || 0}</div>
+                    </div>
+                    <div style={{ background: '#0f172a', padding: '20px' }}>
+                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '5px' }}>Stake Times</div>
+                      <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>{viewingUser.stakeCount || 0}</div>
+                    </div>
+                  </div>
+
+                  {/* User Balance & Points */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', margin: '20px' }}>
+                    <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '8px' }}>Balance</div>
+                      <div style={{ color: '#10b981', fontSize: '24px', fontWeight: 'bold' }}>${(viewingUser.balance || 0).toLocaleString()}</div>
+                    </div>
+                    <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '8px' }}>Points</div>
+                      <div style={{ color: '#f59e0b', fontSize: '24px', fontWeight: 'bold' }}>{(viewingUser.points || 0).toLocaleString()}</div>
+                    </div>
+                    <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '8px' }}>VIP Level</div>
+                      <div style={{ color: '#8b5cf6', fontSize: '24px', fontWeight: 'bold' }}>Level {viewingUser.vipLevel || 1}</div>
+                    </div>
+                    <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '8px' }}>Credit Score</div>
+                      <div style={{ color: '#3b82f6', fontSize: '24px', fontWeight: 'bold' }}>{viewingUser.creditScore || 100}</div>
+                    </div>
+                  </div>
+
+                  {/* Deposit Address Section */}
+                  <div style={{ margin: '20px', background: '#1e293b', borderRadius: '12px', padding: '20px' }}>
+                    <h3 style={{ color: '#fff', marginBottom: '15px' }}>💰 User Deposit Address</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
+                      <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
+                        <label style={{ color: '#64748b', fontSize: '12px', display: 'block', marginBottom: '8px' }}>USDT (TRC20) Address</label>
+                        <input 
+                          type="text" 
+                          value={viewingUser.depositAddressUSDT || ''} 
+                          placeholder="Enter USDT TRC20 address for this user"
+                          onChange={async (e) => {
+                            const val = e.target.value
+                            setViewingUser(prev => ({ ...prev, depositAddressUSDT: val }))
+                          }}
+                          onBlur={async (e) => {
+                            try {
+                              if (viewingUser._id) await userAPI.update(viewingUser._id, { depositAddressUSDT: e.target.value })
+                            } catch (err) { console.error(err) }
+                          }}
+                          style={{ width: '100%', padding: '10px', background: '#1e293b', border: '1px solid #374151', borderRadius: '6px', color: '#fff' }}
+                        />
+                      </div>
+                      <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
+                        <label style={{ color: '#64748b', fontSize: '12px', display: 'block', marginBottom: '8px' }}>USDT (ERC20) Address</label>
+                        <input 
+                          type="text" 
+                          value={viewingUser.depositAddressERC20 || ''} 
+                          placeholder="Enter USDT ERC20 address for this user"
+                          onChange={async (e) => {
+                            const val = e.target.value
+                            setViewingUser(prev => ({ ...prev, depositAddressERC20: val }))
+                          }}
+                          onBlur={async (e) => {
+                            try {
+                              if (viewingUser._id) await userAPI.update(viewingUser._id, { depositAddressERC20: e.target.value })
+                            } catch (err) { console.error(err) }
+                          }}
+                          style={{ width: '100%', padding: '10px', background: '#1e293b', border: '1px solid #374151', borderRadius: '6px', color: '#fff' }}
+                        />
+                      </div>
+                      <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
+                        <label style={{ color: '#64748b', fontSize: '12px', display: 'block', marginBottom: '8px' }}>BTC Address</label>
+                        <input 
+                          type="text" 
+                          value={viewingUser.depositAddressBTC || ''} 
+                          placeholder="Enter BTC address for this user"
+                          onChange={async (e) => {
+                            const val = e.target.value
+                            setViewingUser(prev => ({ ...prev, depositAddressBTC: val }))
+                          }}
+                          onBlur={async (e) => {
+                            try {
+                              if (viewingUser._id) await userAPI.update(viewingUser._id, { depositAddressBTC: e.target.value })
+                            } catch (err) { console.error(err) }
+                          }}
+                          style={{ width: '100%', padding: '10px', background: '#1e293b', border: '1px solid #374151', borderRadius: '6px', color: '#fff' }}
+                        />
+                      </div>
+                      <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
+                        <label style={{ color: '#64748b', fontSize: '12px', display: 'block', marginBottom: '8px' }}>ETH Address</label>
+                        <input 
+                          type="text" 
+                          value={viewingUser.depositAddressETH || ''} 
+                          placeholder="Enter ETH address for this user"
+                          onChange={async (e) => {
+                            const val = e.target.value
+                            setViewingUser(prev => ({ ...prev, depositAddressETH: val }))
+                          }}
+                          onBlur={async (e) => {
+                            try {
+                              if (viewingUser._id) await userAPI.update(viewingUser._id, { depositAddressETH: e.target.value })
+                            } catch (err) { console.error(err) }
+                          }}
+                          style={{ width: '100%', padding: '10px', background: '#1e293b', border: '1px solid #374151', borderRadius: '6px', color: '#fff' }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* User Actions */}
+                  <div style={{ margin: '20px' }}>
+                    <h3 style={{ color: '#fff', marginBottom: '15px' }}>User Actions</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
+                      <button onClick={() => {
+                        setEditingUser(viewingUser)
+                        setEditUserForm({ balance: viewingUser.balance || 0, points: viewingUser.points || 0, vipLevel: viewingUser.vipLevel || 1 })
+                      }} style={{ padding: '12px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        ✏️ Edit User
+                      </button>
+                      <button onClick={() => {
+                        const msg = prompt('Enter message to send to user:')
+                        if (msg) alert('Message sent: ' + msg)
+                      }} style={{ padding: '12px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        ✉️ Send Message
+                      </button>
+                      <button onClick={() => alert('Reset password feature')} style={{ padding: '12px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        🔑 Reset Password
+                      </button>
+                      <button onClick={async () => {
+                        const pass = prompt('Set withdrawal password for this user:')
+                        if (pass) {
+                          try {
+                            if (viewingUser._id) await userAPI.update(viewingUser._id, { withdrawPassword: pass })
+                            alert('Withdraw password set!')
+                          } catch (err) { alert('Error: ' + err.message) }
+                        }
+                      }} style={{ padding: '12px', background: '#8b5cf6', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        🔒 Set Withdraw Pass
+                      </button>
+                      <button onClick={async () => {
+                        const role = prompt('Enter new role (user/admin):', viewingUser.role || 'user')
+                        if (role) {
+                          try {
+                            if (viewingUser._id) await userAPI.update(viewingUser._id, { role })
+                            setViewingUser(prev => ({ ...prev, role }))
+                            setUsers(prev => prev.map(u => u._id === viewingUser._id ? { ...u, role } : u))
+                            alert('Role updated!')
+                          } catch (err) { alert('Error: ' + err.message) }
+                        }
+                      }} style={{ padding: '12px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        👤 Change Role
+                      </button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px', marginTop: '10px' }}>
+                      <button onClick={async () => {
+                        if (confirm('Delete this user permanently?')) {
+                          try {
+                            if (viewingUser._id) await userAPI.delete(viewingUser._id)
+                            setUsers(prev => prev.filter(u => u._id !== viewingUser._id))
+                            setViewingUser(null)
+                            alert('User deleted!')
+                          } catch (err) { alert('Error: ' + err.message) }
+                        }
+                      }} style={{ padding: '12px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        🗑️ Delete User
+                      </button>
+                      <button onClick={async () => {
+                        const score = prompt('Enter new credit score (0-100):', viewingUser.creditScore || 100)
+                        if (score) {
+                          try {
+                            if (viewingUser._id) await userAPI.update(viewingUser._id, { creditScore: parseInt(score) })
+                            setViewingUser(prev => ({ ...prev, creditScore: parseInt(score) }))
+                            setUsers(prev => prev.map(u => u._id === viewingUser._id ? { ...u, creditScore: parseInt(score) } : u))
+                            alert('Credit score updated!')
+                          } catch (err) { alert('Error: ' + err.message) }
+                        }
+                      }} style={{ padding: '12px', background: '#0891b2', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        ⭐ Credit Score
+                      </button>
+                      <button onClick={async () => {
+                        const modes = ['auto', 'win', 'lose']
+                        const currentIdx = modes.indexOf(viewingUser.tradeMode || 'auto')
+                        const newMode = modes[(currentIdx + 1) % modes.length]
+                        try {
+                          if (viewingUser._id) await userAPI.setTradeMode(viewingUser._id, newMode)
+                          setViewingUser(prev => ({ ...prev, tradeMode: newMode }))
+                          setUsers(prev => prev.map(u => u._id === viewingUser._id ? { ...u, tradeMode: newMode } : u))
+                          alert(`Trade mode set to: ${newMode}`)
+                        } catch (err) { alert('Error: ' + err.message) }
+                      }} style={{ padding: '12px', background: '#f97316', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        📈 Trading ({viewingUser.tradeMode || 'auto'})
+                      </button>
+                      <button onClick={async () => {
+                        const bal = prompt('Enter new balance:', viewingUser.balance || 0)
+                        if (bal !== null) {
+                          try {
+                            if (viewingUser._id) await userAPI.update(viewingUser._id, { balance: parseFloat(bal) })
+                            setViewingUser(prev => ({ ...prev, balance: parseFloat(bal) }))
+                            setUsers(prev => prev.map(u => u._id === viewingUser._id ? { ...u, balance: parseFloat(bal) } : u))
+                            alert('Balance updated!')
+                          } catch (err) { alert('Error: ' + err.message) }
+                        }
+                      }} style={{ padding: '12px', background: '#059669', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        💰 Balance
+                      </button>
+                      <button onClick={() => alert('Activity history feature coming soon')} style={{ padding: '12px', background: '#e11d48', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        📋 Activity History
+                      </button>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginTop: '10px', maxWidth: '410px' }}>
+                      <button onClick={async () => {
+                        const result = prompt('Preset next trade result (win/lose):', 'win')
+                        if (result && ['win', 'lose'].includes(result)) {
+                          try {
+                            if (viewingUser._id) await userAPI.update(viewingUser._id, { presetTradeResult: result })
+                            setViewingUser(prev => ({ ...prev, presetTradeResult: result }))
+                            alert(`Next trade will ${result}!`)
+                          } catch (err) { alert('Error: ' + err.message) }
+                        }
+                      }} style={{ padding: '12px', background: '#0d9488', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        📝 Preset Trade Order
+                      </button>
+                      <button onClick={async () => {
+                        if (confirm('Reset trade count for this user?')) {
+                          try {
+                            if (viewingUser._id) await userAPI.update(viewingUser._id, { tradeCount: 0 })
+                            setViewingUser(prev => ({ ...prev, tradeCount: 0 }))
+                            alert('Trade count reset!')
+                          } catch (err) { alert('Error: ' + err.message) }
+                        }
+                      }} style={{ padding: '12px', background: '#f43f5e', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        🔄 Reset Trade Count
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Additional Info */}
+                  <div style={{ margin: '20px', background: '#1e293b', borderRadius: '12px', padding: '20px' }}>
+                    <h3 style={{ color: '#fff', marginBottom: '15px' }}>Additional Information</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
+                      <div>
+                        <span style={{ color: '#64748b' }}>Wallet:</span>
+                        <span style={{ color: '#fff', marginLeft: '10px', fontFamily: 'monospace' }}>{viewingUser.wallet || '-'}</span>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748b' }}>Wallet Type:</span>
+                        <span style={{ color: '#fff', marginLeft: '10px' }}>{viewingUser.walletType || '-'}</span>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748b' }}>KYC Status:</span>
+                        <span style={{ color: viewingUser.kycStatus === 'verified' ? '#10b981' : '#f59e0b', marginLeft: '10px' }}>{viewingUser.kycStatus || 'none'}</span>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748b' }}>Created:</span>
+                        <span style={{ color: '#fff', marginLeft: '10px' }}>{viewingUser.createdAt ? new Date(viewingUser.createdAt).toLocaleString() : '-'}</span>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748b' }}>Last Login:</span>
+                        <span style={{ color: '#fff', marginLeft: '10px' }}>{viewingUser.lastLogin ? new Date(viewingUser.lastLogin).toLocaleString() : '-'}</span>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748b' }}>User Agent:</span>
+                        <span style={{ color: '#fff', marginLeft: '10px', fontSize: '11px' }}>{viewingUser.userAgent?.substring(0, 50) || '-'}...</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Edit User Modal */}
             {editingUser && (
