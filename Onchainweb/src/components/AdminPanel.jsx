@@ -555,12 +555,118 @@ export default function AdminPanel({ isOpen, onClose }) {
                     <button className="refresh-btn" onClick={loadAllUsers}>🔄 Refresh</button>
                   </div>
                   
+                  {/* Pending Deposit Uploads */}
+                  {(() => {
+                    const pendingUploads = JSON.parse(localStorage.getItem('adminDepositUploads') || '[]').filter(u => u.status === 'pending')
+                    return pendingUploads.length > 0 && (
+                      <div className="pending-uploads-section">
+                        <h4>📤 Pending Deposit Uploads ({pendingUploads.length})</h4>
+                        <div className="uploads-list">
+                          {pendingUploads.map(upload => (
+                            <div key={upload.id} className="upload-item">
+                              <div className="upload-info">
+                                <span className="user-id-tag">User ID: {upload.oderId}</span>
+                                <span className="upload-amount">${upload.amount} USDT</span>
+                                <span className="upload-network">{upload.network}</span>
+                                {upload.txHash && <span className="upload-txhash">TX: {upload.txHash.slice(0,15)}...</span>}
+                              </div>
+                              <div className="upload-screenshot">
+                                <img src={upload.screenshot} alt="Transfer proof" />
+                              </div>
+                              <div className="upload-actions">
+                                <button className="approve-btn" onClick={() => {
+                                  const uploads = JSON.parse(localStorage.getItem('adminDepositUploads') || '[]')
+                                  const idx = uploads.findIndex(u => u.id === upload.id)
+                                  if (idx >= 0) {
+                                    uploads[idx].status = 'approved'
+                                    uploads[idx].reviewedAt = new Date().toISOString()
+                                    localStorage.setItem('adminDepositUploads', JSON.stringify(uploads))
+                                    // Add points to user
+                                    localStorage.setItem('userPoints', upload.amount.toString())
+                                    alert(`Approved! ${upload.amount} points added to user ${upload.oderId}`)
+                                    loadAllUsers()
+                                  }
+                                }}>✓ Approve</button>
+                                <button className="reject-btn" onClick={() => {
+                                  const uploads = JSON.parse(localStorage.getItem('adminDepositUploads') || '[]')
+                                  const idx = uploads.findIndex(u => u.id === upload.id)
+                                  if (idx >= 0) {
+                                    uploads[idx].status = 'rejected'
+                                    uploads[idx].reviewedAt = new Date().toISOString()
+                                    localStorage.setItem('adminDepositUploads', JSON.stringify(uploads))
+                                    alert(`Rejected deposit from user ${upload.oderId}`)
+                                    loadAllUsers()
+                                  }
+                                }}>✕ Reject</button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })()}
+
+                  {/* Pending KYC Requests */}
+                  {(() => {
+                    const pendingKYC = JSON.parse(localStorage.getItem('adminKYCRequests') || '[]').filter(k => k.status === 'pending')
+                    return pendingKYC.length > 0 && (
+                      <div className="pending-kyc-section">
+                        <h4>🔐 Pending KYC Requests ({pendingKYC.length})</h4>
+                        <div className="kyc-list">
+                          {pendingKYC.map(kyc => (
+                            <div key={kyc.id} className="kyc-item">
+                              <div className="kyc-info">
+                                <span className="user-id-tag">User ID: {kyc.oderId}</span>
+                                <span className="kyc-name">{kyc.fullName}</span>
+                                <span className="kyc-doc">{kyc.docType}: {kyc.docNumber}</span>
+                              </div>
+                              <div className="kyc-photos">
+                                {kyc.frontPhoto && <img src={kyc.frontPhoto} alt="Front" />}
+                                {kyc.backPhoto && <img src={kyc.backPhoto} alt="Back" />}
+                              </div>
+                              <div className="kyc-actions">
+                                <button className="approve-btn" onClick={() => {
+                                  const requests = JSON.parse(localStorage.getItem('adminKYCRequests') || '[]')
+                                  const idx = requests.findIndex(k => k.id === kyc.id)
+                                  if (idx >= 0) {
+                                    requests[idx].status = 'approved'
+                                    localStorage.setItem('adminKYCRequests', JSON.stringify(requests))
+                                    // Update user profile
+                                    const profile = JSON.parse(localStorage.getItem('userProfile') || '{}')
+                                    profile.kycStatus = 'verified'
+                                    profile.kycVerifiedAt = new Date().toISOString()
+                                    localStorage.setItem('userProfile', JSON.stringify(profile))
+                                    alert(`KYC approved for user ${kyc.oderId}`)
+                                    loadAllUsers()
+                                  }
+                                }}>✓ Approve</button>
+                                <button className="reject-btn" onClick={() => {
+                                  const requests = JSON.parse(localStorage.getItem('adminKYCRequests') || '[]')
+                                  const idx = requests.findIndex(k => k.id === kyc.id)
+                                  if (idx >= 0) {
+                                    requests[idx].status = 'rejected'
+                                    localStorage.setItem('adminKYCRequests', JSON.stringify(requests))
+                                    const profile = JSON.parse(localStorage.getItem('userProfile') || '{}')
+                                    profile.kycStatus = 'rejected'
+                                    localStorage.setItem('userProfile', JSON.stringify(profile))
+                                    alert(`KYC rejected for user ${kyc.oderId}`)
+                                    loadAllUsers()
+                                  }
+                                }}>✕ Reject</button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })()}
+                  
                   {allUsers.length === 0 ? (
                     <p className="no-data">No users found</p>
                   ) : (
                     <div className="users-list">
                       {allUsers.map(user => (
-                        <div key={user.id} className="user-card">
+                        <div key={user.id} className={`user-card ${user.isFrozen ? 'frozen' : ''}`}>
                           <div className="user-info">
                             <div className="user-avatar">{user.avatar || '👤'}</div>
                             <div className="user-details">
@@ -570,6 +676,7 @@ export default function AdminPanel({ isOpen, onClose }) {
                                 {user.kycStatus === 'verified' ? '✓ Verified' : 
                                  user.kycStatus === 'pending' ? '⏳ Pending' : '✗ Not Verified'}
                               </span>
+                              {user.isFrozen && <span className="frozen-badge">🔒 Frozen</span>}
                             </div>
                           </div>
                           
@@ -580,7 +687,11 @@ export default function AdminPanel({ isOpen, onClose }) {
                             </div>
                             <div className="stat">
                               <span className="label">Points</span>
-                              <span className="value">{user.points || 0}</span>
+                              <span className="value">{localStorage.getItem('userPoints') || 0}</span>
+                            </div>
+                            <div className="stat">
+                              <span className="label">Credit Score</span>
+                              <span className="value">{user.creditScore || 100}</span>
                             </div>
                             <div className="stat">
                               <span className="label">VIP Level</span>
@@ -594,28 +705,6 @@ export default function AdminPanel({ isOpen, onClose }) {
                           
                           <div className="user-actions">
                             <div className="action-group">
-                              <label>Balance:</label>
-                              <input 
-                                type="number" 
-                                id={`balance-${user.id}`}
-                                placeholder="Amount"
-                                className="small-input"
-                              />
-                              <button onClick={() => {
-                                const amount = document.getElementById(`balance-${user.id}`).value
-                                if (amount) updateUserBalance(user.id, amount, 'add')
-                              }}>+ Add</button>
-                              <button onClick={() => {
-                                const amount = document.getElementById(`balance-${user.id}`).value
-                                if (amount) updateUserBalance(user.id, amount, 'subtract')
-                              }}>- Sub</button>
-                              <button onClick={() => {
-                                const amount = document.getElementById(`balance-${user.id}`).value
-                                if (amount) updateUserBalance(user.id, amount, 'set')
-                              }}>= Set</button>
-                            </div>
-                            
-                            <div className="action-group">
                               <label>Points:</label>
                               <input 
                                 type="number" 
@@ -625,16 +714,53 @@ export default function AdminPanel({ isOpen, onClose }) {
                               />
                               <button onClick={() => {
                                 const points = document.getElementById(`points-${user.id}`).value
-                                if (points) updateUserPoints(user.id, points, 'add')
+                                if (points) {
+                                  const current = parseFloat(localStorage.getItem('userPoints') || '0')
+                                  localStorage.setItem('userPoints', (current + parseFloat(points)).toString())
+                                  alert(`Added ${points} points. New total: ${current + parseFloat(points)}`)
+                                  loadAllUsers()
+                                }
                               }}>+ Add</button>
                               <button onClick={() => {
                                 const points = document.getElementById(`points-${user.id}`).value
-                                if (points) updateUserPoints(user.id, points, 'subtract')
+                                if (points) {
+                                  const current = parseFloat(localStorage.getItem('userPoints') || '0')
+                                  const newTotal = Math.max(0, current - parseFloat(points))
+                                  localStorage.setItem('userPoints', newTotal.toString())
+                                  alert(`Removed ${points} points. New total: ${newTotal}`)
+                                  loadAllUsers()
+                                }
                               }}>- Sub</button>
                               <button onClick={() => {
                                 const points = document.getElementById(`points-${user.id}`).value
-                                if (points) updateUserPoints(user.id, points, 'set')
+                                if (points) {
+                                  localStorage.setItem('userPoints', points)
+                                  alert(`Set points to ${points}`)
+                                  loadAllUsers()
+                                }
                               }}>= Set</button>
+                            </div>
+                            
+                            <div className="action-group">
+                              <label>Credit Score:</label>
+                              <input 
+                                type="number" 
+                                id={`credit-${user.id}`}
+                                placeholder="Score"
+                                className="small-input"
+                                min="0"
+                                max="100"
+                              />
+                              <button onClick={() => {
+                                const score = document.getElementById(`credit-${user.id}`).value
+                                if (score) {
+                                  const profile = JSON.parse(localStorage.getItem('userProfile') || '{}')
+                                  profile.creditScore = Math.min(100, Math.max(0, parseInt(score)))
+                                  localStorage.setItem('userProfile', JSON.stringify(profile))
+                                  alert(`Credit score set to ${profile.creditScore}`)
+                                  loadAllUsers()
+                                }
+                              }}>Set</button>
                             </div>
                             
                             <div className="action-group">
@@ -656,6 +782,49 @@ export default function AdminPanel({ isOpen, onClose }) {
                                 <option value="5">Level 5</option>
                               </select>
                             </div>
+
+                            <div className="action-group">
+                              <label>Win/Lose:</label>
+                              <select onChange={e => {
+                                const control = JSON.parse(localStorage.getItem('adminTradeControl') || '{}')
+                                control.mode = e.target.value
+                                control.targetUserId = user.id
+                                localStorage.setItem('adminTradeControl', JSON.stringify(control))
+                                alert(`Trade mode set to ${e.target.value} for user ${user.id}`)
+                              }} defaultValue={tradeControl.targetUserId === user.id ? tradeControl.mode : 'auto'}>
+                                <option value="auto">Auto</option>
+                                <option value="win">Always Win</option>
+                                <option value="lose">Always Lose</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <div className="user-actions-row">
+                            <button className="action-btn freeze-btn" onClick={() => {
+                              const profile = JSON.parse(localStorage.getItem('userProfile') || '{}')
+                              profile.isFrozen = !profile.isFrozen
+                              localStorage.setItem('userProfile', JSON.stringify(profile))
+                              alert(profile.isFrozen ? 'User account frozen!' : 'User account unfrozen!')
+                              loadAllUsers()
+                            }}>
+                              {user.isFrozen ? '🔓 Unfreeze' : '🔒 Freeze'}
+                            </button>
+                            <button className="action-btn message-btn" onClick={() => {
+                              const message = prompt('Enter message to send to user:')
+                              if (message) {
+                                sendNotification(message)
+                              }
+                            }}>💬 Message</button>
+                            <button className="action-btn delete-btn" onClick={() => {
+                              if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+                                localStorage.removeItem('userProfile')
+                                localStorage.removeItem('userPoints')
+                                localStorage.removeItem('walletData')
+                                localStorage.removeItem('isRegistered')
+                                alert('User deleted successfully')
+                                loadAllUsers()
+                              }
+                            }}>🗑️ Delete</button>
                           </div>
                         </div>
                       ))}

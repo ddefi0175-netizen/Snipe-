@@ -117,11 +117,32 @@ function AccountSwitcher({ onDemoClick }) {
     return newId
   })
 
+  // User Points (controlled by admin only, starts at 0)
+  const [userPoints, setUserPoints] = useState(() => {
+    const saved = localStorage.getItem('userPoints')
+    return saved ? parseFloat(saved) : 0
+  })
+
   // Demo Account Balance
   const [demoBalance] = useState(() => {
     const saved = localStorage.getItem('demoBalance')
     return saved ? parseFloat(saved) : 100000
   })
+
+  // Listen for points updates from admin
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const saved = localStorage.getItem('userPoints')
+      setUserPoints(saved ? parseFloat(saved) : 0)
+    }
+    window.addEventListener('storage', handleStorageChange)
+    // Also check periodically for local updates
+    const interval = setInterval(handleStorageChange, 2000)
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      clearInterval(interval)
+    }
+  }, [])
 
   const handleSwitch = (type) => {
     setAccountType(type)
@@ -170,7 +191,11 @@ function AccountSwitcher({ onDemoClick }) {
                 📋
               </button>
             </div>
-            <p className="account-note">Trade with real assets. Be careful with your investments.</p>
+            <div className="user-points-display">
+              <span className="points-label">Points Balance:</span>
+              <span className="points-value">{userPoints.toLocaleString()} USDT</span>
+            </div>
+            <p className="account-note">Points are added by admin after deposit verification.</p>
           </>
         ) : (
           <>

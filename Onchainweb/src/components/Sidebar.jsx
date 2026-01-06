@@ -22,6 +22,17 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
   const [kycBackPhoto, setKycBackPhoto] = useState(null)
   const [kycFrontPreview, setKycFrontPreview] = useState('')
   const [kycBackPreview, setKycBackPreview] = useState('')
+
+  // Upload Deposit Proof States
+  const [uploadAmount, setUploadAmount] = useState('')
+  const [uploadNetwork, setUploadNetwork] = useState('')
+  const [uploadTxHash, setUploadTxHash] = useState('')
+  const [uploadScreenshot, setUploadScreenshot] = useState(null)
+  const [uploadScreenshotPreview, setUploadScreenshotPreview] = useState('')
+  const [uploadHistory, setUploadHistory] = useState(() => {
+    const saved = localStorage.getItem('uploadHistory')
+    return saved ? JSON.parse(saved) : []
+  })
   
   // Generate random 5-digit UserID (numbers only)
   const generateUserId = () => {
@@ -263,6 +274,12 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
   }
 
   const handleKycSubmit = () => {
+    // If already verified, don't allow changes
+    if (profile.kycStatus === 'verified') {
+      alert('Your KYC is already verified. You cannot modify your information.')
+      return
+    }
+    
     if (!kycFullName || !kycDocType || !kycDocNumber) {
       alert('Please fill in all required fields')
       return
@@ -280,12 +297,103 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
       kycDocNumber,
       kycFrontPhoto: kycFrontPreview,
       kycBackPhoto: kycBackPreview,
-      kycStatus: 'pending'
+      kycStatus: 'pending',
+      kycSubmittedAt: new Date().toISOString()
     }))
     
-    alert('KYC documents submitted successfully!\n\nYour verification is being processed. This usually takes 1-3 business days.')
-    closeModal()
+    // Save to admin KYC requests for review
+    const kycRequests = JSON.parse(localStorage.getItem('adminKYCRequests') || '[]')
+    kycRequests.unshift({
+      id: Date.now(),
+      oderId: profile.userId,
+      fullName: kycFullName,
+      docType: kycDocType,
+      docNumber: kycDocNumber,
+      frontPhoto: kycFrontPreview,
+      backPhoto: kycBackPreview,
+      status: 'pending',
+      submittedAt: new Date().toISOString()
+    })
+    localStorage.setItem('adminKYCRequests', JSON.stringify(kycRequests))
+    
+    alert('KYC documents submitted successfully!\n\nYour verification is pending review. You will be notified once approved.')
   }
+
+  // Handle Screenshot Upload
+  const handleScreenshotUpload = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        alert('File size should be less than 10MB')
+        return
+      }
+      setUploadScreenshot(file)
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setUploadScreenshotPreview(reader.result)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  // Handle Deposit Proof Submission
+  const handleUploadSubmit = () => {
+    if (!uploadAmount || parseFloat(uploadAmount) <= 0) {
+      alert('Please enter a valid deposit amount')
+      return
+    }
+    if (!uploadNetwork) {
+      alert('Please select the network used for transfer')
+      return
+    }
+    if (!uploadScreenshot) {
+      alert('Please upload a screenshot of your transfer')
+      return
+    }
+
+    const newUpload = {
+      id: Date.now(),
+      oderId: profile.userId,
+      amount: parseFloat(uploadAmount),
+      network: uploadNetwork,
+      txHash: uploadTxHash || '',
+      screenshot: uploadScreenshotPreview,
+      status: 'pending',
+      submittedAt: new Date().toISOString()
+    }
+
+    // Save to user's upload history
+    const newHistory = [newUpload, ...uploadHistory]
+    setUploadHistory(newHistory)
+    localStorage.setItem('uploadHistory', JSON.stringify(newHistory))
+
+    // Save to admin review queue
+    const adminUploads = JSON.parse(localStorage.getItem('adminDepositUploads') || '[]')
+    adminUploads.unshift(newUpload)
+    localStorage.setItem('adminDepositUploads', JSON.stringify(adminUploads))
+
+    // Reset form
+    setUploadAmount('')
+    setUploadNetwork('')
+    setUploadTxHash('')
+    setUploadScreenshot(null)
+    setUploadScreenshotPreview('')
+
+    alert('Deposit proof uploaded successfully!\n\nYour deposit is pending admin review. Points will be added once approved.')
+  }
+
+  // Network options for upload
+  const networkOptions = [
+    { value: 'eth', label: 'Ethereum (ETH)' },
+    { value: 'bsc', label: 'BNB Smart Chain (BSC)' },
+    { value: 'polygon', label: 'Polygon (MATIC)' },
+    { value: 'tron', label: 'Tron (TRX)' },
+    { value: 'solana', label: 'Solana (SOL)' },
+    { value: 'arbitrum', label: 'Arbitrum' },
+    { value: 'optimism', label: 'Optimism' },
+    { value: 'base', label: 'Base' },
+    { value: 'other', label: 'Other' }
+  ]
 
   return (
     <>
@@ -343,16 +451,6 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
               <polyline points="16 7 22 7 22 13" />
             </svg>
             Futures Trading
-
-          </button>
-
-          <button onClick={onBinaryClick} className="sidebar-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <polyline points="12 6 12 12 16 14" />
-            </svg>
-            Binary Options
-
           </button>
 
           <button onClick={onC2CClick} className="sidebar-btn">
@@ -363,7 +461,6 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
               <path d="M16 3.13a4 4 0 0 1 0 7.75" />
             </svg>
             P2P Trading
-
           </button>
 
           <button onClick={onBorrowClick} className="sidebar-btn">
@@ -372,11 +469,9 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
               <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
             </svg>
             Borrow & Lend
-
           </button>
 
           <div className="sidebar-divider"></div>
-
 
           {/* Gmail Registration Button */}
           {!isRegistered && (
@@ -386,7 +481,6 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
                 <polyline points="22,6 12,13 2,6" />
               </svg>
               Register with Gmail
-
             </button>
           )}
 
@@ -416,17 +510,15 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
               <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z" />
             </svg>
             Bonus & Rewards
-
           </button>
 
-          <button onClick={onWalletActionsClick} className="sidebar-btn wallet-actions">
+          <button onClick={() => openModal('upload')} className="sidebar-btn">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
-              <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
-              <path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z" />
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            Deposit / VIP
-
+            Upload Deposit Proof
           </button>
 
           <button onClick={() => openModal('settings')} className="sidebar-btn">
@@ -1003,148 +1095,405 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
                 </span>
               </div>
               
-              <p className="kyc-intro">Complete KYC verification to unlock all features including higher withdrawal limits, bonus rewards, and premium features.</p>
-
-              {/* Personal Information Section */}
-              <div className="kyc-form-section">
-                <h4>📋 Personal Information</h4>
-                
-                <div className="kyc-field">
-                  <label>Full Name (as shown on ID) *</label>
-                  <input 
-                    type="text"
-                    className="kyc-input"
-                    value={kycFullName}
-                    onChange={(e) => setKycFullName(e.target.value)}
-                    placeholder="Enter your full legal name"
-                  />
+              {/* Show different content based on KYC status */}
+              {profile.kycStatus === 'verified' ? (
+                <div className="kyc-verified-view">
+                  <div className="kyc-success-icon">✓</div>
+                  <h3>KYC Verification Complete</h3>
+                  <p>Your identity has been verified successfully. You now have full access to all platform features.</p>
+                  
+                  <div className="kyc-verified-details">
+                    <div className="kyc-detail-item">
+                      <span className="detail-label">Full Name:</span>
+                      <span className="detail-value">{profile.kycFullName || kycFullName}</span>
+                    </div>
+                    <div className="kyc-detail-item">
+                      <span className="detail-label">Document Type:</span>
+                      <span className="detail-value">{documentTypes.find(d => d.value === (profile.kycDocType || kycDocType))?.label || profile.kycDocType}</span>
+                    </div>
+                    <div className="kyc-detail-item">
+                      <span className="detail-label">Document Number:</span>
+                      <span className="detail-value">{profile.kycDocNumber || kycDocNumber}</span>
+                    </div>
+                    <div className="kyc-detail-item">
+                      <span className="detail-label">Verified On:</span>
+                      <span className="detail-value">{profile.kycVerifiedAt ? new Date(profile.kycVerifiedAt).toLocaleDateString() : 'N/A'}</span>
+                    </div>
+                  </div>
+                  
+                  <button className="kyc-close-btn" onClick={closeModal}>
+                    Close
+                  </button>
                 </div>
-              </div>
-
-              {/* Document Information Section */}
-              <div className="kyc-form-section">
-                <h4>📄 Document Information</h4>
-                
-                <div className="kyc-field">
-                  <label>Document Type *</label>
-                  <select 
-                    className="kyc-select"
-                    value={kycDocType}
-                    onChange={(e) => setKycDocType(e.target.value)}
-                  >
-                    <option value="">Select document type</option>
-                    {documentTypes.map((doc) => (
-                      <option key={doc.value} value={doc.value}>{doc.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="kyc-field">
-                  <label>Document ID Number *</label>
-                  <input 
-                    type="text"
-                    className="kyc-input"
-                    value={kycDocNumber}
-                    onChange={(e) => setKycDocNumber(e.target.value)}
-                    placeholder="Enter your document ID number"
-                  />
-                </div>
-              </div>
-
-              {/* Document Upload Section */}
-              <div className="kyc-form-section">
-                <h4>📸 Document Photos</h4>
-                <p className="kyc-upload-hint">Please upload clear photos of your document. Make sure all details are visible.</p>
-                
-                <div className="kyc-upload-grid">
-                  {/* Front Photo Upload */}
-                  <div className="kyc-upload-box">
-                    <label className="kyc-upload-label">
-                      <span className="upload-title">Front Side *</span>
-                      <div className={`upload-area ${kycFrontPreview ? 'has-image' : ''}`}>
-                        {kycFrontPreview ? (
-                          <img src={kycFrontPreview} alt="Front of document" className="upload-preview" />
-                        ) : (
-                          <>
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                              <circle cx="8.5" cy="8.5" r="1.5" />
-                              <polyline points="21 15 16 10 5 21" />
-                            </svg>
-                            <p>Click to upload front</p>
-                            <span>JPG, PNG (Max 10MB)</span>
-                          </>
-                        )}
-                      </div>
+              ) : profile.kycStatus === 'pending' ? (
+                <div className="kyc-pending-view">
+                  <div className="kyc-pending-icon">⏳</div>
+                  <h3>Verification In Progress</h3>
+                  <p>Your KYC documents are being reviewed by our team. This usually takes 1-3 business days.</p>
+                  <p className="kyc-pending-note">You can still edit your information below until your verification is approved.</p>
+                  
+                  {/* Editable Form for Pending Status */}
+                  <div className="kyc-form-section">
+                    <h4>📋 Personal Information</h4>
+                    <div className="kyc-field">
+                      <label>Full Name (as shown on ID) *</label>
                       <input 
-                        type="file" 
-                        accept="image/*"
-                        onChange={(e) => handlePhotoUpload(e, 'front')}
-                        style={{ display: 'none' }}
+                        type="text"
+                        className="kyc-input"
+                        value={kycFullName}
+                        onChange={(e) => setKycFullName(e.target.value)}
+                        placeholder="Enter your full legal name"
                       />
-                    </label>
-                    {kycFrontPreview && (
-                      <button 
-                        className="remove-photo-btn"
-                        onClick={() => { setKycFrontPhoto(null); setKycFrontPreview(''); }}
-                      >
-                        ✕ Remove
-                      </button>
-                    )}
+                    </div>
                   </div>
 
-                  {/* Back Photo Upload */}
-                  <div className="kyc-upload-box">
-                    <label className="kyc-upload-label">
-                      <span className="upload-title">Back Side *</span>
-                      <div className={`upload-area ${kycBackPreview ? 'has-image' : ''}`}>
-                        {kycBackPreview ? (
-                          <img src={kycBackPreview} alt="Back of document" className="upload-preview" />
-                        ) : (
-                          <>
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                              <circle cx="8.5" cy="8.5" r="1.5" />
-                              <polyline points="21 15 16 10 5 21" />
-                            </svg>
-                            <p>Click to upload back</p>
-                            <span>JPG, PNG (Max 10MB)</span>
-                          </>
+                  <div className="kyc-form-section">
+                    <h4>📄 Document Information</h4>
+                    <div className="kyc-field">
+                      <label>Document Type *</label>
+                      <select 
+                        className="kyc-select"
+                        value={kycDocType}
+                        onChange={(e) => setKycDocType(e.target.value)}
+                      >
+                        <option value="">Select document type</option>
+                        {documentTypes.map((doc) => (
+                          <option key={doc.value} value={doc.value}>{doc.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="kyc-field">
+                      <label>Document ID Number *</label>
+                      <input 
+                        type="text"
+                        className="kyc-input"
+                        value={kycDocNumber}
+                        onChange={(e) => setKycDocNumber(e.target.value)}
+                        placeholder="Enter your document ID number"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="kyc-form-section">
+                    <h4>📸 Document Photos</h4>
+                    <div className="kyc-upload-grid">
+                      <div className="kyc-upload-box">
+                        <label className="kyc-upload-label">
+                          <span className="upload-title">Front Side *</span>
+                          <div className={`upload-area ${kycFrontPreview ? 'has-image' : ''}`}>
+                            {kycFrontPreview ? (
+                              <img src={kycFrontPreview} alt="Front of document" className="upload-preview" />
+                            ) : (
+                              <>
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                  <circle cx="8.5" cy="8.5" r="1.5" />
+                                  <polyline points="21 15 16 10 5 21" />
+                                </svg>
+                                <p>Click to upload front</p>
+                              </>
+                            )}
+                          </div>
+                          <input type="file" accept="image/*" onChange={(e) => handlePhotoUpload(e, 'front')} style={{ display: 'none' }} />
+                        </label>
+                        {kycFrontPreview && <button className="remove-photo-btn" onClick={() => { setKycFrontPhoto(null); setKycFrontPreview(''); }}>✕ Remove</button>}
+                      </div>
+                      <div className="kyc-upload-box">
+                        <label className="kyc-upload-label">
+                          <span className="upload-title">Back Side *</span>
+                          <div className={`upload-area ${kycBackPreview ? 'has-image' : ''}`}>
+                            {kycBackPreview ? (
+                              <img src={kycBackPreview} alt="Back of document" className="upload-preview" />
+                            ) : (
+                              <>
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                  <circle cx="8.5" cy="8.5" r="1.5" />
+                                  <polyline points="21 15 16 10 5 21" />
+                                </svg>
+                                <p>Click to upload back</p>
+                              </>
+                            )}
+                          </div>
+                          <input type="file" accept="image/*" onChange={(e) => handlePhotoUpload(e, 'back')} style={{ display: 'none' }} />
+                        </label>
+                        {kycBackPreview && <button className="remove-photo-btn" onClick={() => { setKycBackPhoto(null); setKycBackPreview(''); }}>✕ Remove</button>}
+                      </div>
+                    </div>
+                  </div>
+
+                  <button className="kyc-submit-btn" onClick={handleKycSubmit}>
+                    📝 Update Submission
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <p className="kyc-intro">Complete KYC verification to unlock all features including higher withdrawal limits, bonus rewards, and premium features.</p>
+
+                  {/* Personal Information Section */}
+                  <div className="kyc-form-section">
+                    <h4>📋 Personal Information</h4>
+                    
+                    <div className="kyc-field">
+                      <label>Full Name (as shown on ID) *</label>
+                      <input 
+                        type="text"
+                        className="kyc-input"
+                        value={kycFullName}
+                        onChange={(e) => setKycFullName(e.target.value)}
+                        placeholder="Enter your full legal name"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Document Information Section */}
+                  <div className="kyc-form-section">
+                    <h4>📄 Document Information</h4>
+                    
+                    <div className="kyc-field">
+                      <label>Document Type *</label>
+                      <select 
+                        className="kyc-select"
+                        value={kycDocType}
+                        onChange={(e) => setKycDocType(e.target.value)}
+                      >
+                        <option value="">Select document type</option>
+                        {documentTypes.map((doc) => (
+                          <option key={doc.value} value={doc.value}>{doc.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="kyc-field">
+                      <label>Document ID Number *</label>
+                      <input 
+                        type="text"
+                        className="kyc-input"
+                        value={kycDocNumber}
+                        onChange={(e) => setKycDocNumber(e.target.value)}
+                        placeholder="Enter your document ID number"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Document Upload Section */}
+                  <div className="kyc-form-section">
+                    <h4>📸 Document Photos</h4>
+                    <p className="kyc-upload-hint">Please upload clear photos of your document. Make sure all details are visible.</p>
+                    
+                    <div className="kyc-upload-grid">
+                      {/* Front Photo Upload */}
+                      <div className="kyc-upload-box">
+                        <label className="kyc-upload-label">
+                          <span className="upload-title">Front Side *</span>
+                          <div className={`upload-area ${kycFrontPreview ? 'has-image' : ''}`}>
+                            {kycFrontPreview ? (
+                              <img src={kycFrontPreview} alt="Front of document" className="upload-preview" />
+                            ) : (
+                              <>
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                  <circle cx="8.5" cy="8.5" r="1.5" />
+                                  <polyline points="21 15 16 10 5 21" />
+                                </svg>
+                                <p>Click to upload front</p>
+                                <span>JPG, PNG (Max 10MB)</span>
+                              </>
+                            )}
+                          </div>
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={(e) => handlePhotoUpload(e, 'front')}
+                            style={{ display: 'none' }}
+                          />
+                        </label>
+                        {kycFrontPreview && (
+                          <button 
+                            className="remove-photo-btn"
+                            onClick={() => { setKycFrontPhoto(null); setKycFrontPreview(''); }}
+                          >
+                            ✕ Remove
+                          </button>
                         )}
                       </div>
-                      <input 
-                        type="file" 
-                        accept="image/*"
-                        onChange={(e) => handlePhotoUpload(e, 'back')}
-                        style={{ display: 'none' }}
-                      />
-                    </label>
-                    {kycBackPreview && (
-                      <button 
-                        className="remove-photo-btn"
-                        onClick={() => { setKycBackPhoto(null); setKycBackPreview(''); }}
-                      >
-                        ✕ Remove
-                      </button>
-                    )}
+
+                      {/* Back Photo Upload */}
+                      <div className="kyc-upload-box">
+                        <label className="kyc-upload-label">
+                          <span className="upload-title">Back Side *</span>
+                          <div className={`upload-area ${kycBackPreview ? 'has-image' : ''}`}>
+                            {kycBackPreview ? (
+                              <img src={kycBackPreview} alt="Back of document" className="upload-preview" />
+                            ) : (
+                              <>
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                                  <circle cx="8.5" cy="8.5" r="1.5" />
+                                  <polyline points="21 15 16 10 5 21" />
+                                </svg>
+                                <p>Click to upload back</p>
+                                <span>JPG, PNG (Max 10MB)</span>
+                              </>
+                            )}
+                          </div>
+                          <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={(e) => handlePhotoUpload(e, 'back')}
+                            style={{ display: 'none' }}
+                          />
+                        </label>
+                        {kycBackPreview && (
+                          <button 
+                            className="remove-photo-btn"
+                            onClick={() => { setKycBackPhoto(null); setKycBackPreview(''); }}
+                          >
+                            ✕ Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Terms Agreement */}
-              <div className="kyc-terms">
-                <p>By submitting, you confirm that the information provided is accurate and the documents are genuine.</p>
-              </div>
+                  {/* Terms Agreement */}
+                  <div className="kyc-terms">
+                    <p>By submitting, you confirm that the information provided is accurate and the documents are genuine.</p>
+                  </div>
 
-              <button className="kyc-submit-btn" onClick={handleKycSubmit}>
-                ✓ Submit for Verification
-              </button>
+                  <button className="kyc-submit-btn" onClick={handleKycSubmit}>
+                    ✓ Submit for Verification
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
       )}
 
+      {/* Upload Deposit Proof Modal */}
+      {activeModal === 'upload' && (
+        <div className="sidebar-modal-overlay" onClick={closeModal}>
+          <div className="sidebar-modal large" onClick={(e) => e.stopPropagation()}>
+            <div className="sidebar-modal-header">
+              <h2>📤 Upload Deposit Proof</h2>
+              <button onClick={closeModal} className="modal-close-btn">×</button>
+            </div>
+            <div className="sidebar-modal-content">
+              <p className="upload-intro">Upload a screenshot of your successful crypto transfer. Once verified by admin, points will be added to your account.</p>
 
+              <div className="upload-form-section">
+                <h4>💰 Deposit Details</h4>
+                
+                <div className="upload-field">
+                  <label>Deposit Amount (USDT) *</label>
+                  <input 
+                    type="number"
+                    className="upload-input"
+                    value={uploadAmount}
+                    onChange={(e) => setUploadAmount(e.target.value)}
+                    placeholder="Enter the amount you deposited"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+
+                <div className="upload-field">
+                  <label>Network Used *</label>
+                  <select 
+                    className="upload-select"
+                    value={uploadNetwork}
+                    onChange={(e) => setUploadNetwork(e.target.value)}
+                  >
+                    <option value="">Select network</option>
+                    {networkOptions.map((net) => (
+                      <option key={net.value} value={net.value}>{net.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="upload-field">
+                  <label>Transaction Hash (Optional)</label>
+                  <input 
+                    type="text"
+                    className="upload-input"
+                    value={uploadTxHash}
+                    onChange={(e) => setUploadTxHash(e.target.value)}
+                    placeholder="Enter transaction hash for faster verification"
+                  />
+                </div>
+              </div>
+
+              <div className="upload-form-section">
+                <h4>📸 Transfer Screenshot *</h4>
+                <p className="upload-hint">Please upload a clear screenshot showing the successful transfer with amount and transaction details visible.</p>
+                
+                <div className="upload-screenshot-box">
+                  <label className="upload-screenshot-label">
+                    <div className={`upload-area ${uploadScreenshotPreview ? 'has-image' : ''}`}>
+                      {uploadScreenshotPreview ? (
+                        <img src={uploadScreenshotPreview} alt="Transfer screenshot" className="upload-preview" />
+                      ) : (
+                        <>
+                          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                          </svg>
+                          <p>Click to upload screenshot</p>
+                          <span>JPG, PNG (Max 10MB)</span>
+                        </>
+                      )}
+                    </div>
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleScreenshotUpload}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                  {uploadScreenshotPreview && (
+                    <button 
+                      className="remove-photo-btn"
+                      onClick={() => { setUploadScreenshot(null); setUploadScreenshotPreview(''); }}
+                    >
+                      ✕ Remove
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <button className="upload-submit-btn" onClick={handleUploadSubmit}>
+                📤 Submit Deposit Proof
+              </button>
+
+              {/* Upload History */}
+              {uploadHistory.length > 0 && (
+                <div className="upload-history-section">
+                  <h4>📋 Your Upload History</h4>
+                  <div className="upload-history-list">
+                    {uploadHistory.map((upload) => (
+                      <div key={upload.id} className="upload-history-item">
+                        <div className="upload-history-info">
+                          <span className="upload-amount">${upload.amount} USDT</span>
+                          <span className="upload-network">{networkOptions.find(n => n.value === upload.network)?.label || upload.network}</span>
+                        </div>
+                        <div className="upload-history-status">
+                          <span className={`upload-status-badge ${upload.status}`}>
+                            {upload.status === 'approved' ? '✓ Approved' : 
+                             upload.status === 'rejected' ? '✕ Rejected' : '⏳ Pending'}
+                          </span>
+                          <span className="upload-date">{new Date(upload.submittedAt).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* About Us Modal */}
       {activeModal === 'about' && (
