@@ -7,6 +7,7 @@ import {
   saveChatMessage,
   isFirebaseEnabled 
 } from '../lib/firebase.js'
+import { userAPI, uploadAPI, authAPI } from '../lib/api.js'
 
 // Lazy localStorage helper to avoid blocking initial render
 const getFromStorage = (key, defaultValue) => {
@@ -224,12 +225,57 @@ export default function MasterAdminDashboard() {
   }), [])
 
   // Load all data after authentication - single batch load
-  const loadAllData = useCallback(() => {
-    // Use requestAnimationFrame to not block UI
-    requestAnimationFrame(() => {
+  const loadAllData = useCallback(async () => {
+    // Fetch users from backend database
+    try {
+      const backendUsers = await userAPI.getAll()
+      if (Array.isArray(backendUsers) && backendUsers.length > 0) {
+        setUsers(backendUsers)
+        console.log('Loaded users from backend:', backendUsers.length)
+      } else {
+        // Fallback to localStorage if backend returns empty
+        setUsers(getFromStorage('registeredUsers', []))
+      }
+    } catch (error) {
+      console.error('Failed to load users from backend:', error)
       setUsers(getFromStorage('registeredUsers', []))
-      setUserAgents(getFromStorage('userAgents', defaultData.userAgents))
+    }
+
+    // Fetch pending uploads from backend
+    try {
+      const backendUploads = await uploadAPI.getAll()
+      if (Array.isArray(backendUploads)) {
+        setPendingDeposits(backendUploads.filter(u => u.status === 'pending'))
+        setDeposits(backendUploads)
+        console.log('Loaded uploads from backend:', backendUploads.length)
+      }
+    } catch (error) {
+      console.error('Failed to load uploads from backend:', error)
       setDeposits(getFromStorage('adminDeposits', []))
+    }
+
+    // Fetch admin accounts from backend
+    try {
+      const adminsResponse = await authAPI.getAdmins()
+      if (adminsResponse.success && Array.isArray(adminsResponse.admins)) {
+        // Merge with master account
+        const masterAdmin = { id: 1, username: 'master', email: 'master@onchainweb.com', role: 'super_admin', permissions: ['all'], status: 'active' }
+        setAdminRoles([masterAdmin, ...adminsResponse.admins.map(a => ({
+          ...a,
+          role: 'admin',
+          status: 'active'
+        }))])
+        console.log('Loaded admins from backend:', adminsResponse.admins.length)
+      }
+    } catch (error) {
+      console.error('Failed to load admins from backend:', error)
+      const loadedAdminRoles = getFromStorage('adminRoles', defaultData.adminRoles)
+      setAdminRoles(loadedAdminRoles)
+    }
+
+    // Use requestAnimationFrame to not block UI for localStorage items
+    requestAnimationFrame(() => {
+      setUserAgents(getFromStorage('userAgents', defaultData.userAgents))
       setWithdrawals(getFromStorage('adminWithdrawals', []))
       setTradeHistory(getFromStorage('tradeHistory', []))
       setStakingPlans(getFromStorage('stakingPlans', defaultData.stakingPlans))
@@ -244,27 +290,11 @@ export default function MasterAdminDashboard() {
       setUserActivityLogs(getFromStorage('userActivityLogs', defaultData.userActivityLogs))
       setAdminAuditLogs(getFromStorage('adminAuditLogs', defaultData.adminAuditLogs))
 
-      // Load admin roles and migrate old roles to 'admin'
-      const loadedAdminRoles = getFromStorage('adminRoles', defaultData.adminRoles)
-      const migratedRoles = loadedAdminRoles.map(admin => {
-        // Migrate old roles to 'admin'
-        if (admin.role && !['admin', 'master', 'super_admin'].includes(admin.role)) {
-          return { ...admin, role: 'admin' }
-        }
-        return admin
-      })
-      // Save migrated roles if any changes
-      if (JSON.stringify(loadedAdminRoles) !== JSON.stringify(migratedRoles)) {
-        localStorage.setItem('adminRoles', JSON.stringify(migratedRoles))
-      }
-      setAdminRoles(migratedRoles)
-
       setSiteSettings(getFromStorage('siteSettings', defaultData.siteSettings))
       setTradeOptions(getFromStorage('tradeOptions', defaultData.tradeOptions))
       setActiveTrades(getFromStorage('activeTrades', []))
-      // VIP Requests and Pending Deposits from WalletActions
+      // VIP Requests
       setVipRequests(getFromStorage('adminVIPRequests', []))
-      setPendingDeposits(getFromStorage('adminPendingDeposits', []))
       setIsDataLoaded(true)
     })
   }, [defaultData])
@@ -468,74 +498,49 @@ export default function MasterAdminDashboard() {
     }
   }, [tradingLevels, isDataLoaded])
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
-    // Master credentials
-    if (loginData.username === 'master' && loginData.password === 'OnchainWeb2025!') {
-      setIsAuthenticated(true)
-      setIsDataLoaded(false) // Reset to trigger data load
-      setLoginError('')
-      localStorage.setItem('masterAdminSession', JSON.stringify({
-        username: loginData.username,
-        role: 'master',
-        timestamp: Date.now()
-      }))
-      setIsMasterAccount(true)
+    setLoginError('')
+    
+    try {
+      // Call backend API for authentication
+      const response = await authAPI.login(loginData.username, loginData.password)
+      
+      if (response.success && response.token) {
+        // Store JWT token for API calls
+        localStorage.setItem('adminToken', response.token)
+        localStorage.setItem('masterAdminSession', JSON.stringify({
+          username: response.user.username,
+          role: response.user.role,
+          permissions: response.user.permissions,
+          timestamp: Date.now()
+        }))
+        
+        setIsAuthenticated(true)
+        setIsDataLoaded(false) // Reset to trigger data load
+        setIsMasterAccount(response.user.role === 'master')
+        console.log('Login successful via backend:', response.user.username)
+        return
+      }
+    } catch (error) {
+      console.error('Backend login failed:', error)
+      // Fallback to hardcoded master credentials if backend fails
+      if (loginData.username === 'master' && loginData.password === 'OnchainWeb2025!') {
+        setIsAuthenticated(true)
+        setIsDataLoaded(false)
+        localStorage.setItem('masterAdminSession', JSON.stringify({
+          username: loginData.username,
+          role: 'master',
+          timestamp: Date.now()
+        }))
+        setIsMasterAccount(true)
+        console.log('Login successful via fallback master credentials')
+        return
+      }
+      setLoginError(error.message || 'Invalid credentials')
       return
     }
 
-    // Check admin accounts from localStorage directly (not state, which may not be loaded yet)
-    const savedAdminRoles = JSON.parse(localStorage.getItem('adminRoles') || '[]')
-    console.log('Login attempt:', loginData.username)
-    console.log('Stored admins:', savedAdminRoles.map(a => ({
-      username: a.username,
-      email: a.email,
-      status: a.status,
-      hasPassword: !!a.password,
-      passwordLength: a.password?.length
-    })))
-
-    const adminUser = savedAdminRoles.find(admin => {
-      // Case-insensitive username/email match
-      const usernameMatch = admin.username?.toLowerCase() === loginData.username?.toLowerCase()
-      const emailMatch = admin.email?.toLowerCase() === loginData.username?.toLowerCase()
-      const passwordMatch = admin.password === loginData.password
-      const isActive = admin.status === 'active'
-
-      console.log(`Checking ${admin.username}:`, {
-        usernameMatch,
-        emailMatch,
-        passwordMatch,
-        isActive,
-        enteredPassword: loginData.password,
-        storedPassword: admin.password?.substring(0, 3) + '***'
-      })
-
-      return (usernameMatch || emailMatch) && passwordMatch && isActive
-    })
-
-    if (adminUser) {
-      console.log('Login successful for:', adminUser.username)
-      setIsAuthenticated(true)
-      setIsDataLoaded(false)
-      setLoginError('')
-      // Update last login time
-      const updatedAdmins = savedAdminRoles.map(admin =>
-        admin.id === adminUser.id
-          ? { ...admin, lastLogin: new Date().toISOString() }
-          : admin
-      )
-      localStorage.setItem('adminRoles', JSON.stringify(updatedAdmins))
-      localStorage.setItem('masterAdminSession', JSON.stringify({
-        username: adminUser.username,
-        role: adminUser.role,
-        permissions: adminUser.permissions,
-        timestamp: Date.now()
-      }))
-      return
-    }
-
-    console.log('Login failed - no matching admin found')
     setLoginError('Invalid credentials or account inactive')
   }
 
@@ -3672,53 +3677,55 @@ export default function MasterAdminDashboard() {
                 </div>
                 <button
                   className="add-admin-btn"
-                  onClick={() => {
+                  onClick={async () => {
                     if (newAdmin.username && newAdmin.email && newAdmin.password) {
                       if (newAdmin.permissions.length === 0) {
                         alert('Please select at least one permission for the admin')
                         return
                       }
-                      const passwordToSave = newAdmin.password.trim()
-                      const newAdminEntry = {
-                        id: Date.now(),
-                        username: newAdmin.username.trim(),
-                        email: newAdmin.email.trim().toLowerCase(),
-                        password: passwordToSave,
-                        role: 'admin',
-                        permissions: newAdmin.permissions,
-                        status: 'active',
-                        createdAt: new Date().toISOString(),
-                        lastLogin: null
+                      
+                      try {
+                        // Create admin in backend database
+                        const response = await authAPI.createAdmin({
+                          username: newAdmin.username.trim(),
+                          password: newAdmin.password.trim(),
+                          permissions: {
+                            manageUsers: newAdmin.permissions.includes('users'),
+                            manageBalances: newAdmin.permissions.includes('balances'),
+                            manageKYC: newAdmin.permissions.includes('kyc'),
+                            manageTrades: newAdmin.permissions.includes('live_trades'),
+                            viewReports: newAdmin.permissions.includes('dashboard'),
+                            createAdmins: false
+                          }
+                        })
+                        
+                        if (response.success) {
+                          const newAdminEntry = {
+                            _id: response.admin._id,
+                            username: response.admin.username,
+                            email: newAdmin.email.trim().toLowerCase(),
+                            role: 'admin',
+                            permissions: newAdmin.permissions,
+                            status: 'active',
+                            createdAt: response.admin.createdAt
+                          }
+                          setAdminRoles(prev => [...prev, newAdminEntry])
+                          
+                          const savedPassword = newAdmin.password
+                          setNewAdmin({
+                            username: '',
+                            email: '',
+                            password: '',
+                            role: 'admin',
+                            permissions: []
+                          })
+                          
+                          alert(`✅ Admin account created successfully!\n\n📝 Login Credentials:\n━━━━━━━━━━━━━━━━━━━━\nUsername: ${newAdminEntry.username}\nEmail: ${newAdminEntry.email}\nPassword: ${savedPassword}\n━━━━━━━━━━━━━━━━━━━━\n\n✅ Account saved to database - can login from any browser!`)
+                        }
+                      } catch (error) {
+                        console.error('Failed to create admin:', error)
+                        alert(`❌ Failed to create admin: ${error.message}`)
                       }
-                      const updatedAdmins = [...adminRoles, newAdminEntry]
-                      setAdminRoles(updatedAdmins)
-                      // Save immediately to localStorage
-                      localStorage.setItem('adminRoles', JSON.stringify(updatedAdmins))
-
-                      // Verify it was saved
-                      const verification = JSON.parse(localStorage.getItem('adminRoles') || '[]')
-                      const savedAdmin = verification.find(a => a.username === newAdminEntry.username)
-                      console.log('Admin saved verification:', savedAdmin ? 'SUCCESS' : 'FAILED', savedAdmin)
-
-                      const savedPassword = newAdmin.password
-                      setNewAdmin({
-                        username: '',
-                        email: '',
-                        password: '',
-                        role: 'admin',
-                        permissions: []
-                      })
-                      // Log admin action
-                      setAdminAuditLogs(prev => [...prev, {
-                        id: Date.now(),
-                        adminId: 'master',
-                        adminName: 'Master Admin',
-                        action: 'admin_create',
-                        details: `Created new admin: ${newAdminEntry.username} with permissions: ${newAdminEntry.permissions.join(', ')}`,
-                        ip: '192.168.1.1',
-                        timestamp: new Date().toISOString()
-                      }])
-                      alert(`✅ Admin account created successfully!\n\n📝 Login Credentials:\n━━━━━━━━━━━━━━━━━━━━\nUsername: ${newAdminEntry.username}\nEmail: ${newAdminEntry.email}\nPassword: ${savedPassword}\n━━━━━━━━━━━━━━━━━━━━\n\nYou can now logout and login with these credentials.`)
                     } else {
                       alert('Please fill in username, email, and password')
                     }

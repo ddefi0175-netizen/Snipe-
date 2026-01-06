@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
+const Admin = require('../models/Admin');
 
 // JWT Secret (use environment variable in production)
 const JWT_SECRET = process.env.JWT_SECRET || 'snipe-jwt-secret-2025-change-in-production';
@@ -11,18 +11,6 @@ const JWT_EXPIRES = '24h';
 // Master credentials from environment variables
 const MASTER_USERNAME = process.env.MASTER_USERNAME || 'master';
 const MASTER_PASSWORD = process.env.MASTER_PASSWORD || 'OnchainWeb2025!';
-
-// Admin accounts stored in memory (in production, use database)
-let adminAccounts = [];
-
-// Load admin accounts from environment if available
-if (process.env.ADMIN_ACCOUNTS) {
-  try {
-    adminAccounts = JSON.parse(process.env.ADMIN_ACCOUNTS);
-  } catch (e) {
-    console.error('Failed to parse ADMIN_ACCOUNTS:', e);
-  }
-}
 
 // Middleware to verify JWT token
 const verifyToken = (req, res, next) => {
@@ -105,13 +93,18 @@ router.post('/login', async (req, res) => {
       });
     }
     
-    // Check admin accounts
-    const admin = adminAccounts.find(a => a.username === username && a.password === password);
-    if (admin) {
+    // Check admin accounts in MongoDB
+    const admin = await Admin.findOne({ username });
+    if (admin && admin.password === password) {
+      // Update last login
+      admin.lastLogin = new Date();
+      await admin.save();
+      
       const token = jwt.sign(
         { 
           username: admin.username, 
           role: 'admin',
+          adminId: admin._id,
           permissions: admin.permissions || {
             manageUsers: true,
             manageBalances: true,
@@ -131,6 +124,7 @@ router.post('/login', async (req, res) => {
         user: {
           username: admin.username,
           role: 'admin',
+          adminId: admin._id,
           permissions: admin.permissions
         }
       });
@@ -190,12 +184,13 @@ router.post('/admin', verifyToken, requireMaster, async (req, res) => {
       return res.status(400).json({ error: 'Username and password required' });
     }
     
-    // Check if admin already exists
-    if (adminAccounts.find(a => a.username === username)) {
+    // Check if admin already exists in MongoDB
+    const existing = await Admin.findOne({ username });
+    if (existing) {
       return res.status(400).json({ error: 'Admin username already exists' });
     }
     
-    const newAdmin = {
+    const newAdmin = new Admin({
       username,
       password,
       permissions: permissions || {
@@ -206,14 +201,15 @@ router.post('/admin', verifyToken, requireMaster, async (req, res) => {
         viewReports: true,
         createAdmins: false
       },
-      createdAt: new Date().toISOString()
-    };
+      createdBy: req.user.username
+    });
     
-    adminAccounts.push(newAdmin);
+    await newAdmin.save();
     
     res.json({
       success: true,
       admin: {
+        _id: newAdmin._id,
         username: newAdmin.username,
         permissions: newAdmin.permissions,
         createdAt: newAdmin.createdAt
@@ -227,32 +223,73 @@ router.post('/admin', verifyToken, requireMaster, async (req, res) => {
 });
 
 // GET /api/auth/admins - List all admin accounts (master only)
-router.get('/admins', verifyToken, requireMaster, (req, res) => {
-  res.json({
-    success: true,
-    admins: adminAccounts.map(a => ({
-      username: a.username,
-      permissions: a.permissions,
-      createdAt: a.createdAt
-    }))
-  });
+router.get('/admins', verifyToken, requireMaster, async (req, res) => {
+  try {
+    const admins = await Admin.find().sort({ createdAt: -1 });
+    res.json({
+      success: true,
+      admins: admins.map(a => ({
+        _id: a._id,
+        username: a.username,
+        permissions: a.permissions,
+        assignedUsers: a.assignedUsers,
+        lastLogin: a.lastLogin,
+        createdAt: a.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('Get admins error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 // DELETE /api/auth/admin/:username - Delete admin account (master only)
-router.delete('/admin/:username', verifyToken, requireMaster, (req, res) => {
-  const { username } = req.params;
-  
-  const index = adminAccounts.findIndex(a => a.username === username);
-  if (index === -1) {
-    return res.status(404).json({ error: 'Admin not found' });
+router.delete('/admin/:username', verifyToken, requireMaster, async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    const admin = await Admin.findOneAndDelete({ username });
+    if (!admin) {
+      return res.status(404).json({ error: 'Admin not found' });
+    }
+    
+    res.json({
+      success: true,
+      message: `Admin ${username} deleted`
+    });
+  } catch (error) {
+    console.error('Delete admin error:', error);
+    res.status(500).json({ error: 'Server error' });
   }
-  
-  adminAccounts.splice(index, 1);
-  
-  res.json({
-    success: true,
-    message: `Admin ${username} deleted`
-  });
+});
+
+// PATCH /api/auth/admin/:id/assign - Assign users to admin (master only)
+router.patch('/admin/:id/assign', verifyToken, requireMaster, async (req, res) => {
+  try {
+    const { userIds } = req.body;
+    
+    const admin = await Admin.findByIdAndUpdate(
+      req.params.id,
+      { assignedUsers: userIds },
+      { new: true }
+    );
+    
+    if (!admin) {
+      return res.status(404).json({ error: 'Admin not found' });
+    }
+    
+    res.json({
+      success: true,
+      admin: {
+        _id: admin._id,
+        username: admin.username,
+        assignedUsers: admin.assignedUsers
+      }
+    });
+  } catch (error) {
+    console.error('Assign users error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 // Export router and middleware
