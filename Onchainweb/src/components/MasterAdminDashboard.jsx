@@ -7,7 +7,7 @@ import {
   saveChatMessage,
   isFirebaseEnabled 
 } from '../lib/firebase.js'
-import { userAPI, uploadAPI, authAPI, tradeAPI } from '../lib/api.js'
+import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI } from '../lib/api.js'
 
 // Lazy localStorage helper to avoid blocking initial render
 const getFromStorage = (key, defaultValue) => {
@@ -237,48 +237,51 @@ export default function MasterAdminDashboard() {
   const loadAllData = useCallback(async () => {
     console.log('Loading all data...')
     
+    // Helper for timeout-protected API calls
+    const withTimeout = (promise, ms = 10000) => {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
+      ])
+    }
+    
+    // Fetch users from backend database
     try {
-      // Fetch users from backend database
-      try {
-        const backendUsers = await userAPI.getAll()
-        if (Array.isArray(backendUsers) && backendUsers.length > 0) {
-          setUsers(backendUsers)
-          console.log('Loaded users from backend:', backendUsers.length)
-        } else {
-          // Fallback to localStorage if backend returns empty
-          setUsers(getFromStorage('registeredUsers', []))
-          console.log('No users in backend, using localStorage')
-        }
-      } catch (error) {
-        console.error('Failed to load users from backend:', error)
+      const backendUsers = await withTimeout(userAPI.getAll())
+      if (Array.isArray(backendUsers) && backendUsers.length > 0) {
+        setUsers(backendUsers)
+        console.log('Loaded users from backend:', backendUsers.length)
+      } else {
         setUsers(getFromStorage('registeredUsers', []))
+        console.log('No users in backend, using localStorage')
       }
+    } catch (error) {
+      console.error('Failed to load users from backend:', error.message)
+      setUsers(getFromStorage('registeredUsers', []))
+    }
 
     // Fetch pending uploads from backend
     try {
-      const backendUploads = await uploadAPI.getAll()
+      const backendUploads = await withTimeout(uploadAPI.getAll())
       if (Array.isArray(backendUploads)) {
         setPendingDeposits(backendUploads.filter(u => u.status === 'pending'))
         setDeposits(backendUploads)
         console.log('Loaded uploads from backend:', backendUploads.length)
       }
     } catch (error) {
-      console.error('Failed to load uploads from backend:', error)
+      console.error('Failed to load uploads from backend:', error.message)
       setDeposits(getFromStorage('adminDeposits', []))
       setPendingDeposits([])
     }
 
-    // Fetch admin accounts from backend (may fail if no token yet, that's ok)
+    // Fetch admin accounts from backend
     try {
-      const adminsResponse = await authAPI.getAdmins()
+      const adminsResponse = await withTimeout(authAPI.getAdmins())
       if (adminsResponse && adminsResponse.success && Array.isArray(adminsResponse.admins)) {
-        // Merge with master account
         const masterAdmin = { id: 1, username: 'master', email: 'master@onchainweb.com', role: 'super_admin', permissions: ['all'], status: 'active' }
-        // Convert permissions object to array for UI compatibility
         const processedAdmins = adminsResponse.admins.map(a => {
           let permArray = []
           if (a.permissions && typeof a.permissions === 'object' && !Array.isArray(a.permissions)) {
-            // Convert object {manageUsers: true, manageKYC: true} to array ['users', 'kyc']
             if (a.permissions.manageUsers) permArray.push('users')
             if (a.permissions.manageBalances) permArray.push('balances')
             if (a.permissions.manageKYC) permArray.push('kyc')
@@ -288,60 +291,48 @@ export default function MasterAdminDashboard() {
           } else if (Array.isArray(a.permissions)) {
             permArray = a.permissions
           }
-          return {
-            ...a,
-            role: 'admin',
-            status: 'active',
-            permissions: permArray
-          }
+          return { ...a, role: 'admin', status: 'active', permissions: permArray }
         })
         setAdminRoles([masterAdmin, ...processedAdmins])
         console.log('Loaded admins from backend:', adminsResponse.admins.length)
       } else {
-        // Use default admin roles
-        const loadedAdminRoles = getFromStorage('adminRoles', defaultData.adminRoles)
-        setAdminRoles(loadedAdminRoles)
+        setAdminRoles(getFromStorage('adminRoles', defaultData.adminRoles))
       }
     } catch (error) {
-      console.error('Failed to load admins from backend:', error)
-      const loadedAdminRoles = getFromStorage('adminRoles', defaultData.adminRoles)
-      setAdminRoles(loadedAdminRoles)
+      console.error('Failed to load admins from backend:', error.message)
+      setAdminRoles(getFromStorage('adminRoles', defaultData.adminRoles))
     }
 
     // Fetch trades from backend
     try {
-      const backendTrades = await tradeAPI.getAll()
+      const backendTrades = await withTimeout(tradeAPI.getAll())
       if (Array.isArray(backendTrades) && backendTrades.length > 0) {
-        // Separate active trades from history
         const active = backendTrades.filter(t => t.status === 'active' || t.status === 'pending')
         const history = backendTrades.filter(t => t.status !== 'active' && t.status !== 'pending')
         setActiveTrades(active)
         setTradeHistory(history)
-        console.log('Loaded trades from backend:', backendTrades.length, 'active:', active.length)
+        console.log('Loaded trades from backend:', backendTrades.length)
       } else {
-        // Fallback to localStorage
         setActiveTrades(getFromStorage('activeTrades', []))
         setTradeHistory(getFromStorage('tradeHistory', []))
       }
     } catch (error) {
-      console.error('Failed to load trades from backend:', error)
+      console.error('Failed to load trades from backend:', error.message)
       setActiveTrades(getFromStorage('activeTrades', []))
       setTradeHistory(getFromStorage('tradeHistory', []))
     }
 
     // Fetch staking from backend
     try {
-      const { stakingAPI } = await import('../lib/api.js')
-      const backendStakes = await stakingAPI.getAll()
-      if (Array.isArray(backendStakes) && backendStakes.length > 0) {
-        // Map to staking data format
+      const backendStakes = await withTimeout(stakingAPI.getAll())
+      if (Array.isArray(backendStakes)) {
         console.log('Loaded stakes from backend:', backendStakes.length)
       }
     } catch (error) {
-      console.error('Failed to load staking from backend:', error)
+      console.error('Failed to load staking from backend:', error.message)
     }
 
-    // Load other config items from localStorage (these are config settings, not user data)
+    // Load config items from localStorage (these are settings, not user data)
     setUserAgents(getFromStorage('userAgents', defaultData.userAgents))
     setWithdrawals(getFromStorage('adminWithdrawals', []))
     setStakingPlans(getFromStorage('stakingPlans', defaultData.stakingPlans))
@@ -359,13 +350,9 @@ export default function MasterAdminDashboard() {
     setTradeOptions(getFromStorage('tradeOptions', defaultData.tradeOptions))
     setVipRequests(getFromStorage('adminVIPRequests', []))
     
-    } catch (outerError) {
-      console.error('Error in loadAllData:', outerError)
-    } finally {
-      // ALWAYS mark data as loaded, even if there are errors
-      console.log('Data loading complete')
-      setIsDataLoaded(true)
-    }
+    // ALWAYS mark data as loaded
+    console.log('Data loading complete')
+    setIsDataLoaded(true)
   }, [defaultData])
 
   // Refresh active trades in real-time from backend
