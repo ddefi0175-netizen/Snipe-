@@ -226,20 +226,24 @@ export default function MasterAdminDashboard() {
 
   // Load all data after authentication - single batch load
   const loadAllData = useCallback(async () => {
-    // Fetch users from backend database
+    console.log('Loading all data...')
+    
     try {
-      const backendUsers = await userAPI.getAll()
-      if (Array.isArray(backendUsers) && backendUsers.length > 0) {
-        setUsers(backendUsers)
-        console.log('Loaded users from backend:', backendUsers.length)
-      } else {
-        // Fallback to localStorage if backend returns empty
+      // Fetch users from backend database
+      try {
+        const backendUsers = await userAPI.getAll()
+        if (Array.isArray(backendUsers) && backendUsers.length > 0) {
+          setUsers(backendUsers)
+          console.log('Loaded users from backend:', backendUsers.length)
+        } else {
+          // Fallback to localStorage if backend returns empty
+          setUsers(getFromStorage('registeredUsers', []))
+          console.log('No users in backend, using localStorage')
+        }
+      } catch (error) {
+        console.error('Failed to load users from backend:', error)
         setUsers(getFromStorage('registeredUsers', []))
       }
-    } catch (error) {
-      console.error('Failed to load users from backend:', error)
-      setUsers(getFromStorage('registeredUsers', []))
-    }
 
     // Fetch pending uploads from backend
     try {
@@ -252,12 +256,13 @@ export default function MasterAdminDashboard() {
     } catch (error) {
       console.error('Failed to load uploads from backend:', error)
       setDeposits(getFromStorage('adminDeposits', []))
+      setPendingDeposits([])
     }
 
-    // Fetch admin accounts from backend
+    // Fetch admin accounts from backend (may fail if no token yet, that's ok)
     try {
       const adminsResponse = await authAPI.getAdmins()
-      if (adminsResponse.success && Array.isArray(adminsResponse.admins)) {
+      if (adminsResponse && adminsResponse.success && Array.isArray(adminsResponse.admins)) {
         // Merge with master account
         const masterAdmin = { id: 1, username: 'master', email: 'master@onchainweb.com', role: 'super_admin', permissions: ['all'], status: 'active' }
         setAdminRoles([masterAdmin, ...adminsResponse.admins.map(a => ({
@@ -266,6 +271,10 @@ export default function MasterAdminDashboard() {
           status: 'active'
         }))])
         console.log('Loaded admins from backend:', adminsResponse.admins.length)
+      } else {
+        // Use default admin roles
+        const loadedAdminRoles = getFromStorage('adminRoles', defaultData.adminRoles)
+        setAdminRoles(loadedAdminRoles)
       }
     } catch (error) {
       console.error('Failed to load admins from backend:', error)
@@ -273,30 +282,33 @@ export default function MasterAdminDashboard() {
       setAdminRoles(loadedAdminRoles)
     }
 
-    // Use requestAnimationFrame to not block UI for localStorage items
-    requestAnimationFrame(() => {
-      setUserAgents(getFromStorage('userAgents', defaultData.userAgents))
-      setWithdrawals(getFromStorage('adminWithdrawals', []))
-      setTradeHistory(getFromStorage('tradeHistory', []))
-      setStakingPlans(getFromStorage('stakingPlans', defaultData.stakingPlans))
-      setBonusPrograms(getFromStorage('bonusPrograms', defaultData.bonusPrograms))
-      setActiveChats(getFromStorage('activeChats', []))
-      setChatLogs(getFromStorage('customerChatLogs', []))
-      setCurrencies(getFromStorage('adminCurrencies', defaultData.currencies))
-      setNetworks(getFromStorage('adminNetworks', defaultData.networks))
-      setDepositWallets(getFromStorage('adminDepositWallets', defaultData.depositWallets))
-      setExchangeRates(getFromStorage('adminExchangeRates', defaultData.exchangeRates))
-      setTradingLevels(getFromStorage('adminTradingLevels', defaultData.tradingLevels))
-      setUserActivityLogs(getFromStorage('userActivityLogs', defaultData.userActivityLogs))
-      setAdminAuditLogs(getFromStorage('adminAuditLogs', defaultData.adminAuditLogs))
-
-      setSiteSettings(getFromStorage('siteSettings', defaultData.siteSettings))
-      setTradeOptions(getFromStorage('tradeOptions', defaultData.tradeOptions))
-      setActiveTrades(getFromStorage('activeTrades', []))
-      // VIP Requests
-      setVipRequests(getFromStorage('adminVIPRequests', []))
+    // Load localStorage items synchronously
+    setUserAgents(getFromStorage('userAgents', defaultData.userAgents))
+    setWithdrawals(getFromStorage('adminWithdrawals', []))
+    setTradeHistory(getFromStorage('tradeHistory', []))
+    setStakingPlans(getFromStorage('stakingPlans', defaultData.stakingPlans))
+    setBonusPrograms(getFromStorage('bonusPrograms', defaultData.bonusPrograms))
+    setActiveChats(getFromStorage('activeChats', []))
+    setChatLogs(getFromStorage('customerChatLogs', []))
+    setCurrencies(getFromStorage('adminCurrencies', defaultData.currencies))
+    setNetworks(getFromStorage('adminNetworks', defaultData.networks))
+    setDepositWallets(getFromStorage('adminDepositWallets', defaultData.depositWallets))
+    setExchangeRates(getFromStorage('adminExchangeRates', defaultData.exchangeRates))
+    setTradingLevels(getFromStorage('adminTradingLevels', defaultData.tradingLevels))
+    setUserActivityLogs(getFromStorage('userActivityLogs', defaultData.userActivityLogs))
+    setAdminAuditLogs(getFromStorage('adminAuditLogs', defaultData.adminAuditLogs))
+    setSiteSettings(getFromStorage('siteSettings', defaultData.siteSettings))
+    setTradeOptions(getFromStorage('tradeOptions', defaultData.tradeOptions))
+    setActiveTrades(getFromStorage('activeTrades', []))
+    setVipRequests(getFromStorage('adminVIPRequests', []))
+    
+    } catch (outerError) {
+      console.error('Error in loadAllData:', outerError)
+    } finally {
+      // ALWAYS mark data as loaded, even if there are errors
+      console.log('Data loading complete')
       setIsDataLoaded(true)
-    })
+    }
   }, [defaultData])
 
   // Refresh active trades in real-time
