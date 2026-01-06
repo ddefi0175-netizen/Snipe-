@@ -8,8 +8,9 @@
 ## Setup
 1. Install dependencies:
    ```bash
-   cd backend
+   cd /workspaces/Snipe/backend
    npm install
+   npm run dev
    ```
 2. Set up MongoDB:
    - Use MongoDB Atlas (free cloud) or local MongoDB
