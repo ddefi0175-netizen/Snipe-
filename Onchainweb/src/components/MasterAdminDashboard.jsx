@@ -274,11 +274,28 @@ export default function MasterAdminDashboard() {
       if (adminsResponse && adminsResponse.success && Array.isArray(adminsResponse.admins)) {
         // Merge with master account
         const masterAdmin = { id: 1, username: 'master', email: 'master@onchainweb.com', role: 'super_admin', permissions: ['all'], status: 'active' }
-        setAdminRoles([masterAdmin, ...adminsResponse.admins.map(a => ({
-          ...a,
-          role: 'admin',
-          status: 'active'
-        }))])
+        // Convert permissions object to array for UI compatibility
+        const processedAdmins = adminsResponse.admins.map(a => {
+          let permArray = []
+          if (a.permissions && typeof a.permissions === 'object' && !Array.isArray(a.permissions)) {
+            // Convert object {manageUsers: true, manageKYC: true} to array ['users', 'kyc']
+            if (a.permissions.manageUsers) permArray.push('users')
+            if (a.permissions.manageBalances) permArray.push('balances')
+            if (a.permissions.manageKYC) permArray.push('kyc')
+            if (a.permissions.manageTrades) permArray.push('live_trades')
+            if (a.permissions.viewReports) permArray.push('dashboard')
+            if (a.permissions.createAdmins) permArray.push('create_admins')
+          } else if (Array.isArray(a.permissions)) {
+            permArray = a.permissions
+          }
+          return {
+            ...a,
+            role: 'admin',
+            status: 'active',
+            permissions: permArray
+          }
+        })
+        setAdminRoles([masterAdmin, ...processedAdmins])
         console.log('Loaded admins from backend:', adminsResponse.admins.length)
       } else {
         // Use default admin roles
@@ -563,6 +580,15 @@ export default function MasterAdminDashboard() {
     setLoginError('')
     
     console.log('[LOGIN] Attempting login for:', loginData.username)
+    
+    // Check if localStorage is available
+    try {
+      localStorage.setItem('test', 'test')
+      localStorage.removeItem('test')
+    } catch (storageError) {
+      setLoginError('Storage access blocked. Please enable cookies/localStorage in your browser settings.')
+      return
+    }
     
     try {
       // Call backend API for authentication
@@ -4590,7 +4616,21 @@ export default function MasterAdminDashboard() {
                         const response = await authAPI.getAdmins()
                         if (response.success && Array.isArray(response.admins)) {
                           const masterAdmin = { username: 'master', email: 'master@onchainweb.app', role: 'super_admin', permissions: ['all'], status: 'active' }
-                          setAdminRoles([masterAdmin, ...response.admins])
+                          // Convert permissions object to array
+                          const processedAdmins = response.admins.map(a => {
+                            let permArray = []
+                            if (a.permissions && typeof a.permissions === 'object' && !Array.isArray(a.permissions)) {
+                              if (a.permissions.manageUsers) permArray.push('users')
+                              if (a.permissions.manageBalances) permArray.push('balances')
+                              if (a.permissions.manageKYC) permArray.push('kyc')
+                              if (a.permissions.manageTrades) permArray.push('live_trades')
+                              if (a.permissions.viewReports) permArray.push('dashboard')
+                            } else if (Array.isArray(a.permissions)) {
+                              permArray = a.permissions
+                            }
+                            return { ...a, role: 'admin', status: 'active', permissions: permArray }
+                          })
+                          setAdminRoles([masterAdmin, ...processedAdmins])
                           alert(`✅ Refreshed! Found ${response.admins.length} admin(s)`)
                         }
                       } catch (err) { alert('Error: ' + err.message) }
@@ -4681,10 +4721,12 @@ export default function MasterAdminDashboard() {
                           )}
                         </td>
                         <td className="permissions-cell">
-                          {admin.permissions?.length === 12 || admin.role === 'super_admin' ? (
+                          {admin.role === 'super_admin' ? (
                             <span style={{ padding: '4px 12px', borderRadius: '20px', background: '#10b981', color: '#fff', fontSize: '12px' }}>Full Access</span>
-                          ) : !admin.permissions || admin.permissions.length === 0 ? (
+                          ) : !admin.permissions || !Array.isArray(admin.permissions) || admin.permissions.length === 0 ? (
                             <span style={{ padding: '4px 12px', borderRadius: '20px', background: '#6b7280', color: '#fff', fontSize: '12px' }}>No Permissions</span>
+                          ) : admin.permissions.length >= 5 ? (
+                            <span style={{ padding: '4px 12px', borderRadius: '20px', background: '#10b981', color: '#fff', fontSize: '12px' }}>Full Access</span>
                           ) : (
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                               {admin.permissions.slice(0, 2).map((perm, i) => (
