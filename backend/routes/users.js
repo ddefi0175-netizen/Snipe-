@@ -96,7 +96,11 @@ router.patch('/:id', async (req, res) => {
       'email', 'username', 'vipLevel', 'allowedTradingLevel', 'tradeMode',
       'kycStatus', 'kycFullName', 'kycDocType', 'kycDocNumber',
       'kycFrontPhoto', 'kycBackPhoto', 'kycSubmittedAt', 'kycVerifiedAt',
-      'assignedAdmin', 'lastActive'
+      'assignedAdmin', 'lastActive',
+      // New fields for enhanced user management
+      'presetTradeResult', 'withdrawEnabled', 'withdrawPassword',
+      'depositAddressUSDT', 'depositAddressERC20', 'depositAddressBTC', 'depositAddressETH',
+      'depositCount', 'withdrawCount', 'tradeCount', 'stakeCount', 'referralCode'
     ];
     const updates = {};
     
@@ -124,7 +128,11 @@ router.patch('/wallet/:wallet', async (req, res) => {
       'email', 'username', 'vipLevel', 'allowedTradingLevel', 'tradeMode',
       'kycStatus', 'kycFullName', 'kycDocType', 'kycDocNumber',
       'kycFrontPhoto', 'kycBackPhoto', 'kycSubmittedAt', 'kycVerifiedAt',
-      'lastActive'
+      'lastActive',
+      // New fields
+      'presetTradeResult', 'withdrawEnabled', 'withdrawPassword',
+      'depositAddressUSDT', 'depositAddressERC20', 'depositAddressBTC', 'depositAddressETH',
+      'depositCount', 'withdrawCount', 'tradeCount', 'stakeCount', 'referralCode'
     ];
     const updates = {};
     

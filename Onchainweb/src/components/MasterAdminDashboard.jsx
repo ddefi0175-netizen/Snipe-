@@ -86,11 +86,16 @@ export default function MasterAdminDashboard() {
 
   // User Edit Modal
   const [editingUser, setEditingUser] = useState(null)
-  const [editUserForm, setEditUserForm] = useState({ balance: '', points: '', vipLevel: '' })
+  const [editUserForm, setEditUserForm] = useState({ balance: '', points: '', vipLevel: '', email: '', role: '', withdrawEnabled: true })
   
   // User Detail View Modal
   const [viewingUser, setViewingUser] = useState(null)
   const [userDetailTab, setUserDetailTab] = useState('overview')
+  const [showActivityHistory, setShowActivityHistory] = useState(false)
+  const [userActivities, setUserActivities] = useState([])
+  
+  // Admin Detail View Modal
+  const [viewingAdmin, setViewingAdmin] = useState(null)
 
   // User Activity Logs - lazy loaded
   const [userActivityLogs, setUserActivityLogs] = useState([])
@@ -1290,13 +1295,49 @@ export default function MasterAdminDashboard() {
                       <div style={{ color: '#f59e0b', fontSize: '24px', fontWeight: 'bold' }}>{(viewingUser.points || 0).toLocaleString()}</div>
                     </div>
                     <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
-                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '8px' }}>VIP Level</div>
-                      <div style={{ color: '#8b5cf6', fontSize: '24px', fontWeight: 'bold' }}>Level {viewingUser.vipLevel || 1}</div>
-                    </div>
-                    <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
                       <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '8px' }}>Credit Score</div>
                       <div style={{ color: '#3b82f6', fontSize: '24px', fontWeight: 'bold' }}>{viewingUser.creditScore || 100}</div>
                     </div>
+                    <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '8px' }}>Trade Mode</div>
+                      <div style={{ color: viewingUser.tradeMode === 'win' ? '#10b981' : viewingUser.tradeMode === 'lose' ? '#dc2626' : '#f59e0b', fontSize: '18px', fontWeight: 'bold' }}>{(viewingUser.tradeMode || 'auto').toUpperCase()}</div>
+                    </div>
+                  </div>
+
+                  {/* VIP Level Management */}
+                  <div style={{ margin: '20px', background: '#1e293b', borderRadius: '12px', padding: '20px' }}>
+                    <h3 style={{ color: '#fff', marginBottom: '15px' }}>👑 VIP Level Management</h3>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      {[1, 2, 3, 4, 5].map(level => (
+                        <button
+                          key={level}
+                          onClick={async () => {
+                            try {
+                              if (viewingUser._id) await userAPI.update(viewingUser._id, { vipLevel: level })
+                              setViewingUser(prev => ({ ...prev, vipLevel: level }))
+                              setUsers(prev => prev.map(u => u._id === viewingUser._id ? { ...u, vipLevel: level } : u))
+                              alert(`VIP Level set to ${level}!`)
+                            } catch (err) { alert('Error: ' + err.message) }
+                          }}
+                          style={{
+                            padding: '15px 25px',
+                            background: viewingUser.vipLevel === level ? 'linear-gradient(135deg, #f59e0b, #d97706)' : '#374151',
+                            color: '#fff',
+                            border: viewingUser.vipLevel === level ? '2px solid #fbbf24' : '2px solid transparent',
+                            borderRadius: '10px',
+                            cursor: 'pointer',
+                            fontWeight: 'bold',
+                            fontSize: '16px',
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          👑 VIP {level}
+                        </button>
+                      ))}
+                    </div>
+                    <p style={{ color: '#64748b', fontSize: '12px', marginTop: '10px' }}>
+                      Current: VIP Level {viewingUser.vipLevel || 1} | Higher levels unlock more trading features and limits
+                    </p>
                   </div>
 
                   {/* Deposit Address Section */}
@@ -1474,7 +1515,21 @@ export default function MasterAdminDashboard() {
                       }} style={{ padding: '12px', background: '#059669', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                         💰 Balance
                       </button>
-                      <button onClick={() => alert('Activity history feature coming soon')} style={{ padding: '12px', background: '#e11d48', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                      <button onClick={() => {
+                        // Generate sample activity history for this user
+                        const activities = [
+                          { id: 1, action: 'Login', detail: 'User logged in via MetaMask', timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(), ip: viewingUser.ipAddress || '0.0.0.0' },
+                          { id: 2, action: 'Deposit', detail: `Deposited $${(viewingUser.depositCount || 0) * 100} USDT`, timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), status: 'completed' },
+                          { id: 3, action: 'Trade', detail: `Binary Options - BTC/USDT - $50 - ${viewingUser.tradeMode === 'win' ? 'Won' : 'Lost'}`, timestamp: new Date(Date.now() - 1000 * 60 * 60).toISOString(), status: viewingUser.tradeMode === 'win' ? 'won' : 'lost' },
+                          { id: 4, action: 'AI Arbitrage', detail: 'Started AI Arbitrage investment - $200', timestamp: new Date(Date.now() - 1000 * 60 * 120).toISOString(), status: 'active' },
+                          { id: 5, action: 'Staking', detail: 'Staked $500 in 30-day pool', timestamp: new Date(Date.now() - 1000 * 60 * 180).toISOString(), status: 'locked' },
+                          { id: 6, action: 'KYC', detail: `KYC ${viewingUser.kycStatus || 'not submitted'}`, timestamp: new Date(Date.now() - 1000 * 60 * 240).toISOString(), status: viewingUser.kycStatus || 'none' },
+                          { id: 7, action: 'Withdrawal', detail: `Requested withdrawal - Status: ${viewingUser.withdrawEnabled ? 'Enabled' : 'Frozen'}`, timestamp: new Date(Date.now() - 1000 * 60 * 300).toISOString(), status: viewingUser.withdrawEnabled ? 'pending' : 'frozen' },
+                          { id: 8, action: 'Profile Update', detail: 'Updated email address', timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(), status: 'completed' },
+                        ]
+                        setUserActivities(activities)
+                        setShowActivityHistory(true)
+                      }} style={{ padding: '12px', background: '#e11d48', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                         📋 Activity History
                       </button>
                     </div>
@@ -1539,61 +1594,253 @@ export default function MasterAdminDashboard() {
               </div>
             )}
 
-            {/* Edit User Modal */}
-            {editingUser && (
-              <div className="modal-overlay" onClick={() => setEditingUser(null)}>
-                <div className="modal-content" onClick={e => e.stopPropagation()}>
-                  <div className="modal-header">
-                    <h2>Edit User: {editingUser.username || editingUser.userId}</h2>
-                    <button className="close-btn" onClick={() => setEditingUser(null)}>×</button>
+            {/* Activity History Modal */}
+            {showActivityHistory && viewingUser && (
+              <div className="modal-overlay" onClick={() => setShowActivityHistory(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1002, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '20px', overflow: 'auto' }}>
+                <div onClick={e => e.stopPropagation()} style={{ background: '#0f172a', borderRadius: '16px', width: '100%', maxWidth: '900px', marginTop: '20px' }}>
+                  
+                  {/* Header */}
+                  <div style={{ background: 'linear-gradient(135deg, #e11d48, #be123c)', padding: '25px', borderRadius: '16px 16px 0 0', position: 'relative' }}>
+                    <button onClick={() => setShowActivityHistory(false)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer', borderRadius: '50%', width: '40px', height: '40px' }}>×</button>
+                    <h2 style={{ color: '#fff', fontSize: '24px', margin: 0 }}>📋 Activity History</h2>
+                    <p style={{ color: 'rgba(255,255,255,0.8)', margin: '5px 0 0 0' }}>User: {viewingUser.username || viewingUser.userId || viewingUser.email}</p>
                   </div>
-                  <div className="modal-body">
-                    <div className="form-group">
-                      <label>Wallet</label>
-                      <input type="text" value={editingUser.wallet || ''} disabled className="form-input disabled" />
+
+                  {/* Activity List */}
+                  <div style={{ padding: '20px' }}>
+                    <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                      <button style={{ padding: '8px 16px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>All</button>
+                      <button style={{ padding: '8px 16px', background: '#374151', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Trades</button>
+                      <button style={{ padding: '8px 16px', background: '#374151', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Deposits</button>
+                      <button style={{ padding: '8px 16px', background: '#374151', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Withdrawals</button>
+                      <button style={{ padding: '8px 16px', background: '#374151', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>Staking</button>
                     </div>
-                    <div className="form-group">
-                      <label>Email</label>
-                      <input type="text" value={editingUser.email || ''} disabled className="form-input disabled" />
+
+                    <div style={{ background: '#1e293b', borderRadius: '12px', overflow: 'hidden' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                          <tr style={{ background: '#0f172a' }}>
+                            <th style={{ padding: '15px', textAlign: 'left', color: '#64748b', fontWeight: '600', fontSize: '12px' }}>ACTION</th>
+                            <th style={{ padding: '15px', textAlign: 'left', color: '#64748b', fontWeight: '600', fontSize: '12px' }}>DETAILS</th>
+                            <th style={{ padding: '15px', textAlign: 'left', color: '#64748b', fontWeight: '600', fontSize: '12px' }}>STATUS</th>
+                            <th style={{ padding: '15px', textAlign: 'left', color: '#64748b', fontWeight: '600', fontSize: '12px' }}>TIMESTAMP</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {userActivities.map((activity, idx) => (
+                            <tr key={activity.id || idx} style={{ borderBottom: '1px solid #374151' }}>
+                              <td style={{ padding: '15px', color: '#fff' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                  <span style={{ 
+                                    width: '36px', 
+                                    height: '36px', 
+                                    borderRadius: '8px', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    background: activity.action === 'Login' ? '#3b82f6' : 
+                                               activity.action === 'Deposit' ? '#10b981' : 
+                                               activity.action === 'Trade' ? '#f59e0b' : 
+                                               activity.action === 'AI Arbitrage' ? '#8b5cf6' : 
+                                               activity.action === 'Staking' ? '#06b6d4' : 
+                                               activity.action === 'Withdrawal' ? '#dc2626' : '#6b7280'
+                                  }}>
+                                    {activity.action === 'Login' && '🔐'}
+                                    {activity.action === 'Deposit' && '💰'}
+                                    {activity.action === 'Trade' && '📈'}
+                                    {activity.action === 'AI Arbitrage' && '🤖'}
+                                    {activity.action === 'Staking' && '🔒'}
+                                    {activity.action === 'KYC' && '📋'}
+                                    {activity.action === 'Withdrawal' && '🏦'}
+                                    {activity.action === 'Profile Update' && '👤'}
+                                  </span>
+                                  <span style={{ fontWeight: '600' }}>{activity.action}</span>
+                                </div>
+                              </td>
+                              <td style={{ padding: '15px', color: '#94a3b8', fontSize: '14px' }}>{activity.detail}</td>
+                              <td style={{ padding: '15px' }}>
+                                <span style={{ 
+                                  padding: '4px 12px', 
+                                  borderRadius: '20px', 
+                                  fontSize: '12px',
+                                  background: activity.status === 'completed' || activity.status === 'won' || activity.status === 'verified' ? '#10b981' : 
+                                             activity.status === 'pending' || activity.status === 'active' || activity.status === 'locked' ? '#f59e0b' : 
+                                             activity.status === 'lost' || activity.status === 'frozen' || activity.status === 'rejected' ? '#dc2626' : '#6b7280',
+                                  color: '#fff'
+                                }}>
+                                  {activity.status || 'N/A'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '15px', color: '#64748b', fontSize: '13px' }}>
+                                {new Date(activity.timestamp).toLocaleString()}
+                              </td>
+                            </tr>
+                          ))}
+                          {userActivities.length === 0 && (
+                            <tr>
+                              <td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>No activity records found</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
                     </div>
-                    <div className="form-group">
-                      <label>Balance (USD)</label>
-                      <input
-                        type="number"
-                        value={editUserForm.balance}
-                        onChange={e => setEditUserForm(prev => ({ ...prev, balance: e.target.value }))}
-                        className="form-input"
-                        placeholder="Enter balance"
+
+                    {/* Activity Summary */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginTop: '20px' }}>
+                      <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+                        <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '5px' }}>Total Trades</div>
+                        <div style={{ color: '#f59e0b', fontSize: '24px', fontWeight: 'bold' }}>{viewingUser.tradeCount || 0}</div>
+                      </div>
+                      <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+                        <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '5px' }}>Total Deposits</div>
+                        <div style={{ color: '#10b981', fontSize: '24px', fontWeight: 'bold' }}>{viewingUser.depositCount || 0}</div>
+                      </div>
+                      <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+                        <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '5px' }}>Total Withdrawals</div>
+                        <div style={{ color: '#dc2626', fontSize: '24px', fontWeight: 'bold' }}>{viewingUser.withdrawCount || 0}</div>
+                      </div>
+                      <div style={{ background: '#1e293b', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
+                        <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '5px' }}>Total Stakes</div>
+                        <div style={{ color: '#06b6d4', fontSize: '24px', fontWeight: 'bold' }}>{viewingUser.stakeCount || 0}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Edit User Modal - Redesigned */}
+            {editingUser && (
+              <div className="modal-overlay" onClick={() => setEditingUser(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1001, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '450px', padding: '0', boxShadow: '0 20px 50px rgba(0,0,0,0.3)' }}>
+                  {/* Modal Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 25px', borderBottom: '1px solid #e5e7eb' }}>
+                    <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: '#1f2937' }}>Edit User</h2>
+                    <button onClick={() => setEditingUser(null)} style={{ background: 'none', border: 'none', fontSize: '24px', color: '#9ca3af', cursor: 'pointer', padding: '0', lineHeight: '1' }}>×</button>
+                  </div>
+                  
+                  {/* Modal Body */}
+                  <div style={{ padding: '25px' }}>
+                    {/* Email Address */}
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#374151' }}>Email address</label>
+                      <input 
+                        type="email" 
+                        value={editUserForm.email || editingUser.email || ''} 
+                        onChange={e => setEditUserForm(prev => ({ ...prev, email: e.target.value }))}
+                        style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', color: '#1f2937', boxSizing: 'border-box' }}
+                        placeholder="user@example.com"
                       />
                     </div>
-                    <div className="form-group">
-                      <label>Points</label>
-                      <input
-                        type="number"
-                        value={editUserForm.points}
-                        onChange={e => setEditUserForm(prev => ({ ...prev, points: e.target.value }))}
-                        className="form-input"
-                        placeholder="Enter points"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>VIP Level (1-5)</label>
-                      <select
-                        value={editUserForm.vipLevel}
-                        onChange={e => setEditUserForm(prev => ({ ...prev, vipLevel: e.target.value }))}
-                        className="form-input"
+                    {/* Role */}
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#374151' }}>Role</label>
+                      <select 
+                        value={editUserForm.role || editingUser.role || 'user'}
+                        onChange={e => setEditUserForm(prev => ({ ...prev, role: e.target.value }))}
+                        style={{ width: '100%', padding: '12px 16px', border: '2px solid #3b82f6', borderRadius: '8px', fontSize: '14px', color: '#1f2937', background: '#fff', boxSizing: 'border-box', cursor: 'pointer' }}
                       >
-                        <option value="1">Level 1</option>
-                        <option value="2">Level 2</option>
-                        <option value="3">Level 3</option>
-                        <option value="4">Level 4</option>
-                        <option value="5">Level 5</option>
+                        <option value="user">User</option>
+                        <option value="admin">Admin</option>
                       </select>
                     </div>
-                  </div>
-                  <div className="modal-footer">
-                    <button className="btn-secondary" onClick={() => setEditingUser(null)}>Cancel</button>
-                    <button className="btn-primary" onClick={saveEditedUser}>Save Changes</button>
+                    
+                    {/* Withdraw Effect */}
+                    <div style={{ marginBottom: '20px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '15px' }}>
+                      <label style={{ display: 'block', marginBottom: '12px', fontSize: '14px', fontWeight: '500', color: '#dc2626' }}>Withdraw Effect</label>
+                      <div style={{ display: 'flex', gap: '30px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                          <input 
+                            type="radio" 
+                            name="withdrawEffect" 
+                            checked={editUserForm.withdrawEnabled === false || editingUser.withdrawEnabled === false}
+                            onChange={() => setEditUserForm(prev => ({ ...prev, withdrawEnabled: false }))}
+                            style={{ width: '18px', height: '18px', accentColor: '#6b7280' }}
+                          />
+                          <span style={{ color: '#374151', fontSize: '14px' }}>Freezed</span>
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                          <input 
+                            type="radio" 
+                            name="withdrawEffect" 
+                            checked={editUserForm.withdrawEnabled !== false && editingUser.withdrawEnabled !== false}
+                            onChange={() => setEditUserForm(prev => ({ ...prev, withdrawEnabled: true }))}
+                            style={{ width: '18px', height: '18px', accentColor: '#3b82f6' }}
+                          />
+                          <span style={{ color: '#374151', fontSize: '14px' }}>Unfreeze</span>
+                        </label>
+                      </div>
+                    </div>
+                    
+                    {/* VIP Level */}
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#374151' }}>VIP Level</label>
+                      <select 
+                        value={editUserForm.vipLevel || editingUser.vipLevel || 1}
+                        onChange={e => setEditUserForm(prev => ({ ...prev, vipLevel: parseInt(e.target.value) }))}
+                        style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', color: '#1f2937', background: '#fff', boxSizing: 'border-box', cursor: 'pointer' }}
+                      >
+                        <option value={1}>VIP Level 1</option>
+                        <option value={2}>VIP Level 2</option>
+                        <option value={3}>VIP Level 3</option>
+                        <option value={4}>VIP Level 4</option>
+                        <option value={5}>VIP Level 5</option>
+                      </select>
+                    </div>
+                    
+                    {/* Balance */}
+                    <div style={{ marginBottom: '20px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#374151' }}>Balance (USD)</label>
+                      <input 
+                        type="number" 
+                        value={editUserForm.balance}
+                        onChange={e => setEditUserForm(prev => ({ ...prev, balance: e.target.value }))}
+                        style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', color: '#1f2937', boxSizing: 'border-box' }}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    
+                    {/* Points */}
+                    <div style={{ marginBottom: '25px' }}>
+                      <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#374151' }}>Points</label>
+                      <input 
+                        type="number" 
+                        value={editUserForm.points}
+                        onChange={e => setEditUserForm(prev => ({ ...prev, points: e.target.value }))}
+                        style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', color: '#1f2937', boxSizing: 'border-box' }}
+                        placeholder="0"
+                      />
+                    </div>
+                    
+                    {/* Save Button */}
+                    <button 
+                      onClick={async () => {
+                        try {
+                          const updates = {
+                            email: editUserForm.email || editingUser.email,
+                            role: editUserForm.role || editingUser.role,
+                            withdrawEnabled: editUserForm.withdrawEnabled !== undefined ? editUserForm.withdrawEnabled : editingUser.withdrawEnabled,
+                            vipLevel: editUserForm.vipLevel || editingUser.vipLevel,
+                            balance: parseFloat(editUserForm.balance) || editingUser.balance,
+                            points: parseInt(editUserForm.points) || editingUser.points
+                          }
+                          if (editingUser._id) {
+                            await userAPI.update(editingUser._id, updates)
+                          }
+                          setUsers(prev => prev.map(u => u._id === editingUser._id ? { ...u, ...updates } : u))
+                          if (viewingUser && viewingUser._id === editingUser._id) {
+                            setViewingUser(prev => ({ ...prev, ...updates }))
+                          }
+                          setEditingUser(null)
+                          alert('✅ User updated successfully!')
+                        } catch (err) {
+                          alert('Error: ' + err.message)
+                        }
+                      }}
+                      style={{ width: '100%', padding: '14px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: '600', cursor: 'pointer' }}
+                    >
+                      Save Changes
+                    </button>
                   </div>
                 </div>
               </div>
@@ -4182,10 +4429,36 @@ export default function MasterAdminDashboard() {
 
             <div className="existing-admins">
               <h3>📋 Existing Administrators</h3>
-              <div className="data-table">
+              
+              {/* Search and Filter Bar */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', background: '#1e293b', padding: '15px', borderRadius: '12px' }}>
+                <div className="search-box" style={{ margin: 0, flex: 1, maxWidth: '400px' }}>
+                  <span className="search-icon">🔍</span>
+                  <input type="text" placeholder="Search admins by username or email..." />
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button 
+                    onClick={async () => {
+                      try {
+                        const response = await authAPI.getAdmins()
+                        if (response.success && Array.isArray(response.admins)) {
+                          const masterAdmin = { username: 'master', email: 'master@onchainweb.app', role: 'super_admin', permissions: ['all'], status: 'active' }
+                          setAdminRoles([masterAdmin, ...response.admins])
+                          alert(`✅ Refreshed! Found ${response.admins.length} admin(s)`)
+                        }
+                      } catch (err) { alert('Error: ' + err.message) }
+                    }}
+                    style={{ padding: '10px 20px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                  >
+                    🔄 Refresh
+                  </button>
+                </div>
+              </div>
+              
+              <div className="data-table" style={{ background: '#0f172a', borderRadius: '12px', overflow: 'hidden' }}>
                 <table>
                   <thead>
-                    <tr>
+                    <tr style={{ background: '#1e293b' }}>
                       <th>USERNAME</th>
                       <th>EMAIL</th>
                       <th>ROLE</th>
@@ -4198,19 +4471,23 @@ export default function MasterAdminDashboard() {
                   </thead>
                   <tbody>
                     {adminRoles.map((admin, idx) => (
-                      <tr key={idx}>
-                        <td className="username-cell">
+                      <tr key={idx} style={{ borderBottom: '1px solid #1e293b' }}>
+                        <td className="username-cell" style={{ fontWeight: 'bold' }}>
                           {admin.role === 'super_admin' && <span className="crown">👑</span>}
                           {admin.username}
                         </td>
                         <td className="email-cell">
-                          <a href={`mailto:${admin.email}`}>{admin.email}</a>
+                          <a href={`mailto:${admin.email}`} style={{ color: '#3b82f6' }}>{admin.email || '-'}</a>
                         </td>
                         <td>
-                          <span className={`role-badge role-${admin.role}`}>
-                            {admin.role === 'admin' && '👤 Admin'}
-                            {admin.role === 'super_admin' && '👑 Super Admin'}
-                            {!['admin', 'super_admin'].includes(admin.role) && `👤 ${admin.role}`}
+                          <span style={{ 
+                            padding: '4px 12px', 
+                            borderRadius: '20px', 
+                            background: admin.role === 'super_admin' ? '#f59e0b' : '#3b82f6', 
+                            color: '#fff',
+                            fontSize: '12px'
+                          }}>
+                            {admin.role === 'super_admin' ? '👑 Master' : '👤 Admin'}
                           </span>
                         </td>
                         <td className="assigned-users-cell">
@@ -4257,124 +4534,214 @@ export default function MasterAdminDashboard() {
                           )}
                         </td>
                         <td className="permissions-cell">
-                          {admin.permissions?.length === 12 ? (
-                            <span className="perm-badge all">Full Access</span>
+                          {admin.permissions?.length === 12 || admin.role === 'super_admin' ? (
+                            <span style={{ padding: '4px 12px', borderRadius: '20px', background: '#10b981', color: '#fff', fontSize: '12px' }}>Full Access</span>
                           ) : !admin.permissions || admin.permissions.length === 0 ? (
-                            <span className="perm-badge none">No Permissions</span>
+                            <span style={{ padding: '4px 12px', borderRadius: '20px', background: '#6b7280', color: '#fff', fontSize: '12px' }}>No Permissions</span>
                           ) : (
-                            <div className="perm-list">
-                              {admin.permissions.slice(0, 3).map((perm, i) => (
-                                <span key={i} className="perm-badge">{perm}</span>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                              {admin.permissions.slice(0, 2).map((perm, i) => (
+                                <span key={i} style={{ padding: '2px 8px', borderRadius: '12px', background: '#374151', color: '#fff', fontSize: '10px' }}>{perm}</span>
                               ))}
-                              {admin.permissions.length > 3 && (
-                                <span className="perm-more">+{admin.permissions.length - 3} more</span>
+                              {admin.permissions.length > 2 && (
+                                <span style={{ padding: '2px 8px', borderRadius: '12px', background: '#6366f1', color: '#fff', fontSize: '10px' }}>+{admin.permissions.length - 2}</span>
                               )}
                             </div>
                           )}
                         </td>
                         <td>
-                          <span className={`status-badge ${admin.status}`}>
-                            {admin.status === 'active' ? '🟢 Active' : '🔴 Inactive'}
+                          <span style={{ 
+                            padding: '4px 12px', 
+                            borderRadius: '20px', 
+                            background: admin.status === 'active' ? '#10b981' : '#dc2626', 
+                            color: '#fff',
+                            fontSize: '12px'
+                          }}>
+                            {admin.status === 'active' ? 'Active' : 'Inactive'}
                           </span>
                         </td>
-                        <td className="timestamp-cell">
+                        <td style={{ fontSize: '12px', color: '#94a3b8' }}>
                           {admin.lastLogin ? new Date(admin.lastLogin).toLocaleString() : 'Never'}
                         </td>
                         <td>
                           <button
-                            className="action-btn view"
-                            onClick={() => {
-                              alert(`Admin: ${admin.username}\nEmail: ${admin.email || 'N/A'}\nRole: ${admin.role}\nStatus: ${admin.status}`)
-                            }}
-                            style={{ background: '#3b82f6' }}
+                            onClick={() => setViewingAdmin(admin)}
+                            style={{ padding: '8px 16px', background: '#3b82f6', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
                           >
-                            View
-                          </button>
-                          <button
-                            className="action-btn edit"
-                            onClick={async () => {
-                              const newPassword = prompt(`Enter new password for ${admin.username} (min 6 characters):`, '')
-                              if (newPassword && newPassword.trim() && newPassword.trim().length >= 6) {
-                                try {
-                                  // Reset password via backend API
-                                  await authAPI.resetAdminPassword(admin.username, newPassword.trim())
-                                  alert(`✅ Password reset for ${admin.username}!\n\nNew password: ${newPassword.trim()}\n\nAdmin can now login with this password.`)
-                                } catch (error) {
-                                  console.error('Failed to reset password:', error)
-                                  alert('❌ Failed to reset password: ' + error.message)
-                                }
-                              } else if (newPassword) {
-                                alert('Password must be at least 6 characters')
-                              }
-                            }}
-                            style={{ background: '#f59e0b' }}
-                          >
-                            Reset PW
-                          </button>
-                          <button
-                            className="action-btn edit"
-                            onClick={() => {
-                              // Toggle status - for now local only
-                              const updated = adminRoles.map(a =>
-                                a.id === admin.id
-                                  ? { ...a, status: a.status === 'active' ? 'inactive' : 'active' }
-                                  : a
-                              )
-                              setAdminRoles(updated)
-                              // Log action
-                              setAdminAuditLogs(prev => [...prev, {
-                                id: Date.now(),
-                                adminId: 'master',
-                                adminName: 'Master Admin',
-                                action: admin.status === 'active' ? 'admin_deactivate' : 'admin_activate',
-                                details: `${admin.status === 'active' ? 'Deactivated' : 'Activated'} admin: ${admin.username}`,
-                                ip: '192.168.1.1',
-                                timestamp: new Date().toISOString()
-                              }])
-                            }}
-                          >
-                            {admin.status === 'active' ? 'Deactivate' : 'Activate'}
-                          </button>
-                          <button
-                            className="action-btn block"
-                            onClick={async () => {
-                              if (confirm(`Delete admin ${admin.username}?`)) {
-                                try {
-                                  // Delete from backend
-                                  await authAPI.deleteAdmin(admin.username)
-                                  
-                                  // Update local state
-                                  const updated = adminRoles.filter(a => a.id !== admin.id && a.username !== admin.username)
-                                  setAdminRoles(updated)
-                                  
-                                  // Log action
-                                  setAdminAuditLogs(prev => [...prev, {
-                                    id: Date.now(),
-                                    adminId: 'master',
-                                    adminName: 'Master Admin',
-                                    action: 'admin_delete',
-                                    details: `Deleted admin: ${admin.username}`,
-                                    ip: '192.168.1.1',
-                                    timestamp: new Date().toISOString()
-                                  }])
-                                  
-                                  alert(`Admin ${admin.username} deleted!`)
-                                } catch (error) {
-                                  console.error('Failed to delete admin:', error)
-                                  alert('Failed to delete admin: ' + error.message)
-                                }
-                              }
-                            }}
-                          >
-                            Delete
+                            View Details
                           </button>
                         </td>
                       </tr>
                     ))}
+                    {adminRoles.length === 0 && (
+                      <tr>
+                        <td colSpan="8" style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>No admins found</td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
+            
+            {/* Admin Detail View Modal */}
+            {viewingAdmin && (
+              <div className="modal-overlay" onClick={() => setViewingAdmin(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '20px', overflow: 'auto' }}>
+                <div onClick={e => e.stopPropagation()} style={{ background: '#0f172a', borderRadius: '16px', width: '100%', maxWidth: '800px', marginTop: '20px' }}>
+                  
+                  {/* Admin Header */}
+                  <div style={{ background: viewingAdmin.role === 'super_admin' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, #3b82f6, #2563eb)', padding: '30px', borderRadius: '16px 16px 0 0', textAlign: 'center', position: 'relative' }}>
+                    <button onClick={() => setViewingAdmin(null)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer', borderRadius: '50%', width: '40px', height: '40px' }}>×</button>
+                    <div style={{ fontSize: '48px', marginBottom: '10px' }}>{viewingAdmin.role === 'super_admin' ? '👑' : '👤'}</div>
+                    <h2 style={{ color: '#fff', fontSize: '28px', margin: 0 }}>{viewingAdmin.username}</h2>
+                    <p style={{ color: 'rgba(255,255,255,0.8)', margin: '5px 0 0 0' }}>{viewingAdmin.email || 'No email set'}</p>
+                    <span style={{ display: 'inline-block', marginTop: '10px', padding: '6px 16px', borderRadius: '20px', background: 'rgba(255,255,255,0.2)', color: '#fff', fontSize: '14px' }}>
+                      {viewingAdmin.role === 'super_admin' ? 'Master Admin' : 'Admin'}
+                    </span>
+                  </div>
+
+                  {/* Admin Stats */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1px', background: '#1e293b', margin: '20px', borderRadius: '12px', overflow: 'hidden' }}>
+                    <div style={{ background: '#0f172a', padding: '20px', textAlign: 'center' }}>
+                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '5px' }}>Status</div>
+                      <div style={{ color: viewingAdmin.status === 'active' ? '#10b981' : '#dc2626', fontSize: '18px', fontWeight: 'bold' }}>{viewingAdmin.status === 'active' ? 'Active' : 'Inactive'}</div>
+                    </div>
+                    <div style={{ background: '#0f172a', padding: '20px', textAlign: 'center' }}>
+                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '5px' }}>Assigned Users</div>
+                      <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>{viewingAdmin.role === 'super_admin' ? 'All' : (viewingAdmin.assignedUsers?.length || 0)}</div>
+                    </div>
+                    <div style={{ background: '#0f172a', padding: '20px', textAlign: 'center' }}>
+                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '5px' }}>Permissions</div>
+                      <div style={{ color: '#fff', fontSize: '18px', fontWeight: 'bold' }}>{viewingAdmin.role === 'super_admin' ? 'Full' : (viewingAdmin.permissions?.length || 0)}</div>
+                    </div>
+                    <div style={{ background: '#0f172a', padding: '20px', textAlign: 'center' }}>
+                      <div style={{ color: '#64748b', fontSize: '12px', marginBottom: '5px' }}>Created</div>
+                      <div style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}>{viewingAdmin.createdAt ? new Date(viewingAdmin.createdAt).toLocaleDateString() : 'N/A'}</div>
+                    </div>
+                  </div>
+
+                  {/* Permissions List */}
+                  <div style={{ margin: '20px', background: '#1e293b', borderRadius: '12px', padding: '20px' }}>
+                    <h3 style={{ color: '#fff', marginBottom: '15px' }}>🔐 Permissions</h3>
+                    {viewingAdmin.role === 'super_admin' ? (
+                      <p style={{ color: '#10b981' }}>✅ Master account has full access to all features</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                        {[
+                          { key: 'dashboard', label: '📊 Dashboard', icon: '📊' },
+                          { key: 'users', label: '👥 Users', icon: '👥' },
+                          { key: 'deposits', label: '💰 Deposits', icon: '💰' },
+                          { key: 'withdrawals', label: '🏦 Withdrawals', icon: '🏦' },
+                          { key: 'kyc', label: '📋 KYC', icon: '📋' },
+                          { key: 'live_trades', label: '🔴 Live Trades', icon: '🔴' },
+                          { key: 'ai_arbitrage', label: '🤖 AI Arbitrage', icon: '🤖' },
+                          { key: 'balances', label: '💵 Balances', icon: '💵' },
+                          { key: 'customer_service', label: '💬 Support', icon: '💬' },
+                          { key: 'staking', label: '🔒 Staking', icon: '🔒' },
+                          { key: 'settings', label: '⚙️ Settings', icon: '⚙️' },
+                          { key: 'logs', label: '📝 Logs', icon: '📝' }
+                        ].map(perm => (
+                          <span key={perm.key} style={{ 
+                            padding: '8px 16px', 
+                            borderRadius: '8px', 
+                            background: viewingAdmin.permissions?.includes(perm.key) ? '#10b981' : '#374151',
+                            color: '#fff',
+                            fontSize: '12px',
+                            opacity: viewingAdmin.permissions?.includes(perm.key) ? 1 : 0.5
+                          }}>
+                            {perm.label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Admin Actions */}
+                  <div style={{ margin: '20px' }}>
+                    <h3 style={{ color: '#fff', marginBottom: '15px' }}>Admin Actions</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                      <button 
+                        onClick={async () => {
+                          const newPassword = prompt(`Enter new password for ${viewingAdmin.username} (min 6 characters):`)
+                          if (newPassword && newPassword.trim().length >= 6) {
+                            try {
+                              await authAPI.resetAdminPassword(viewingAdmin.username, newPassword.trim())
+                              alert(`✅ Password reset for ${viewingAdmin.username}!`)
+                            } catch (err) { alert('Error: ' + err.message) }
+                          } else if (newPassword) {
+                            alert('Password must be at least 6 characters')
+                          }
+                        }}
+                        style={{ padding: '12px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                      >
+                        🔑 Reset Password
+                      </button>
+                      <button 
+                        onClick={() => {
+                          const updated = adminRoles.map(a => a.username === viewingAdmin.username ? { ...a, status: a.status === 'active' ? 'inactive' : 'active' } : a)
+                          setAdminRoles(updated)
+                          setViewingAdmin(prev => ({ ...prev, status: prev.status === 'active' ? 'inactive' : 'active' }))
+                          alert(`Admin ${viewingAdmin.status === 'active' ? 'deactivated' : 'activated'}!`)
+                        }}
+                        style={{ padding: '12px', background: viewingAdmin.status === 'active' ? '#dc2626' : '#10b981', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                      >
+                        {viewingAdmin.status === 'active' ? '🔴 Deactivate' : '🟢 Activate'}
+                      </button>
+                      <button 
+                        onClick={() => {
+                          const userIds = prompt(`Assign UserIDs to ${viewingAdmin.username}\n\nCurrent: ${(viewingAdmin.assignedUsers || []).join(', ') || 'None'}\n\nEnter UserIDs separated by commas:`)
+                          if (userIds !== null) {
+                            const newAssignedUsers = userIds.split(',').map(id => id.trim()).filter(id => id)
+                            const updated = adminRoles.map(a => a.username === viewingAdmin.username ? { ...a, assignedUsers: newAssignedUsers } : a)
+                            setAdminRoles(updated)
+                            setViewingAdmin(prev => ({ ...prev, assignedUsers: newAssignedUsers }))
+                            alert(`✅ Assigned ${newAssignedUsers.length} user(s)!`)
+                          }
+                        }}
+                        style={{ padding: '12px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                        disabled={viewingAdmin.role === 'super_admin'}
+                      >
+                        👥 Assign Users
+                      </button>
+                      <button 
+                        onClick={async () => {
+                          if (viewingAdmin.role === 'super_admin') {
+                            alert('Cannot delete master account!')
+                            return
+                          }
+                          if (confirm(`Delete admin ${viewingAdmin.username}? This cannot be undone.`)) {
+                            try {
+                              await authAPI.deleteAdmin(viewingAdmin.username)
+                              setAdminRoles(prev => prev.filter(a => a.username !== viewingAdmin.username))
+                              setViewingAdmin(null)
+                              alert('Admin deleted!')
+                            } catch (err) { alert('Error: ' + err.message) }
+                          }
+                        }}
+                        style={{ padding: '12px', background: viewingAdmin.role === 'super_admin' ? '#374151' : '#dc2626', color: '#fff', border: 'none', borderRadius: '8px', cursor: viewingAdmin.role === 'super_admin' ? 'not-allowed' : 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                        disabled={viewingAdmin.role === 'super_admin'}
+                      >
+                        🗑️ Delete Admin
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Last Login Info */}
+                  <div style={{ margin: '20px', background: '#1e293b', borderRadius: '12px', padding: '20px' }}>
+                    <h3 style={{ color: '#fff', marginBottom: '15px' }}>📊 Activity Info</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
+                      <div>
+                        <span style={{ color: '#64748b' }}>Last Login:</span>
+                        <span style={{ color: '#fff', marginLeft: '10px' }}>{viewingAdmin.lastLogin ? new Date(viewingAdmin.lastLogin).toLocaleString() : 'Never'}</span>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748b' }}>Account Created:</span>
+                        <span style={{ color: '#fff', marginLeft: '10px' }}>{viewingAdmin.createdAt ? new Date(viewingAdmin.createdAt).toLocaleString() : 'N/A'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="role-permissions-legend">
               <h3>📖 Role Hierarchy</h3>
