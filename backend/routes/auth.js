@@ -52,12 +52,19 @@ router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     
+    console.log('Login attempt:', { username, providedPassword: password ? '***' : 'empty' });
+    console.log('Master config:', { 
+      expectedUser: MASTER_USERNAME, 
+      expectedPass: MASTER_PASSWORD ? MASTER_PASSWORD.substring(0, 3) + '***' : 'empty' 
+    });
+    
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password required' });
     }
     
-    // Check master credentials
+    // Check master credentials first
     if (username === MASTER_USERNAME && password === MASTER_PASSWORD) {
+      console.log('Master login successful');
       const token = jwt.sign(
         { 
           username: 'master', 
