@@ -222,9 +222,9 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
     setRegisterError('')
     setRegisterStep('verify')
     
-    // Simulate sending email (in real app, this would call an API)
+    // In production, this would call an email API
+    // For demo, code is stored and shown to user
     console.log(`Verification code ${code} sent to ${registerEmail}`)
-    alert(`Verification code sent to ${registerEmail}\n\nFor demo purposes, your code is: ${code}`)
   }
 
   const handleVerifyCode = () => {
@@ -247,7 +247,6 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
   const handleResendCode = () => {
     const code = generateVerificationCode()
     setGeneratedCode(code)
-    alert(`New verification code sent to ${registerEmail}\n\nFor demo purposes, your code is: ${code}`)
   }
 
   // Handle KYC Photo Upload
@@ -1790,6 +1789,13 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
                     <strong>{registerEmail}</strong>
                   </div>
 
+                  {/* Demo: Show the verification code */}
+                  <div className="demo-code-box">
+                    <span className="demo-label">📱 Your Verification Code:</span>
+                    <span className="demo-code">{generatedCode}</span>
+                    <span className="demo-note">(In production, this would be sent to your email)</span>
+                  </div>
+
                   <div className="verify-field">
                     <label>Enter 6-digit verification code</label>
                     <input 
@@ -1813,7 +1819,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
                   </button>
 
                   <button className="resend-btn" onClick={handleResendCode}>
-                    📤 Resend Code
+                    📤 Get New Code
                   </button>
 
                   <button className="back-btn" onClick={() => { setRegisterStep('email'); setRegisterError(''); }}>

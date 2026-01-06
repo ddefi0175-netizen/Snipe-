@@ -3739,6 +3739,7 @@ export default function MasterAdminDashboard() {
                       <th>USERNAME</th>
                       <th>EMAIL</th>
                       <th>ROLE</th>
+                      <th>ASSIGNED USERS</th>
                       <th>PERMISSIONS</th>
                       <th>STATUS</th>
                       <th>LAST LOGIN</th>
@@ -3761,6 +3762,49 @@ export default function MasterAdminDashboard() {
                             {admin.role === 'super_admin' && '👑 Super Admin'}
                             {!['admin', 'super_admin'].includes(admin.role) && `👤 ${admin.role}`}
                           </span>
+                        </td>
+                        <td className="assigned-users-cell">
+                          {admin.role === 'super_admin' ? (
+                            <span className="perm-badge all">All Users</span>
+                          ) : (
+                            <div className="assigned-users-list">
+                              {(admin.assignedUsers && admin.assignedUsers.length > 0) ? (
+                                <>
+                                  {admin.assignedUsers.slice(0, 3).map((userId, i) => (
+                                    <span key={i} className="user-id-badge">{userId}</span>
+                                  ))}
+                                  {admin.assignedUsers.length > 3 && (
+                                    <span className="perm-more">+{admin.assignedUsers.length - 3} more</span>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="perm-badge none">None</span>
+                              )}
+                              {isMasterAccount && (
+                                <button 
+                                  className="assign-users-btn"
+                                  onClick={() => {
+                                    const userIds = prompt(
+                                      `Assign UserIDs to ${admin.username}\n\nCurrent: ${(admin.assignedUsers || []).join(', ') || 'None'}\n\nEnter UserIDs separated by commas (e.g., 12345, 67890):`
+                                    )
+                                    if (userIds !== null) {
+                                      const newAssignedUsers = userIds.split(',').map(id => id.trim()).filter(id => id)
+                                      const updatedAdmins = adminRoles.map(a => 
+                                        a.username === admin.username 
+                                          ? { ...a, assignedUsers: newAssignedUsers }
+                                          : a
+                                      )
+                                      setAdminRoles(updatedAdmins)
+                                      localStorage.setItem('adminRoles', JSON.stringify(updatedAdmins))
+                                      alert(`✅ Assigned ${newAssignedUsers.length} user(s) to ${admin.username}`)
+                                    }
+                                  }}
+                                >
+                                  ✏️
+                                </button>
+                              )}
+                            </div>
+                          )}
                         </td>
                         <td className="permissions-cell">
                           {admin.permissions?.length === 12 ? (

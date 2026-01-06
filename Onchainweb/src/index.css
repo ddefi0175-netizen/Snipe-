@@ -1871,6 +1871,41 @@ button.news-item:hover {
   font-size: 1.1rem;
 }
 
+/* Demo Verification Code Box */
+.demo-code-box {
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.2), rgba(37, 99, 235, 0.2));
+  border: 2px dashed rgba(124, 58, 237, 0.5);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  text-align: center;
+  margin: 1rem 0 1.5rem;
+}
+
+.demo-label {
+  display: block;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+}
+
+.demo-code {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: monospace;
+  letter-spacing: 0.5em;
+  color: #7c3aed;
+  text-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
+  margin: 0.5rem 0;
+}
+
+.demo-note {
+  display: block;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
+
 .verify-input {
   width: 100%;
   padding: 1.25rem;
@@ -9232,6 +9267,49 @@ body {
 /* Permission Badges */
 .permissions-cell {
   max-width: 200px;
+}
+
+/* Assigned Users Cell */
+.assigned-users-cell {
+  max-width: 180px;
+}
+
+.assigned-users-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: center;
+}
+
+.user-id-badge {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.assign-users-btn {
+  background: rgba(124, 58, 237, 0.2);
+  border: 1px solid rgba(124, 58, 237, 0.4);
+  color: #a78bfa;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: all 0.2s;
+}
+
+.assign-users-btn:hover {
+  background: rgba(124, 58, 237, 0.4);
+}
+
+.perm-badge.none {
+  background: rgba(107, 114, 128, 0.15);
+  color: #6b7280;
 }
 
 .perm-list {
