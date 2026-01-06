@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from 'react'
 
-// Master credentials (change these)
-const MASTER_CREDENTIALS = {
-  username: 'master',
-  password: 'OnchainWeb2025!'
-}
+// API Base URL for authentication
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api'
 
 // Default Trading Levels
 const DEFAULT_TRADING_LEVELS = [
@@ -208,90 +205,155 @@ export default function AdminPanel({ isOpen, onClose }) {
     localStorage.setItem('allUsersData', JSON.stringify(users))
   }
   
-  // Handle login
-  const handleLogin = () => {
+  // Handle login via backend API
+  const handleLogin = async () => {
     setLoginError('')
     
-    // Check master credentials
-    if (loginUsername === MASTER_CREDENTIALS.username && loginPassword === MASTER_CREDENTIALS.password) {
-      setIsAuthenticated(true)
-      setCurrentAdmin({ 
-        username: 'master', 
-        role: 'master',
-        permissions: {
-          manageUsers: true,
-          manageBalances: true,
-          manageKYC: true,
-          manageTrades: true,
-          viewReports: true,
-          createAdmins: true
-        }
+    try {
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: loginUsername, password: loginPassword })
       })
-      setLoginUsername('')
-      setLoginPassword('')
-      return
+      
+      const data = await response.json()
+      
+      if (response.ok && data.success) {
+        // Store token in localStorage
+        localStorage.setItem('adminToken', data.token)
+        localStorage.setItem('adminUser', JSON.stringify(data.user))
+        
+        setIsAuthenticated(true)
+        setCurrentAdmin(data.user)
+        setLoginUsername('')
+        setLoginPassword('')
+      } else {
+        setLoginError(data.error || 'Invalid username or password')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+      setLoginError('Connection error. Please try again.')
     }
-    
-    // Check admin accounts
-    const admin = adminAccounts.find(a => a.username === loginUsername && a.password === loginPassword)
-    if (admin) {
-      setIsAuthenticated(true)
-      setCurrentAdmin({ ...admin, role: 'admin' })
-      setLoginUsername('')
-      setLoginPassword('')
-      return
-    }
-    
-    setLoginError('Invalid username or password')
   }
   
   // Handle logout
   const handleLogout = () => {
+    localStorage.removeItem('adminToken')
+    localStorage.removeItem('adminUser')
     setIsAuthenticated(false)
     setCurrentAdmin(null)
     setLoginUsername('')
     setLoginPassword('')
   }
   
-  // Create new admin
-  const createAdmin = () => {
+  // Check for existing session on mount
+  useEffect(() => {
+    const token = localStorage.getItem('adminToken')
+    const user = localStorage.getItem('adminUser')
+    
+    if (token && user) {
+      // Verify token with backend
+      fetch(`${API_BASE}/auth/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setIsAuthenticated(true)
+          setCurrentAdmin(JSON.parse(user))
+        } else {
+          localStorage.removeItem('adminToken')
+          localStorage.removeItem('adminUser')
+        }
+      })
+      .catch(() => {
+        // Token invalid, clear storage
+        localStorage.removeItem('adminToken')
+        localStorage.removeItem('adminUser')
+      })
+    }
+  }, [])
+  
+  // Create new admin via backend API
+  const createAdmin = async () => {
     if (!newAdminForm.username || !newAdminForm.password) {
       alert('Please fill in username and password')
       return
     }
     
-    if (adminAccounts.find(a => a.username === newAdminForm.username)) {
-      alert('Username already exists')
-      return
-    }
-    
-    const newAdmin = {
-      id: Date.now().toString(),
-      ...newAdminForm,
-      createdAt: new Date().toISOString(),
-      createdBy: currentAdmin.username
-    }
-    
-    setAdminAccounts([...adminAccounts, newAdmin])
-    setNewAdminForm({
-      username: '',
-      password: '',
-      permissions: {
-        manageUsers: true,
-        manageBalances: true,
-        manageKYC: true,
-        manageTrades: true,
-        viewReports: true,
-        createAdmins: false
+    try {
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch(`${API_BASE}/auth/admin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newAdminForm)
+      })
+      
+      const data = await response.json()
+      
+      if (response.ok && data.success) {
+        // Also add to local state for display
+        const newAdmin = {
+          id: Date.now().toString(),
+          ...newAdminForm,
+          createdAt: new Date().toISOString(),
+          createdBy: currentAdmin.username
+        }
+        
+        setAdminAccounts([...adminAccounts, newAdmin])
+        setNewAdminForm({
+          username: '',
+          password: '',
+          permissions: {
+            manageUsers: true,
+            manageBalances: true,
+            manageKYC: true,
+            manageTrades: true,
+            viewReports: true,
+            createAdmins: false
+          }
+        })
+        alert('Admin account created successfully!')
+      } else {
+        alert(data.error || 'Failed to create admin')
       }
-    })
-    alert('Admin account created successfully!')
+    } catch (error) {
+      console.error('Create admin error:', error)
+      alert('Connection error. Please try again.')
+    }
   }
   
-  // Delete admin
-  const deleteAdmin = (adminId) => {
+  // Delete admin via backend API
+  const deleteAdmin = async (adminId, username) => {
     if (confirm('Are you sure you want to delete this admin account?')) {
-      setAdminAccounts(adminAccounts.filter(a => a.id !== adminId))
+      try {
+        const token = localStorage.getItem('adminToken')
+        const response = await fetch(`${API_BASE}/auth/admin/${username}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+        
+        if (response.ok) {
+          setAdminAccounts(adminAccounts.filter(a => a.id !== adminId))
+          alert('Admin deleted successfully')
+        } else {
+          const data = await response.json()
+          alert(data.error || 'Failed to delete admin')
+        }
+      } catch (error) {
+        console.error('Delete admin error:', error)
+        // Still remove from local state
+        setAdminAccounts(adminAccounts.filter(a => a.id !== adminId))
+      }
     }
   }
   
@@ -1478,7 +1540,7 @@ export default function AdminPanel({ isOpen, onClose }) {
                         </div>
                         <button 
                           className="delete-admin-btn"
-                          onClick={() => deleteAdmin(admin.id)}
+                          onClick={() => deleteAdmin(admin.id, admin.username)}
                         >
                           🗑️ Delete
                         </button>
