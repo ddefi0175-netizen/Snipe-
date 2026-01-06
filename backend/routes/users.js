@@ -41,13 +41,21 @@ router.get('/id/:userId', async (req, res) => {
 // Create or update user by wallet (login/register)
 router.post('/', async (req, res) => {
   try {
-    const { wallet, username, email } = req.body;
+    const { wallet, walletType, username, email } = req.body;
+    
+    // Get IP and user agent from request
+    const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
+    const userAgent = req.headers['user-agent'] || '';
+    
     let user = await User.findOne({ wallet });
     
     if (user) {
-      // Update last login
+      // Update last login and activity info
       user.lastLogin = new Date();
       user.lastActive = new Date();
+      user.ipAddress = ipAddress;
+      user.userAgent = userAgent;
+      if (walletType) user.walletType = walletType;
       if (username) user.username = username;
       if (email) user.email = email;
       await user.save();
@@ -55,6 +63,7 @@ router.post('/', async (req, res) => {
       // Create new user
       user = new User({ 
         wallet,
+        walletType: walletType || '',
         username: username || '',
         email: email || '',
         role: 'user',
@@ -64,13 +73,17 @@ router.post('/', async (req, res) => {
         vipLevel: 1,
         allowedTradingLevel: 1,
         frozen: false,
-        balance: 0
+        balance: 0,
+        ipAddress,
+        userAgent
       });
       await user.save();
+      console.log('New user created:', user.userId, user.wallet.substring(0, 10) + '...');
     }
     
     res.status(201).json(user);
   } catch (err) {
+    console.error('User creation error:', err);
     res.status(500).json({ error: err.message });
   }
 });

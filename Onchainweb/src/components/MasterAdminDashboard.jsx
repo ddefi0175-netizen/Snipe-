@@ -586,19 +586,27 @@ export default function MasterAdminDashboard() {
     )
   }
 
-  // Update user balance
-  const updateUserBalance = (userId, newBalance) => {
-    setUsers(prev => prev.map(user =>
-      user.id === userId ? { ...user, balance: parseFloat(newBalance) } : user
-    ))
-    const updatedUsers = users.map(user =>
-      user.id === userId ? { ...user, balance: parseFloat(newBalance) } : user
-    )
-    localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers))
+  // Update user balance - now uses backend API
+  const updateUserBalance = async (userId, newBalance) => {
+    try {
+      // Find user by userId or _id
+      const user = users.find(u => u.id === userId || u._id === userId || u.userId === userId)
+      if (user && user._id) {
+        await userAPI.update(user._id, { balance: parseFloat(newBalance) })
+      }
+      setUsers(prev => prev.map(u =>
+        (u.id === userId || u._id === userId || u.userId === userId) 
+          ? { ...u, balance: parseFloat(newBalance) } 
+          : u
+      ))
+    } catch (error) {
+      console.error('Failed to update balance:', error)
+      alert('Failed to update balance: ' + error.message)
+    }
   }
 
-  // Save edited user
-  const saveEditedUser = () => {
+  // Save edited user - now uses backend API
+  const saveEditedUser = async () => {
     if (!editingUser) return
 
     const updates = {
@@ -607,11 +615,18 @@ export default function MasterAdminDashboard() {
       vipLevel: parseInt(editUserForm.vipLevel) || editingUser.vipLevel || 1
     }
 
-    const updatedUsers = users.map(user =>
-      user.id === editingUser.id ? { ...user, ...updates } : user
-    )
-    setUsers(updatedUsers)
-    localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers))
+    try {
+      if (editingUser._id) {
+        await userAPI.update(editingUser._id, updates)
+      }
+      setUsers(prev => prev.map(user =>
+        (user.id === editingUser.id || user._id === editingUser._id) ? { ...user, ...updates } : user
+      ))
+    } catch (error) {
+      console.error('Failed to save user:', error)
+      alert('Failed to save user: ' + error.message)
+      return
+    }
 
     // Log the action
     setAdminAuditLogs(prev => [...prev, {
@@ -968,8 +983,35 @@ export default function MasterAdminDashboard() {
         {activeSection === 'users' && (
           <div className="admin-section">
             <div className="section-header">
-              <h1>All Users</h1>
-              <p>Manage user accounts and balances</p>
+              <h1>All Users <span style={{ fontSize: '14px', color: '#888' }}>({users.length} total)</span></h1>
+              <p>Manage user accounts and balances - Real-time data from MongoDB</p>
+              <button 
+                onClick={async () => {
+                  try {
+                    const backendUsers = await userAPI.getAll()
+                    if (Array.isArray(backendUsers)) {
+                      setUsers(backendUsers)
+                      alert(`✅ Refreshed! Found ${backendUsers.length} users`)
+                    }
+                  } catch (error) {
+                    alert('Failed to refresh: ' + error.message)
+                  }
+                }}
+                style={{ 
+                  marginTop: '10px', 
+                  padding: '8px 16px', 
+                  background: 'linear-gradient(135deg, #10b981, #059669)', 
+                  border: 'none', 
+                  borderRadius: '8px', 
+                  color: '#fff', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                🔄 Refresh Users from Database
+              </button>
             </div>
             <div className="search-box">
               <span className="search-icon">🔍</span>
@@ -984,121 +1026,81 @@ export default function MasterAdminDashboard() {
               <table>
                 <thead>
                   <tr>
-                    <th>ID</th>
+                    <th>USER ID</th>
+                    <th>WALLET</th>
                     <th>USERNAME</th>
                     <th>EMAIL</th>
                     <th>BALANCE</th>
                     <th>POINTS</th>
                     <th>VIP LEVEL</th>
-                    <th>ROLE</th>
                     <th>KYC STATUS</th>
-                    <th>STATUS</th>
+                    <th>LAST LOGIN</th>
                     <th>ACTIONS</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filterData(users, searchQuery).map((user, idx) => (
-                    <tr key={idx}>
-                      <td>{user.id}</td>
-                      <td>{user.username}</td>
-                      <td><a href={`mailto:${user.email}`}>{user.email}</a></td>
+                    <tr key={user._id || idx}>
+                      <td>{user.userId || user.id || '-'}</td>
+                      <td title={user.wallet} style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {user.wallet ? `${user.wallet.substring(0, 6)}...${user.wallet.slice(-4)}` : '-'}
+                      </td>
+                      <td>{user.username || 'N/A'}</td>
+                      <td><a href={`mailto:${user.email}`}>{user.email || '-'}</a></td>
                       <td>${(user.balance || 0).toLocaleString()}</td>
                       <td>{user.points || 0}</td>
                       <td>Level {user.vipLevel || 1}</td>
                       <td>
-                        <span className={`role-badge role-${user.role || 'user'}`}>
-                          {user.role === 'admin' ? '👑 Admin' : '👤 User'}
+                        <span className={`status-badge ${user.kycStatus || 'none'}`}>
+                          {user.kycStatus === 'verified' ? '✅ Verified' : 
+                           user.kycStatus === 'pending' ? '⏳ Pending' :
+                           user.kycStatus === 'rejected' ? '❌ Rejected' : '⚪ None'}
                         </span>
                       </td>
-                      <td>
-                        <span className={`status-badge ${user.kycStatus || 'pending'}`}>
-                          {user.kycStatus || 'Pending'}
-                        </span>
+                      <td style={{ fontSize: '12px' }}>
+                        {user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}
                       </td>
                       <td>
-                        <span className={`status-badge ${user.isActive !== false ? 'active' : 'inactive'}`}>
-                          {user.isActive !== false ? 'Active' : 'Blocked'}
-                        </span>
-                      </td>
-                      <td>
-                        <button
-                          className={`action-btn ${user.role === 'admin' ? 'demote' : 'promote'}`}
-                          onClick={() => {
-                            const newRole = user.role === 'admin' ? 'user' : 'admin'
-                            const updatedUsers = users.map(u =>
-                              u.id === user.id ? { ...u, role: newRole } : u
-                            )
-                            setUsers(updatedUsers)
-                            localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers))
-
-                            // Log the action
-                            setAdminAuditLogs(prev => [...prev, {
-                              id: Date.now(),
-                              adminId: 'master',
-                              adminName: 'Master Admin',
-                              action: newRole === 'admin' ? 'promote_to_admin' : 'demote_to_user',
-                              details: `${newRole === 'admin' ? 'Promoted' : 'Demoted'} user ${user.username} (${user.email}) to ${newRole}`,
-                              targetUser: user.id,
-                              ip: '192.168.1.1',
-                              timestamp: new Date().toISOString()
-                            }])
-
-                            // If promoting to admin, also add to adminRoles
-                            if (newRole === 'admin') {
-                              const existingAdmin = adminRoles.find(a => a.email === user.email)
-                              if (!existingAdmin) {
-                                setAdminRoles(prev => [...prev, {
-                                  id: Date.now(),
-                                  username: user.username,
-                                  email: user.email,
-                                  role: 'support',
-                                  permissions: ['view_users', 'manage_chats'],
-                                  status: 'active',
-                                  createdAt: new Date().toISOString(),
-                                  lastLogin: null,
-                                  promotedFrom: 'user'
-                                }])
-                              }
-                            } else {
-                              // If demoting, remove from adminRoles
-                              setAdminRoles(prev => prev.filter(a => a.email !== user.email))
-                            }
-                          }}
-                        >
-                          {user.role === 'admin' ? '⬇️ Demote' : '⬆️ Promote'}
-                        </button>
                         <button
                           className="action-btn edit"
                           onClick={() => {
                             setEditingUser(user)
                             setEditUserForm({
-                              balance: user.balance?.toString() || '0',
-                              points: user.points?.toString() || '0',
-                              vipLevel: user.vipLevel?.toString() || '1'
+                              balance: user.balance || 0,
+                              points: user.points || 0,
+                              vipLevel: user.vipLevel || 1
                             })
                           }}
+                          style={{ marginRight: '4px', padding: '4px 8px', fontSize: '12px' }}
                         >
                           ✏️ Edit
                         </button>
-                        <button className="action-btn view">View</button>
                         <button
-                          className="action-btn block"
-                          onClick={() => {
-                            const updatedUsers = users.map(u =>
-                              u.id === user.id ? { ...u, isActive: u.isActive === false ? true : false } : u
-                            )
-                            setUsers(updatedUsers)
-                            localStorage.setItem('registeredUsers', JSON.stringify(updatedUsers))
+                          className={`action-btn ${user.frozen ? 'unfreeze' : 'freeze'}`}
+                          onClick={async () => {
+                            try {
+                              if (user._id) {
+                                await userAPI.setFrozen(user._id, !user.frozen)
+                              }
+                              setUsers(prev => prev.map(u =>
+                                (u._id === user._id || u.id === user.id) ? { ...u, frozen: !u.frozen } : u
+                              ))
+                            } catch (error) {
+                              alert('Failed to update user: ' + error.message)
+                            }
                           }}
+                          style={{ padding: '4px 8px', fontSize: '12px' }}
                         >
-                          {user.isActive !== false ? 'Block' : 'Unblock'}
+                          {user.frozen ? '🔓 Unfreeze' : '🔒 Freeze'}
                         </button>
                       </td>
                     </tr>
                   ))}
                   {users.length === 0 && (
                     <tr>
-                      <td colSpan="10" className="no-data">No users registered yet</td>
+                      <td colSpan="9" className="no-data">
+                        No users found. Users will appear here automatically when they connect their wallet.
+                      </td>
                     </tr>
                   )}
                 </tbody>
@@ -1110,13 +1112,17 @@ export default function MasterAdminDashboard() {
               <div className="modal-overlay" onClick={() => setEditingUser(null)}>
                 <div className="modal-content" onClick={e => e.stopPropagation()}>
                   <div className="modal-header">
-                    <h2>Edit User: {editingUser.username}</h2>
+                    <h2>Edit User: {editingUser.username || editingUser.userId}</h2>
                     <button className="close-btn" onClick={() => setEditingUser(null)}>×</button>
                   </div>
                   <div className="modal-body">
                     <div className="form-group">
+                      <label>Wallet</label>
+                      <input type="text" value={editingUser.wallet || ''} disabled className="form-input disabled" />
+                    </div>
+                    <div className="form-group">
                       <label>Email</label>
-                      <input type="text" value={editingUser.email} disabled className="form-input disabled" />
+                      <input type="text" value={editingUser.email || ''} disabled className="form-input disabled" />
                     </div>
                     <div className="form-group">
                       <label>Balance (USD)</label>

@@ -11,25 +11,53 @@ export default function WalletGate({ onConnect, children }) {
   const isConnected = localStorage.getItem('walletConnected') === 'true'
   const connectedAddress = localStorage.getItem('walletAddress') || ''
 
-  // Register user in backend
-  const registerUserInBackend = async (address) => {
+  // Register user in backend immediately when wallet connects
+  const registerUserInBackend = async (address, walletType) => {
     try {
-      const user = await userAPI.loginByWallet(address)
+      console.log('Registering user in backend:', address, walletType)
+      
+      // Get existing profile data if any
+      const existingProfile = localStorage.getItem('userProfile')
+      const profileData = existingProfile ? JSON.parse(existingProfile) : {}
+      
+      // Create/update user in backend with wallet type
+      const user = await userAPI.loginByWallet(
+        address, 
+        profileData.username || `User_${address.substring(2, 8)}`,
+        profileData.email || '',
+        walletType
+      )
+      
       // Store user data from backend
       if (user) {
+        console.log('User registered successfully:', user)
         localStorage.setItem('backendUserId', user._id)
         localStorage.setItem('backendUser', JSON.stringify(user))
+        
         // Sync userId
         if (user.userId) {
           localStorage.setItem('realAccountId', user.userId)
+          // Update local profile with backend userId
+          const updatedProfile = { ...profileData, userId: user.userId, wallet: address, walletType }
+          localStorage.setItem('userProfile', JSON.stringify(updatedProfile))
         }
       }
       return user
     } catch (error) {
       console.error('Failed to register user in backend:', error)
+      // Don't block user - still allow local usage
       return null
     }
   }
+
+  // On app load, ensure connected wallet is registered in backend
+  useEffect(() => {
+    if (isConnected && connectedAddress) {
+      // Re-register to ensure backend has latest data
+      const walletType = localStorage.getItem('walletType') || 'unknown'
+      registerUserInBackend(connectedAddress, walletType)
+    }
+  }, [isConnected, connectedAddress])
 
   // Supported wallets
   const wallets = [
@@ -76,8 +104,9 @@ export default function WalletGate({ onConnect, children }) {
         localStorage.setItem('walletAddress', address)
         localStorage.setItem('walletType', walletId)
         
-        // Register user in backend database
-        await registerUserInBackend(address)
+        // Register user in backend database immediately
+        const user = await registerUserInBackend(address, walletId)
+        console.log('Wallet connected and user registered:', user ? user.userId : 'failed')
         
         if (onConnect) onConnect(address)
         window.location.reload()

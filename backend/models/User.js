@@ -2,9 +2,11 @@ const mongoose = require('mongoose');
 
 const UserSchema = new mongoose.Schema({
   wallet: { type: String, required: true, unique: true },
+  walletType: { type: String, default: '' }, // metamask, trustwallet, etc.
   userId: { type: String, unique: true }, // Generated user ID like 00001
   username: { type: String, default: '' },
   email: { type: String, default: '' },
+  phone: { type: String, default: '' },
   role: { type: String, enum: ['user', 'admin', 'master'], default: 'user' },
   points: { type: Number, default: 0 },
   creditScore: { type: Number, default: 100 },
@@ -27,10 +29,13 @@ const UserSchema = new mongoose.Schema({
   // Trade Control (admin sets for this user)
   tradeMode: { type: String, enum: ['auto', 'win', 'lose'], default: 'auto' },
   
-  // Activity
+  // Activity tracking
   lastLogin: { type: Date, default: Date.now },
   lastActive: { type: Date, default: Date.now },
   createdAt: { type: Date, default: Date.now },
+  ipAddress: { type: String, default: '' },
+  userAgent: { type: String, default: '' },
+  device: { type: String, default: '' },
   
   // Admin assignment (which admin manages this user)
   assignedAdmin: { type: String, default: '' }

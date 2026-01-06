@@ -106,11 +106,11 @@ export const userAPI = {
   // Get users assigned to admin
   getByAdmin: (adminId) => apiCall(`/users/admin/${adminId}/users`),
   
-  // Login or register user by wallet
-  loginByWallet: async (wallet, username, email) => {
+  // Login or register user by wallet - creates user immediately in backend
+  loginByWallet: async (wallet, username, email, walletType) => {
     return await apiCall('/users', {
       method: 'POST',
-      body: JSON.stringify({ wallet, username, email }),
+      body: JSON.stringify({ wallet, username, email, walletType }),
     });
   },
 };
