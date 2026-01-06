@@ -276,6 +276,13 @@ export default function MasterAdminDashboard() {
 
     // Fetch admin accounts from backend
     try {
+      // Make sure we have a token before calling
+      const token = localStorage.getItem('adminToken')
+      if (!token) {
+        console.warn('No admin token found, skipping admin load')
+        setAdminRoles(getFromStorage('adminRoles', defaultData.adminRoles))
+        return
+      }
       const adminsResponse = await withTimeout(authAPI.getAdmins())
       if (adminsResponse && adminsResponse.success && Array.isArray(adminsResponse.admins)) {
         const masterAdmin = { id: 1, username: 'master', email: 'master@onchainweb.com', role: 'super_admin', permissions: ['all'], status: 'active' }

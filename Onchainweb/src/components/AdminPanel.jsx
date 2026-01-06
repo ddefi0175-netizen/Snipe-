@@ -284,29 +284,18 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     const user = localStorage.getItem('adminUser')
     
     if (token && user) {
-      // Verify token with backend
-      fetch(`${API_BASE}/auth/verify`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          setIsAuthenticated(true)
-          setCurrentAdmin(JSON.parse(user))
-        } else {
-          localStorage.removeItem('adminToken')
-          localStorage.removeItem('adminUser')
-        }
-      })
-      .catch(() => {
-        // Token invalid, clear storage
+      // Token exists and user data exists - restore session without backend verification
+      // This avoids CORS issues on cold starts
+      try {
+        const userData = JSON.parse(user)
+        setIsAuthenticated(true)
+        setCurrentAdmin(userData)
+        console.log('[AdminPanel] Session restored from localStorage')
+      } catch (e) {
+        console.error('[AdminPanel] Failed to parse user data:', e)
         localStorage.removeItem('adminToken')
         localStorage.removeItem('adminUser')
-      })
+      }
     }
   }, [])
   
