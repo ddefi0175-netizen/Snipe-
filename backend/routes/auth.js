@@ -52,12 +52,15 @@ router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
     
+    console.log(`[LOGIN] Attempt for username: ${username}`);
+    
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password required' });
     }
     
     // Check master credentials first
     if (username === MASTER_USERNAME && password === MASTER_PASSWORD) {
+      console.log(`[LOGIN] Master login successful`)
       const token = jwt.sign(
         { 
           username: 'master', 
@@ -95,7 +98,15 @@ router.post('/login', async (req, res) => {
     
     // Check admin accounts in MongoDB
     const admin = await Admin.findOne({ username });
+    console.log(`[LOGIN] Admin lookup for ${username}: ${admin ? 'FOUND' : 'NOT FOUND'}`);
+    
+    if (admin) {
+      console.log(`[LOGIN] Admin password stored: ${admin.password ? admin.password.substring(0, 3) + '***' : 'EMPTY'}, entered: ${password.substring(0, 3)}***`);
+      console.log(`[LOGIN] Password match: ${admin.password === password}`);
+    }
+    
     if (admin && admin.password === password) {
+      console.log(`[LOGIN] Admin ${username} login successful`);
       // Update last login
       admin.lastLogin = new Date();
       await admin.save();

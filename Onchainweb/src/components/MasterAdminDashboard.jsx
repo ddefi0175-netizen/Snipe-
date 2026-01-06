@@ -1560,6 +1560,152 @@ export default function MasterAdminDashboard() {
                     </div>
                   </div>
 
+                  {/* KYC Verification Section */}
+                  <div style={{ margin: '20px', background: '#1e293b', borderRadius: '12px', padding: '20px' }}>
+                    <h3 style={{ color: '#fff', marginBottom: '15px' }}>📋 KYC Verification</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+                      {/* KYC Status */}
+                      <div style={{ gridColumn: '1 / -1' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
+                          <span style={{ color: '#64748b' }}>Current Status:</span>
+                          <span style={{ 
+                            padding: '8px 20px', 
+                            borderRadius: '20px', 
+                            fontWeight: 'bold',
+                            background: viewingUser.kycStatus === 'verified' ? '#10b981' : 
+                                       viewingUser.kycStatus === 'pending' ? '#f59e0b' : 
+                                       viewingUser.kycStatus === 'rejected' ? '#dc2626' : '#6b7280',
+                            color: '#fff'
+                          }}>
+                            {viewingUser.kycStatus === 'verified' ? '✅ Verified' : 
+                             viewingUser.kycStatus === 'pending' ? '⏳ Pending Review' : 
+                             viewingUser.kycStatus === 'rejected' ? '❌ Rejected' : '⚪ Not Submitted'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {/* KYC Details */}
+                      {viewingUser.kycStatus && viewingUser.kycStatus !== 'none' && (
+                        <>
+                          <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
+                            <label style={{ color: '#64748b', fontSize: '12px', display: 'block', marginBottom: '8px' }}>Full Name</label>
+                            <div style={{ color: '#fff', fontSize: '16px' }}>{viewingUser.kycFullName || 'Not provided'}</div>
+                          </div>
+                          <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
+                            <label style={{ color: '#64748b', fontSize: '12px', display: 'block', marginBottom: '8px' }}>Document Type</label>
+                            <div style={{ color: '#fff', fontSize: '16px' }}>{viewingUser.kycDocType || 'Not provided'}</div>
+                          </div>
+                          <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
+                            <label style={{ color: '#64748b', fontSize: '12px', display: 'block', marginBottom: '8px' }}>Document Number</label>
+                            <div style={{ color: '#fff', fontSize: '16px' }}>{viewingUser.kycDocNumber || 'Not provided'}</div>
+                          </div>
+                          <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
+                            <label style={{ color: '#64748b', fontSize: '12px', display: 'block', marginBottom: '8px' }}>Submitted At</label>
+                            <div style={{ color: '#fff', fontSize: '14px' }}>{viewingUser.kycSubmittedAt ? new Date(viewingUser.kycSubmittedAt).toLocaleString() : 'N/A'}</div>
+                          </div>
+                          
+                          {/* Document Images */}
+                          <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
+                            <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
+                              <label style={{ color: '#64748b', fontSize: '12px', display: 'block', marginBottom: '8px' }}>ID Front Photo</label>
+                              {viewingUser.kycFrontPhoto ? (
+                                <a href={viewingUser.kycFrontPhoto} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: '10px', background: '#3b82f6', color: '#fff', borderRadius: '6px', textAlign: 'center', textDecoration: 'none' }}>
+                                  📄 View Front Photo
+                                </a>
+                              ) : (
+                                <div style={{ color: '#64748b', padding: '10px', background: '#374151', borderRadius: '6px', textAlign: 'center' }}>No photo uploaded</div>
+                              )}
+                            </div>
+                            <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
+                              <label style={{ color: '#64748b', fontSize: '12px', display: 'block', marginBottom: '8px' }}>ID Back Photo</label>
+                              {viewingUser.kycBackPhoto ? (
+                                <a href={viewingUser.kycBackPhoto} target="_blank" rel="noopener noreferrer" style={{ display: 'block', padding: '10px', background: '#3b82f6', color: '#fff', borderRadius: '6px', textAlign: 'center', textDecoration: 'none' }}>
+                                  📄 View Back Photo
+                                </a>
+                              ) : (
+                                <div style={{ color: '#64748b', padding: '10px', background: '#374151', borderRadius: '6px', textAlign: 'center' }}>No photo uploaded</div>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      
+                      {/* KYC Action Buttons */}
+                      <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '15px', marginTop: '10px' }}>
+                        <button 
+                          onClick={async () => {
+                            try {
+                              if (viewingUser._id) {
+                                await userAPI.reviewKYC(viewingUser._id, 'verified')
+                                setViewingUser(prev => ({ ...prev, kycStatus: 'verified', kycVerifiedAt: new Date().toISOString() }))
+                                setUsers(prev => prev.map(u => u._id === viewingUser._id ? { ...u, kycStatus: 'verified' } : u))
+                                alert('✅ KYC Approved successfully!')
+                              }
+                            } catch (err) { alert('Error: ' + err.message) }
+                          }}
+                          disabled={viewingUser.kycStatus === 'verified' || viewingUser.kycStatus === 'none' || !viewingUser.kycStatus}
+                          style={{ 
+                            flex: 1, 
+                            padding: '15px', 
+                            background: viewingUser.kycStatus === 'verified' ? '#374151' : '#10b981', 
+                            color: '#fff', 
+                            border: 'none', 
+                            borderRadius: '8px', 
+                            cursor: viewingUser.kycStatus === 'verified' ? 'not-allowed' : 'pointer', 
+                            fontWeight: 'bold', 
+                            fontSize: '16px',
+                            opacity: viewingUser.kycStatus === 'verified' || viewingUser.kycStatus === 'none' || !viewingUser.kycStatus ? 0.5 : 1
+                          }}
+                        >
+                          ✅ Approve KYC
+                        </button>
+                        <button 
+                          onClick={async () => {
+                            const reason = prompt('Enter rejection reason (optional):')
+                            try {
+                              if (viewingUser._id) {
+                                await userAPI.reviewKYC(viewingUser._id, 'rejected')
+                                setViewingUser(prev => ({ ...prev, kycStatus: 'rejected' }))
+                                setUsers(prev => prev.map(u => u._id === viewingUser._id ? { ...u, kycStatus: 'rejected' } : u))
+                                alert('❌ KYC Rejected!' + (reason ? ` Reason: ${reason}` : ''))
+                              }
+                            } catch (err) { alert('Error: ' + err.message) }
+                          }}
+                          disabled={viewingUser.kycStatus === 'rejected' || viewingUser.kycStatus === 'none' || !viewingUser.kycStatus}
+                          style={{ 
+                            flex: 1, 
+                            padding: '15px', 
+                            background: viewingUser.kycStatus === 'rejected' ? '#374151' : '#dc2626', 
+                            color: '#fff', 
+                            border: 'none', 
+                            borderRadius: '8px', 
+                            cursor: viewingUser.kycStatus === 'rejected' ? 'not-allowed' : 'pointer', 
+                            fontWeight: 'bold', 
+                            fontSize: '16px',
+                            opacity: viewingUser.kycStatus === 'rejected' || viewingUser.kycStatus === 'none' || !viewingUser.kycStatus ? 0.5 : 1
+                          }}
+                        >
+                          ❌ Reject KYC
+                        </button>
+                        <button 
+                          onClick={async () => {
+                            try {
+                              if (viewingUser._id) {
+                                await userAPI.update(viewingUser._id, { kycStatus: 'none', kycFullName: '', kycDocType: '', kycDocNumber: '', kycFrontPhoto: '', kycBackPhoto: '' })
+                                setViewingUser(prev => ({ ...prev, kycStatus: 'none', kycFullName: '', kycDocType: '', kycDocNumber: '', kycFrontPhoto: '', kycBackPhoto: '' }))
+                                setUsers(prev => prev.map(u => u._id === viewingUser._id ? { ...u, kycStatus: 'none' } : u))
+                                alert('🔄 KYC Reset to None!')
+                              }
+                            } catch (err) { alert('Error: ' + err.message) }
+                          }}
+                          style={{ padding: '15px 25px', background: '#6b7280', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                        >
+                          🔄 Reset
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Additional Info */}
                   <div style={{ margin: '20px', background: '#1e293b', borderRadius: '12px', padding: '20px' }}>
                     <h3 style={{ color: '#fff', marginBottom: '15px' }}>Additional Information</h3>
