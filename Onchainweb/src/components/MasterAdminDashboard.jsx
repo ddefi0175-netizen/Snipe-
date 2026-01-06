@@ -666,14 +666,77 @@ export default function MasterAdminDashboard() {
     ))
   }
 
-  // Approve/Reject deposit
-  const handleDepositAction = (id, action) => {
-    setDeposits(prev => prev.map(d =>
-      d.id === id ? { ...d, status: action } : d
-    ))
-    localStorage.setItem('adminDeposits', JSON.stringify(
-      deposits.map(d => d.id === id ? { ...d, status: action } : d)
-    ))
+  // Approve/Reject deposit - now uses backend API
+  const handleDepositAction = async (id, action) => {
+    try {
+      // Use MongoDB _id for API call
+      const deposit = deposits.find(d => d.id === id || d._id === id)
+      const mongoId = deposit?._id || id
+      
+      await uploadAPI.updateStatus(mongoId, action)
+      
+      // Update local state
+      setDeposits(prev => prev.map(d =>
+        (d.id === id || d._id === id) ? { ...d, status: action } : d
+      ))
+      setPendingDeposits(prev => prev.map(d =>
+        (d.id === id || d._id === id) ? { ...d, status: action } : d
+      ))
+      
+      console.log(`Deposit ${id} ${action} via backend`)
+    } catch (error) {
+      console.error('Failed to update deposit:', error)
+      alert('Failed to update deposit: ' + error.message)
+    }
+  }
+  
+  // Approve/Reject pending deposit proof - uses backend API
+  const handlePendingDepositAction = async (deposit, action) => {
+    try {
+      const mongoId = deposit._id || deposit.id
+      const amount = action === 'confirmed' ? (deposit.amount || 0) : 0
+      
+      if (action === 'confirmed') {
+        await uploadAPI.approve(mongoId, amount)
+      } else {
+        await uploadAPI.reject(mongoId, 'Rejected by admin')
+      }
+      
+      // Update local state
+      setPendingDeposits(prev => prev.map(d =>
+        (d.id === deposit.id || d._id === deposit._id) ? { ...d, status: action } : d
+      ))
+      
+      // Refresh data from backend
+      const backendUploads = await uploadAPI.getAll()
+      if (Array.isArray(backendUploads)) {
+        setPendingDeposits(backendUploads.filter(u => u.status === 'pending'))
+        setDeposits(backendUploads)
+      }
+      
+      alert(`Deposit ${action}!`)
+    } catch (error) {
+      console.error('Failed to update deposit:', error)
+      alert('Failed to update deposit: ' + error.message)
+    }
+  }
+  
+  // Approve/Reject KYC - uses backend API  
+  const handleKYCAction = async (user, action) => {
+    try {
+      const mongoId = user._id || user.id
+      await userAPI.reviewKYC(mongoId, action)
+      
+      // Update local state
+      setUsers(prev => prev.map(u =>
+        (u.id === user.id || u._id === user._id) ? { ...u, kycStatus: action } : u
+      ))
+      
+      alert(`KYC ${action} for ${user.username}!`)
+    } catch (error) {
+      console.error('Failed to review KYC:', error)
+      alert('Failed to review KYC: ' + error.message)
+    }
   }
 
   // Show loading spinner during initial auth check
@@ -1221,15 +1284,22 @@ export default function MasterAdminDashboard() {
                       <td>{user.email}</td>
                       <td>{new Date().toLocaleDateString()}</td>
                       <td>
-                        <button className="doc-btn">ID Card</button>
-                        <button className="doc-btn">Selfie</button>
+                        {user.kycFrontPhoto && (
+                          <a href={user.kycFrontPhoto} target="_blank" rel="noopener noreferrer" className="doc-btn">ID Front</a>
+                        )}
+                        {user.kycBackPhoto && (
+                          <a href={user.kycBackPhoto} target="_blank" rel="noopener noreferrer" className="doc-btn">ID Back</a>
+                        )}
+                        {!user.kycFrontPhoto && !user.kycBackPhoto && (
+                          <span style={{color: '#666'}}>No docs</span>
+                        )}
                       </td>
                       <td>
                         <span className="status-badge pending">Pending</span>
                       </td>
                       <td>
-                        <button className="action-btn approve">Approve</button>
-                        <button className="action-btn reject">Reject</button>
+                        <button className="action-btn approve" onClick={() => handleKYCAction(user, 'verified')}>Approve</button>
+                        <button className="action-btn reject" onClick={() => handleKYCAction(user, 'rejected')}>Reject</button>
                       </td>
                     </tr>
                   ))}
@@ -1519,12 +1589,12 @@ export default function MasterAdminDashboard() {
                 <tbody>
                   {pendingDeposits.map((deposit, idx) => (
                     <tr key={idx}>
-                      <td>{deposit.id}</td>
-                      <td>{deposit.token}</td>
-                      <td className="amount-cell">${deposit.amount?.toLocaleString()}</td>
-                      <td className="address-cell">{deposit.from?.slice(0, 10)}...{deposit.from?.slice(-6)}</td>
-                      <td className="address-cell">{deposit.txHash?.slice(0, 12)}...</td>
-                      <td>{new Date(deposit.timestamp).toLocaleString()}</td>
+                      <td>{deposit._id || deposit.id}</td>
+                      <td>{deposit.network || deposit.token || 'USDT'}</td>
+                      <td className="amount-cell">${(deposit.amount || 0).toLocaleString()}</td>
+                      <td className="address-cell">{(deposit.userId || deposit.from)?.slice(0, 10)}...</td>
+                      <td className="address-cell">{deposit.txHash?.slice(0, 12) || 'N/A'}...</td>
+                      <td>{new Date(deposit.createdAt || deposit.timestamp).toLocaleString()}</td>
                       <td>
                         <span className={`status-badge ${deposit.status}`}>
                           {deposit.status}
@@ -1533,40 +1603,12 @@ export default function MasterAdminDashboard() {
                       <td>
                         {deposit.status === 'pending' && (
                           <>
-                            <button className="action-btn approve" onClick={() => {
-                              // Confirm the deposit - add to user balance
-                              const walletData = JSON.parse(localStorage.getItem('walletData') || '{"balance":0}')
-                              walletData.balance = (walletData.balance || 0) + deposit.amount
-                              walletData.totalDeposits = (walletData.totalDeposits || 0) + deposit.amount
-                              localStorage.setItem('walletData', JSON.stringify(walletData))
-                              
-                              // Update deposit status
-                              setPendingDeposits(prev => prev.map(d => 
-                                d.id === deposit.id ? { ...d, status: 'confirmed' } : d
-                              ))
-                              localStorage.setItem('adminPendingDeposits', JSON.stringify(
-                                pendingDeposits.map(d => d.id === deposit.id ? { ...d, status: 'confirmed' } : d)
-                              ))
-                              
-                              // Update user deposits list too
-                              const userDeposits = JSON.parse(localStorage.getItem('userDeposits') || '[]')
-                              const updatedUserDeposits = userDeposits.map(d => 
-                                d.id === deposit.id ? { ...d, status: 'confirmed' } : d
-                              )
-                              localStorage.setItem('userDeposits', JSON.stringify(updatedUserDeposits))
-                              
-                              alert(`Deposit of $${deposit.amount} ${deposit.token} confirmed!`)
-                            }}>Confirm</button>
-                            <button className="action-btn reject" onClick={() => {
-                              setPendingDeposits(prev => prev.map(d => 
-                                d.id === deposit.id ? { ...d, status: 'rejected' } : d
-                              ))
-                              localStorage.setItem('adminPendingDeposits', JSON.stringify(
-                                pendingDeposits.map(d => d.id === deposit.id ? { ...d, status: 'rejected' } : d)
-                              ))
-                              alert('Deposit rejected')
-                            }}>Reject</button>
+                            <button className="action-btn approve" onClick={() => handlePendingDepositAction(deposit, 'confirmed')}>Confirm</button>
+                            <button className="action-btn reject" onClick={() => handlePendingDepositAction(deposit, 'rejected')}>Reject</button>
                           </>
+                        )}
+                        {deposit.imageUrl && (
+                          <a href={deposit.imageUrl} target="_blank" rel="noopener noreferrer" className="doc-btn" style={{marginLeft: '4px'}}>📷 View</a>
                         )}
                       </td>
                     </tr>
@@ -3893,16 +3935,17 @@ export default function MasterAdminDashboard() {
                           </button>
                           <button
                             className="action-btn edit"
-                            onClick={() => {
+                            onClick={async () => {
                               const newPassword = prompt(`Enter new password for ${admin.username}:`, '')
                               if (newPassword && newPassword.trim()) {
+                                // Note: Password update would need backend endpoint
+                                // For now, update local state
                                 const updated = adminRoles.map(a =>
                                   a.id === admin.id
                                     ? { ...a, password: newPassword.trim(), role: 'admin' }
                                     : a
                                 )
                                 setAdminRoles(updated)
-                                localStorage.setItem('adminRoles', JSON.stringify(updated))
                                 alert(`Password updated for ${admin.username}`)
                               }
                             }}
@@ -3913,14 +3956,13 @@ export default function MasterAdminDashboard() {
                           <button
                             className="action-btn edit"
                             onClick={() => {
-                              // Toggle status
+                              // Toggle status - for now local only
                               const updated = adminRoles.map(a =>
                                 a.id === admin.id
                                   ? { ...a, status: a.status === 'active' ? 'inactive' : 'active' }
                                   : a
                               )
                               setAdminRoles(updated)
-                              localStorage.setItem('adminRoles', JSON.stringify(updated))
                               // Log action
                               setAdminAuditLogs(prev => [...prev, {
                                 id: Date.now(),
@@ -3937,21 +3979,32 @@ export default function MasterAdminDashboard() {
                           </button>
                           <button
                             className="action-btn block"
-                            onClick={() => {
+                            onClick={async () => {
                               if (confirm(`Delete admin ${admin.username}?`)) {
-                                const updated = adminRoles.filter(a => a.id !== admin.id)
-                                setAdminRoles(updated)
-                                localStorage.setItem('adminRoles', JSON.stringify(updated))
-                                // Log action
-                                setAdminAuditLogs(prev => [...prev, {
-                                  id: Date.now(),
-                                  adminId: 'master',
-                                  adminName: 'Master Admin',
-                                  action: 'admin_delete',
-                                  details: `Deleted admin: ${admin.username}`,
-                                  ip: '192.168.1.1',
-                                  timestamp: new Date().toISOString()
-                                }])
+                                try {
+                                  // Delete from backend
+                                  await authAPI.deleteAdmin(admin.username)
+                                  
+                                  // Update local state
+                                  const updated = adminRoles.filter(a => a.id !== admin.id && a.username !== admin.username)
+                                  setAdminRoles(updated)
+                                  
+                                  // Log action
+                                  setAdminAuditLogs(prev => [...prev, {
+                                    id: Date.now(),
+                                    adminId: 'master',
+                                    adminName: 'Master Admin',
+                                    action: 'admin_delete',
+                                    details: `Deleted admin: ${admin.username}`,
+                                    ip: '192.168.1.1',
+                                    timestamp: new Date().toISOString()
+                                  }])
+                                  
+                                  alert(`Admin ${admin.username} deleted!`)
+                                } catch (error) {
+                                  console.error('Failed to delete admin:', error)
+                                  alert('Failed to delete admin: ' + error.message)
+                                }
                               }
                             }}
                           >
