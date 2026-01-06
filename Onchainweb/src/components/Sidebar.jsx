@@ -100,14 +100,44 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
   // Also sync userId with realAccountId in localStorage
   useEffect(() => {
     const realAccountId = localStorage.getItem('realAccountId')
-    if (realAccountId && /^\d{5}$/.test(realAccountId) && realAccountId !== profile.userId) {
-      // Sync profile userId with realAccountId
+    if (realAccountId && realAccountId !== profile.userId) {
+      // Sync profile userId with realAccountId (backend takes precedence)
       setProfile(prev => ({ ...prev, userId: realAccountId }))
-    } else if (profile.userId && /^\d{5}$/.test(profile.userId)) {
+    } else if (profile.userId) {
       // Set realAccountId from profile userId
       localStorage.setItem('realAccountId', profile.userId)
     }
   }, [profile.userId])
+
+  // Sync with backend when wallet is connected
+  useEffect(() => {
+    const syncWithBackend = async () => {
+      const wallet = localStorage.getItem('walletAddress')
+      if (!wallet) return
+
+      try {
+        const user = await userAPI.getByWallet(wallet)
+        if (user && user.userId) {
+          console.log('Synced with backend user:', user.userId)
+          localStorage.setItem('realAccountId', user.userId)
+          localStorage.setItem('backendUserId', user._id)
+          localStorage.setItem('backendUser', JSON.stringify(user))
+          
+          // Update profile with backend userId
+          setProfile(prev => ({
+            ...prev,
+            userId: user.userId,
+            kycStatus: user.kycStatus || prev.kycStatus,
+            balance: user.balance || prev.balance
+          }))
+        }
+      } catch (error) {
+        console.log('Backend sync skipped:', error.message)
+      }
+    }
+    
+    syncWithBackend()
+  }, []) // Run once on mount
 
   // Get display name (KYC name if available, otherwise username)
   const getDisplayName = () => {
