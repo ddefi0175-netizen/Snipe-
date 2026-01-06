@@ -1,8 +1,8 @@
 // API Configuration for Snipe Backend
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api';
 
-// Helper function for API calls
-async function apiCall(endpoint, options = {}) {
+// Helper function for API calls with retry logic for Render cold starts
+async function apiCall(endpoint, options = {}, retries = 2) {
   const url = `${API_BASE}${endpoint}`;
   const token = localStorage.getItem('adminToken');
   
@@ -15,18 +15,36 @@ async function apiCall(endpoint, options = {}) {
     ...options,
   };
 
-  try {
-    const response = await fetch(url, config);
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'API request failed');
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      // Create abort controller for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), attempt === 0 ? 30000 : 60000); // 30s first try, 60s retry
+      
+      const response = await fetch(url, { ...config, signal: controller.signal });
+      clearTimeout(timeoutId);
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'API request failed');
+      }
+      
+      return data;
+    } catch (error) {
+      const isTimeout = error.name === 'AbortError' || error.message.includes('timeout');
+      const isNetworkError = error.message.includes('Failed to fetch') || error.message.includes('NetworkError');
+      
+      // Retry on timeout or network errors (Render cold start)
+      if ((isTimeout || isNetworkError) && attempt < retries) {
+        console.log(`API retry ${attempt + 1}/${retries} for ${endpoint} (server may be waking up)...`);
+        await new Promise(r => setTimeout(r, 2000)); // Wait 2s before retry
+        continue;
+      }
+      
+      console.error(`API Error [${endpoint}]:`, error);
+      throw error;
     }
-    
-    return data;
-  } catch (error) {
-    console.error(`API Error [${endpoint}]:`, error);
-    throw error;
   }
 }
 
