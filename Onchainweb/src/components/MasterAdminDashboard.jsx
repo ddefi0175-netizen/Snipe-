@@ -308,10 +308,42 @@ export default function MasterAdminDashboard() {
       setAdminRoles(loadedAdminRoles)
     }
 
-    // Load localStorage items synchronously
+    // Fetch trades from backend
+    try {
+      const backendTrades = await tradeAPI.getAll()
+      if (Array.isArray(backendTrades) && backendTrades.length > 0) {
+        // Separate active trades from history
+        const active = backendTrades.filter(t => t.status === 'active' || t.status === 'pending')
+        const history = backendTrades.filter(t => t.status !== 'active' && t.status !== 'pending')
+        setActiveTrades(active)
+        setTradeHistory(history)
+        console.log('Loaded trades from backend:', backendTrades.length, 'active:', active.length)
+      } else {
+        // Fallback to localStorage
+        setActiveTrades(getFromStorage('activeTrades', []))
+        setTradeHistory(getFromStorage('tradeHistory', []))
+      }
+    } catch (error) {
+      console.error('Failed to load trades from backend:', error)
+      setActiveTrades(getFromStorage('activeTrades', []))
+      setTradeHistory(getFromStorage('tradeHistory', []))
+    }
+
+    // Fetch staking from backend
+    try {
+      const { stakingAPI } = await import('../lib/api.js')
+      const backendStakes = await stakingAPI.getAll()
+      if (Array.isArray(backendStakes) && backendStakes.length > 0) {
+        // Map to staking data format
+        console.log('Loaded stakes from backend:', backendStakes.length)
+      }
+    } catch (error) {
+      console.error('Failed to load staking from backend:', error)
+    }
+
+    // Load other config items from localStorage (these are config settings, not user data)
     setUserAgents(getFromStorage('userAgents', defaultData.userAgents))
     setWithdrawals(getFromStorage('adminWithdrawals', []))
-    setTradeHistory(getFromStorage('tradeHistory', []))
     setStakingPlans(getFromStorage('stakingPlans', defaultData.stakingPlans))
     setBonusPrograms(getFromStorage('bonusPrograms', defaultData.bonusPrograms))
     setActiveChats(getFromStorage('activeChats', []))
@@ -325,7 +357,6 @@ export default function MasterAdminDashboard() {
     setAdminAuditLogs(getFromStorage('adminAuditLogs', defaultData.adminAuditLogs))
     setSiteSettings(getFromStorage('siteSettings', defaultData.siteSettings))
     setTradeOptions(getFromStorage('tradeOptions', defaultData.tradeOptions))
-    setActiveTrades(getFromStorage('activeTrades', []))
     setVipRequests(getFromStorage('adminVIPRequests', []))
     
     } catch (outerError) {
@@ -337,20 +368,32 @@ export default function MasterAdminDashboard() {
     }
   }, [defaultData])
 
-  // Refresh active trades in real-time
+  // Refresh active trades in real-time from backend
   useEffect(() => {
     if (!isAuthenticated || !isDataLoaded) return
 
-    const refreshActiveTrades = () => {
+    const refreshActiveTrades = async () => {
+      try {
+        // Try backend first for real-time data
+        const backendTrades = await tradeAPI.getActive()
+        if (Array.isArray(backendTrades)) {
+          setActiveTrades(backendTrades)
+          return
+        }
+      } catch (error) {
+        // Fallback to localStorage for any trades that might be there
+        console.log('Using localStorage for active trades fallback')
+      }
+      
+      // Fallback to localStorage
       const trades = getFromStorage('activeTrades', [])
-      // Filter out expired trades
       const now = Date.now()
       const validTrades = trades.filter(t => t.endTime > now || t.status === 'active')
       setActiveTrades(validTrades)
     }
 
     refreshActiveTrades()
-    const interval = setInterval(refreshActiveTrades, 1000) // Real-time updates
+    const interval = setInterval(refreshActiveTrades, 3000) // Check backend every 3s
     return () => clearInterval(interval)
   }, [isAuthenticated, isDataLoaded])
 
@@ -690,12 +733,20 @@ export default function MasterAdminDashboard() {
     const updates = {
       balance: parseFloat(editUserForm.balance) || editingUser.balance || 0,
       points: parseInt(editUserForm.points) || editingUser.points || 0,
-      vipLevel: parseInt(editUserForm.vipLevel) || editingUser.vipLevel || 1
+      vipLevel: parseInt(editUserForm.vipLevel) || editingUser.vipLevel || 1,
+      // Include all editable fields for complete backend sync
+      withdrawEnabled: editUserForm.withdrawEnabled !== undefined ? editUserForm.withdrawEnabled : editingUser.withdrawEnabled,
+      frozen: editUserForm.frozen !== undefined ? editUserForm.frozen : editingUser.frozen,
+      creditScore: parseInt(editUserForm.creditScore) || editingUser.creditScore || 100,
+      tradeMode: editUserForm.tradeMode || editingUser.tradeMode || 'auto',
+      presetTradeResult: editUserForm.presetTradeResult || editingUser.presetTradeResult || '',
+      allowedTradingLevel: parseInt(editUserForm.allowedTradingLevel) || editingUser.allowedTradingLevel || 1,
     }
 
     try {
       if (editingUser._id) {
         await userAPI.update(editingUser._id, updates)
+        console.log('User updated in backend:', editingUser._id, updates)
       }
       setUsers(prev => prev.map(user =>
         (user.id === editingUser.id || user._id === editingUser._id) ? { ...user, ...updates } : user
@@ -3307,26 +3358,59 @@ export default function MasterAdminDashboard() {
                           <>
                             <button
                               className="outcome-btn win"
-                              onClick={() => {
-                                const trades = JSON.parse(localStorage.getItem('activeTrades') || '[]')
-                                const updated = trades.map(t =>
-                                  t.id === trade.id ? { ...t, adminOutcome: 'win' } : t
-                                )
-                                localStorage.setItem('activeTrades', JSON.stringify(updated))
-                                setActiveTrades(updated)
+                              onClick={async () => {
+                                try {
+                                  // Call backend API to force result
+                                  const tradeId = trade._id || trade.id
+                                  if (trade._id) {
+                                    await tradeAPI.forceResult(trade._id, 'win')
+                                    console.log('Trade set to WIN via backend:', trade._id)
+                                  }
+                                  // Also update localStorage for compatibility
+                                  const trades = JSON.parse(localStorage.getItem('activeTrades') || '[]')
+                                  const updated = trades.map(t =>
+                                    (t.id === trade.id || t._id === trade._id) ? { ...t, adminOutcome: 'win' } : t
+                                  )
+                                  localStorage.setItem('activeTrades', JSON.stringify(updated))
+                                  setActiveTrades(prev => prev.map(t =>
+                                    (t.id === trade.id || t._id === trade._id) ? { ...t, adminOutcome: 'win' } : t
+                                  ))
+                                } catch (error) {
+                                  console.error('Failed to force win:', error)
+                                  // Still update local state
+                                  setActiveTrades(prev => prev.map(t =>
+                                    (t.id === trade.id || t._id === trade._id) ? { ...t, adminOutcome: 'win' } : t
+                                  ))
+                                }
                               }}
                             >
                               ✅ Set WIN
                             </button>
                             <button
                               className="outcome-btn lose"
-                              onClick={() => {
-                                const trades = JSON.parse(localStorage.getItem('activeTrades') || '[]')
-                                const updated = trades.map(t =>
-                                  t.id === trade.id ? { ...t, adminOutcome: 'lose' } : t
-                                )
-                                localStorage.setItem('activeTrades', JSON.stringify(updated))
-                                setActiveTrades(updated)
+                              onClick={async () => {
+                                try {
+                                  // Call backend API to force result
+                                  if (trade._id) {
+                                    await tradeAPI.forceResult(trade._id, 'lose')
+                                    console.log('Trade set to LOSE via backend:', trade._id)
+                                  }
+                                  // Also update localStorage for compatibility
+                                  const trades = JSON.parse(localStorage.getItem('activeTrades') || '[]')
+                                  const updated = trades.map(t =>
+                                    (t.id === trade.id || t._id === trade._id) ? { ...t, adminOutcome: 'lose' } : t
+                                  )
+                                  localStorage.setItem('activeTrades', JSON.stringify(updated))
+                                  setActiveTrades(prev => prev.map(t =>
+                                    (t.id === trade.id || t._id === trade._id) ? { ...t, adminOutcome: 'lose' } : t
+                                  ))
+                                } catch (error) {
+                                  console.error('Failed to force lose:', error)
+                                  // Still update local state
+                                  setActiveTrades(prev => prev.map(t =>
+                                    (t.id === trade.id || t._id === trade._id) ? { ...t, adminOutcome: 'lose' } : t
+                                  ))
+                                }
                               }}
                             >
                               ❌ Set LOSE
@@ -3337,13 +3421,27 @@ export default function MasterAdminDashboard() {
                             {trade.adminOutcome === 'win' ? '✅ Will WIN' : '❌ Will LOSE'}
                             <button
                               className="reset-outcome-btn"
-                              onClick={() => {
-                                const trades = JSON.parse(localStorage.getItem('activeTrades') || '[]')
-                                const updated = trades.map(t =>
-                                  t.id === trade.id ? { ...t, adminOutcome: 'pending' } : t
-                                )
-                                localStorage.setItem('activeTrades', JSON.stringify(updated))
-                                setActiveTrades(updated)
+                              onClick={async () => {
+                                try {
+                                  // Reset via backend
+                                  if (trade._id) {
+                                    await tradeAPI.forceResult(trade._id, 'pending')
+                                    console.log('Trade outcome reset via backend:', trade._id)
+                                  }
+                                  const trades = JSON.parse(localStorage.getItem('activeTrades') || '[]')
+                                  const updated = trades.map(t =>
+                                    (t.id === trade.id || t._id === trade._id) ? { ...t, adminOutcome: 'pending' } : t
+                                  )
+                                  localStorage.setItem('activeTrades', JSON.stringify(updated))
+                                  setActiveTrades(prev => prev.map(t =>
+                                    (t.id === trade.id || t._id === trade._id) ? { ...t, adminOutcome: 'pending' } : t
+                                  ))
+                                } catch (error) {
+                                  console.error('Failed to reset outcome:', error)
+                                  setActiveTrades(prev => prev.map(t =>
+                                    (t.id === trade.id || t._id === trade._id) ? { ...t, adminOutcome: 'pending' } : t
+                                  ))
+                                }
                               }}
                             >
                               Reset
