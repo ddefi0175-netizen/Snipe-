@@ -17,6 +17,7 @@ const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
   
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.log('[VERIFY] No token provided');
     return res.status(401).json({ error: 'No token provided' });
   }
   
@@ -25,17 +26,22 @@ const verifyToken = (req, res, next) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
+    console.log('[VERIFY] Token verified for user:', decoded.username, 'role:', decoded.role);
     next();
   } catch (error) {
+    console.log('[VERIFY] Token error:', error.message);
     return res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
 
 // Middleware to check if user is master
 const requireMaster = (req, res, next) => {
+  console.log('[REQUIRE_MASTER] Checking user:', req.user.username, 'role:', req.user.role);
   if (req.user.role !== 'master') {
+    console.log('[REQUIRE_MASTER] Access denied - not master');
     return res.status(403).json({ error: 'Master access required' });
   }
+  console.log('[REQUIRE_MASTER] Access granted');
   next();
 };
 
@@ -233,9 +239,10 @@ router.post('/admin', verifyToken, requireMaster, async (req, res) => {
   }
 });
 
-// GET /api/auth/admins - List all admin accounts (master only)
-router.get('/admins', verifyToken, requireMaster, async (req, res) => {
+// GET /api/auth/admins - List all admin accounts (master + admin)
+router.get('/admins', verifyToken, requireAdmin, async (req, res) => {
   try {
+    console.log(`[ADMINS] Request from user:`, req.user.username, `role:`, req.user.role);
     const admins = await Admin.find().sort({ createdAt: -1 });
     res.json({
       success: true,
