@@ -549,9 +549,13 @@ export default function MasterAdminDashboard() {
     e.preventDefault()
     setLoginError('')
     
+    console.log('[LOGIN] Attempting login for:', loginData.username)
+    
     try {
       // Call backend API for authentication
       const response = await authAPI.login(loginData.username, loginData.password)
+      
+      console.log('[LOGIN] Backend response:', response)
       
       if (response.success && response.token) {
         // Store JWT token for API calls
@@ -566,11 +570,15 @@ export default function MasterAdminDashboard() {
         setIsAuthenticated(true)
         setIsDataLoaded(false) // Reset to trigger data load
         setIsMasterAccount(response.user.role === 'master')
-        console.log('Login successful via backend:', response.user.username)
+        console.log('[LOGIN] Success! Role:', response.user.role)
+        return
+      } else {
+        console.log('[LOGIN] Response missing success or token')
+        setLoginError('Login failed - invalid response from server')
         return
       }
     } catch (error) {
-      console.error('Backend login failed:', error)
+      console.error('[LOGIN] Backend error:', error.message)
       // Fallback to hardcoded master credentials if backend fails
       if (loginData.username === 'master' && loginData.password === 'OnchainWeb2025!') {
         setIsAuthenticated(true)
@@ -581,20 +589,19 @@ export default function MasterAdminDashboard() {
           timestamp: Date.now()
         }))
         setIsMasterAccount(true)
-        console.log('Login successful via fallback master credentials')
+        console.log('[LOGIN] Fallback master login successful')
         return
       }
       setLoginError(error.message || 'Invalid credentials')
       return
     }
-
-    setLoginError('Invalid credentials or account inactive')
   }
 
   const handleLogout = () => {
     setIsAuthenticated(false)
     setIsDataLoaded(false)
     localStorage.removeItem('masterAdminSession')
+    localStorage.removeItem('adminToken')
   }
 
   // Filter function for search
