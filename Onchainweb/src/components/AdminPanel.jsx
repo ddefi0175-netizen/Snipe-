@@ -628,7 +628,7 @@ export default function AdminPanel({ isOpen, onClose }) {
                           {pendingUploads.map(upload => (
                             <div key={upload.id} className="upload-item">
                               <div className="upload-info">
-                                <span className="user-id-tag">User ID: {upload.oderId}</span>
+                                <span className="user-id-tag">User ID: {upload.userId}</span>
                                 <span className="upload-amount">${upload.amount} USDT</span>
                                 <span className="upload-network">{upload.network}</span>
                                 {upload.txHash && <span className="upload-txhash">TX: {upload.txHash.slice(0,15)}...</span>}
@@ -646,7 +646,7 @@ export default function AdminPanel({ isOpen, onClose }) {
                                     localStorage.setItem('adminDepositUploads', JSON.stringify(uploads))
                                     // Add points to user
                                     localStorage.setItem('userPoints', upload.amount.toString())
-                                    alert(`Approved! ${upload.amount} points added to user ${upload.oderId}`)
+                                    alert(`Approved! ${upload.amount} points added to user ${upload.userId}`)
                                     loadAllUsers()
                                   }
                                 }}>✓ Approve</button>
@@ -657,7 +657,7 @@ export default function AdminPanel({ isOpen, onClose }) {
                                     uploads[idx].status = 'rejected'
                                     uploads[idx].reviewedAt = new Date().toISOString()
                                     localStorage.setItem('adminDepositUploads', JSON.stringify(uploads))
-                                    alert(`Rejected deposit from user ${upload.oderId}`)
+                                    alert(`Rejected deposit from user ${upload.userId}`)
                                     loadAllUsers()
                                   }
                                 }}>✕ Reject</button>
@@ -679,7 +679,7 @@ export default function AdminPanel({ isOpen, onClose }) {
                           {pendingKYC.map(kyc => (
                             <div key={kyc.id} className="kyc-item">
                               <div className="kyc-info">
-                                <span className="user-id-tag">User ID: {kyc.oderId}</span>
+                                <span className="user-id-tag">User ID: {kyc.userId}</span>
                                 <span className="kyc-name">{kyc.fullName}</span>
                                 <span className="kyc-doc">{kyc.docType}: {kyc.docNumber}</span>
                               </div>
@@ -699,7 +699,7 @@ export default function AdminPanel({ isOpen, onClose }) {
                                     profile.kycStatus = 'verified'
                                     profile.kycVerifiedAt = new Date().toISOString()
                                     localStorage.setItem('userProfile', JSON.stringify(profile))
-                                    alert(`KYC approved for user ${kyc.oderId}`)
+                                    alert(`KYC approved for user ${kyc.userId}`)
                                     loadAllUsers()
                                   }
                                 }}>✓ Approve</button>
@@ -712,7 +712,7 @@ export default function AdminPanel({ isOpen, onClose }) {
                                     const profile = JSON.parse(localStorage.getItem('userProfile') || '{}')
                                     profile.kycStatus = 'rejected'
                                     localStorage.setItem('userProfile', JSON.stringify(profile))
-                                    alert(`KYC rejected for user ${kyc.oderId}`)
+                                    alert(`KYC rejected for user ${kyc.userId}`)
                                     loadAllUsers()
                                   }
                                 }}>✕ Reject</button>

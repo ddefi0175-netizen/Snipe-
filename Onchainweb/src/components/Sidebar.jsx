@@ -304,7 +304,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
     const kycRequests = JSON.parse(localStorage.getItem('adminKYCRequests') || '[]')
     kycRequests.unshift({
       id: Date.now(),
-      oderId: profile.userId,
+      userId: profile.userId,
       fullName: kycFullName,
       docType: kycDocType,
       docNumber: kycDocNumber,
@@ -352,7 +352,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
 
     const newUpload = {
       id: Date.now(),
-      oderId: profile.userId,
+      userId: profile.userId,
       amount: parseFloat(uploadAmount),
       network: uploadNetwork,
       txHash: uploadTxHash || '',
