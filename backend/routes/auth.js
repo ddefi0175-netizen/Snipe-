@@ -292,6 +292,36 @@ router.patch('/admin/:id/assign', verifyToken, requireMaster, async (req, res) =
   }
 });
 
+// PATCH /api/auth/admin/:username/password - Reset admin password (master only)
+router.patch('/admin/:username/password', verifyToken, requireMaster, async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { newPassword } = req.body;
+    
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    }
+    
+    const admin = await Admin.findOneAndUpdate(
+      { username },
+      { password: newPassword },
+      { new: true }
+    );
+    
+    if (!admin) {
+      return res.status(404).json({ error: 'Admin not found' });
+    }
+    
+    res.json({
+      success: true,
+      message: `Password reset for ${username}`
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Export router and middleware
 module.exports = router;
 module.exports.verifyToken = verifyToken;

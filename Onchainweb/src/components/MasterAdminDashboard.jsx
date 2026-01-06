@@ -3927,7 +3927,7 @@ export default function MasterAdminDashboard() {
                           <button
                             className="action-btn view"
                             onClick={() => {
-                              alert(`Admin: ${admin.username}\nEmail: ${admin.email}\nPassword: ${admin.password || '(not set)'}\nRole: ${admin.role}\nStatus: ${admin.status}`)
+                              alert(`Admin: ${admin.username}\nEmail: ${admin.email || 'N/A'}\nRole: ${admin.role}\nStatus: ${admin.status}`)
                             }}
                             style={{ background: '#3b82f6' }}
                           >
@@ -3936,17 +3936,18 @@ export default function MasterAdminDashboard() {
                           <button
                             className="action-btn edit"
                             onClick={async () => {
-                              const newPassword = prompt(`Enter new password for ${admin.username}:`, '')
-                              if (newPassword && newPassword.trim()) {
-                                // Note: Password update would need backend endpoint
-                                // For now, update local state
-                                const updated = adminRoles.map(a =>
-                                  a.id === admin.id
-                                    ? { ...a, password: newPassword.trim(), role: 'admin' }
-                                    : a
-                                )
-                                setAdminRoles(updated)
-                                alert(`Password updated for ${admin.username}`)
+                              const newPassword = prompt(`Enter new password for ${admin.username} (min 6 characters):`, '')
+                              if (newPassword && newPassword.trim() && newPassword.trim().length >= 6) {
+                                try {
+                                  // Reset password via backend API
+                                  await authAPI.resetAdminPassword(admin.username, newPassword.trim())
+                                  alert(`✅ Password reset for ${admin.username}!\n\nNew password: ${newPassword.trim()}\n\nAdmin can now login with this password.`)
+                                } catch (error) {
+                                  console.error('Failed to reset password:', error)
+                                  alert('❌ Failed to reset password: ' + error.message)
+                                }
+                              } else if (newPassword) {
+                                alert('Password must be at least 6 characters')
                               }
                             }}
                             style={{ background: '#f59e0b' }}

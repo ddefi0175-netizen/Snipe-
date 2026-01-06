@@ -220,6 +220,12 @@ export const authAPI = {
   deleteAdmin: (username) => apiCall(`/auth/admin/${username}`, {
     method: 'DELETE',
   }),
+  
+  // Reset admin password (master only)
+  resetAdminPassword: (username, newPassword) => apiCall(`/auth/admin/${username}/password`, {
+    method: 'PATCH',
+    body: JSON.stringify({ newPassword }),
+  }),
 };
 
 // Export base URL for direct use if needed
