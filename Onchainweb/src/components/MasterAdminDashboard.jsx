@@ -611,6 +611,12 @@ export default function MasterAdminDashboard() {
     
     console.log('[LOGIN] Attempting login for:', loginData.username)
     
+    // Validate inputs
+    if (!loginData.username || !loginData.password) {
+      setLoginError('Please enter username and password')
+      return
+    }
+    
     // Check if localStorage is available
     try {
       localStorage.setItem('test', 'test')
@@ -619,6 +625,8 @@ export default function MasterAdminDashboard() {
       setLoginError('Storage access blocked. Please enable cookies/localStorage in your browser settings.')
       return
     }
+    
+    setLoginError('Connecting to server...')
     
     try {
       // Call backend API for authentication
@@ -636,14 +644,15 @@ export default function MasterAdminDashboard() {
           timestamp: Date.now()
         }))
         
+        setLoginError('') // Clear any loading message
         setIsAuthenticated(true)
         setIsDataLoaded(false) // Reset to trigger data load
         setIsMasterAccount(response.user.role === 'master')
         console.log('[LOGIN] Success! Role:', response.user.role, 'Token stored:', !!localStorage.getItem('adminToken'))
         return
       } else {
-        console.log('[LOGIN] Response missing success or token')
-        setLoginError('Login failed - invalid response from server')
+        console.log('[LOGIN] Response missing success or token:', response)
+        setLoginError(response.error || 'Login failed - invalid response from server')
         return
       }
     } catch (error) {
@@ -666,13 +675,14 @@ export default function MasterAdminDashboard() {
           },
           timestamp: Date.now()
         }))
+        setLoginError('')
         setIsAuthenticated(true)
         setIsDataLoaded(false)
         setIsMasterAccount(true)
         console.log('[LOGIN] Fallback master login successful')
         return
       }
-      setLoginError(error.message || 'Invalid credentials')
+      setLoginError(error.message || 'Invalid credentials. Check username/password.')
       return
     }
   }

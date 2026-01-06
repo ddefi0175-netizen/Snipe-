@@ -211,6 +211,13 @@ export default function AdminPanel({ isOpen = true, onClose }) {
   const handleLogin = async () => {
     setLoginError('')
     
+    if (!loginUsername || !loginPassword) {
+      setLoginError('Please enter username and password')
+      return
+    }
+    
+    setLoginError('Connecting to server...')
+    
     try {
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
@@ -225,6 +232,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         localStorage.setItem('adminToken', data.token)
         localStorage.setItem('adminUser', JSON.stringify(data.user))
         
+        setLoginError('')
         setIsAuthenticated(true)
         setCurrentAdmin(data.user)
         setLoginUsername('')
@@ -234,7 +242,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       }
     } catch (error) {
       console.error('Login error:', error)
-      setLoginError('Connection error. Please try again.')
+      setLoginError('Connection error. Server may be starting up, please try again in a few seconds.')
     }
   }
   
