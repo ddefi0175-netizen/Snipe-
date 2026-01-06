@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { userAPI, uploadAPI } from '../lib/api'
 
 export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick, onDemoClick, onC2CClick, onBorrowClick, onWalletActionsClick }) {
   const [activeModal, setActiveModal] = useState(null)
@@ -272,7 +273,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
     }
   }
 
-  const handleKycSubmit = () => {
+  const handleKycSubmit = async () => {
     // If already verified, don't allow changes
     if (profile.kycStatus === 'verified') {
       alert('Your KYC is already verified. You cannot modify your information.')
@@ -288,7 +289,27 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
       return
     }
     
-    // Save KYC data
+    try {
+      // Get wallet address for user identification
+      const wallet = localStorage.getItem('walletAddress')
+      if (wallet) {
+        // Submit KYC to backend
+        const user = await userAPI.getByWallet(wallet).catch(() => null)
+        if (user && user._id) {
+          await userAPI.submitKYC(user._id, {
+            fullName: kycFullName,
+            docType: kycDocType,
+            docNumber: kycDocNumber,
+            frontPhoto: kycFrontPreview,
+            backPhoto: kycBackPreview
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Failed to submit KYC to backend:', error)
+    }
+    
+    // Also save locally for immediate UI update
     setProfile(prev => ({
       ...prev,
       kycFullName,
@@ -299,21 +320,6 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
       kycStatus: 'pending',
       kycSubmittedAt: new Date().toISOString()
     }))
-    
-    // Save to admin KYC requests for review
-    const kycRequests = JSON.parse(localStorage.getItem('adminKYCRequests') || '[]')
-    kycRequests.unshift({
-      id: Date.now(),
-      userId: profile.userId,
-      fullName: kycFullName,
-      docType: kycDocType,
-      docNumber: kycDocNumber,
-      frontPhoto: kycFrontPreview,
-      backPhoto: kycBackPreview,
-      status: 'pending',
-      submittedAt: new Date().toISOString()
-    })
-    localStorage.setItem('adminKYCRequests', JSON.stringify(kycRequests))
     
     alert('KYC documents submitted successfully!\n\nYour verification is pending review. You will be notified once approved.')
   }
@@ -336,7 +342,7 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
   }
 
   // Handle Deposit Proof Submission
-  const handleUploadSubmit = () => {
+  const handleUploadSubmit = async () => {
     if (!uploadAmount || parseFloat(uploadAmount) <= 0) {
       alert('Please enter a valid deposit amount')
       return
@@ -350,6 +356,21 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
       return
     }
 
+    const wallet = localStorage.getItem('walletAddress')
+    
+    try {
+      // Submit to backend
+      await uploadAPI.create({
+        userId: wallet || profile.userId,
+        imageUrl: uploadScreenshotPreview,
+        amount: parseFloat(uploadAmount),
+        network: uploadNetwork,
+        txHash: uploadTxHash || ''
+      })
+    } catch (error) {
+      console.error('Failed to submit upload to backend:', error)
+    }
+
     const newUpload = {
       id: Date.now(),
       userId: profile.userId,
@@ -361,15 +382,10 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
       submittedAt: new Date().toISOString()
     }
 
-    // Save to user's upload history
+    // Save to user's upload history locally
     const newHistory = [newUpload, ...uploadHistory]
     setUploadHistory(newHistory)
     localStorage.setItem('uploadHistory', JSON.stringify(newHistory))
-
-    // Save to admin review queue
-    const adminUploads = JSON.parse(localStorage.getItem('adminDepositUploads') || '[]')
-    adminUploads.unshift(newUpload)
-    localStorage.setItem('adminDepositUploads', JSON.stringify(adminUploads))
 
     // Reset form
     setUploadAmount('')

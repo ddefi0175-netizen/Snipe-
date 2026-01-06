@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { userAPI } from '../lib/api'
 
 // Web3 Wallet Gate - User MUST connect wallet to see any content
 export default function WalletGate({ onConnect, children }) {
@@ -9,6 +10,26 @@ export default function WalletGate({ onConnect, children }) {
   // Check if already connected
   const isConnected = localStorage.getItem('walletConnected') === 'true'
   const connectedAddress = localStorage.getItem('walletAddress') || ''
+
+  // Register user in backend
+  const registerUserInBackend = async (address) => {
+    try {
+      const user = await userAPI.loginByWallet(address)
+      // Store user data from backend
+      if (user) {
+        localStorage.setItem('backendUserId', user._id)
+        localStorage.setItem('backendUser', JSON.stringify(user))
+        // Sync userId
+        if (user.userId) {
+          localStorage.setItem('realAccountId', user.userId)
+        }
+      }
+      return user
+    } catch (error) {
+      console.error('Failed to register user in backend:', error)
+      return null
+    }
+  }
 
   // Supported wallets
   const wallets = [
@@ -31,35 +52,36 @@ export default function WalletGate({ onConnect, children }) {
     setSelectedWallet(walletId)
 
     try {
+      let address = ''
+      
       // Check if MetaMask or other Web3 provider exists
       if (walletId === 'metamask' && typeof window.ethereum !== 'undefined') {
         // Real MetaMask connection
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' })
         if (accounts.length > 0) {
-          const address = accounts[0]
-          localStorage.setItem('walletConnected', 'true')
-          localStorage.setItem('walletAddress', address)
-          localStorage.setItem('walletType', walletId)
-          if (onConnect) onConnect(address)
-          window.location.reload()
-          return
+          address = accounts[0]
         }
+      } else {
+        // For other wallets or if no Web3 provider, simulate connection
+        await new Promise(resolve => setTimeout(resolve, 2000))
+        
+        // Generate a simulated address
+        address = '0x' + Array.from({length: 40}, () => 
+          Math.floor(Math.random() * 16).toString(16)
+        ).join('')
       }
-
-      // For other wallets or if no Web3 provider, simulate connection
-      await new Promise(resolve => setTimeout(resolve, 2000))
       
-      // Generate a simulated address
-      const simulatedAddress = '0x' + Array.from({length: 40}, () => 
-        Math.floor(Math.random() * 16).toString(16)
-      ).join('')
-
-      localStorage.setItem('walletConnected', 'true')
-      localStorage.setItem('walletAddress', simulatedAddress)
-      localStorage.setItem('walletType', walletId)
-      
-      if (onConnect) onConnect(simulatedAddress)
-      window.location.reload()
+      if (address) {
+        localStorage.setItem('walletConnected', 'true')
+        localStorage.setItem('walletAddress', address)
+        localStorage.setItem('walletType', walletId)
+        
+        // Register user in backend database
+        await registerUserInBackend(address)
+        
+        if (onConnect) onConnect(address)
+        window.location.reload()
+      }
 
     } catch (err) {
       setError('Connection failed. Please try again or use a different wallet.')

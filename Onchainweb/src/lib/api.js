@@ -4,9 +4,12 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.co
 // Helper function for API calls
 async function apiCall(endpoint, options = {}) {
   const url = `${API_BASE}${endpoint}`;
+  const token = localStorage.getItem('adminToken');
+  
   const config = {
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
       ...options.headers,
     },
     ...options,
@@ -35,38 +38,80 @@ export const userAPI = {
   // Get user by wallet address
   getByWallet: (wallet) => apiCall(`/users/wallet/${wallet}`),
   
-  // Create new user
+  // Get user by userId
+  getByUserId: (userId) => apiCall(`/users/id/${userId}`),
+  
+  // Create new user (register/login)
   create: (userData) => apiCall('/users', {
     method: 'POST',
     body: JSON.stringify(userData),
   }),
   
-  // Update user
+  // Update user by MongoDB ID
   update: (id, userData) => apiCall(`/users/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(userData),
   }),
   
+  // Update user by wallet
+  updateByWallet: (wallet, userData) => apiCall(`/users/wallet/${wallet}`, {
+    method: 'PATCH',
+    body: JSON.stringify(userData),
+  }),
+  
+  // Submit KYC
+  submitKYC: (id, kycData) => apiCall(`/users/${id}/kyc`, {
+    method: 'POST',
+    body: JSON.stringify(kycData),
+  }),
+  
+  // Review KYC (admin)
+  reviewKYC: (id, status) => apiCall(`/users/${id}/kyc/review`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  }),
+  
+  // Get pending KYC
+  getPendingKYC: () => apiCall('/users/kyc/pending'),
+  
+  // Freeze/unfreeze user
+  setFrozen: (id, frozen) => apiCall(`/users/${id}/freeze`, {
+    method: 'PATCH',
+    body: JSON.stringify({ frozen }),
+  }),
+  
+  // Set trade mode (admin controls win/lose)
+  setTradeMode: (id, tradeMode) => apiCall(`/users/${id}/trade-mode`, {
+    method: 'PATCH',
+    body: JSON.stringify({ tradeMode }),
+  }),
+  
+  // Update points
+  updatePoints: (id, amount, type) => apiCall(`/users/${id}/points`, {
+    method: 'PATCH',
+    body: JSON.stringify({ amount, type }),
+  }),
+  
+  // Delete user
+  delete: (id) => apiCall(`/users/${id}`, {
+    method: 'DELETE',
+  }),
+  
+  // Assign user to admin
+  assignToAdmin: (id, adminId) => apiCall(`/users/${id}/assign`, {
+    method: 'PATCH',
+    body: JSON.stringify({ adminId }),
+  }),
+  
+  // Get users assigned to admin
+  getByAdmin: (adminId) => apiCall(`/users/admin/${adminId}/users`),
+  
   // Login or register user by wallet
-  loginByWallet: async (wallet) => {
-    try {
-      // Try to get existing user
-      const users = await apiCall('/users');
-      const existingUser = users.find(u => u.wallet === wallet);
-      
-      if (existingUser) {
-        return existingUser;
-      }
-      
-      // Create new user
-      return await apiCall('/users', {
-        method: 'POST',
-        body: JSON.stringify({ wallet, role: 'user' }),
-      });
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
+  loginByWallet: async (wallet, username, email) => {
+    return await apiCall('/users', {
+      method: 'POST',
+      body: JSON.stringify({ wallet, username, email }),
+    });
   },
 };
 
@@ -97,19 +142,65 @@ export const uploadAPI = {
   // Get all uploads (admin)
   getAll: () => apiCall('/uploads'),
   
+  // Get pending uploads
+  getPending: () => apiCall('/uploads?status=pending'),
+  
+  // Get pending count
+  getPendingCount: () => apiCall('/uploads/pending/count'),
+  
   // Get uploads by user
   getByUserId: (userId) => apiCall(`/uploads?userId=${userId}`),
   
-  // Create upload
+  // Create upload (user submits deposit proof)
   create: (uploadData) => apiCall('/uploads', {
     method: 'POST',
     body: JSON.stringify(uploadData),
   }),
   
-  // Update upload status (admin)
-  updateStatus: (id, status) => apiCall(`/uploads/${id}`, {
+  // Update upload status (admin approve/reject)
+  updateStatus: (id, status, adminNote) => apiCall(`/uploads/${id}`, {
     method: 'PATCH',
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, adminNote }),
+  }),
+  
+  // Approve deposit
+  approve: (id, amount) => apiCall(`/uploads/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'approved', amount }),
+  }),
+  
+  // Reject deposit
+  reject: (id, adminNote) => apiCall(`/uploads/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status: 'rejected', adminNote }),
+  }),
+};
+
+// ============== AUTH API ==============
+export const authAPI = {
+  // Login
+  login: (username, password) => apiCall('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  }),
+  
+  // Verify token
+  verify: () => apiCall('/auth/verify', {
+    method: 'POST',
+  }),
+  
+  // Create admin (master only)
+  createAdmin: (adminData) => apiCall('/auth/admin', {
+    method: 'POST',
+    body: JSON.stringify(adminData),
+  }),
+  
+  // Get all admins
+  getAdmins: () => apiCall('/auth/admins'),
+  
+  // Delete admin
+  deleteAdmin: (username) => apiCall(`/auth/admin/${username}`, {
+    method: 'DELETE',
   }),
 };
 

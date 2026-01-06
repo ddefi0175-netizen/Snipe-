@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { userAPI, uploadAPI, authAPI } from '../lib/api'
 
 // API Base URL for authentication
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api'
@@ -172,37 +173,38 @@ export default function AdminPanel({ isOpen, onClose }) {
     }
   }, [isOpen])
   
-  const loadAllUsers = () => {
-    // Get main user profile
-    const userProfile = localStorage.getItem('userProfile')
-    const walletData = localStorage.getItem('walletData')
-    const tradeHistory = localStorage.getItem('tradeHistory')
-    const aiHistory = localStorage.getItem('investmentHistory')
-    
-    const users = []
-    
-    if (userProfile) {
-      const profile = JSON.parse(userProfile)
-      const wallet = walletData ? JSON.parse(walletData) : { balance: 0 }
-      const trades = tradeHistory ? JSON.parse(tradeHistory) : []
-      const aiInvestments = aiHistory ? JSON.parse(aiHistory) : []
-      
-      users.push({
-        id: profile.userId || '00001',
-        ...profile,
-        balance: wallet.balance || 0,
-        points: profile.points || 0,
-        totalDeposits: wallet.totalDeposits || 0,
-        totalWithdrawals: wallet.totalWithdrawals || 0,
-        tradeCount: trades.length,
-        aiInvestmentCount: aiInvestments.length,
-        lastActive: new Date().toISOString(),
-        allowedTradingLevel: profile.allowedTradingLevel || 1
-      })
+  const loadAllUsers = async () => {
+    try {
+      // Fetch all users from backend database
+      const users = await userAPI.getAll()
+      setAllUsers(users)
+    } catch (error) {
+      console.error('Failed to load users:', error)
+      // Fallback to empty array
+      setAllUsers([])
     }
-    
-    setAllUsers(users)
-    localStorage.setItem('allUsersData', JSON.stringify(users))
+  }
+  
+  // Load pending uploads from backend
+  const loadPendingUploads = async () => {
+    try {
+      const uploads = await uploadAPI.getPending()
+      return uploads
+    } catch (error) {
+      console.error('Failed to load pending uploads:', error)
+      return []
+    }
+  }
+  
+  // Load pending KYC from backend
+  const loadPendingKYC = async () => {
+    try {
+      const users = await userAPI.getPendingKYC()
+      return users
+    } catch (error) {
+      console.error('Failed to load pending KYC:', error)
+      return []
+    }
   }
   
   // Handle login via backend API
@@ -357,68 +359,166 @@ export default function AdminPanel({ isOpen, onClose }) {
     }
   }
   
-  // Update user balance
-  const updateUserBalance = (userId, amount, type) => {
-    const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
-    const walletData = JSON.parse(localStorage.getItem('walletData') || '{"balance":0}')
-    
-    if (type === 'add') {
-      walletData.balance = (walletData.balance || 0) + parseFloat(amount)
-    } else if (type === 'subtract') {
-      walletData.balance = Math.max(0, (walletData.balance || 0) - parseFloat(amount))
-    } else if (type === 'set') {
-      walletData.balance = parseFloat(amount)
+  // Update user balance (using backend API)
+  const updateUserBalance = async (userId, amount, type) => {
+    try {
+      const user = allUsers.find(u => u._id === userId || u.userId === userId)
+      if (!user) {
+        alert('User not found')
+        return
+      }
+      
+      let newBalance = user.balance || 0
+      if (type === 'add') {
+        newBalance += parseFloat(amount)
+      } else if (type === 'subtract') {
+        newBalance = Math.max(0, newBalance - parseFloat(amount))
+      } else if (type === 'set') {
+        newBalance = parseFloat(amount)
+      }
+      
+      await userAPI.update(user._id, { balance: newBalance })
+      await loadAllUsers()
+      alert(`Balance updated successfully! New balance: $${newBalance.toFixed(2)}`)
+    } catch (error) {
+      console.error('Failed to update balance:', error)
+      alert('Failed to update balance')
+    }
+  }
+  
+  // Update user KYC status (using backend API)
+  const updateUserKYC = async (userId, status) => {
+    try {
+      const user = allUsers.find(u => u._id === userId || u.userId === userId)
+      if (!user) return
+      
+      await userAPI.reviewKYC(user._id, status)
+      await loadAllUsers()
+      alert(`KYC status updated to: ${status}`)
+    } catch (error) {
+      console.error('Failed to update KYC:', error)
+      alert('Failed to update KYC status')
+    }
+  }
+  
+  // Update user VIP level (using backend API)
+  const updateUserVIP = async (userId, level) => {
+    try {
+      const user = allUsers.find(u => u._id === userId || u.userId === userId)
+      if (!user) return
+      
+      await userAPI.update(user._id, { vipLevel: parseInt(level) })
+      await loadAllUsers()
+      alert(`VIP level updated to: ${level}`)
+    } catch (error) {
+      console.error('Failed to update VIP:', error)
+      alert('Failed to update VIP level')
+    }
+  }
+  
+  // Update user points (using backend API)
+  const updateUserPoints = async (userId, points, type) => {
+    try {
+      const user = allUsers.find(u => u._id === userId || u.userId === userId)
+      if (!user) return
+      
+      await userAPI.updatePoints(user._id, parseInt(points), type)
+      await loadAllUsers()
+      alert(`Points updated successfully!`)
+    } catch (error) {
+      console.error('Failed to update points:', error)
+      alert('Failed to update points')
+    }
+  }
+  
+  // Update trade control (using backend API)
+  const updateTradeControl = async (userId, mode) => {
+    try {
+      const user = allUsers.find(u => u._id === userId || u.userId === userId)
+      if (!user) return
+      
+      await userAPI.setTradeMode(user._id, mode)
+      await loadAllUsers()
+      alert(`Trade mode set to ${mode} for user ${user.userId}`)
+    } catch (error) {
+      console.error('Failed to update trade mode:', error)
+      alert('Failed to update trade mode')
+    }
+  }
+  
+  // Freeze/unfreeze user (using backend API)
+  const toggleFreezeUser = async (userId, frozen) => {
+    try {
+      const user = allUsers.find(u => u._id === userId || u.userId === userId)
+      if (!user) return
+      
+      await userAPI.setFrozen(user._id, frozen)
+      await loadAllUsers()
+      alert(`User ${frozen ? 'frozen' : 'unfrozen'} successfully`)
+    } catch (error) {
+      console.error('Failed to freeze/unfreeze user:', error)
+      alert('Failed to update user status')
+    }
+  }
+  
+  // Delete user (using backend API)
+  const deleteUser = async (userId) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return
     }
     
-    localStorage.setItem('walletData', JSON.stringify(walletData))
-    loadAllUsers()
-    alert(`Balance updated successfully! New balance: $${walletData.balance.toFixed(2)}`)
-  }
-  
-  // Update user KYC status
-  const updateUserKYC = (userId, status) => {
-    const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
-    userProfile.kycStatus = status
-    localStorage.setItem('userProfile', JSON.stringify(userProfile))
-    loadAllUsers()
-    alert(`KYC status updated to: ${status}`)
-  }
-  
-  // Update user VIP level
-  const updateUserVIP = (userId, level) => {
-    const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
-    userProfile.vipLevel = parseInt(level)
-    localStorage.setItem('userProfile', JSON.stringify(userProfile))
-    loadAllUsers()
-    alert(`VIP level updated to: ${level}`)
-  }
-  
-  // Update user points
-  const updateUserPoints = (userId, points, type) => {
-    const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
-    const currentPoints = userProfile.points || 0
-    
-    if (type === 'add') {
-      userProfile.points = currentPoints + parseInt(points)
-    } else if (type === 'subtract') {
-      userProfile.points = Math.max(0, currentPoints - parseInt(points))
-    } else if (type === 'set') {
-      userProfile.points = parseInt(points)
+    try {
+      const user = allUsers.find(u => u._id === userId || u.userId === userId)
+      if (!user) return
+      
+      await userAPI.delete(user._id)
+      await loadAllUsers()
+      alert('User deleted successfully')
+    } catch (error) {
+      console.error('Failed to delete user:', error)
+      alert('Failed to delete user')
     }
-    
-    localStorage.setItem('userProfile', JSON.stringify(userProfile))
-    loadAllUsers()
-    alert(`Points updated successfully! New points: ${userProfile.points}`)
   }
   
-  // Update trade control
-  const updateTradeControl = (key, value) => {
-    const newControl = { ...tradeControl, [key]: value }
-    setTradeControl(newControl)
-    localStorage.setItem('adminTradeControl', JSON.stringify(newControl))
+  // Update trading level allowed (using backend API)
+  const updateAllowedTradingLevel = async (userId, level) => {
+    try {
+      const user = allUsers.find(u => u._id === userId || u.userId === userId)
+      if (!user) return
+      
+      await userAPI.update(user._id, { allowedTradingLevel: parseInt(level) })
+      await loadAllUsers()
+      alert(`Trading level set to ${level} for user ${user.userId}`)
+    } catch (error) {
+      console.error('Failed to update trading level:', error)
+      alert('Failed to update trading level')
+    }
   }
   
-  // Update trading level
+  // Approve deposit upload (using backend API)
+  const approveDeposit = async (uploadId, amount) => {
+    try {
+      await uploadAPI.approve(uploadId, amount)
+      alert(`Deposit of $${amount} approved!`)
+      await loadAllUsers()
+    } catch (error) {
+      console.error('Failed to approve deposit:', error)
+      alert('Failed to approve deposit')
+    }
+  }
+  
+  // Reject deposit upload (using backend API)
+  const rejectDeposit = async (uploadId) => {
+    try {
+      await uploadAPI.reject(uploadId, 'Rejected by admin')
+      alert('Deposit rejected')
+    } catch (error) {
+      console.error('Failed to reject deposit:', error)
+      alert('Failed to reject deposit')
+    }
+  }
+  
+  // Update trading level config (local storage for now)
   const updateTradingLevel = (index, field, value) => {
     const updated = [...tradingLevels]
     updated[index] = { ...updated[index], [field]: parseFloat(value) || 0 }
