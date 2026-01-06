@@ -8,8 +8,9 @@ import './styles/master-admin.css'
 // Import main app directly for fast initial load
 import MainApp from './App.jsx'
 
-// Lazy load Master Admin for code splitting
+// Lazy load Admin panels for code splitting
 const MasterAdminDashboard = lazy(() => import('./components/MasterAdminDashboard.jsx'))
+const AdminPanel = lazy(() => import('./components/AdminPanel.jsx'))
 
 // Loading spinner for lazy loaded routes
 const LoadingSpinner = () => (
@@ -44,6 +45,7 @@ createRoot(document.getElementById('root')).render(
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             <Route path="/" element={<MainApp />} />
+            <Route path="/admin" element={<AdminPanel isOpen={true} onClose={() => window.location.href = '/'} />} />
             <Route path="/master-admin" element={<MasterAdminDashboard />} />
           </Routes>
         </Suspense>

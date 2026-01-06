@@ -32,7 +32,7 @@ const DEFAULT_DEPOSIT_ADDRESSES = [
   { network: 'MATIC', name: 'Polygon', address: '', enabled: true },
 ]
 
-export default function AdminPanel({ isOpen, onClose }) {
+export default function AdminPanel({ isOpen = true, onClose }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loginUsername, setLoginUsername] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
@@ -592,10 +592,13 @@ export default function AdminPanel({ isOpen, onClose }) {
     alert('Notification sent!')
   }
 
-  if (!isOpen) return null
+  // Determine if running as standalone page or modal
+  const isStandalone = typeof onClose === 'function' ? false : true
+  
+  if (!isOpen && !isStandalone) return null
 
   return (
-    <div className="admin-modal-overlay" onClick={onClose}>
+    <div className={`admin-modal-overlay ${isStandalone ? 'standalone' : ''}`} onClick={!isStandalone ? onClose : undefined}>
       <div className="admin-modal master-admin" onClick={e => e.stopPropagation()}>
         {!isAuthenticated ? (
           // Login Screen
