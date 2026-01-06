@@ -22,14 +22,12 @@ app.get('/', (req, res) => {
   res.send('Snipe backend API running');
 });
 
-// Debug endpoint to check config (remove in production)
-app.get('/api/debug/config', (req, res) => {
+// Health check endpoint
+app.get('/api/health', (req, res) => {
   res.json({
-    masterUsername: process.env.MASTER_USERNAME || 'master',
-    masterPasswordSet: !!process.env.MASTER_PASSWORD,
-    masterPasswordLength: (process.env.MASTER_PASSWORD || 'OnchainWeb2025!').length,
+    status: 'ok',
     mongoConnected: mongoose.connection.readyState === 1,
-    nodeEnv: process.env.NODE_ENV
+    timestamp: new Date().toISOString()
   });
 });
 
