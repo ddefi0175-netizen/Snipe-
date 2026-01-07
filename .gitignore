@@ -22,6 +22,9 @@ Thumbs.db
 .env.local
 .env.*.local
 
+# Admin Documentation (Private)
+ADMIN_ONLY.md
+
 # Build outputs
 *.tgz
 
