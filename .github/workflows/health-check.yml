@@ -1,0 +1,75 @@
+name: Health Check - Production Monitoring
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Make test script executable
+        run: chmod +x ./test-deployment.sh
+
+      - name: Run health checks
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL || 'https://snipe-backend.onrender.com' }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL || 'https://snipe-frontend.vercel.app' }}
+        run: |
+          echo "🔍 Running automated health checks..."
+          echo "Backend URL: $BACKEND_URL"
+          echo "Frontend URL: $FRONTEND_URL"
+          
+          # Test backend health
+          echo ""
+          echo "=== BACKEND HEALTH CHECK ==="
+          BACKEND_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/health" || echo "000")
+          if [ "$BACKEND_HEALTH" = "200" ]; then
+            echo "✅ Backend health check passed (HTTP $BACKEND_HEALTH)"
+          else
+            echo "❌ Backend health check failed (HTTP $BACKEND_HEALTH)"
+            exit 1
+          fi
+          
+          # Test backend API endpoints
+          echo ""
+          echo "=== API ENDPOINTS CHECK ==="
+          API_RESPONSE=$(curl -s "$BACKEND_URL/api/users" -H "Content-Type: application/json" || echo "{}")
+          if echo "$API_RESPONSE" | grep -q "users\|data"; then
+            echo "✅ API endpoints responding"
+          else
+            echo "⚠️ API endpoints may have issues"
+          fi
+          
+          # Test frontend availability
+          echo ""
+          echo "=== FRONTEND AVAILABILITY CHECK ==="
+          FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_URL" || echo "000")
+          if [ "$FRONTEND_STATUS" = "200" ]; then
+            echo "✅ Frontend is accessible (HTTP $FRONTEND_STATUS)"
+          else
+            echo "❌ Frontend is not accessible (HTTP $FRONTEND_STATUS)"
+            exit 1
+          fi
+          
+          echo ""
+          echo "✅ All health checks passed!"
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Health check failed!"
+          echo "Please review the logs and check your deployment."
+          echo "Backend: ${{ secrets.BACKEND_URL }}"
+          echo "Frontend: ${{ secrets.FRONTEND_URL }}"

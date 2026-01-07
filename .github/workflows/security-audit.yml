@@ -1,0 +1,55 @@
+name: Security Audit & Dependency Updates
+
+on:
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Backend Security Audit
+        run: |
+          echo "🔐 Running backend security audit..."
+          cd backend
+          npm install --package-lock-only
+          npm audit --audit-level=moderate || true
+          echo ""
+          echo "📊 Backend audit complete"
+
+      - name: Frontend Security Audit
+        run: |
+          echo "🔐 Running frontend security audit..."
+          cd Onchainweb
+          npm install --package-lock-only
+          npm audit --audit-level=moderate || true
+          echo ""
+          echo "📊 Frontend audit complete"
+
+      - name: Check for outdated dependencies
+        run: |
+          echo "📦 Checking for outdated backend dependencies..."
+          cd backend
+          npm outdated || true
+          echo ""
+          echo "📦 Checking for outdated frontend dependencies..."
+          cd ../Onchainweb
+          npm outdated || true
+
+      - name: Security Summary
+        run: |
+          echo "✅ Security audit completed"
+          echo "Review the output above for any vulnerabilities"
+          echo "Run 'npm audit fix' locally to apply automatic fixes"
+          echo "For breaking changes, review and update manually"

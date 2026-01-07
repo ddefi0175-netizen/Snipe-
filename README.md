@@ -2,6 +2,12 @@
 
 A modern, accessible trading platform with real-time price updates, user dashboards, and live chat functionality. Built with Node.js, React, and MongoDB.
 
+## 🚀 Live Demo
+
+- **Frontend**: [https://snipe-frontend.vercel.app](https://snipe-frontend.vercel.app)
+- **Backend API**: [https://snipe-backend.onrender.com](https://snipe-backend.onrender.com)
+- **Documentation**: [View Docs](https://github.com/ddefi0175-netizen/Snipe)
+
 ## Features
 
 - **Real-Time Price Updates**: Live cryptocurrency price feeds powered by CoinGecko
