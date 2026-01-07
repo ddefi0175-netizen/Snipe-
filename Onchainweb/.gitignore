@@ -24,3 +24,25 @@ Thumbs.db
 # Build outputs
 *.tgz
 .vercel
+
+# Unused/versioned config files (kept for reference but not needed)
+*_Version*.json
+*_Version*.js
+*_Version*.cjs
+*_Version*.jsx
+*_Version*.css
+*_Version*.md
+*_Version*.html
+*.txt
+*.bak
+
+# Unused/versioned config files (kept for reference but not needed)
+*_Version*.json
+*_Version*.js
+*_Version*.cjs
+*_Version*.jsx
+*_Version*.css
+*_Version*.md
+*_Version*.html
+*.txt
+*.bak
