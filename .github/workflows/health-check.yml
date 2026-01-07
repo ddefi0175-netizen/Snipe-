@@ -9,7 +9,10 @@ on:
 jobs:
   health-check:
     runs-on: ubuntu-latest
-    
+    env:
+      BACKEND_URL: ${{ secrets.BACKEND_URL }}
+      FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -23,14 +26,11 @@ jobs:
         run: chmod +x ./test-deployment.sh
 
       - name: Run health checks
-        env:
-          BACKEND_URL: ${{ secrets.BACKEND_URL || 'https://snipe-backend.onrender.com' }}
-          FRONTEND_URL: ${{ secrets.FRONTEND_URL || 'https://snipe-frontend.vercel.app' }}
         run: |
           echo "🔍 Running automated health checks..."
           echo "Backend URL: $BACKEND_URL"
           echo "Frontend URL: $FRONTEND_URL"
-          
+
           # Test backend health
           echo ""
           echo "=== BACKEND HEALTH CHECK ==="
@@ -41,7 +41,7 @@ jobs:
             echo "❌ Backend health check failed (HTTP $BACKEND_HEALTH)"
             exit 1
           fi
-          
+
           # Test backend API endpoints
           echo ""
           echo "=== API ENDPOINTS CHECK ==="
@@ -51,7 +51,7 @@ jobs:
           else
             echo "⚠️ API endpoints may have issues"
           fi
-          
+
           # Test frontend availability
           echo ""
           echo "=== FRONTEND AVAILABILITY CHECK ==="
@@ -62,7 +62,7 @@ jobs:
             echo "❌ Frontend is not accessible (HTTP $FRONTEND_STATUS)"
             exit 1
           fi
-          
+
           echo ""
           echo "✅ All health checks passed!"
 
@@ -71,5 +71,5 @@ jobs:
         run: |
           echo "❌ Health check failed!"
           echo "Please review the logs and check your deployment."
-          echo "Backend: ${{ secrets.BACKEND_URL }}"
-          echo "Frontend: ${{ secrets.FRONTEND_URL }}"
+          echo "Backend: ${BACKEND_URL}"
+          echo "Frontend: ${FRONTEND_URL}"

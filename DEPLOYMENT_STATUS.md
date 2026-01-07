@@ -1,11 +1,13 @@
 # OnchainWeb Deployment Status ✓
 
 ## Backend Status
-- **URL**: https://snipe-api.onrender.com/api
+
+- **URL**: <https://snipe-api.onrender.com/api>
 - **Database**: MongoDB Atlas (Real-time data)
 - **Status**: ✅ LIVE & PUBLIC
 
 ### Verified API Endpoints
+
 - ✅ `/auth/login` - Master & Admin authentication
 - ✅ `/auth/admins` - List all admin accounts
 - ✅ `/users` - Get all users from MongoDB
@@ -15,6 +17,7 @@
 - ✅ `/staking` - Get staking records
 
 ### Database Contents (Live Data)
+
 - **Users**: 5 registered users in MongoDB
 - **Admin Accounts**: 4 active admin accounts
 - **Trades**: 0 active trades
@@ -24,11 +27,13 @@
 ---
 
 ## Frontend Status
-- **URL**: https://www.onchainweb.app
+
+- **URL**: <https://www.onchainweb.app>
 - **Platform**: Vercel (Auto-deploy on git push)
 - **Status**: ✅ LIVE & PUBLIC
 
 ### Available Routes
+
 - `/` - Main application (user dashboard)
 - `/admin` - Admin Panel login
 - `/master` - Master Admin Dashboard (alias for `/master-admin`)
@@ -39,13 +44,15 @@
 ## Login Credentials
 
 ### Master Account
-- **URL**: https://www.onchainweb.app/master-admin
+
+- **URL**: <https://www.onchainweb.app/master-admin>
 - **Username**: `master`
 - **Password**: `OnchainWeb2025!`
 - **Access**: Full system control
 
 ### Admin Accounts
-- **URL**: https://www.onchainweb.app/admin
+
+- **URL**: <https://www.onchainweb.app/admin>
 - **Account 1**: aqiang / Aqiang2026!
 - **Account 2**: newadmin / NewAdmin2026!
 - **Account 3**: admin2 / Admin123!
@@ -57,51 +64,60 @@
 ## Dashboard Features - All Real-Time from MongoDB
 
 ### Master Admin Dashboard
+
 ✅ **User Management**
-  - View all 5 registered users with real-time data
-  - Edit balances, points, VIP levels
-  - Freeze/unfreeze accounts
-  - Set trade modes and presets
-  - View detailed user profiles
+
+- View all 5 registered users with real-time data
+- Edit balances, points, VIP levels
+- Freeze/unfreeze accounts
+- Set trade modes and presets
+- View detailed user profiles
 
 ✅ **Deposit Management**
-  - Approve/reject pending deposits
-  - View deposit history (real-time from MongoDB)
-  - Update deposit status
+
+- Approve/reject pending deposits
+- View deposit history (real-time from MongoDB)
+- Update deposit status
 
 ✅ **Admin Management**
-  - View 4 admin accounts
-  - Create new admin accounts
-  - Reset admin passwords
-  - Assign users to admins
-  - Delete admin accounts
+
+- View 4 admin accounts
+- Create new admin accounts
+- Reset admin passwords
+- Assign users to admins
+- Delete admin accounts
 
 ✅ **Trading Management**
-  - View active trades
-  - View trade history
-  - Force trade results
-  - Cancel pending trades
+
+- View active trades
+- View trade history
+- Force trade results
+- Cancel pending trades
 
 ✅ **User Services**
-  - Review KYC submissions
-  - Manage bonus programs
-  - Handle withdrawal requests
-  - View user activity logs
+
+- Review KYC submissions
+- Manage bonus programs
+- Handle withdrawal requests
+- View user activity logs
 
 ### Admin Panel
+
 ✅ **Limited Dashboard**
-  - View assigned users only
-  - Manage user balances
-  - Approve deposits
-  - Handle KYC
-  - View trading activity
+
+- View assigned users only
+- Manage user balances
+- Approve deposits
+- Handle KYC
+- View trading activity
 
 ---
 
 ## Data Flow Architecture
 
 ### All Data Sources
-```
+
+```text
 User Actions (Frontend)
     ↓
 React Components (MasterAdminDashboard.jsx, AdminPanel.jsx)
@@ -114,6 +130,7 @@ MongoDB Atlas (Real Source of Truth)
 ```
 
 ### Key Implementation Details
+
 1. **No Static Data**: All user/trade/deposit data comes from MongoDB
 2. **Real-Time Sync**: Dashboard refreshes data every 30 seconds
 3. **Fallback Support**: Uses localStorage only for admin settings, not user data
@@ -125,6 +142,7 @@ MongoDB Atlas (Real Source of Truth)
 ## Testing Results
 
 ### API Tests (Passed ✓)
+
 - ✅ Master login successful (JWT token generated)
 - ✅ Admin login successful (JWT token generated)
 - ✅ Get users from database (5 users found)
@@ -135,6 +153,7 @@ MongoDB Atlas (Real Source of Truth)
 - ✅ Get staking (real-time sync working)
 
 ### Frontend Tests
+
 - ✅ Master dashboard loads with real data
 - ✅ Admin dashboard loads with real data
 - ✅ Login error handling works
@@ -145,6 +164,7 @@ MongoDB Atlas (Real Source of Truth)
 ---
 
 ## Security Implementation
+
 - ✅ JWT tokens with 24-hour expiry
 - ✅ Role-based access control (master/admin)
 - ✅ Permission system (users/balances/kyc/trades/reports)
@@ -158,6 +178,7 @@ MongoDB Atlas (Real Source of Truth)
 ## Deployment Commands
 
 ### Deploy Frontend
+
 ```bash
 cd Onchainweb
 git add -A
@@ -166,6 +187,7 @@ git push  # Auto-deploys to Vercel
 ```
 
 ### View Logs
+
 ```bash
 # Master Admin Dashboard logs: Browser Console (F12)
 # Backend logs: Render dashboard
@@ -175,7 +197,9 @@ git push  # Auto-deploys to Vercel
 ---
 
 ## Status Summary
+
 🟢 **ALL SYSTEMS OPERATIONAL**
+
 - Backend: ✅ Live & responding
 - Frontend: ✅ Live & responsive
 - Database: ✅ Connected & syncing

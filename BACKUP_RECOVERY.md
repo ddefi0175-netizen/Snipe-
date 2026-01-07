@@ -6,9 +6,10 @@ Complete guide for backing up and restoring your Snipe MongoDB database.
 
 ## 📋 Overview
 
-**Database**: MongoDB Atlas (Cloud)  
-**Database Name**: `snipe`  
-**Backup Methods**: 
+**Database**: MongoDB Atlas (Cloud)
+**Database Name**: `snipe`
+**Backup Methods**:
+
 - Automatic Cloud Backups (MongoDB Atlas)
 - Manual mongodump/mongorestore
 - Export collections to JSON
@@ -22,7 +23,7 @@ MongoDB Atlas provides automatic continuous backups for your cluster.
 ### Enabling Automatic Backups
 
 1. **Log into MongoDB Atlas**:
-   - Visit: https://cloud.mongodb.com
+   - Visit: <https://cloud.mongodb.com>
    - Select your cluster
 
 2. **Enable Cloud Backup**:
@@ -40,14 +41,16 @@ MongoDB Atlas provides automatic continuous backups for your cluster.
 
 ### Restoring from Cloud Backup
 
-**Option 1: Restore to Same Cluster**
+### Option 1: Restore to Same Cluster
+
 1. In MongoDB Atlas, go to "Backup" tab
 2. Select the snapshot to restore
 3. Click "Restore"
 4. Choose "Download" or "Restore to cluster"
 5. **Warning**: This will overwrite current data!
 
-**Option 2: Restore to New Cluster (Recommended for Testing)**
+### Option 2: Restore to New Cluster (Recommended for Testing)
+
 1. In MongoDB Atlas, go to "Backup" tab
 2. Select snapshot
 3. Click "Restore" → "Create new cluster"
@@ -66,6 +69,7 @@ Use `mongodump` for on-demand backups or before major changes.
 ### Prerequisites
 
 Install MongoDB Database Tools:
+
 ```bash
 # macOS
 brew install mongodb-database-tools
@@ -80,6 +84,7 @@ sudo apt install mongodb-database-tools
 ### Creating a Backup
 
 **Full Database Backup**:
+
 ```bash
 # Set your connection string
 MONGO_URI="mongodb+srv://USERNAME:PASSWORD@cluster.mongodb.net/snipe"
@@ -93,6 +98,7 @@ echo "Backup saved to: $BACKUP_DIR"
 ```
 
 **Backup Specific Collections**:
+
 ```bash
 # Backup only users and activitylogs
 mongodump --uri="$MONGO_URI" \
@@ -105,6 +111,7 @@ mongodump --uri="$MONGO_URI" \
 ```
 
 **Compressed Backup**:
+
 ```bash
 # Create gzip-compressed backup
 mongodump --uri="$MONGO_URI" \
@@ -117,6 +124,7 @@ mongodump --uri="$MONGO_URI" \
 ### Backup Script
 
 Create `backend/scripts/backup-db.sh`:
+
 ```bash
 #!/bin/bash
 
@@ -133,7 +141,7 @@ mongodump --uri="$MONGO_URI" --gzip --out="$BACKUP_DIR"
 if [ $? -eq 0 ]; then
   echo "✅ Backup completed successfully!"
   echo "Location: $BACKUP_DIR"
-  
+
   # Optional: Upload to cloud storage
   # aws s3 cp "$BACKUP_DIR" s3://my-bucket/snipe-backups/ --recursive
 else
@@ -143,6 +151,7 @@ fi
 ```
 
 Make executable and run:
+
 ```bash
 chmod +x backend/scripts/backup-db.sh
 ./backend/scripts/backup-db.sh
@@ -168,6 +177,7 @@ mongorestore --uri="$MONGO_URI" \
 ```
 
 **Flags Explained**:
+
 - `--gzip`: Decompress backup if it was compressed
 - `--drop`: Drop collections before restoring (prevents duplicates)
 - `--nsInclude`: Restore specific namespaces only
@@ -186,7 +196,9 @@ mongorestore --uri="$MONGO_URI" \
 
 ```bash
 # Restore to 'snipe-test' instead of 'snipe'
-mongorestore --uri="mongodb+srv://USERNAME:PASSWORD@cluster.mongodb.net/snipe-test" \
+MONGO_URI_TEST="mongodb+srv://USERNAME:PASSWORD@cluster.mongodb.net/snipe-test"
+
+mongorestore --uri="$MONGO_URI_TEST" \
   --drop \
   "./backups/backup-20260107"
 ```
@@ -194,6 +206,7 @@ mongorestore --uri="mongodb+srv://USERNAME:PASSWORD@cluster.mongodb.net/snipe-te
 ### Restore Script
 
 Create `backend/scripts/restore-db.sh`:
+
 ```bash
 #!/bin/bash
 
@@ -231,6 +244,7 @@ fi
 ```
 
 Usage:
+
 ```bash
 chmod +x backend/scripts/restore-db.sh
 ./backend/scripts/restore-db.sh ./backups/backup-20260107-120000
@@ -297,11 +311,13 @@ gpg --decrypt backup-encrypted.gpg | \
 ### 2. Store Backups Securely
 
 **Local Storage**:
+
 - Store backups outside the repository
 - Use encrypted drives/volumes
 - Limit file permissions: `chmod 600 backup-dir/`
 
 **Cloud Storage** (Recommended):
+
 ```bash
 # AWS S3
 aws s3 cp ./backups/backup-20260107 \
@@ -327,6 +343,7 @@ az storage blob upload-batch \
 - **Yearly backups**: Keep for 3-5 years
 
 **Automated Cleanup Script**:
+
 ```bash
 # Delete backups older than 7 days
 find ./backups -type d -mtime +7 -exec rm -rf {} +
@@ -336,12 +353,12 @@ find ./backups -type d -mtime +7 -exec rm -rf {} +
 
 ## 📅 Backup Schedule
 
-| Backup Type | Frequency | Retention | Method |
-|-------------|-----------|-----------|--------|
-| Automatic | Every 12 hours | 7 days | MongoDB Atlas |
-| Manual | Before releases | 30 days | mongodump |
-| Pre-migration | Before schema changes | Until verified | mongodump |
-| Export | Weekly | 4 weeks | mongoexport |
+| Backup Type   | Frequency              | Retention        | Method         |
+| ------------- | ---------------------- | ---------------- | -------------- |
+| Automatic     | Every 12 hours         | 7 days           | MongoDB Atlas  |
+| Manual        | Before releases        | 30 days          | mongodump      |
+| Pre-migration | Before schema changes  | Until verified   | mongodump      |
+| Export        | Weekly                 | 4 weeks          | mongoexport    |
 
 ---
 
@@ -350,23 +367,25 @@ find ./backups -type d -mtime +7 -exec rm -rf {} +
 ### Test Restore Procedure (Quarterly)
 
 1. **Create Test Environment**:
+
    ```bash
    # Restore to local MongoDB
    docker run -d -p 27017:27017 mongo:latest
-   
+
    mongorestore --uri="mongodb://localhost:27017/snipe-test" \
      ./backups/latest
    ```
 
 2. **Verify Data Integrity**:
+
    ```javascript
    // Connect to test database
    mongo mongodb://localhost:27017/snipe-test
-   
+
    // Check collection counts
    db.users.countDocuments()
    db.chatmessages.countDocuments()
-   
+
    // Spot-check data
    db.users.findOne()
    db.activitylogs.find().limit(5)
@@ -379,16 +398,18 @@ find ./backups -type d -mtime +7 -exec rm -rf {} +
    - Verify all features work
 
 4. **Clean Up**:
+
    ```bash
    # Stop test database
    docker stop <container-id>
-   
+
    # Restore original .env
    ```
 
 ### Backup Checklist
 
 Before major releases:
+
 - [ ] Create manual backup with mongodump
 - [ ] Verify backup completed successfully
 - [ ] Check backup file size (should be reasonable)
@@ -405,12 +426,14 @@ Before major releases:
 1. **Stop the application** immediately to prevent more changes
 2. **Identify the timestamp** of the deletion
 3. **Restore from snapshot** just before the deletion:
+
    ```bash
    mongorestore --uri="$MONGO_URI" \
      --nsInclude="snipe.users" \
      --drop \
      ./backups/backup-before-deletion
    ```
+
 4. **Verify data** is restored correctly
 5. **Restart application**
 
@@ -428,15 +451,19 @@ Before major releases:
 
 1. **Create new MongoDB cluster** in Atlas
 2. **Restore from most recent backup**:
+
    ```bash
    mongorestore --uri="$NEW_MONGO_URI" \
      ./backups/latest-backup
    ```
+
 3. **Seed missing data** if needed:
+
    ```bash
    cd backend
    node seed.js
    ```
+
 4. **Update environment variables** with new connection string
 5. **Redeploy application**
 6. **Notify users** of potential data loss
@@ -445,11 +472,11 @@ Before major releases:
 
 ## 📞 Support Contacts
 
-- **MongoDB Atlas Support**: https://support.mongodb.com
+- **MongoDB Atlas Support**: <https://support.mongodb.com>
 - **Backup Issues**: Check MAINTENANCE.md for troubleshooting
 - **Emergency**: Contact repository maintainer
 
 ---
 
-**Last Updated**: January 2026  
+**Last Updated**: January 2026
 **Next Review**: April 2026
