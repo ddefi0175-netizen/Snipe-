@@ -478,5 +478,33 @@ export const depositWalletsAPI = {
   }),
 };
 
+// ============== CHAT API (Real-time Customer Service) ==============
+export const chatAPI = {
+  // Get all active chat sessions (admin/master)
+  getSessions: () => apiCall('/chat/sessions'),
+  
+  // Get messages for a session
+  getMessages: (sessionId, limit = 50) => apiCall(`/chat/messages/${sessionId}?limit=${limit}`),
+  
+  // Get new messages since timestamp (for polling)
+  getNewMessages: (sessionId, since) => apiCall(`/chat/messages/${sessionId}/new?since=${encodeURIComponent(since)}`),
+  
+  // Send a message
+  sendMessage: (data) => apiCall('/chat/messages', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+  
+  // Mark messages as read
+  markRead: (sessionId) => apiCall(`/chat/messages/${sessionId}/read`, {
+    method: 'PATCH',
+  }),
+  
+  // Delete chat session (master only)
+  deleteSession: (sessionId) => apiCall(`/chat/sessions/${sessionId}`, {
+    method: 'DELETE',
+  }),
+};
+
 // Export base URL for direct use if needed
 export { API_BASE };

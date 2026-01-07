@@ -1,97 +1,116 @@
-// Firebase Configuration for Real-time Chat Sync
-import { initializeApp } from 'firebase/app'
-import { getDatabase, ref, push, onValue, set, get, update, remove } from 'firebase/database'
+// Real-time Chat using Backend API
+// Replaces Firebase with MongoDB backend for persistent storage
 
-// Firebase configuration - Using a demo project for OnchainWeb
-// In production, replace with your own Firebase project credentials
-const firebaseConfig = {
-  apiKey: "AIzaSyDemoKeyForOnchainWeb2024",
-  authDomain: "onchainweb-chat.firebaseapp.com",
-  databaseURL: "https://onchainweb-chat-default-rtdb.firebaseio.com",
-  projectId: "onchainweb-chat",
-  storageBucket: "onchainweb-chat.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abc123def456ghi789"
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api';
+
+// Helper for API calls
+async function chatApiCall(endpoint, options = {}) {
+  const url = `${API_BASE}/chat${endpoint}`;
+  const token = localStorage.getItem('adminToken');
+  
+  const config = {
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+      ...options.headers,
+    },
+    ...options,
+  };
+
+  try {
+    const response = await fetch(url, config);
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'API request failed');
+    }
+    return data;
+  } catch (error) {
+    console.error(`Chat API Error [${endpoint}]:`, error);
+    throw error;
+  }
 }
 
-let app = null
-let database = null
-let isFirebaseAvailable = false
-
-// Initialize Firebase with error handling
-try {
-  app = initializeApp(firebaseConfig)
-  database = getDatabase(app)
-  isFirebaseAvailable = true
-  console.log('✅ Firebase initialized successfully')
-} catch (error) {
-  console.warn('⚠️ Firebase initialization failed, falling back to localStorage:', error.message)
-  isFirebaseAvailable = false
-}
+let isFirebaseAvailable = true; // Now using backend API
+let pollingIntervals = new Map();
 
 // ==========================================
-// CHAT LOGS FUNCTIONS
+// CHAT MESSAGES FUNCTIONS
 // ==========================================
 
 // Save a new chat message
 export const saveChatMessage = async (message) => {
-  if (!isFirebaseAvailable) {
-    // Fallback to localStorage
-    const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]')
-    logs.push({ ...message, id: Date.now() })
-    localStorage.setItem('customerChatLogs', JSON.stringify(logs))
-    window.dispatchEvent(new Event('storage'))
-    return message.id || Date.now()
-  }
-
   try {
-    const messagesRef = ref(database, 'chatMessages')
-    const newMessageRef = push(messagesRef)
-    await set(newMessageRef, {
-      ...message,
-      id: newMessageRef.key,
-      createdAt: Date.now()
-    })
-    return newMessageRef.key
+    const result = await chatApiCall('/messages', {
+      method: 'POST',
+      body: JSON.stringify({
+        sessionId: message.sessionId,
+        message: message.message || message.text,
+        senderName: message.username || message.senderName || 'User',
+        senderWallet: message.wallet || message.senderWallet
+      })
+    });
+    return result.message?._id || result.message?.id || Date.now();
   } catch (error) {
-    console.error('Firebase save error:', error)
+    console.error('Save message error:', error);
     // Fallback to localStorage
-    const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]')
-    logs.push({ ...message, id: Date.now() })
-    localStorage.setItem('customerChatLogs', JSON.stringify(logs))
-    return message.id || Date.now()
+    const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]');
+    const newMsg = { ...message, id: Date.now(), createdAt: Date.now() };
+    logs.push(newMsg);
+    localStorage.setItem('customerChatLogs', JSON.stringify(logs));
+    window.dispatchEvent(new Event('storage'));
+    return newMsg.id;
   }
-}
+};
 
-// Subscribe to chat messages (real-time)
+// Subscribe to chat messages (polling-based for backend)
 export const subscribeToChatMessages = (callback) => {
-  if (!isFirebaseAvailable) {
-    // Fallback to localStorage polling
-    const checkMessages = () => {
-      const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]')
-      callback(logs)
+  let lastTimestamp = 0;
+  
+  const fetchMessages = async () => {
+    try {
+      // Get all recent messages
+      const messages = await chatApiCall(`/admin/messages?since=${lastTimestamp}`);
+      if (Array.isArray(messages) && messages.length > 0) {
+        // Update last timestamp
+        const newest = messages.reduce((max, m) => {
+          const t = new Date(m.createdAt).getTime();
+          return t > max ? t : max;
+        }, lastTimestamp);
+        lastTimestamp = newest;
+        
+        // Convert to expected format
+        const formattedMessages = messages.map(m => ({
+          id: m._id,
+          sessionId: m.sessionId,
+          sender: m.sender,
+          text: m.message,
+          message: m.message,
+          username: m.senderName,
+          wallet: m.senderWallet,
+          adminName: m.adminName,
+          createdAt: new Date(m.createdAt).getTime(),
+          timestamp: new Date(m.createdAt).getTime()
+        }));
+        
+        callback(formattedMessages);
+      }
+    } catch (error) {
+      console.error('Fetch messages error:', error);
+      // Fallback to localStorage
+      const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]');
+      callback(logs);
     }
-    checkMessages()
-    const interval = setInterval(checkMessages, 500)
-    return () => clearInterval(interval)
-  }
-
-  try {
-    const messagesRef = ref(database, 'chatMessages')
-    const unsubscribe = onValue(messagesRef, (snapshot) => {
-      const data = snapshot.val()
-      const messages = data ? Object.values(data).sort((a, b) => a.createdAt - b.createdAt) : []
-      callback(messages)
-    })
-    return unsubscribe
-  } catch (error) {
-    console.error('Firebase subscribe error:', error)
-    // Fallback
-    const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]')
-    callback(logs)
-    return () => {}
-  }
-}
+  };
+  
+  fetchMessages();
+  const interval = setInterval(fetchMessages, 2000); // Poll every 2 seconds
+  pollingIntervals.set('messages', interval);
+  
+  return () => {
+    clearInterval(interval);
+    pollingIntervals.delete('messages');
+  };
+};
 
 // ==========================================
 // ACTIVE CHATS FUNCTIONS
@@ -99,92 +118,94 @@ export const subscribeToChatMessages = (callback) => {
 
 // Save or update active chat
 export const saveActiveChat = async (chat) => {
-  if (!isFirebaseAvailable) {
-    const chats = JSON.parse(localStorage.getItem('activeChats') || '[]')
-    const existingIndex = chats.findIndex(c => c.sessionId === chat.sessionId)
-    if (existingIndex >= 0) {
-      chats[existingIndex] = { ...chats[existingIndex], ...chat }
-    } else {
-      chats.push(chat)
-    }
-    localStorage.setItem('activeChats', JSON.stringify(chats))
-    window.dispatchEvent(new Event('storage'))
-    return chat.sessionId
-  }
-
   try {
-    const chatRef = ref(database, `activeChats/${chat.sessionId}`)
-    await set(chatRef, {
-      ...chat,
-      updatedAt: Date.now()
-    })
-    return chat.sessionId
+    const result = await chatApiCall('/session', {
+      method: 'POST',
+      body: JSON.stringify({
+        sessionId: chat.sessionId,
+        username: chat.username,
+        wallet: chat.wallet,
+        userId: chat.userId,
+        metadata: chat.metadata
+      })
+    });
+    return result.chat?.sessionId || chat.sessionId;
   } catch (error) {
-    console.error('Firebase save chat error:', error)
-    // Fallback
-    const chats = JSON.parse(localStorage.getItem('activeChats') || '[]')
-    const existingIndex = chats.findIndex(c => c.sessionId === chat.sessionId)
+    console.error('Save active chat error:', error);
+    // Fallback to localStorage
+    const chats = JSON.parse(localStorage.getItem('activeChats') || '[]');
+    const existingIndex = chats.findIndex(c => c.sessionId === chat.sessionId);
     if (existingIndex >= 0) {
-      chats[existingIndex] = { ...chats[existingIndex], ...chat }
+      chats[existingIndex] = { ...chats[existingIndex], ...chat };
     } else {
-      chats.push(chat)
+      chats.push(chat);
     }
-    localStorage.setItem('activeChats', JSON.stringify(chats))
-    return chat.sessionId
+    localStorage.setItem('activeChats', JSON.stringify(chats));
+    window.dispatchEvent(new Event('storage'));
+    return chat.sessionId;
   }
-}
+};
 
 // Update active chat partially
 export const updateActiveChat = async (sessionId, updates) => {
-  if (!isFirebaseAvailable) {
-    const chats = JSON.parse(localStorage.getItem('activeChats') || '[]')
-    const chat = chats.find(c => c.sessionId === sessionId)
+  try {
+    await chatApiCall(`/admin/chat/${sessionId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates)
+    });
+  } catch (error) {
+    console.error('Update active chat error:', error);
+    // Fallback to localStorage
+    const chats = JSON.parse(localStorage.getItem('activeChats') || '[]');
+    const chat = chats.find(c => c.sessionId === sessionId);
     if (chat) {
-      Object.assign(chat, updates)
-      localStorage.setItem('activeChats', JSON.stringify(chats))
-      window.dispatchEvent(new Event('storage'))
+      Object.assign(chat, updates);
+      localStorage.setItem('activeChats', JSON.stringify(chats));
+      window.dispatchEvent(new Event('storage'));
     }
-    return
   }
+};
 
-  try {
-    const chatRef = ref(database, `activeChats/${sessionId}`)
-    await update(chatRef, {
-      ...updates,
-      updatedAt: Date.now()
-    })
-  } catch (error) {
-    console.error('Firebase update chat error:', error)
-  }
-}
-
-// Subscribe to active chats (real-time)
+// Subscribe to active chats (for admin dashboard)
 export const subscribeToActiveChats = (callback) => {
-  if (!isFirebaseAvailable) {
-    const checkChats = () => {
-      const chats = JSON.parse(localStorage.getItem('activeChats') || '[]')
-      callback(chats)
+  const fetchChats = async () => {
+    try {
+      const chats = await chatApiCall('/admin/chats');
+      if (Array.isArray(chats)) {
+        const formattedChats = chats.map(c => ({
+          sessionId: c.sessionId,
+          username: c.username,
+          wallet: c.wallet,
+          userId: c.userId,
+          status: c.status,
+          lastMessage: c.lastMessage,
+          lastMessageTime: c.lastMessageTime,
+          unreadCount: c.unreadCount,
+          assignedAdmin: c.assignedAdmin,
+          assignedAdminName: c.assignedAdminName,
+          priority: c.priority,
+          updatedAt: c.updatedAt,
+          createdAt: c.createdAt
+        }));
+        callback(formattedChats);
+      }
+    } catch (error) {
+      console.error('Fetch active chats error:', error);
+      // Fallback to localStorage
+      const chats = JSON.parse(localStorage.getItem('activeChats') || '[]');
+      callback(chats);
     }
-    checkChats()
-    const interval = setInterval(checkChats, 500)
-    return () => clearInterval(interval)
-  }
-
-  try {
-    const chatsRef = ref(database, 'activeChats')
-    const unsubscribe = onValue(chatsRef, (snapshot) => {
-      const data = snapshot.val()
-      const chats = data ? Object.values(data) : []
-      callback(chats)
-    })
-    return unsubscribe
-  } catch (error) {
-    console.error('Firebase subscribe chats error:', error)
-    const chats = JSON.parse(localStorage.getItem('activeChats') || '[]')
-    callback(chats)
-    return () => {}
-  }
-}
+  };
+  
+  fetchChats();
+  const interval = setInterval(fetchChats, 2000); // Poll every 2 seconds
+  pollingIntervals.set('activeChats', interval);
+  
+  return () => {
+    clearInterval(interval);
+    pollingIntervals.delete('activeChats');
+  };
+};
 
 // ==========================================
 // ADMIN REPLIES FUNCTIONS
@@ -192,113 +213,138 @@ export const subscribeToActiveChats = (callback) => {
 
 // Save admin reply
 export const saveAdminReply = async (reply) => {
-  if (!isFirebaseAvailable) {
-    const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]')
-    replies.push({ ...reply, id: Date.now() })
-    localStorage.setItem('adminChatReplies', JSON.stringify(replies))
-    window.dispatchEvent(new Event('storage'))
-    return reply.id || Date.now()
-  }
-
   try {
-    const repliesRef = ref(database, 'adminReplies')
-    const newReplyRef = push(repliesRef)
-    await set(newReplyRef, {
-      ...reply,
-      id: newReplyRef.key,
-      createdAt: Date.now()
-    })
-    return newReplyRef.key
+    const result = await chatApiCall('/admin/reply', {
+      method: 'POST',
+      body: JSON.stringify({
+        sessionId: reply.sessionId,
+        message: reply.message || reply.text
+      })
+    });
+    return result.message?._id || result.message?.id || Date.now();
   } catch (error) {
-    console.error('Firebase save reply error:', error)
-    const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]')
-    replies.push({ ...reply, id: Date.now() })
-    localStorage.setItem('adminChatReplies', JSON.stringify(replies))
-    return reply.id || Date.now()
+    console.error('Save admin reply error:', error);
+    // Fallback to localStorage
+    const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]');
+    const newReply = { ...reply, id: Date.now(), createdAt: Date.now() };
+    replies.push(newReply);
+    localStorage.setItem('adminChatReplies', JSON.stringify(replies));
+    window.dispatchEvent(new Event('storage'));
+    return newReply.id;
   }
-}
+};
 
-// Subscribe to admin replies for a specific session
+// Subscribe to admin replies for a specific session (user-side polling)
 export const subscribeToAdminReplies = (sessionId, callback) => {
-  if (!isFirebaseAvailable) {
-    const checkReplies = () => {
-      const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]')
-      const sessionReplies = replies.filter(r => r.sessionId === sessionId && !r.delivered)
-      callback(sessionReplies)
-    }
-    checkReplies()
-    const interval = setInterval(checkReplies, 500)
-    return () => clearInterval(interval)
-  }
-
-  try {
-    const repliesRef = ref(database, 'adminReplies')
-    const unsubscribe = onValue(repliesRef, (snapshot) => {
-      const data = snapshot.val()
-      if (data) {
-        const replies = Object.entries(data)
-          .map(([key, value]) => ({ ...value, firebaseKey: key }))
-          .filter(r => r.sessionId === sessionId && !r.delivered)
-        callback(replies)
-      } else {
-        callback([])
+  let lastTimestamp = 0;
+  
+  const fetchReplies = async () => {
+    try {
+      const messages = await chatApiCall(`/poll/${sessionId}?since=${lastTimestamp}`);
+      if (Array.isArray(messages) && messages.length > 0) {
+        // Update last timestamp
+        const newest = messages.reduce((max, m) => {
+          const t = new Date(m.createdAt).getTime();
+          return t > max ? t : max;
+        }, lastTimestamp);
+        lastTimestamp = newest;
+        
+        const formattedReplies = messages.map(m => ({
+          id: m._id,
+          sessionId: m.sessionId,
+          message: m.message,
+          text: m.message,
+          adminName: m.adminName,
+          createdAt: new Date(m.createdAt).getTime(),
+          delivered: m.delivered
+        }));
+        
+        callback(formattedReplies);
       }
-    })
-    return unsubscribe
-  } catch (error) {
-    console.error('Firebase subscribe replies error:', error)
-    return () => {}
-  }
-}
+    } catch (error) {
+      console.error('Fetch admin replies error:', error);
+      // Fallback to localStorage
+      const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]');
+      const sessionReplies = replies.filter(r => r.sessionId === sessionId && !r.delivered);
+      callback(sessionReplies);
+    }
+  };
+  
+  fetchReplies();
+  const intervalKey = `replies_${sessionId}`;
+  const interval = setInterval(fetchReplies, 2000); // Poll every 2 seconds
+  pollingIntervals.set(intervalKey, interval);
+  
+  return () => {
+    clearInterval(interval);
+    pollingIntervals.delete(intervalKey);
+  };
+};
 
 // Mark reply as delivered
 export const markReplyDelivered = async (replyId, firebaseKey) => {
-  if (!isFirebaseAvailable) {
-    const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]')
-    const reply = replies.find(r => r.id === replyId)
-    if (reply) {
-      reply.delivered = true
-      localStorage.setItem('adminChatReplies', JSON.stringify(replies))
-    }
-    return
+  // With backend, messages are tracked by read status
+  // This is handled server-side when admin marks as read
+  const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]');
+  const reply = replies.find(r => r.id === replyId);
+  if (reply) {
+    reply.delivered = true;
+    localStorage.setItem('adminChatReplies', JSON.stringify(replies));
   }
-
-  try {
-    const replyRef = ref(database, `adminReplies/${firebaseKey}`)
-    await update(replyRef, { delivered: true })
-  } catch (error) {
-    console.error('Firebase mark delivered error:', error)
-  }
-}
+};
 
 // Get all admin replies (for admin dashboard)
 export const subscribeToAllAdminReplies = (callback) => {
-  if (!isFirebaseAvailable) {
-    const checkReplies = () => {
-      const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]')
-      callback(replies)
+  const fetchReplies = async () => {
+    try {
+      const messages = await chatApiCall('/admin/messages');
+      if (Array.isArray(messages)) {
+        const adminReplies = messages
+          .filter(m => m.sender === 'admin')
+          .map(m => ({
+            id: m._id,
+            sessionId: m.sessionId,
+            message: m.message,
+            text: m.message,
+            adminName: m.adminName,
+            adminId: m.adminId,
+            createdAt: new Date(m.createdAt).getTime(),
+            delivered: m.delivered
+          }));
+        callback(adminReplies);
+      }
+    } catch (error) {
+      console.error('Fetch all admin replies error:', error);
+      const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]');
+      callback(replies);
     }
-    checkReplies()
-    const interval = setInterval(checkReplies, 500)
-    return () => clearInterval(interval)
-  }
+  };
+  
+  fetchReplies();
+  const interval = setInterval(fetchReplies, 3000);
+  pollingIntervals.set('allReplies', interval);
+  
+  return () => {
+    clearInterval(interval);
+    pollingIntervals.delete('allReplies');
+  };
+};
 
-  try {
-    const repliesRef = ref(database, 'adminReplies')
-    const unsubscribe = onValue(repliesRef, (snapshot) => {
-      const data = snapshot.val()
-      const replies = data ? Object.values(data) : []
-      callback(replies)
-    })
-    return unsubscribe
-  } catch (error) {
-    console.error('Firebase subscribe all replies error:', error)
-    return () => {}
-  }
-}
+// Check if Firebase/Backend is available
+export const isFirebaseEnabled = () => isFirebaseAvailable;
 
-// Check if Firebase is available
-export const isFirebaseEnabled = () => isFirebaseAvailable
+// Clean up all polling intervals
+export const cleanupChatPolling = () => {
+  pollingIntervals.forEach((interval) => clearInterval(interval));
+  pollingIntervals.clear();
+};
 
-// Export database reference for advanced usage
-export { database, ref, push, onValue, set, get, update, remove }
+// Export for compatibility (no longer using Firebase directly)
+export const database = null;
+export const ref = () => null;
+export const push = () => null;
+export const onValue = () => () => {};
+export const set = () => Promise.resolve();
+export const get = () => Promise.resolve({ val: () => null });
+export const update = () => Promise.resolve();
+export const remove = () => Promise.resolve();

@@ -48,6 +48,9 @@ app.use('/api/networks', require('./routes/networks'));
 app.use('/api/rates', require('./routes/rates'));
 app.use('/api/deposit-wallets', require('./routes/depositWallets'));
 
+// Real-time chat support
+app.use('/api/chat', require('./routes/chat'));
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
