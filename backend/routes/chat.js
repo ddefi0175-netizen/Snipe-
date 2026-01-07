@@ -194,9 +194,9 @@ router.post('/admin/reply', authenticateAdmin, async (req, res) => {
     const chatMessage = new ChatMessage({
       sessionId,
       sender: 'admin',
-      senderName: req.admin.username || 'Support',
-      adminId: req.admin.adminId || req.admin.username,
-      adminName: req.admin.username,
+      senderName: req.user.username || 'Support',
+      adminId: req.user.adminId || req.user.username,
+      adminName: req.user.username,
       message,
       delivered: true,
       read: true
@@ -232,7 +232,7 @@ router.delete('/sessions/:sessionId', authenticateAdmin, async (req, res) => {
   try {
     const { sessionId } = req.params;
     
-    if (req.admin.role !== 'master') {
+    if (req.user.role !== 'master') {
       return res.status(403).json({ error: 'Only master can delete chat sessions' });
     }
     
