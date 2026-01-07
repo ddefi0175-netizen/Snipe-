@@ -39,6 +39,15 @@ app.use('/api/uploads', require('./routes/uploads'));
 app.use('/api/trades', require('./routes/trades'));
 app.use('/api/staking', require('./routes/staking'));
 
+// Configuration routes for admin control
+app.use('/api/settings', require('./routes/settings'));
+app.use('/api/trading-levels', require('./routes/tradingLevels'));
+app.use('/api/bonuses', require('./routes/bonuses'));
+app.use('/api/currencies', require('./routes/currencies'));
+app.use('/api/networks', require('./routes/networks'));
+app.use('/api/rates', require('./routes/rates'));
+app.use('/api/deposit-wallets', require('./routes/depositWallets'));
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
