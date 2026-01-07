@@ -7,7 +7,7 @@ import {
   saveChatMessage,
   isFirebaseEnabled 
 } from '../lib/firebase.js'
-import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI } from '../lib/api.js'
+import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
 
 // Lazy localStorage helper to avoid blocking initial render
 const getFromStorage = (key, defaultValue) => {
@@ -16,6 +16,23 @@ const getFromStorage = (key, defaultValue) => {
     return saved ? JSON.parse(saved) : defaultValue
   } catch (e) {
     return defaultValue
+  }
+}
+
+// Backend sync helper - saves to backend and falls back to localStorage
+const syncToBackend = async (api, method, data, fallbackKey) => {
+  try {
+    const result = await api[method](data)
+    console.log(`Backend sync success: ${method}`, result)
+    return result
+  } catch (error) {
+    console.error(`Backend sync failed: ${method}`, error.message)
+    // Fallback to localStorage
+    if (fallbackKey) {
+      const current = getFromStorage(fallbackKey, [])
+      localStorage.setItem(fallbackKey, JSON.stringify([...current, data]))
+    }
+    return null
   }
 }
 
@@ -339,21 +356,164 @@ export default function MasterAdminDashboard() {
       console.error('Failed to load staking from backend:', error.message)
     }
 
-    // Load config items from localStorage (these are settings, not user data)
+    // Load config items from backend (real-time data)
+    // Settings
+    try {
+      const backendSettings = await withTimeout(settingsAPI.get())
+      if (backendSettings && backendSettings.siteName) {
+        setSiteSettings(backendSettings)
+        console.log('Loaded settings from backend')
+      } else {
+        setSiteSettings(getFromStorage('siteSettings', defaultData.siteSettings))
+      }
+    } catch (error) {
+      console.error('Failed to load settings from backend:', error.message)
+      setSiteSettings(getFromStorage('siteSettings', defaultData.siteSettings))
+    }
+
+    // Trading Levels
+    try {
+      const backendLevels = await withTimeout(tradingLevelsAPI.getAll())
+      if (Array.isArray(backendLevels) && backendLevels.length > 0) {
+        const mappedLevels = backendLevels.map(l => ({
+          id: l._id,
+          name: l.name,
+          countdown: l.countdown,
+          profitPercent: l.profitPercent,
+          minCapital: l.minCapital,
+          maxCapital: l.maxCapital,
+          status: l.status
+        }))
+        setTradingLevels(mappedLevels)
+        console.log('Loaded trading levels from backend:', mappedLevels.length)
+      } else {
+        setTradingLevels(getFromStorage('adminTradingLevels', defaultData.tradingLevels))
+      }
+    } catch (error) {
+      console.error('Failed to load trading levels from backend:', error.message)
+      setTradingLevels(getFromStorage('adminTradingLevels', defaultData.tradingLevels))
+    }
+
+    // Currencies
+    try {
+      const backendCurrencies = await withTimeout(currenciesAPI.getAll())
+      if (Array.isArray(backendCurrencies) && backendCurrencies.length > 0) {
+        const mappedCurrencies = backendCurrencies.map(c => ({
+          id: c._id,
+          name: c.name,
+          symbol: c.symbol,
+          icon: c.icon,
+          status: c.status
+        }))
+        setCurrencies(mappedCurrencies)
+        console.log('Loaded currencies from backend:', mappedCurrencies.length)
+      } else {
+        setCurrencies(getFromStorage('adminCurrencies', defaultData.currencies))
+      }
+    } catch (error) {
+      console.error('Failed to load currencies from backend:', error.message)
+      setCurrencies(getFromStorage('adminCurrencies', defaultData.currencies))
+    }
+
+    // Networks
+    try {
+      const backendNetworks = await withTimeout(networksAPI.getAll())
+      if (Array.isArray(backendNetworks) && backendNetworks.length > 0) {
+        const mappedNetworks = backendNetworks.map(n => ({
+          id: n._id,
+          name: n.name,
+          symbol: n.symbol,
+          chainId: n.chainId,
+          confirmations: n.confirmations,
+          status: n.status
+        }))
+        setNetworks(mappedNetworks)
+        console.log('Loaded networks from backend:', mappedNetworks.length)
+      } else {
+        setNetworks(getFromStorage('adminNetworks', defaultData.networks))
+      }
+    } catch (error) {
+      console.error('Failed to load networks from backend:', error.message)
+      setNetworks(getFromStorage('adminNetworks', defaultData.networks))
+    }
+
+    // Exchange Rates
+    try {
+      const backendRates = await withTimeout(ratesAPI.getAll())
+      if (Array.isArray(backendRates) && backendRates.length > 0) {
+        const mappedRates = backendRates.map(r => ({
+          id: r._id,
+          from: r.from,
+          to: r.to,
+          rate: r.rate,
+          status: r.status
+        }))
+        setExchangeRates(mappedRates)
+        console.log('Loaded exchange rates from backend:', mappedRates.length)
+      } else {
+        setExchangeRates(getFromStorage('adminExchangeRates', defaultData.exchangeRates))
+      }
+    } catch (error) {
+      console.error('Failed to load exchange rates from backend:', error.message)
+      setExchangeRates(getFromStorage('adminExchangeRates', defaultData.exchangeRates))
+    }
+
+    // Deposit Wallets
+    try {
+      const backendWallets = await withTimeout(depositWalletsAPI.getAll())
+      if (Array.isArray(backendWallets) && backendWallets.length > 0) {
+        const mappedWallets = backendWallets.map(w => ({
+          id: w._id,
+          network: w.network,
+          address: w.address,
+          label: w.label,
+          status: w.status
+        }))
+        setDepositWallets(mappedWallets)
+        console.log('Loaded deposit wallets from backend:', mappedWallets.length)
+      } else {
+        setDepositWallets(getFromStorage('adminDepositWallets', defaultData.depositWallets))
+      }
+    } catch (error) {
+      console.error('Failed to load deposit wallets from backend:', error.message)
+      setDepositWallets(getFromStorage('adminDepositWallets', defaultData.depositWallets))
+    }
+
+    // Bonuses
+    try {
+      const backendBonuses = await withTimeout(bonusesAPI.getAll())
+      if (Array.isArray(backendBonuses) && backendBonuses.length > 0) {
+        // Convert array to object format expected by component
+        const bonusObj = {}
+        backendBonuses.forEach(b => {
+          bonusObj[b.name] = {
+            id: b._id,
+            name: b.name,
+            type: b.type,
+            amount: b.amount,
+            percentage: b.percentage,
+            minDeposit: b.minDeposit,
+            status: b.status
+          }
+        })
+        setBonusPrograms(bonusObj)
+        console.log('Loaded bonuses from backend:', backendBonuses.length)
+      } else {
+        setBonusPrograms(getFromStorage('bonusPrograms', defaultData.bonusPrograms))
+      }
+    } catch (error) {
+      console.error('Failed to load bonuses from backend:', error.message)
+      setBonusPrograms(getFromStorage('bonusPrograms', defaultData.bonusPrograms))
+    }
+
+    // These remain localStorage-based (non-critical config)
     setUserAgents(getFromStorage('userAgents', defaultData.userAgents))
     setWithdrawals(getFromStorage('adminWithdrawals', []))
     setStakingPlans(getFromStorage('stakingPlans', defaultData.stakingPlans))
-    setBonusPrograms(getFromStorage('bonusPrograms', defaultData.bonusPrograms))
     setActiveChats(getFromStorage('activeChats', []))
     setChatLogs(getFromStorage('customerChatLogs', []))
-    setCurrencies(getFromStorage('adminCurrencies', defaultData.currencies))
-    setNetworks(getFromStorage('adminNetworks', defaultData.networks))
-    setDepositWallets(getFromStorage('adminDepositWallets', defaultData.depositWallets))
-    setExchangeRates(getFromStorage('adminExchangeRates', defaultData.exchangeRates))
-    setTradingLevels(getFromStorage('adminTradingLevels', defaultData.tradingLevels))
     setUserActivityLogs(getFromStorage('userActivityLogs', defaultData.userActivityLogs))
     setAdminAuditLogs(getFromStorage('adminAuditLogs', defaultData.adminAuditLogs))
-    setSiteSettings(getFromStorage('siteSettings', defaultData.siteSettings))
     setTradeOptions(getFromStorage('tradeOptions', defaultData.tradeOptions))
     setVipRequests(getFromStorage('adminVIPRequests', []))
     
@@ -2655,15 +2815,34 @@ export default function MasterAdminDashboard() {
                     <div className="modal-actions">
                       <button
                         className="save-btn"
-                        onClick={() => {
+                        onClick={async () => {
                           if (newTradingLevel.name) {
-                            setTradingLevels(prev => [...prev, {
-                              id: Date.now(),
-                              ...newTradingLevel,
-                              status: 'active'
-                            }])
-                            setNewTradingLevel({ name: '', countdown: 180, profitPercent: 18, minCapital: 100, maxCapital: 10000 })
-                            setShowCreateModal(null)
+                            try {
+                              const result = await tradingLevelsAPI.create({
+                                name: newTradingLevel.name,
+                                countdown: newTradingLevel.countdown,
+                                profitPercent: newTradingLevel.profitPercent,
+                                minCapital: newTradingLevel.minCapital,
+                                maxCapital: newTradingLevel.maxCapital,
+                                status: 'active'
+                              })
+                              if (result && result._id) {
+                                setTradingLevels(prev => [...prev, {
+                                  id: result._id,
+                                  name: result.name,
+                                  countdown: result.countdown,
+                                  profitPercent: result.profitPercent,
+                                  minCapital: result.minCapital,
+                                  maxCapital: result.maxCapital,
+                                  status: result.status
+                                }])
+                                setNewTradingLevel({ name: '', countdown: 180, profitPercent: 18, minCapital: 100, maxCapital: 10000 })
+                                setShowCreateModal(null)
+                              }
+                            } catch (error) {
+                              console.error('Failed to create trading level:', error)
+                              alert('Failed to create trading level: ' + error.message)
+                            }
                           }
                         }}
                       >
@@ -2779,16 +2958,31 @@ export default function MasterAdminDashboard() {
               </div>
               <button
                 className="save-btn"
-                onClick={() => {
+                onClick={async () => {
                   if (newCurrency.name && newCurrency.symbol) {
-                    setCurrencies(prev => [...prev, {
-                      id: Date.now(),
-                      ...newCurrency,
-                      status: 'active',
-                      createdAt: new Date().toISOString().split('T')[0]
-                    }])
-                    setNewCurrency({ name: '', symbol: '', icon: '' })
-                    alert('Currency created successfully!')
+                    try {
+                      const result = await currenciesAPI.create({
+                        name: newCurrency.name,
+                        symbol: newCurrency.symbol,
+                        icon: newCurrency.icon,
+                        status: 'active'
+                      })
+                      if (result && result._id) {
+                        setCurrencies(prev => [...prev, {
+                          id: result._id,
+                          name: result.name,
+                          symbol: result.symbol,
+                          icon: result.icon,
+                          status: result.status,
+                          createdAt: new Date().toISOString().split('T')[0]
+                        }])
+                        setNewCurrency({ name: '', symbol: '', icon: '' })
+                        alert('Currency created successfully!')
+                      }
+                    } catch (error) {
+                      console.error('Failed to create currency:', error)
+                      alert('Failed to create currency: ' + error.message)
+                    }
                   }
                 }}
               >
@@ -2843,15 +3037,32 @@ export default function MasterAdminDashboard() {
               </div>
               <button
                 className="save-btn"
-                onClick={() => {
+                onClick={async () => {
                   if (newNetwork.name && newNetwork.symbol) {
-                    setNetworks(prev => [...prev, {
-                      id: Date.now(),
-                      ...newNetwork,
-                      status: 'active'
-                    }])
-                    setNewNetwork({ name: '', symbol: '', chainId: '', confirmations: 12 })
-                    alert('Network created successfully!')
+                    try {
+                      const result = await networksAPI.create({
+                        name: newNetwork.name,
+                        symbol: newNetwork.symbol,
+                        chainId: newNetwork.chainId,
+                        confirmations: newNetwork.confirmations,
+                        status: 'active'
+                      })
+                      if (result && result._id) {
+                        setNetworks(prev => [...prev, {
+                          id: result._id,
+                          name: result.name,
+                          symbol: result.symbol,
+                          chainId: result.chainId,
+                          confirmations: result.confirmations,
+                          status: result.status
+                        }])
+                        setNewNetwork({ name: '', symbol: '', chainId: '', confirmations: 12 })
+                        alert('Network created successfully!')
+                      }
+                    } catch (error) {
+                      console.error('Failed to create network:', error)
+                      alert('Failed to create network: ' + error.message)
+                    }
                   }
                 }}
               >
@@ -2955,15 +3166,30 @@ export default function MasterAdminDashboard() {
               </div>
               <button
                 className="save-btn"
-                onClick={() => {
+                onClick={async () => {
                   if (newWallet.network && newWallet.address) {
-                    setDepositWallets(prev => [...prev, {
-                      id: Date.now(),
-                      ...newWallet,
-                      status: 'active'
-                    }])
-                    setNewWallet({ network: '', address: '', label: '' })
-                    alert('Wallet address added successfully!')
+                    try {
+                      const result = await depositWalletsAPI.create({
+                        network: newWallet.network,
+                        address: newWallet.address,
+                        label: newWallet.label,
+                        status: 'active'
+                      })
+                      if (result && result._id) {
+                        setDepositWallets(prev => [...prev, {
+                          id: result._id,
+                          network: result.network,
+                          address: result.address,
+                          label: result.label,
+                          status: result.status
+                        }])
+                        setNewWallet({ network: '', address: '', label: '' })
+                        alert('Wallet address added successfully!')
+                      }
+                    } catch (error) {
+                      console.error('Failed to create wallet:', error)
+                      alert('Failed to create wallet: ' + error.message)
+                    }
                   }
                 }}
               >
@@ -3084,15 +3310,30 @@ export default function MasterAdminDashboard() {
               </div>
               <button
                 className="save-btn"
-                onClick={() => {
+                onClick={async () => {
                   if (newExchangeRate.from && newExchangeRate.rate) {
-                    setExchangeRates(prev => [...prev, {
-                      id: Date.now(),
-                      ...newExchangeRate,
-                      status: 'active'
-                    }])
-                    setNewExchangeRate({ from: '', to: 'USDT', rate: 0 })
-                    alert('Exchange rate added successfully!')
+                    try {
+                      const result = await ratesAPI.create({
+                        from: newExchangeRate.from,
+                        to: newExchangeRate.to,
+                        rate: newExchangeRate.rate,
+                        status: 'active'
+                      })
+                      if (result && result._id) {
+                        setExchangeRates(prev => [...prev, {
+                          id: result._id,
+                          from: result.from,
+                          to: result.to,
+                          rate: result.rate,
+                          status: result.status
+                        }])
+                        setNewExchangeRate({ from: '', to: 'USDT', rate: 0 })
+                        alert('Exchange rate added successfully!')
+                      }
+                    } catch (error) {
+                      console.error('Failed to create exchange rate:', error)
+                      alert('Failed to create exchange rate: ' + error.message)
+                    }
                   }
                 }}
               >

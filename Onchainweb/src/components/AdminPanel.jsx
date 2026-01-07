@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { userAPI, uploadAPI, authAPI } from '../lib/api'
+import { userAPI, uploadAPI, authAPI, tradingLevelsAPI, currenciesAPI, networksAPI, depositWalletsAPI, ratesAPI, settingsAPI } from '../lib/api'
 
 // API Base URL for authentication
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api'
@@ -172,6 +172,50 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       loadAllUsers()
     }
   }, [isOpen])
+
+  // Load config from backend when authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadConfigFromBackend()
+    }
+  }, [isAuthenticated])
+
+  const loadConfigFromBackend = async () => {
+    try {
+      // Load trading levels from backend
+      const levels = await tradingLevelsAPI.getAll()
+      if (Array.isArray(levels) && levels.length > 0) {
+        const mappedLevels = levels.map((l, idx) => ({
+          level: l.level || idx + 1,
+          minCapital: l.minCapital,
+          maxCapital: l.maxCapital,
+          profit: l.profitPercent,
+          duration: l.countdown
+        }))
+        setTradingLevels(mappedLevels)
+        console.log('Admin: Loaded trading levels from backend')
+      }
+    } catch (error) {
+      console.error('Failed to load trading levels:', error)
+    }
+
+    try {
+      // Load deposit wallets from backend
+      const wallets = await depositWalletsAPI.getAll()
+      if (Array.isArray(wallets) && wallets.length > 0) {
+        const mappedAddresses = wallets.map(w => ({
+          network: w.network,
+          name: w.label || w.network,
+          address: w.address,
+          enabled: w.status === 'active'
+        }))
+        setDepositAddresses(mappedAddresses)
+        console.log('Admin: Loaded deposit addresses from backend')
+      }
+    } catch (error) {
+      console.error('Failed to load deposit wallets:', error)
+    }
+  }
   
   const loadAllUsers = async () => {
     try {

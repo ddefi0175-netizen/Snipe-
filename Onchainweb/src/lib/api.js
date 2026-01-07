@@ -325,5 +325,158 @@ export const authAPI = {
   }),
 };
 
+// ============== SETTINGS API (Master only) ==============
+export const settingsAPI = {
+  // Get site settings
+  get: () => apiCall('/settings'),
+  
+  // Update settings (master only)
+  update: (settings) => apiCall('/settings', {
+    method: 'PUT',
+    body: JSON.stringify(settings),
+  }),
+};
+
+// ============== TRADING LEVELS API ==============
+export const tradingLevelsAPI = {
+  // Get all trading levels
+  getAll: () => apiCall('/trading-levels'),
+  
+  // Create trading level (master only)
+  create: (level) => apiCall('/trading-levels', {
+    method: 'POST',
+    body: JSON.stringify(level),
+  }),
+  
+  // Update trading level (master only)
+  update: (id, level) => apiCall(`/trading-levels/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(level),
+  }),
+  
+  // Delete trading level (master only)
+  delete: (id) => apiCall(`/trading-levels/${id}`, {
+    method: 'DELETE',
+  }),
+};
+
+// ============== BONUSES API ==============
+export const bonusesAPI = {
+  // Get all bonus programs
+  getAll: () => apiCall('/bonuses'),
+  
+  // Create bonus program (master only)
+  create: (bonus) => apiCall('/bonuses', {
+    method: 'POST',
+    body: JSON.stringify(bonus),
+  }),
+  
+  // Update bonus program (master only)
+  update: (id, bonus) => apiCall(`/bonuses/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(bonus),
+  }),
+  
+  // Delete bonus program (master only)
+  delete: (id) => apiCall(`/bonuses/${id}`, {
+    method: 'DELETE',
+  }),
+};
+
+// ============== CURRENCIES API ==============
+export const currenciesAPI = {
+  // Get all currencies
+  getAll: () => apiCall('/currencies'),
+  
+  // Create currency (master only)
+  create: (currency) => apiCall('/currencies', {
+    method: 'POST',
+    body: JSON.stringify(currency),
+  }),
+  
+  // Update currency (master only)
+  update: (id, currency) => apiCall(`/currencies/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(currency),
+  }),
+  
+  // Delete currency (master only)
+  delete: (id) => apiCall(`/currencies/${id}`, {
+    method: 'DELETE',
+  }),
+};
+
+// ============== NETWORKS API ==============
+export const networksAPI = {
+  // Get all networks
+  getAll: () => apiCall('/networks'),
+  
+  // Create network (master only)
+  create: (network) => apiCall('/networks', {
+    method: 'POST',
+    body: JSON.stringify(network),
+  }),
+  
+  // Update network (master only)
+  update: (id, network) => apiCall(`/networks/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(network),
+  }),
+  
+  // Delete network (master only)
+  delete: (id) => apiCall(`/networks/${id}`, {
+    method: 'DELETE',
+  }),
+};
+
+// ============== RATES API ==============
+export const ratesAPI = {
+  // Get all exchange rates
+  getAll: () => apiCall('/rates'),
+  
+  // Create rate (master only)
+  create: (rate) => apiCall('/rates', {
+    method: 'POST',
+    body: JSON.stringify(rate),
+  }),
+  
+  // Update rate (master only)
+  update: (id, rate) => apiCall(`/rates/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(rate),
+  }),
+  
+  // Delete rate (master only)
+  delete: (id) => apiCall(`/rates/${id}`, {
+    method: 'DELETE',
+  }),
+};
+
+// ============== DEPOSIT WALLETS API ==============
+export const depositWalletsAPI = {
+  // Get all deposit wallets
+  getAll: () => apiCall('/deposit-wallets'),
+  
+  // Get wallet by network
+  getByNetwork: (network) => apiCall(`/deposit-wallets/network/${network}`),
+  
+  // Create wallet (master only)
+  create: (wallet) => apiCall('/deposit-wallets', {
+    method: 'POST',
+    body: JSON.stringify(wallet),
+  }),
+  
+  // Update wallet (master only)
+  update: (id, wallet) => apiCall(`/deposit-wallets/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(wallet),
+  }),
+  
+  // Delete wallet (master only)
+  delete: (id) => apiCall(`/deposit-wallets/${id}`, {
+    method: 'DELETE',
+  }),
+};
+
 // Export base URL for direct use if needed
 export { API_BASE };
