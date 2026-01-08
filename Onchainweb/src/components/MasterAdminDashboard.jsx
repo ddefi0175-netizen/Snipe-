@@ -830,32 +830,9 @@ export default function MasterAdminDashboard() {
       }
     } catch (error) {
       console.error('[LOGIN] Backend error:', error.message)
-      // Fallback to hardcoded master credentials if backend fails
-      if (loginData.username === 'master' && loginData.password === 'OnchainWeb2025!') {
-        // Generate a fallback token for local operations
-        const fallbackToken = 'fallback-master-' + Date.now()
-        localStorage.setItem('adminToken', fallbackToken)
-        localStorage.setItem('masterAdminSession', JSON.stringify({
-          username: loginData.username,
-          role: 'master',
-          permissions: {
-            manageUsers: true,
-            manageBalances: true,
-            manageKYC: true,
-            manageTrades: true,
-            viewReports: true,
-            createAdmins: true
-          },
-          timestamp: Date.now()
-        }))
-        setLoginError('')
-        setIsAuthenticated(true)
-        setIsDataLoaded(false)
-        setIsMasterAccount(true)
-        console.log('[LOGIN] Fallback master login successful')
-        return
-      }
-      setLoginError(error.message || 'Invalid credentials. Check username/password.')
+      // No fallback credentials - backend authentication is required
+      // This ensures security by requiring proper database-backed authentication
+      setLoginError('Server unavailable. Please try again later or contact support.')
       return
     } finally {
       setIsLoggingIn(false)

@@ -24,6 +24,7 @@ Thumbs.db
 
 # Admin Documentation (Private)
 ADMIN_ONLY.md
+DEPLOYMENT_STATUS.md
 
 # Build outputs
 *.tgz

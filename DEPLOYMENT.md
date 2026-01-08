@@ -92,9 +92,9 @@ PORT=4000
 # Authentication
 JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters
 
-# Master Account (hardcoded admin)
+# Master Account (set secure values - DO NOT commit real credentials)
 MASTER_USERNAME=master
-MASTER_PASSWORD=OnchainWeb2025!
+MASTER_PASSWORD=<set-secure-password-in-env>
 ```
 
 ### Deploy to Render.com
@@ -179,10 +179,14 @@ This creates:
 
 ### Login Credentials After Seeding
 
+> ⚠️ **Security Note**: Default credentials are set via environment variables.
+> See `ADMIN_ONLY.md` (internal document) for credential management.
+> Never commit actual passwords to version control.
+
 | Account | Username | Password |
 | --------- | ---------- | ---------- |
-| Master | master | OnchainWeb2025! |
-| Admin | aqiang | Aqiang2026! |
+| Master | master | Set via `MASTER_PASSWORD` env var |
+| Admin | (created via dashboard) | Set during admin creation |
 
 ---
 
@@ -225,10 +229,10 @@ Add these secrets if needed:
 # Health check
 curl https://snipe-api.onrender.com/api/health
 
-# Login test
+# Login test (use your actual credentials)
 curl -X POST https://snipe-api.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"master","password":"OnchainWeb2025!"}'
+  -d '{"username":"master","password":"YOUR_PASSWORD_HERE"}'
 
 # Get settings (with token)
 curl https://snipe-api.onrender.com/api/settings \
