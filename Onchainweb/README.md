@@ -109,7 +109,7 @@ The frontend communicates with the backend API. See [backend README](../backend/
 Required environment variable:
 
 ```env
-VITE_API_BASE_URL=http://localhost:4000  # or your backend URL
+VITE_API_BASE=http://localhost:4000/api  # or your backend URL
 ```
 
 ## Keyboard Navigation
@@ -170,7 +170,7 @@ npm run preview
 ### Backend API not responding?
 
 - Verify backend is running (`http://localhost:4000`)
-- Check `.env` has correct `VITE_API_BASE_URL`
+- Check `.env` has correct `VITE_API_BASE`
 - Check network tab in browser DevTools
 
 ### Price feed not updating?
