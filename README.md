@@ -5,8 +5,8 @@ and live chat functionality. Built with Node.js, React, and MongoDB.
 
 ## 🚀 Live Demo
 
-- **Frontend**: [https://snipe-frontend.vercel.app](https://snipe-frontend.vercel.app)
-- **Backend API**: [https://snipe-backend.onrender.com](https://snipe-backend.onrender.com)
+- **Frontend**: [https://www.onchainweb.app](https://www.onchainweb.app)
+- **Backend API**: [https://snipe-api.onrender.com](https://snipe-api.onrender.com)
 - **Documentation**: [View Docs](https://github.com/ddefi0175-netizen/Snipe)
 
 ## Features
@@ -103,6 +103,112 @@ The following endpoints are available for registered users:
 
 Register a new account or log in with your credentials through the frontend
 dashboard. Your session is secured with JWT tokens.
+
+## 🔐 Wallet Connection System
+
+The platform features a comprehensive multi-wallet connection system supporting **11 different wallet providers** across all platforms (desktop, mobile, dApps browsers).
+
+### Supported Wallets
+
+| Wallet | Connection Method | Platform Support |
+|--------|-------------------|------------------|
+| MetaMask | Injected Provider / WalletConnect | Desktop, Mobile, Browser |
+| Trust Wallet | Deep Link / WalletConnect | Mobile, dApp Browser |
+| Coinbase Wallet | Injected / WalletConnect | Desktop, Mobile |
+| OKX Wallet | Injected / WalletConnect | Desktop, Mobile |
+| Phantom | Injected (EVM Mode) | Desktop, Mobile |
+| Binance Web3 Wallet | Injected | Desktop |
+| TokenPocket | Deep Link / Injected | Mobile |
+| Rainbow | WalletConnect | Mobile |
+| Ledger Live | WalletConnect | Desktop |
+| imToken | Deep Link / Injected | Mobile |
+| WalletConnect | QR Code Protocol | Universal |
+
+### Connection Strategies
+
+The system uses intelligent environment detection to provide the optimal connection method:
+
+1. **Desktop Browser with Extension**
+   - Direct injected provider connection (fastest)
+   - Falls back to WalletConnect QR code
+
+2. **Mobile Browser**
+   - Deep links to open wallet apps directly
+   - Automatic return to browser after signing
+
+3. **In-App dApp Browser**
+   - Uses wallet's native injected provider
+   - Detects Trust Wallet, MetaMask, OKX, etc.
+
+4. **No Wallet Installed**
+   - WalletConnect QR code for any wallet
+   - Links to download official wallet apps
+
+### Key Features
+
+- **EIP-6963 Support**: Modern multi-wallet detection standard
+- **Open Access Mode**: Users can explore without connecting wallet
+- **Auto-Detection**: Identifies available wallets and in-app browsers
+- **Deep Linking**: Native mobile app integration
+- **Graceful Fallbacks**: Multiple connection methods per wallet
+- **Clear Error Messages**: User-friendly feedback for all scenarios
+
+### For Developers
+
+```javascript
+// Using the wallet provider
+import { useUniversalWallet } from '../lib/walletConnect';
+
+function MyComponent() {
+  const {
+    address,           // Connected wallet address
+    isConnected,       // Connection status
+    connectWallet,     // Connect function
+    disconnect,        // Disconnect function
+    environment        // Current environment info
+  } = useUniversalWallet();
+
+  return (
+    <button onClick={() => connectWallet('metamask')}>
+      Connect MetaMask
+    </button>
+  );
+}
+```
+
+## 🛡️ Admin Management System
+
+The platform includes a comprehensive admin management system with granular permissions.
+
+### Admin Hierarchy
+
+- **Master Account**: Full platform control, can create/manage all admins
+- **Admin Accounts**: Customizable permissions, can be assigned specific users
+
+### Admin Permissions
+
+| Permission | Description |
+|------------|-------------|
+| manageUsers | View and edit user profiles |
+| manageBalances | Modify user account balances |
+| manageKYC | Review and approve KYC submissions |
+| manageTrades | Monitor and intervene in trades |
+| viewReports | Access platform analytics |
+| manageStaking | Control staking features |
+| manageAIArbitrage | Manage AI arbitrage system |
+| manageDeposits | Process deposit requests |
+| manageWithdrawals | Approve withdrawal requests |
+| customerService | Access support tickets |
+| viewLogs | View system audit logs |
+| siteSettings | Modify platform settings |
+| createAdmins | Create new admin accounts |
+
+### User Assignment Modes
+
+Admins can be configured with:
+
+- **All Users**: Access to manage all platform users
+- **Assigned Users Only**: Limited to specific user IDs
 
 ## Support
 
