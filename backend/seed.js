@@ -211,10 +211,10 @@ async function seed() {
     console.log('='.repeat(50));
     console.log('Master Account:');
     console.log('  Username: master');
-    console.log('  Password: OnchainWeb2025!');
+    console.log('  Password: (set via MASTER_PASSWORD env var)');
     console.log('\nAdmin Account:');
-    console.log('  Username: aqiang');
-    console.log('  Password: Aqiang2026!');
+    console.log('  Username:', process.env.SEED_ADMIN_USERNAME || 'aqiang');
+    console.log('  Password: (set via SEED_ADMIN_PASSWORD env var)');
     console.log('='.repeat(50));
 
   } catch (error) {
