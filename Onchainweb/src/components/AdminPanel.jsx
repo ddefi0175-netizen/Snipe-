@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { userAPI, uploadAPI, authAPI, tradingLevelsAPI, currenciesAPI, networksAPI, depositWalletsAPI, ratesAPI, settingsAPI } from '../lib/api'
+import { formatApiError, validatePassword } from '../lib/errorHandling'
 
 // API Base URL for authentication
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api'
@@ -265,8 +266,10 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       return
     }
 
-    if (loginPassword.length < 6) {
-      setLoginError('Password must be at least 6 characters')
+    // Validate password
+    const passwordValidation = validatePassword(loginPassword, 6)
+    if (!passwordValidation.valid) {
+      setLoginError(passwordValidation.error)
       return
     }
 
@@ -305,26 +308,14 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         setLoginPassword('')
         console.log('[AdminPanel] Login successful!')
       } else {
-        // Enhanced error messages for common scenarios
-        let errorMsg = data.error || 'Invalid username or password'
-        if (response.status === 401) {
-          errorMsg = 'Invalid credentials. Please check your username and password.'
-        } else if (response.status === 403) {
-          errorMsg = 'Account access denied. Please contact support.'
-        } else if (response.status >= 500) {
-          errorMsg = 'Server error. Please try again in a few moments.'
-        }
-        setLoginError(errorMsg)
+        // Use shared error handling for response errors
+        const error = new Error(data.error || 'Invalid username or password')
+        error.response = { status: response.status, data }
+        setLoginError(formatApiError(error))
       }
     } catch (error) {
       console.error('[AdminPanel] Login error:', error)
-      if (error.name === 'AbortError') {
-        setLoginError('⏱️ Request timed out. The server may be starting up (cold start). Please wait 30 seconds and try again.')
-      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-        setLoginError('🌐 Network error. Please check your internet connection and try again.')
-      } else {
-        setLoginError('❌ Connection error: ' + error.message)
-      }
+      setLoginError(formatApiError(error, { isColdStartAware: true }))
     } finally {
       setIsLoggingIn(false)
     }

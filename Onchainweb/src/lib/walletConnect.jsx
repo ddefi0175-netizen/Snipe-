@@ -17,6 +17,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { formatWalletError } from './errorHandling'
 
 // ============ Constants ============
 const STORAGE_KEYS = {

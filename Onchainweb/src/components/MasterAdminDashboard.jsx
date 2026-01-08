@@ -8,6 +8,7 @@ import {
   isFirebaseEnabled
 } from '../lib/firebase.js'
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
+import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js'
 
 // Lazy localStorage helper to avoid blocking initial render
 const getFromStorage = (key, defaultValue) => {
@@ -789,16 +790,15 @@ export default function MasterAdminDashboard() {
       return
     }
 
-    if (loginData.password.length < 6) {
-      setLoginError('Password must be at least 6 characters')
+    // Validate password
+    const passwordValidation = validatePassword(loginData.password, 6)
+    if (!passwordValidation.valid) {
+      setLoginError(passwordValidation.error)
       return
     }
 
     // Check if localStorage is available
-    try {
-      localStorage.setItem('test', 'test')
-      localStorage.removeItem('test')
-    } catch (storageError) {
+    if (!isLocalStorageAvailable()) {
       setLoginError('❌ Storage access blocked. Please enable cookies/localStorage in your browser settings.')
       return
     }
@@ -835,20 +835,8 @@ export default function MasterAdminDashboard() {
       }
     } catch (error) {
       console.error('[LOGIN] Backend error:', error.message)
-      // Enhanced error messages
-      if (error.message.includes('timeout') || error.message.includes('AbortError')) {
-        setLoginError('⏱️ Request timed out. The server may be starting up (cold start). Please wait 30 seconds and try again.')
-      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-        setLoginError('🌐 Network error. Please check your internet connection and try again.')
-      } else if (error.message.includes('401')) {
-        setLoginError('❌ Invalid credentials. Please check your username and password.')
-      } else if (error.message.includes('403')) {
-        setLoginError('🚫 Account access denied. Please contact support.')
-      } else if (error.message.includes('500') || error.message.includes('502') || error.message.includes('503')) {
-        setLoginError('🔧 Server error. Please try again in a few moments.')
-      } else {
-        setLoginError('❌ Server unavailable: ' + error.message + '. Please try again later or contact support.')
-      }
+      // Use shared error handling utility
+      setLoginError(formatApiError(error, { isColdStartAware: true }))
       return
     } finally {
       setIsLoggingIn(false)
