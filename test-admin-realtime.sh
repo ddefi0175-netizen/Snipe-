@@ -18,7 +18,10 @@ MASTER_PASSWORD="${MASTER_PASSWORD}"
 
 if [ -z "$MASTER_PASSWORD" ]; then
   echo -e "${RED}Error: MASTER_PASSWORD environment variable is required${NC}"
-  echo "Usage: MASTER_PASSWORD=your-password ./test-admin-realtime.sh"
+  echo "Usage: export MASTER_PASSWORD=your-password && ./test-admin-realtime.sh"
+  echo "Or: MASTER_PASSWORD=your-password ./test-admin-realtime.sh"
+  echo ""
+  echo "Note: Using export is more secure as it keeps the password out of shell history"
   exit 1
 fi
 

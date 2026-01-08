@@ -26,8 +26,9 @@ const AdminActivitySchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now, index: true }
 });
 
-// Index for efficient querying
+// Compound indexes for efficient querying
 AdminActivitySchema.index({ adminUsername: 1, timestamp: -1 });
+AdminActivitySchema.index({ adminUsername: 1, actionType: 1, timestamp: -1 });
 AdminActivitySchema.index({ actionType: 1, timestamp: -1 });
 AdminActivitySchema.index({ targetType: 1, timestamp: -1 });
 

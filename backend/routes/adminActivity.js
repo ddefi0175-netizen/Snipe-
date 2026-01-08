@@ -6,6 +6,16 @@ const { verifyToken, requireAdmin } = require('./auth');
 // Middleware to log admin activity
 const logActivity = async (req, action, actionType, targetType, targetId, targetName, details = {}) => {
   try {
+    // Get client IP - prioritize trusted proxy header, fallback to connection IP
+    let ipAddress = req.socket.remoteAddress || req.connection.remoteAddress || '';
+    
+    // If behind a trusted proxy (like Render), use X-Forwarded-For
+    // In production, validate this is from a trusted source
+    if (req.headers['x-forwarded-for']) {
+      // Take the first IP in the chain (original client)
+      ipAddress = req.headers['x-forwarded-for'].split(',')[0].trim();
+    }
+    
     const activity = new AdminActivity({
       adminUsername: req.user?.username || 'system',
       adminId: req.user?.adminId || req.user?.username,
@@ -15,7 +25,7 @@ const logActivity = async (req, action, actionType, targetType, targetId, target
       targetId,
       targetName,
       details,
-      ipAddress: req.headers['x-forwarded-for'] || req.socket.remoteAddress || '',
+      ipAddress,
       userAgent: req.headers['user-agent'] || '',
       success: true,
       timestamp: new Date()

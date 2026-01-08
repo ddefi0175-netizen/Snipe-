@@ -7,7 +7,7 @@ const { verifyToken, requireAdmin } = require('./auth');
 
 // Get all users with pagination (admin/master only with real-time filtering)
 // Query params: page (default 1), limit (default 50, max 100), search, sortBy, sortOrder
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, requireAdmin, async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
