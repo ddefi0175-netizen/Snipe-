@@ -2,6 +2,14 @@
 # Test script for admin login and creation
 
 API_BASE="${BACKEND_URL:-https://snipe-api.onrender.com}"
+MASTER_USERNAME="${MASTER_USERNAME:-master}"
+MASTER_PASSWORD="${MASTER_PASSWORD}"
+
+if [ -z "$MASTER_PASSWORD" ]; then
+  echo "❌ ERROR: MASTER_PASSWORD environment variable is required"
+  echo "Usage: MASTER_PASSWORD='your-password' ./test-admin-creation.sh"
+  exit 1
+fi
 
 echo "=== Testing Admin Login & Creation ==="
 echo "API Base: $API_BASE"
@@ -11,7 +19,7 @@ echo ""
 echo "1. Master Login..."
 MASTER_RESPONSE=$(curl -s -X POST "$API_BASE/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"username":"master","password":"OnchainWeb2025!"}')
+  -d "{\"username\":\"$MASTER_USERNAME\",\"password\":\"$MASTER_PASSWORD\"}")
 
 echo "Response: $MASTER_RESPONSE"
 

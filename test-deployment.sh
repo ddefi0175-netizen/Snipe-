@@ -3,15 +3,26 @@
 # Snipe Deployment Test Script
 # ===========================================
 # Tests all API endpoints to verify deployment
-# Usage: ./test-deployment.sh [API_URL]
-# Example: ./test-deployment.sh https://snipe-api.onrender.com/api
+# Usage: MASTER_PASSWORD='your-password' ADMIN_PASSWORD='admin-password' ./test-deployment.sh [API_URL]
+# Example: MASTER_PASSWORD='secret123' ./test-deployment.sh https://snipe-api.onrender.com/api
 
 # Configuration
 API_BASE="${1:-https://snipe-api.onrender.com/api}"
-MASTER_USER="master"
-MASTER_PASS="OnchainWeb2025!"
-ADMIN_USER="aqiang"
-ADMIN_PASS="Aqiang2026!"
+MASTER_USER="${MASTER_USERNAME:-master}"
+MASTER_PASS="${MASTER_PASSWORD}"
+ADMIN_USER="${ADMIN_USERNAME:-aqiang}"
+ADMIN_PASS="${ADMIN_PASSWORD}"
+
+# Validate required environment variables
+if [ -z "$MASTER_PASS" ]; then
+  echo "❌ ERROR: MASTER_PASSWORD environment variable is required"
+  echo "Usage: MASTER_PASSWORD='your-password' ./test-deployment.sh"
+  exit 1
+fi
+
+if [ -z "$ADMIN_PASS" ]; then
+  echo "⚠️  WARNING: ADMIN_PASSWORD not set. Admin login tests will be skipped."
+fi
 
 # Colors for output
 RED='\033[0;31m'

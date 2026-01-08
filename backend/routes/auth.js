@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const Admin = require('../models/Admin');
 
 // JWT Secret - REQUIRED in production (no insecure fallback)
@@ -115,44 +116,59 @@ router.post('/login', async (req, res) => {
     console.log(`[LOGIN] Admin lookup for ${username}: ${admin ? 'FOUND' : 'NOT FOUND'}`);
 
     if (admin) {
-      console.log(`[LOGIN] Admin password stored: ${admin.password ? admin.password.substring(0, 3) + '***' : 'EMPTY'}, entered: ${password.substring(0, 3)}***`);
-      console.log(`[LOGIN] Password match: ${admin.password === password}`);
-    }
+      // Check if password is hashed (starts with $2a$ or $2b$ for bcrypt)
+      const isHashed = admin.password && admin.password.startsWith('$2');
+      let passwordMatch = false;
 
-    if (admin && admin.password === password) {
-      console.log(`[LOGIN] Admin ${username} login successful`);
-      // Update last login
-      admin.lastLogin = new Date();
-      await admin.save();
-
-      const token = jwt.sign(
-        {
-          username: admin.username,
-          role: 'admin',
-          adminId: admin._id,
-          permissions: admin.permissions || {
-            manageUsers: true,
-            manageBalances: true,
-            manageKYC: true,
-            manageTrades: false,
-            viewReports: true,
-            createAdmins: false
-          }
-        },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRES }
-      );
-
-      return res.json({
-        success: true,
-        token,
-        user: {
-          username: admin.username,
-          role: 'admin',
-          adminId: admin._id,
-          permissions: admin.permissions
+      if (isHashed) {
+        // Compare with bcrypt for hashed passwords
+        passwordMatch = await bcrypt.compare(password, admin.password);
+      } else {
+        // Legacy plaintext comparison (for backward compatibility during migration)
+        passwordMatch = admin.password === password;
+        
+        // If plaintext password matches, hash it for future logins
+        if (passwordMatch) {
+          console.log(`[LOGIN] Upgrading plaintext password to hashed for admin: ${username}`);
+          admin.password = await bcrypt.hash(password, 10);
         }
-      });
+      }
+
+      if (passwordMatch) {
+        console.log(`[LOGIN] Admin ${username} login successful`);
+        // Update last login
+        admin.lastLogin = new Date();
+        await admin.save();
+
+        const token = jwt.sign(
+          {
+            username: admin.username,
+            role: 'admin',
+            adminId: admin._id,
+            permissions: admin.permissions || {
+              manageUsers: true,
+              manageBalances: true,
+              manageKYC: true,
+              manageTrades: false,
+              viewReports: true,
+              createAdmins: false
+            }
+          },
+          JWT_SECRET,
+          { expiresIn: JWT_EXPIRES }
+        );
+
+        return res.json({
+          success: true,
+          token,
+          user: {
+            username: admin.username,
+            role: 'admin',
+            adminId: admin._id,
+            permissions: admin.permissions
+          }
+        });
+      }
     }
 
     // Invalid credentials
@@ -209,6 +225,11 @@ router.post('/admin', verifyToken, requireMaster, async (req, res) => {
       return res.status(400).json({ error: 'Username and password required' });
     }
 
+    // Validate password strength
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+
     // Check if admin already exists in MongoDB
     const existing = await Admin.findOne({ username });
     if (existing) {
@@ -239,9 +260,12 @@ router.post('/admin', verifyToken, requireMaster, async (req, res) => {
         : [];
     const dedupedAssigned = [...new Set(incomingAssigned.filter(Boolean))];
 
+    // Hash the password before storing
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const newAdmin = new Admin({
       username,
-      password,
+      password: hashedPassword,
       email: email || '',
       permissions: { ...defaultPermissions, ...(permissions || {}) },
       assignedUsers: dedupedAssigned,
@@ -431,13 +455,16 @@ router.patch('/admin/:username/password', verifyToken, requireMaster, async (req
     const { username } = req.params;
     const { newPassword } = req.body;
 
-    if (!newPassword || newPassword.length < 6) {
-      return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
     }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     const admin = await Admin.findOneAndUpdate(
       { username },
-      { password: newPassword },
+      { password: hashedPassword },
       { new: true }
     );
 
