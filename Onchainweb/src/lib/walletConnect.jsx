@@ -261,14 +261,27 @@ const connectInjected = async (walletId) => {
             throw new Error('REDIRECT_TO_WALLET')
         }
 
-        throw new Error(`${wallet.name} not detected. Please install the extension or use ${wallet.name} mobile app.`)
+        // Enhanced error messages with installation guidance
+        const installUrl = wallet.downloadUrl || 'https://ethereum.org/wallets'
+        throw new Error(`🔌 ${wallet.name} not detected. Please install the ${wallet.name} extension from ${installUrl} or use the ${wallet.name} mobile app.`)
     }
 
-    // Request accounts
-    const accounts = await provider.request({ method: 'eth_requestAccounts' })
+    // Request accounts with better error handling
+    let accounts
+    try {
+        accounts = await provider.request({ method: 'eth_requestAccounts' })
+    } catch (error) {
+        if (error.code === 4001) {
+            throw new Error('🚫 Connection request was rejected. Please approve the connection in your wallet.')
+        } else if (error.code === -32002) {
+            throw new Error('⏳ Connection request is already pending. Please check your wallet and approve the connection.')
+        } else {
+            throw new Error(`❌ Wallet connection failed: ${error.message || 'Unknown error'}`)
+        }
+    }
 
     if (!accounts || accounts.length === 0) {
-        throw new Error('No accounts returned. Please unlock your wallet.')
+        throw new Error('🔒 No accounts found. Please unlock your wallet and try again.')
     }
 
     // Get chain ID

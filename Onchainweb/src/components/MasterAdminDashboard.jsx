@@ -789,12 +789,17 @@ export default function MasterAdminDashboard() {
       return
     }
 
+    if (loginData.password.length < 6) {
+      setLoginError('Password must be at least 6 characters')
+      return
+    }
+
     // Check if localStorage is available
     try {
       localStorage.setItem('test', 'test')
       localStorage.removeItem('test')
     } catch (storageError) {
-      setLoginError('Storage access blocked. Please enable cookies/localStorage in your browser settings.')
+      setLoginError('❌ Storage access blocked. Please enable cookies/localStorage in your browser settings.')
       return
     }
 
@@ -825,14 +830,25 @@ export default function MasterAdminDashboard() {
         return
       } else {
         console.log('[LOGIN] Response missing success or token:', response)
-        setLoginError(response.error || 'Login failed - invalid response from server')
+        setLoginError(response.error || '❌ Login failed - invalid response from server')
         return
       }
     } catch (error) {
       console.error('[LOGIN] Backend error:', error.message)
-      // No fallback credentials - backend authentication is required
-      // This ensures security by requiring proper database-backed authentication
-      setLoginError('Server unavailable. Please try again later or contact support.')
+      // Enhanced error messages
+      if (error.message.includes('timeout') || error.message.includes('AbortError')) {
+        setLoginError('⏱️ Request timed out. The server may be starting up (cold start). Please wait 30 seconds and try again.')
+      } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        setLoginError('🌐 Network error. Please check your internet connection and try again.')
+      } else if (error.message.includes('401')) {
+        setLoginError('❌ Invalid credentials. Please check your username and password.')
+      } else if (error.message.includes('403')) {
+        setLoginError('🚫 Account access denied. Please contact support.')
+      } else if (error.message.includes('500') || error.message.includes('502') || error.message.includes('503')) {
+        setLoginError('🔧 Server error. Please try again in a few moments.')
+      } else {
+        setLoginError('❌ Server unavailable: ' + error.message + '. Please try again later or contact support.')
+      }
       return
     } finally {
       setIsLoggingIn(false)
