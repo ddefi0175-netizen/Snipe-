@@ -316,8 +316,14 @@ const initWalletConnectProvider = async () => {
         // Dynamically import WalletConnect
         const UniversalProvider = (await import('@walletconnect/universal-provider')).default
 
-        // Get project ID from environment or use default
-        const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'c0e8d61d2a4f8a1e0e6b8e5c9d8e5c8e'
+        // Get project ID from environment or use default for testing
+        // IMPORTANT: For production, set VITE_WALLETCONNECT_PROJECT_ID in your .env file
+        // Get your free Project ID from https://cloud.walletconnect.com
+        const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'DEMO-PROJECT-ID-GET-YOUR-OWN'
+
+        if (!import.meta.env.VITE_WALLETCONNECT_PROJECT_ID) {
+            console.warn('⚠️  Using demo WalletConnect Project ID. Get your own at https://cloud.walletconnect.com')
+        }
 
         walletConnectProvider = await UniversalProvider.init({
             projectId,
@@ -337,106 +343,111 @@ const initWalletConnectProvider = async () => {
     }
 }
 
-const connectWalletConnect = async () => {
-    return new Promise(async (resolve, reject) => {
+const connectWalletConnect = () => {
+    return new Promise((resolve, reject) => {
         let modal = null
         let provider = null
 
-        try {
-            // Initialize provider
-            provider = await initWalletConnectProvider()
+        const initAndConnect = async () => {
+            try {
+                // Initialize provider
+                provider = await initWalletConnectProvider()
 
-            // Create modal
-            modal = createWalletConnectModal(
-                () => {
-                    // User closed modal
-                    if (provider) {
-                        provider.disconnect().catch(console.error)
+                // Create modal
+                modal = createWalletConnectModal(
+                    () => {
+                        // User closed modal
+                        if (provider) {
+                            provider.disconnect().catch(console.error)
+                        }
+                        reject(new Error('User closed WalletConnect modal'))
                     }
-                    reject(new Error('User closed WalletConnect modal'))
-                }
-            )
-            document.body.appendChild(modal)
+                )
+                document.body.appendChild(modal)
 
-            // Listen for display_uri event to show QR code
-            provider.on('display_uri', (uri) => {
-                updateModalWithQR(modal, uri)
-            })
+                // Listen for display_uri event to show QR code
+                provider.on('display_uri', (uri) => {
+                    updateModalWithQR(modal, uri)
+                })
 
-            // Connect and wait for session
-            const session = await provider.connect({
-                namespaces: {
-                    eip155: {
-                        methods: [
-                            'eth_sendTransaction',
-                            'eth_signTransaction',
-                            'eth_sign',
-                            'personal_sign',
-                            'eth_signTypedData'
-                        ],
-                        chains: ['eip155:1', 'eip155:56', 'eip155:137'], // Ethereum, BSC, Polygon
-                        events: ['chainChanged', 'accountsChanged'],
-                        rpcMap: {
-                            1: 'https://eth.llamarpc.com',
-                            56: 'https://bsc-dataseed.binance.org',
-                            137: 'https://polygon-rpc.com'
+                // Connect and wait for session
+                const session = await provider.connect({
+                    namespaces: {
+                        eip155: {
+                            methods: [
+                                'eth_sendTransaction',
+                                'eth_signTransaction',
+                                'eth_sign',
+                                'personal_sign',
+                                'eth_signTypedData'
+                            ],
+                            chains: ['eip155:1', 'eip155:56', 'eip155:137'], // Ethereum, BSC, Polygon
+                            events: ['chainChanged', 'accountsChanged'],
+                            rpcMap: {
+                                1: 'https://eth.llamarpc.com',
+                                56: 'https://bsc-dataseed.binance.org',
+                                137: 'https://polygon-rpc.com'
+                            }
                         }
                     }
-                }
-            })
-
-            // Get account and chain info
-            const accounts = provider.session?.namespaces?.eip155?.accounts || []
-            if (accounts.length === 0) {
-                throw new Error('No accounts found in WalletConnect session')
-            }
-
-            // Parse account (format: "eip155:1:0x...")
-            const [namespace, chainId, address] = accounts[0].split(':')
-            const parsedChainId = parseInt(chainId)
-
-            // Get balance
-            let balance = 0
-            try {
-                const balanceHex = await provider.request({
-                    method: 'eth_getBalance',
-                    params: [address, 'latest']
                 })
-                balance = parseInt(balanceHex, 16) / 1e18
-            } catch (err) {
-                console.warn('Failed to get balance:', err)
-            }
 
-            // Remove modal
-            if (modal && modal.parentNode) {
-                modal.remove()
-            }
+                // Get account and chain info
+                const accounts = provider.session?.namespaces?.eip155?.accounts || []
+                if (accounts.length === 0) {
+                    throw new Error('No accounts found in WalletConnect session')
+                }
 
-            // Return connection result
-            resolve({
-                address,
-                chainId: parsedChainId,
-                balance,
-                provider,
-                connectorType: 'walletconnect',
-                walletId: 'walletconnect',
-            })
+                // Parse account (format: "eip155:1:0x...")
+                const [namespace, chainId, address] = accounts[0].split(':')
+                const parsedChainId = parseInt(chainId)
 
-        } catch (error) {
-            // Clean up
-            if (modal && modal.parentNode) {
-                modal.remove()
-            }
-            if (provider) {
-                provider.disconnect().catch(console.error)
-            }
+                // Get balance
+                let balance = 0
+                try {
+                    const balanceHex = await provider.request({
+                        method: 'eth_getBalance',
+                        params: [address, 'latest']
+                    })
+                    balance = parseInt(balanceHex, 16) / 1e18
+                } catch (err) {
+                    console.warn('Failed to get balance:', err)
+                }
 
-            if (error.message === 'User closed WalletConnect modal') {
-                reject(error)
-            } else {
-                reject(new Error(`WalletConnect failed: ${error.message || 'Unknown error'}`))
+                // Remove modal
+                if (modal && modal.parentNode) {
+                    modal.remove()
+                }
+
+                // Return connection result
+                resolve({
+                    address,
+                    chainId: parsedChainId,
+                    balance,
+                    provider,
+                    connectorType: 'walletconnect',
+                    walletId: 'walletconnect',
+                })
+
+            } catch (error) {
+                // Clean up
+                if (modal && modal.parentNode) {
+                    modal.remove()
+                }
+                if (provider) {
+                    provider.disconnect().catch(console.error)
+                }
+
+                if (error.message === 'User closed WalletConnect modal') {
+                    reject(error)
+                } else {
+                    reject(new Error(`WalletConnect failed: ${error.message || 'Unknown error'}`))
+                }
             }
         }
+
+        // Start the async initialization and connection
+        initAndConnect()
     })
 }
 
@@ -712,6 +723,80 @@ export function UniversalWalletProvider({ children }) {
         }
     }, [])
 
+    // Helper: Reconnect injected wallet
+    const reconnectInjectedWallet = async (savedAddress, savedWalletId) => {
+        if (!window.ethereum) return false
+
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' })
+            if (accounts.length > 0 && accounts[0].toLowerCase() === savedAddress.toLowerCase()) {
+                const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' })
+                const balanceHex = await window.ethereum.request({
+                    method: 'eth_getBalance',
+                    params: [accounts[0], 'latest']
+                })
+
+                setState(prev => ({
+                    ...prev,
+                    isConnected: true,
+                    address: accounts[0],
+                    chainId: parseInt(chainIdHex, 16),
+                    balance: parseInt(balanceHex, 16) / 1e18,
+                    connectorType: 'injected',
+                    walletId: savedWalletId,
+                    provider: window.ethereum,
+                }))
+                return true
+            }
+        } catch (err) {
+            console.warn('Failed to reconnect injected wallet:', err)
+        }
+        return false
+    }
+
+    // Helper: Reconnect WalletConnect
+    const reconnectWalletConnect = async (savedAddress) => {
+        try {
+            const provider = await initWalletConnectProvider()
+
+            // Check if there's an active session
+            if (provider.session) {
+                const accounts = provider.session?.namespaces?.eip155?.accounts || []
+                if (accounts.length > 0) {
+                    const [namespace, chainId, address] = accounts[0].split(':')
+
+                    if (address.toLowerCase() === savedAddress.toLowerCase()) {
+                        let balance = 0
+                        try {
+                            const balanceHex = await provider.request({
+                                method: 'eth_getBalance',
+                                params: [address, 'latest']
+                            })
+                            balance = parseInt(balanceHex, 16) / 1e18
+                        } catch (err) {
+                            console.warn('Failed to get balance:', err)
+                        }
+
+                        setState(prev => ({
+                            ...prev,
+                            isConnected: true,
+                            address,
+                            chainId: parseInt(chainId),
+                            balance,
+                            connectorType: 'walletconnect',
+                            walletId: 'walletconnect',
+                            provider,
+                        }))
+                        return true
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn('Failed to restore WalletConnect session:', err)
+        }
+        return false
+    }
+
     // Restore previous session
     const restoreSession = useCallback(async () => {
         const wasConnected = localStorage.getItem(STORAGE_KEYS.CONNECTED) === 'true'
@@ -719,74 +804,17 @@ export function UniversalWalletProvider({ children }) {
         const savedConnectorType = localStorage.getItem(STORAGE_KEYS.CONNECTOR_TYPE)
         const savedWalletId = localStorage.getItem('walletType')
 
-        if (wasConnected && savedAddress) {
-            try {
-                if (savedConnectorType === 'injected' && window.ethereum) {
-                    // Try to reconnect to injected wallet silently
-                    const accounts = await window.ethereum.request({ method: 'eth_accounts' })
-                    if (accounts.length > 0 && accounts[0].toLowerCase() === savedAddress.toLowerCase()) {
-                        const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' })
-                        const balanceHex = await window.ethereum.request({
-                            method: 'eth_getBalance',
-                            params: [accounts[0], 'latest']
-                        })
+        if (!wasConnected || !savedAddress) return
 
-                        setState(prev => ({
-                            ...prev,
-                            isConnected: true,
-                            address: accounts[0],
-                            chainId: parseInt(chainIdHex, 16),
-                            balance: parseInt(balanceHex, 16) / 1e18,
-                            connectorType: savedConnectorType,
-                            walletId: savedWalletId,
-                            provider: window.ethereum,
-                        }))
-                    }
-                } else if (savedConnectorType === 'walletconnect') {
-                    // Try to restore WalletConnect session
-                    try {
-                        const provider = await initWalletConnectProvider()
-                        
-                        // Check if there's an active session
-                        if (provider.session) {
-                            const accounts = provider.session?.namespaces?.eip155?.accounts || []
-                            if (accounts.length > 0) {
-                                const [namespace, chainId, address] = accounts[0].split(':')
-                                
-                                if (address.toLowerCase() === savedAddress.toLowerCase()) {
-                                    let balance = 0
-                                    try {
-                                        const balanceHex = await provider.request({
-                                            method: 'eth_getBalance',
-                                            params: [address, 'latest']
-                                        })
-                                        balance = parseInt(balanceHex, 16) / 1e18
-                                    } catch (err) {
-                                        console.warn('Failed to get balance:', err)
-                                    }
-
-                                    setState(prev => ({
-                                        ...prev,
-                                        isConnected: true,
-                                        address,
-                                        chainId: parseInt(chainId),
-                                        balance,
-                                        connectorType: 'walletconnect',
-                                        walletId: 'walletconnect',
-                                        provider,
-                                    }))
-                                }
-                            }
-                        }
-                    } catch (err) {
-                        console.warn('Failed to restore WalletConnect session:', err)
-                        clearSession()
-                    }
-                }
-            } catch (err) {
-                console.warn('Failed to restore session:', err)
-                clearSession()
+        try {
+            if (savedConnectorType === 'injected') {
+                await reconnectInjectedWallet(savedAddress, savedWalletId)
+            } else if (savedConnectorType === 'walletconnect') {
+                await reconnectWalletConnect(savedAddress)
             }
+        } catch (err) {
+            console.warn('Failed to restore session:', err)
+            clearSession()
         }
     }, [])
 
