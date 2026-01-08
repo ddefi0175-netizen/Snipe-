@@ -107,7 +107,7 @@ MASTER_PASSWORD=OnchainWeb2025!
 
 2. **Configure Build Settings**
 
-   ```
+   ```text
    Root Directory: backend
    Build Command: npm install
    Start Command: node index.js
@@ -241,18 +241,18 @@ curl https://snipe-api.onrender.com/api/settings \
 
 ### Backend Issues
 
-**"MongoDB connection error"**
+#### "MongoDB connection error"
 
 - Check `MONGO_URI` is correct
 - Ensure IP is whitelisted in MongoDB Atlas (0.0.0.0/0 for Render)
 - Verify database name exists
 
-**"No token provided"**
+#### "No token provided"
 
 - Include `Authorization: Bearer TOKEN` header
 - Token expires after 24h, re-login
 
-**Render cold starts (slow first request)**
+#### Render cold starts (slow first request)
 
 - Free tier spins down after 15 mins inactivity
 - First request takes 30-60 seconds
@@ -260,13 +260,13 @@ curl https://snipe-api.onrender.com/api/settings \
 
 ### Frontend Issues
 
-**"Failed to fetch" / CORS errors**
+#### "Failed to fetch" / CORS errors
 
 - Verify `VITE_API_BASE` matches your backend URL
 - Backend has `cors()` middleware enabled
 - Check browser console for exact error
 
-**Login not working**
+#### Login not working
 
 - Open browser DevTools → Network tab
 - Check if API request goes to correct URL
@@ -274,12 +274,12 @@ curl https://snipe-api.onrender.com/api/settings \
 
 ### Database Issues
 
-**Empty dashboard data**
+#### Empty dashboard data
 
 - Run `node seed.js` to populate initial data
 - Check MongoDB Atlas collections have data
 
-**Duplicate key errors**
+#### Duplicate key errors
 
 - Seed script uses `upsert`, should not duplicate
 - Clear collection and re-run if needed
@@ -288,7 +288,7 @@ curl https://snipe-api.onrender.com/api/settings \
 
 ## Project Structure
 
-```
+```text
 Snipe/
 ├── backend/                 # Node.js Express API
 │   ├── .env                 # Environment vars (not committed)
