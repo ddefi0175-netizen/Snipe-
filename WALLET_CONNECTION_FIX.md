@@ -57,19 +57,26 @@ npm list react-router-dom @walletconnect/universal-provider qrcode-generator
 
 ## Configuration
 
-### WalletConnect Project ID (Required for Production)
+### WalletConnect Project ID (Required)
 
-For WalletConnect to work in production, you need to register for a free Project ID:
+WalletConnect requires a Project ID to function. You must register for a free Project ID:
 
-1. Visit [WalletConnect Cloud](https://cloud.walletconnect.com)
-2. Create an account and new project
-3. Copy your Project ID
-4. Add to your `.env` file:
+1. **Register at WalletConnect Cloud**
+   - Visit: https://cloud.walletconnect.com
+   - Create an account
+   - Create a new project
+   - Copy your Project ID
+
+2. **Set Environment Variable**
+   Create/update your `.env` file in the `Onchainweb` directory:
+   ```bash
+   VITE_WALLETCONNECT_PROJECT_ID=your-actual-project-id-here
    ```
-   VITE_WALLETCONNECT_PROJECT_ID=your-project-id-here
-   ```
 
-**Note:** The app includes a default Project ID for development/testing, but you should use your own for production deployments.
+3. **Build and Deploy**
+   The environment variable will be used automatically during build.
+
+**Note:** Without a valid Project ID, the WalletConnect feature will not work and will show an error message to users.
 
 ## Diagnosis (Original)
 ```bash

@@ -316,13 +316,18 @@ const initWalletConnectProvider = async () => {
         // Dynamically import WalletConnect
         const UniversalProvider = (await import('@walletconnect/universal-provider')).default
 
-        // Get project ID from environment or use default for testing
+        // Get project ID from environment
         // IMPORTANT: For production, set VITE_WALLETCONNECT_PROJECT_ID in your .env file
         // Get your free Project ID from https://cloud.walletconnect.com
-        const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || 'DEMO-PROJECT-ID-GET-YOUR-OWN'
+        const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID
 
-        if (!import.meta.env.VITE_WALLETCONNECT_PROJECT_ID) {
-            console.warn('⚠️  Using demo WalletConnect Project ID. Get your own at https://cloud.walletconnect.com')
+        if (!projectId) {
+            console.error('❌ WalletConnect Project ID is not configured!')
+            throw new Error(
+                'WalletConnect requires a Project ID. ' +
+                'Get your free Project ID from https://cloud.walletconnect.com ' +
+                'and set VITE_WALLETCONNECT_PROJECT_ID in your .env file.'
+            )
         }
 
         walletConnectProvider = await UniversalProvider.init({

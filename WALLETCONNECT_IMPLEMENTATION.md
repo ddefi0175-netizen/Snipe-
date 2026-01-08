@@ -38,29 +38,34 @@ Replaced the mock/placeholder implementation with the official WalletConnect Uni
 
 ## Configuration
 
-### Development/Testing
-The app includes a demo Project ID for testing. You'll see this warning in the console:
-```
-⚠️  Using demo WalletConnect Project ID. Get your own at https://cloud.walletconnect.com
-```
+### WalletConnect Project ID (Required)
 
-### Production Setup
-For production deployment, you must register for a free WalletConnect Project ID:
+**IMPORTANT**: WalletConnect requires a valid Project ID to function. This is NOT optional.
 
 1. **Register at WalletConnect Cloud**
    - Visit: https://cloud.walletconnect.com
-   - Create an account
+   - Create an account (free)
    - Create a new project
    - Copy your Project ID
 
 2. **Set Environment Variable**
-   Create/update your `.env` file:
+   Create/update your `.env` file in the `Onchainweb` directory:
    ```bash
    VITE_WALLETCONNECT_PROJECT_ID=your-actual-project-id-here
    ```
 
-3. **Deploy**
-   The environment variable will be used automatically during build.
+3. **Build**
+   The environment variable is embedded during the build process:
+   ```bash
+   npm run build
+   ```
+
+### Without Project ID
+If you don't set a Project ID, users will see an error when trying to use WalletConnect:
+```
+WalletConnect requires a Project ID. Get your free Project ID from 
+https://cloud.walletconnect.com and set VITE_WALLETCONNECT_PROJECT_ID in your .env file.
+```
 
 ## Technical Details
 
