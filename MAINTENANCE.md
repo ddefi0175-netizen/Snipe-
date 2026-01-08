@@ -9,7 +9,7 @@ This document outlines routine maintenance tasks, monitoring procedures, and ope
 ### 1. Dashboard & Feature Testing (Every Monday)
 
 - [ ] **Admin Login**: Log in as master/admin and verify dashboard loads correctly
-- [ ] **User Management**: 
+- [ ] **User Management**:
   - [ ] View user list and ensure data loads quickly
   - [ ] Check user details, points, and activity logs
   - [ ] Test user role changes and verify permissions
@@ -69,14 +69,15 @@ This document outlines routine maintenance tasks, monitoring procedures, and ope
 ### Before Deploying Updates
 
 1. **Local Testing**:
+
    ```bash
    # Pull latest code
    git pull origin main
-   
+
    # Run health check script
    chmod +x test-deployment.sh
    ./test-deployment.sh
-   
+
    # Test seed script
    cd backend
    node seed.js
@@ -116,6 +117,7 @@ This document outlines routine maintenance tasks, monitoring procedures, and ope
 ### GitHub Releases
 
 For significant updates:
+
 ```bash
 # Tag a new release
 git tag -a v1.1.0 -m "Release v1.1.0: Feature updates"
@@ -123,6 +125,7 @@ git push origin v1.1.0
 ```
 
 Then create a GitHub Release:
+
 1. Go to: `https://github.com/ddefi0175-netizen/Snipe/releases/new`
 2. Select the tag you created
 3. Add release notes describing:
@@ -140,15 +143,17 @@ Then create a GitHub Release:
 ### Automated Health Checks
 
 GitHub Actions runs automated health checks every 6 hours:
+
 - Backend API health endpoint
 - Frontend availability
 - Critical API endpoints
 
-**View Results**: https://github.com/ddefi0175-netizen/Snipe/actions
+**View Results**: <https://github.com/ddefi0175-netizen/Snipe/actions>
 
 ### Manual Health Check
 
 Run the deployment test script anytime:
+
 ```bash
 cd /workspaces/Snipe
 ./test-deployment.sh
@@ -180,12 +185,14 @@ Use a free service like **UptimeRobot** or **BetterUptime**:
 ### MongoDB Atlas Backups
 
 **Enable Automatic Backups**:
+
 1. Log into MongoDB Atlas
 2. Go to your cluster → "Backup" tab
 3. Enable "Continuous Cloud Backup"
 4. Set retention policy (7 days recommended for free tier)
 
 **Test Restore Procedure** (Quarterly):
+
 1. In MongoDB Atlas, go to "Backup" tab
 2. Select a recent snapshot
 3. Click "Restore" → Create new cluster
@@ -203,6 +210,7 @@ mongorestore --uri "mongodb+srv://USER:PASSWORD@cluster.mongodb.net/snipe" ./bac
 ```
 
 **Backup Schedule**:
+
 - Automatic: Daily (via MongoDB Atlas)
 - Manual: Before major releases
 - Store backups: Securely offsite (S3, Google Drive, etc.)
@@ -210,6 +218,7 @@ mongorestore --uri "mongodb+srv://USER:PASSWORD@cluster.mongodb.net/snipe" ./bac
 ### Database Cleanup
 
 **Monthly Tasks**:
+
 - Archive old activity logs (>90 days)
 - Clean up expired sessions
 - Review and remove test data
@@ -228,15 +237,17 @@ db.activitylogs.deleteMany({
 ### Weekly Security Audit
 
 GitHub Actions runs automated security audits every Monday:
+
 - `npm audit` on backend dependencies
 - `npm audit` on frontend dependencies
 - Check for outdated packages
 
-**View Results**: https://github.com/ddefi0175-netizen/Snipe/actions/workflows/security-audit.yml
+**View Results**: <https://github.com/ddefi0175-netizen/Snipe/actions/workflows/security-audit.yml>
 
 ### Manual Security Review
 
 **Run locally**:
+
 ```bash
 # Backend
 cd backend
@@ -250,11 +261,13 @@ npm outdated
 ```
 
 **Apply automatic fixes**:
+
 ```bash
 npm audit fix
 ```
 
 **For breaking changes**:
+
 - Review changelog of updated package
 - Test thoroughly in development
 - Update code if needed
@@ -265,10 +278,11 @@ npm audit fix
 Rotate sensitive credentials every 3-6 months:
 
 1. **JWT Secret**:
+
    ```bash
    # Generate new secret
    openssl rand -base64 32
-   
+
    # Update in backend/.env and hosting platform
    JWT_SECRET=new-secret-here
    ```
@@ -326,9 +340,11 @@ Rotate sensitive credentials every 3-6 months:
 
 1. Check backend logs in hosting platform
 2. Verify MongoDB connection:
+
    ```bash
    mongo "mongodb+srv://cluster.mongodb.net" --username USER --password PASS
    ```
+
 3. Restart backend service
 4. Check environment variables are set correctly
 
@@ -358,6 +374,7 @@ Rotate sensitive credentials every 3-6 months:
 ## 📝 Documentation Updates
 
 Update documentation when:
+
 - Project structure changes
 - New features are added
 - Deployment process changes
@@ -365,6 +382,7 @@ Update documentation when:
 - API endpoints are modified
 
 **Documentation to Update**:
+
 - [ ] Root README.md
 - [ ] Backend README.md
 - [ ] Frontend README.md
@@ -379,6 +397,7 @@ Update documentation when:
 ### GitHub Issues
 
 Enable and monitor GitHub Issues for:
+
 - Bug reports
 - Feature requests
 - Questions from users
@@ -389,6 +408,7 @@ Enable and monitor GitHub Issues for:
 ### Pull Requests
 
 Review process for community PRs:
+
 1. Check code quality and tests
 2. Run locally to verify functionality
 3. Review security implications
@@ -401,7 +421,7 @@ Review process for community PRs:
 ## 📅 Maintenance Schedule
 
 | Task | Frequency | Day/Time |
-|------|-----------|----------|
+| ------ | ----------- | ---------- |
 | Dashboard testing | Weekly | Monday, 9 AM |
 | Log review | Weekly | Monday, 10 AM |
 | Security audit | Weekly | Monday (automated) |
@@ -442,10 +462,11 @@ Review process for community PRs:
 ### Escalation Contact
 
 For critical issues, contact:
+
 - **Maintainer**: ddefi0175-netizen
 - **Hosting Support**: Render.com, Vercel, MongoDB Atlas
 
 ---
 
-**Last Updated**: January 2026  
+**Last Updated**: January 2026
 **Next Review**: April 2026

@@ -3,6 +3,7 @@
 Complete guide for deploying the Snipe trading platform with real-time data.
 
 ## 📋 Table of Contents
+
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
 - [Backend Deployment](#backend-deployment)
@@ -16,7 +17,7 @@ Complete guide for deploying the Snipe trading platform with real-time data.
 
 ## Prerequisites
 
-- Node.js 18+ 
+- Node.js 18+
 - npm or yarn
 - MongoDB Atlas account (or local MongoDB)
 - GitHub account
@@ -105,6 +106,7 @@ MASTER_PASSWORD=OnchainWeb2025!
    - Select the `backend` folder as root directory
 
 2. **Configure Build Settings**
+
    ```
    Root Directory: backend
    Build Command: npm install
@@ -166,7 +168,7 @@ node seed.js
 This creates:
 
 | Collection | Records |
-|------------|---------|
+| ------------ | --------- |
 | Settings | Site configuration |
 | Admins | aqiang (admin) |
 | DepositWallets | BTC, ETH, BSC, TRC20, SOL, MATIC |
@@ -178,7 +180,7 @@ This creates:
 ### Login Credentials After Seeding
 
 | Account | Username | Password |
-|---------|----------|----------|
+| --------- | ---------- | ---------- |
 | Master | master | OnchainWeb2025! |
 | Admin | aqiang | Aqiang2026! |
 
@@ -193,7 +195,7 @@ Go to **Repository → Settings → Secrets and variables → Actions**
 Add these secrets if needed:
 
 | Secret | Purpose |
-|--------|---------|
+| -------- | --------- |
 | `MONGO_URI` | MongoDB connection (if using in CI) |
 | `VERCEL_TOKEN` | For Vercel deployments |
 | `VERCEL_ORG_ID` | Vercel organization |
@@ -240,15 +242,18 @@ curl https://snipe-api.onrender.com/api/settings \
 ### Backend Issues
 
 **"MongoDB connection error"**
+
 - Check `MONGO_URI` is correct
 - Ensure IP is whitelisted in MongoDB Atlas (0.0.0.0/0 for Render)
 - Verify database name exists
 
 **"No token provided"**
+
 - Include `Authorization: Bearer TOKEN` header
 - Token expires after 24h, re-login
 
 **Render cold starts (slow first request)**
+
 - Free tier spins down after 15 mins inactivity
 - First request takes 30-60 seconds
 - Consider upgrading or use a keep-alive service
@@ -256,11 +261,13 @@ curl https://snipe-api.onrender.com/api/settings \
 ### Frontend Issues
 
 **"Failed to fetch" / CORS errors**
+
 - Verify `VITE_API_BASE` matches your backend URL
 - Backend has `cors()` middleware enabled
 - Check browser console for exact error
 
 **Login not working**
+
 - Open browser DevTools → Network tab
 - Check if API request goes to correct URL
 - Verify response status and body
@@ -268,10 +275,12 @@ curl https://snipe-api.onrender.com/api/settings \
 ### Database Issues
 
 **Empty dashboard data**
+
 - Run `node seed.js` to populate initial data
 - Check MongoDB Atlas collections have data
 
 **Duplicate key errors**
+
 - Seed script uses `upsert`, should not duplicate
 - Clear collection and re-run if needed
 
@@ -305,7 +314,7 @@ Snipe/
 ## API Endpoints Reference
 
 | Endpoint | Method | Auth | Description |
-|----------|--------|------|-------------|
+| ---------- | -------- | ------ | ------------- |
 | `/api/health` | GET | No | Health check |
 | `/api/auth/login` | POST | No | Login |
 | `/api/auth/admins` | GET | Admin | List admins |
@@ -325,6 +334,6 @@ Snipe/
 
 ## Support
 
-- **Repository**: https://github.com/ddefi0175-netizen/Snipe
-- **Backend URL**: https://snipe-api.onrender.com
-- **Frontend URL**: https://www.onchainweb.app
+- **Repository**: <https://github.com/ddefi0175-netizen/Snipe>
+- **Backend URL**: <https://snipe-api.onrender.com>
+- **Frontend URL**: <https://www.onchainweb.app>

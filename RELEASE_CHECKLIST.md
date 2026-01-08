@@ -52,7 +52,7 @@ Final checklist for making Snipe publicly available.
 ### Common Issues Summary
 
 | Cause | Prevention/Fix |
-|-------|----------------|
+| ------- | ---------------- |
 | Backend/API cold start | Paid hosting or keep-alive service |
 | Bad DB connection | Whitelist IPs, monitor, optimize queries |
 | Wrong API URL | Set and test frontend `.env` |

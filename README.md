@@ -111,7 +111,7 @@ The platform features a comprehensive multi-wallet connection system supporting 
 ### Supported Wallets
 
 | Wallet | Connection Method | Platform Support |
-|--------|-------------------|------------------|
+| -------- | ------------------- | ------------------ |
 | MetaMask | Injected Provider / WalletConnect | Desktop, Mobile, Browser |
 | Trust Wallet | Deep Link / WalletConnect | Mobile, dApp Browser |
 | Coinbase Wallet | Injected / WalletConnect | Desktop, Mobile |
@@ -188,7 +188,7 @@ The platform includes a comprehensive admin management system with granular perm
 ### Admin Permissions
 
 | Permission | Description |
-|------------|-------------|
+| ------------ | ------------- |
 | manageUsers | View and edit user profiles |
 | manageBalances | Modify user account balances |
 | manageKYC | Review and approve KYC submissions |
