@@ -7,7 +7,32 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 
-app.use(cors());
+// CORS configuration - allow specific origins
+const allowedOrigins = [
+  'https://www.onchainweb.app',
+  'https://onchainweb.app',
+  'https://snipe-frontend.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    // Allow any Vercel preview URLs
+    if (origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+    console.log('[CORS] Blocked origin:', origin);
+    return callback(new Error('Not allowed by CORS'), false);
+  },
+  credentials: true,
+}));
+
 app.use(express.json({ limit: '50mb' })); // Increase limit for base64 images
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
@@ -22,7 +47,15 @@ app.get('/', (req, res) => {
   res.send('Snipe backend API running');
 });
 
-// Health check endpoint
+// Health check endpoints (root and /api for flexibility)
+app.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    mongoConnected: mongoose.connection.readyState === 1,
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',

@@ -22,6 +22,7 @@ Modern, accessible trading platform interface built with React and Vite. Feature
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - npm or yarn
 - Backend API running (see [backend README](../backend/README.md))
@@ -29,19 +30,22 @@ Modern, accessible trading platform interface built with React and Vite. Feature
 ### Setup
 
 1. **Install dependencies:**
+
    ```bash
    cd Onchainweb
    npm install
    ```
 
 2. **Configure environment:**
+
    ```bash
    cp .env.example .env
    # Edit .env with your backend API URL
-   VITE_API_BASE_URL=http://localhost:4000
+   VITE_API_BASE=http://localhost:4000/api
    ```
 
 3. **Start development server:**
+
    ```bash
    npm run dev
    ```
@@ -75,21 +79,25 @@ npm run lint
 ## Features Walkthrough
 
 ### 1. Connect Wallet
+
 - Click "Connect Wallet" in the header
 - Accept the permission request in your wallet
 - Your ETH balance will display automatically
 
 ### 2. View Real-Time Prices
+
 - Hero section displays current ETH price from CoinGecko
 - Price updates every 30 seconds
 - No API key required (respects rate limits)
 
 ### 3. Live Chat
+
 - Chat is available when active
 - Send messages to the community
 - Real-time message delivery via backend
 
 ### 4. User Dashboard
+
 - View your profile and activity
 - Track points and achievements
 - Manage account settings
@@ -99,6 +107,7 @@ npm run lint
 The frontend communicates with the backend API. See [backend README](../backend/README.md) for available endpoints.
 
 Required environment variable:
+
 ```env
 VITE_API_BASE_URL=http://localhost:4000  # or your backend URL
 ```
@@ -106,6 +115,7 @@ VITE_API_BASE_URL=http://localhost:4000  # or your backend URL
 ## Keyboard Navigation
 
 All UI elements are keyboard accessible:
+
 - `Tab` – Navigate between elements
 - `Enter/Space` – Activate buttons and links
 - `Escape` – Close modals and menus
@@ -120,6 +130,7 @@ All UI elements are keyboard accessible:
 ## Development
 
 ### Component Structure
+
 ```
 src/
 ├── components/     # Reusable UI components
@@ -151,16 +162,19 @@ npm run preview
 ## Troubleshooting
 
 ### Wallet not connecting?
+
 - Ensure MetaMask or compatible wallet is installed
 - Check browser console for errors
 - Try refreshing the page
 
 ### Backend API not responding?
+
 - Verify backend is running (`http://localhost:4000`)
 - Check `.env` has correct `VITE_API_BASE_URL`
 - Check network tab in browser DevTools
 
 ### Price feed not updating?
+
 - CoinGecko has rate limits; wait a moment and refresh
 - Check browser console for fetch errors
 
