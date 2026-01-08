@@ -131,7 +131,7 @@ All UI elements are keyboard accessible:
 
 ### Component Structure
 
-```
+```text
 src/
 ├── components/     # Reusable UI components
 ├── pages/         # Page components
@@ -185,3 +185,7 @@ For issues or feature requests, please open an issue on GitHub.
 ---
 
 **Note**: For admin features and advanced configuration, contact the maintainer.
+
+```text
+Some plain text content
+```
