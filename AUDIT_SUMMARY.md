@@ -20,7 +20,7 @@ I've completed a comprehensive security audit of your Snipe trading platform and
 **Benefit:** Database breach won't expose passwords
 
 ### 2. ✅ Exposed Master Password → Environment Variables
-**BEFORE:** Master password `OnchainWeb2025!` hardcoded in README, test scripts
+**BEFORE:** Master password was hardcoded in README, test scripts
 **AFTER:** Password removed from all files, uses environment variable
 **Benefit:** Public repository doesn't contain credentials
 
