@@ -221,6 +221,9 @@ router.post('/admin', verifyToken, requireMaster, async (req, res) => {
   try {
     const { username, password, email, permissions, assignedUsers, userAccessMode, customerIds } = req.body;
 
+    console.log('[CREATE_ADMIN] Request from:', req.user.username);
+    console.log('[CREATE_ADMIN] New admin username:', username);
+
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password required' });
     }
@@ -236,6 +239,7 @@ router.post('/admin', verifyToken, requireMaster, async (req, res) => {
       return res.status(400).json({ error: 'Admin username already exists' });
     }
 
+    // Default permissions - all enabled for flexibility unless specified
     const defaultPermissions = {
       manageUsers: true,
       manageBalances: true,
@@ -249,8 +253,11 @@ router.post('/admin', verifyToken, requireMaster, async (req, res) => {
       viewReports: true,
       viewLogs: true,
       siteSettings: true,
-      createAdmins: true
+      createAdmins: false  // Only master has this by default
     };
+
+    // Merge provided permissions with defaults
+    const finalPermissions = { ...defaultPermissions, ...(permissions || {}) };
 
     // Allow master to supply a custom list of customer IDs; if provided, we default to "assigned" mode
     const incomingAssigned = Array.isArray(assignedUsers)
@@ -260,6 +267,13 @@ router.post('/admin', verifyToken, requireMaster, async (req, res) => {
         : [];
     const dedupedAssigned = [...new Set(incomingAssigned.filter(Boolean))];
 
+    // Determine user access mode
+    const accessMode = userAccessMode || (dedupedAssigned.length > 0 ? 'assigned' : 'all');
+
+    console.log('[CREATE_ADMIN] Permissions:', finalPermissions);
+    console.log('[CREATE_ADMIN] Access mode:', accessMode);
+    console.log('[CREATE_ADMIN] Assigned users count:', dedupedAssigned.length);
+
     // Hash the password before storing
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -267,30 +281,38 @@ router.post('/admin', verifyToken, requireMaster, async (req, res) => {
       username,
       password: hashedPassword,
       email: email || '',
-      permissions: { ...defaultPermissions, ...(permissions || {}) },
+      permissions: finalPermissions,
       assignedUsers: dedupedAssigned,
-      userAccessMode: userAccessMode || (dedupedAssigned.length ? 'assigned' : 'all'),
-      createdBy: req.user.username
+      userAccessMode: accessMode,
+      createdBy: req.user.username,
+      status: 'active',
+      role: 'admin'
     });
 
     await newAdmin.save();
 
+    console.log('[CREATE_ADMIN] Successfully created admin:', username);
+
     res.json({
       success: true,
+      message: `Admin ${username} created successfully`,
       admin: {
         _id: newAdmin._id,
         username: newAdmin.username,
         email: newAdmin.email,
+        role: newAdmin.role,
+        status: newAdmin.status,
         permissions: newAdmin.permissions,
         assignedUsers: newAdmin.assignedUsers,
         userAccessMode: newAdmin.userAccessMode,
-        createdAt: newAdmin.createdAt
+        createdAt: newAdmin.createdAt,
+        createdBy: newAdmin.createdBy
       }
     });
 
   } catch (error) {
-    console.error('Create admin error:', error);
-    res.status(500).json({ error: 'Server error' });
+    console.error('[CREATE_ADMIN] Error:', error);
+    res.status(500).json({ error: 'Server error: ' + error.message });
   }
 });
 
@@ -478,6 +500,60 @@ router.patch('/admin/:username/password', verifyToken, requireMaster, async (req
     });
   } catch (error) {
     console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// GET /api/auth/status - Get real-time authentication status (authenticated users only)
+router.get('/status', verifyToken, async (req, res) => {
+  try {
+    const User = require('../models/User');
+    
+    // Get current user's info
+    let userInfo = {
+      username: req.user.username,
+      role: req.user.role,
+      permissions: req.user.permissions || {}
+    };
+
+    // If admin, get assigned users count
+    if (req.user.role === 'admin' && req.user.adminId) {
+      const admin = await Admin.findById(req.user.adminId);
+      if (admin) {
+        let assignedUsersCount = 0;
+        if (admin.userAccessMode === 'all') {
+          assignedUsersCount = await User.countDocuments();
+        } else {
+          assignedUsersCount = admin.assignedUsers.length;
+        }
+        userInfo.assignedUsersCount = assignedUsersCount;
+        userInfo.userAccessMode = admin.userAccessMode;
+      }
+    }
+
+    // Get system-wide stats for master
+    if (req.user.role === 'master') {
+      const [totalUsers, totalAdmins, activeUsers] = await Promise.all([
+        User.countDocuments(),
+        Admin.countDocuments(),
+        User.countDocuments({ frozen: false })
+      ]);
+      
+      userInfo.systemStats = {
+        totalUsers,
+        totalAdmins,
+        activeUsers,
+        frozenUsers: totalUsers - activeUsers
+      };
+    }
+
+    res.json({
+      success: true,
+      user: userInfo,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Status check error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });

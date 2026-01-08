@@ -146,6 +146,78 @@ export const userAPI = {
   },
 };
 
+// ============== AUTH API ==============
+export const authAPI = {
+  // Login with username and password
+  login: (username, password) => apiCall('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  }),
+
+  // Verify current token
+  verify: () => apiCall('/auth/verify', {
+    method: 'POST',
+  }),
+
+  // Get authentication status with real-time data
+  getStatus: () => apiCall('/auth/status'),
+
+  // Create new admin (master only)
+  createAdmin: (adminData) => apiCall('/auth/admin', {
+    method: 'POST',
+    body: JSON.stringify(adminData),
+  }),
+
+  // Get all admin accounts
+  getAdmins: () => apiCall('/auth/admins'),
+
+  // Get single admin details
+  getAdmin: (id) => apiCall(`/auth/admin/${id}`),
+
+  // Update admin
+  updateAdmin: (id, data) => apiCall(`/auth/admin/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  }),
+
+  // Delete admin
+  deleteAdmin: (username) => apiCall(`/auth/admin/${username}`, {
+    method: 'DELETE',
+  }),
+
+  // Reset admin password
+  resetAdminPassword: (username, newPassword) => apiCall(`/auth/admin/${username}/password`, {
+    method: 'PATCH',
+    body: JSON.stringify({ newPassword }),
+  }),
+
+  // Assign users to admin
+  assignUsers: (adminId, userIds, userAccessMode) => apiCall(`/auth/admin/${adminId}/assign`, {
+    method: 'PATCH',
+    body: JSON.stringify({ userIds, userAccessMode }),
+  }),
+};
+
+// ============== ADMIN ACTIVITY API ==============
+export const adminActivityAPI = {
+  // Get activity logs with pagination
+  getActivities: (options = {}) => {
+    const params = new URLSearchParams();
+    if (options.page) params.append('page', options.page);
+    if (options.limit) params.append('limit', options.limit);
+    if (options.admin) params.append('admin', options.admin);
+    if (options.actionType) params.append('actionType', options.actionType);
+    if (options.targetType) params.append('targetType', options.targetType);
+    if (options.startDate) params.append('startDate', options.startDate);
+    if (options.endDate) params.append('endDate', options.endDate);
+    const queryString = params.toString();
+    return apiCall(`/admin-activity${queryString ? '?' + queryString : ''}`);
+  },
+
+  // Get activity statistics
+  getStats: (hours = 24) => apiCall(`/admin-activity/stats?hours=${hours}`),
+};
+
 // ============== NOTIFICATION API ==============
 export const notificationAPI = {
   // Get notifications for user
@@ -295,55 +367,6 @@ export const tradeAPI = {
   // Delete trade
   delete: (id) => apiCall(`/trades/${id}`, {
     method: 'DELETE',
-  }),
-};
-
-// ============== AUTH API ==============
-export const authAPI = {
-  // Login
-  login: (username, password) => apiCall('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify({ username, password }),
-  }),
-
-  // Verify token
-  verify: () => apiCall('/auth/verify', {
-    method: 'POST',
-  }),
-
-  // Create admin (master only)
-  createAdmin: (adminData) => apiCall('/auth/admin', {
-    method: 'POST',
-    body: JSON.stringify(adminData),
-  }),
-
-  // Get all admins
-  getAdmins: () => apiCall('/auth/admins'),
-
-  // Get single admin details
-  getAdmin: (adminId) => apiCall(`/auth/admin/${adminId}`),
-
-  // Update admin (master only)
-  updateAdmin: (adminId, updateData) => apiCall(`/auth/admin/${adminId}`, {
-    method: 'PATCH',
-    body: JSON.stringify(updateData),
-  }),
-
-  // Delete admin
-  deleteAdmin: (username) => apiCall(`/auth/admin/${username}`, {
-    method: 'DELETE',
-  }),
-
-  // Reset admin password (master only)
-  resetAdminPassword: (username, newPassword) => apiCall(`/auth/admin/${username}/password`, {
-    method: 'PATCH',
-    body: JSON.stringify({ newPassword }),
-  }),
-
-  // Assign users to admin (master only)
-  assignUsersToAdmin: (adminId, userIds, userAccessMode = 'assigned') => apiCall(`/auth/admin/${adminId}/assign`, {
-    method: 'PATCH',
-    body: JSON.stringify({ userIds, userAccessMode }),
   }),
 };
 
