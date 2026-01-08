@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import WalletGate from './components/WalletGate.jsx'
+import WalletGate from './components/WalletGateUniversal.jsx'
 import Header from './components/Header.jsx'
 import Sidebar from './components/Sidebar.jsx'
 import Dashboard from './components/Dashboard.jsx'
@@ -21,7 +21,7 @@ import BorrowLending from './components/BorrowLending.jsx'
 // Promo Carousel Component
 function PromoCarousel() {
   const [currentSlide, setCurrentSlide] = useState(0)
-  
+
   const promos = [
     {
       title: "Welcome to OnchainWeb",
@@ -71,10 +71,10 @@ function PromoCarousel() {
     <div className="promo-carousel">
       <div className="promo-slides" style={{ transform: `translateX(-${currentSlide * 100}%)` }}>
         {promos.map((promo, index) => (
-          <div 
-            key={index} 
+          <div
+            key={index}
             className="promo-slide"
-            style={{ 
+            style={{
               backgroundImage: `${promo.gradient}, url(${promo.image})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center'
@@ -107,7 +107,7 @@ function AccountSwitcher({ onDemoClick }) {
   const [accountType, setAccountType] = useState(() => {
     return localStorage.getItem('accountType') || 'real'
   })
-  
+
   // Get Real Account ID (5-digit numbers only)
   const [realAccountId] = useState(() => {
     const savedId = localStorage.getItem('realAccountId')
@@ -157,13 +157,13 @@ function AccountSwitcher({ onDemoClick }) {
       <div className="account-switcher-header">
         <span className="account-label">Account Type</span>
         <div className="account-toggle">
-          <button 
+          <button
             className={`toggle-btn ${accountType === 'real' ? 'active' : ''}`}
             onClick={() => handleSwitch('real')}
           >
             💰 Real
           </button>
-          <button 
+          <button
             className={`toggle-btn ${accountType === 'demo' ? 'active' : ''}`}
             onClick={() => handleSwitch('demo')}
           >
@@ -181,7 +181,7 @@ function AccountSwitcher({ onDemoClick }) {
             <div className="account-id">
               <span className="id-label">Account ID:</span>
               <span className="id-value">{realAccountId}</span>
-              <button 
+              <button
                 className="copy-btn-mini"
                 onClick={() => {
                   navigator.clipboard.writeText(realAccountId)
@@ -240,8 +240,8 @@ export default function App() {
   return (
     <WalletGate>
       <div className="app-root" lang="en">
-        <Sidebar 
-          isOpen={sidebarOpen} 
+        <Sidebar
+          isOpen={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           onFuturesClick={() => { setSidebarOpen(false); setFuturesOpen(true); }}
           onBinaryClick={() => { setSidebarOpen(false); setBinaryOpen(true); }}
@@ -250,7 +250,7 @@ export default function App() {
           onBorrowClick={() => { setSidebarOpen(false); setBorrowOpen(true); }}
           onWalletActionsClick={() => { setSidebarOpen(false); setWalletActionsOpen(true); }}
         />
-        <Header 
+        <Header
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
           onAboutClick={() => setAboutModalOpen(true)}
           onWhitepaperClick={() => setWhitepaperModalOpen(true)}
@@ -259,10 +259,10 @@ export default function App() {
         <main id="main" role="main">
           {/* Promo Carousel */}
           <PromoCarousel />
-          
+
           {/* Account Switcher (Real/Demo) */}
           <AccountSwitcher onDemoClick={() => setDemoOpen(true)} />
-          
+
           <Dashboard />
           <Features />
         </main>
@@ -283,7 +283,7 @@ export default function App() {
         <SimulatedTrading isOpen={demoOpen} onClose={() => setDemoOpen(false)} />
         <C2CTrading isOpen={c2cOpen} onClose={() => setC2cOpen(false)} />
         <BorrowLending isOpen={borrowOpen} onClose={() => setBorrowOpen(false)} />
-        
+
         {/* About Us Modal */}
         {aboutModalOpen && (
           <div className="info-modal-overlay" onClick={() => setAboutModalOpen(false)}>
@@ -298,7 +298,7 @@ export default function App() {
                   <h3>OnchainWeb</h3>
                   <p className="tagline">Your Gateway to Decentralized Finance</p>
                 </div>
-                
+
                 <div className="about-section">
                   <h4>🎯 Our Mission</h4>
                   <p>To democratize access to financial markets through cutting-edge blockchain technology, providing secure, transparent, and efficient trading solutions for everyone.</p>

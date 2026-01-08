@@ -1,7 +1,7 @@
 import React, { lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { WalletProvider } from './lib/wallet.jsx'
+import { UniversalWalletProvider } from './lib/walletConnect.jsx'
 import './index.css'
 import './styles/master-admin.css'
 
@@ -41,7 +41,7 @@ const LoadingSpinner = () => (
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
-      <WalletProvider>
+      <UniversalWalletProvider>
         <Suspense fallback={<LoadingSpinner />}>
           <Routes>
             <Route path="/" element={<MainApp />} />
@@ -50,7 +50,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="/master-admin" element={<MasterAdminDashboard />} />
           </Routes>
         </Suspense>
-      </WalletProvider>
+      </UniversalWalletProvider>
     </BrowserRouter>
   </React.StrictMode>
 )
