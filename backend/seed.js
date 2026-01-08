@@ -15,6 +15,7 @@
 
 require('dotenv').config();
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 // Admin credentials from environment (with secure defaults for seed only)
 const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || process.env.DEFAULT_ADMIN_PASSWORD;
@@ -142,9 +143,19 @@ async function seed() {
     // Seed Admins
     console.log('\n👤 Seeding Admin accounts...');
     for (const admin of seedData.admins) {
+      // Check if admin exists
+      const existingAdmin = await Admin.findOne({ username: admin.username });
+      
+      // Hash password if it's not already hashed
+      let passwordToStore = admin.password;
+      if (passwordToStore && !passwordToStore.startsWith('$2')) {
+        passwordToStore = await bcrypt.hash(admin.password, 10);
+        console.log(`   🔒 Hashing password for admin '${admin.username}'`);
+      }
+
       await Admin.findOneAndUpdate(
         { username: admin.username },
-        admin,
+        { ...admin, password: passwordToStore },
         { upsert: true, new: true }
       );
       console.log(`   ✅ Admin '${admin.username}' created/updated`);

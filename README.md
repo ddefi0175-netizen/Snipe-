@@ -11,9 +11,10 @@ and live chat functionality. Built with Node.js, React, and MongoDB.
 
 ### Admin Access
 
-- **Master (full control)**: `master` / `OnchainWeb2025!`
+- **Master Account**: Username is `master` (password set via `MASTER_PASSWORD` environment variable)
 - API login endpoint: `POST /api/auth/login` with `{ username, password }`
   - Master token includes `createAdmins: true` and can create admins with full permissions.
+- **IMPORTANT**: Never commit real credentials to the repository. Always use environment variables.
 
 ## Features
 
