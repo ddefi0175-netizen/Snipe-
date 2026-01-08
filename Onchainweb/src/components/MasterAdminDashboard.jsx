@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { 
-  subscribeToChatMessages, 
-  subscribeToActiveChats, 
+import {
+  subscribeToChatMessages,
+  subscribeToActiveChats,
   saveAdminReply,
   updateActiveChat,
   saveChatMessage,
-  isFirebaseEnabled 
+  isFirebaseEnabled
 } from '../lib/firebase.js'
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
 
@@ -104,13 +104,13 @@ export default function MasterAdminDashboard() {
   // User Edit Modal
   const [editingUser, setEditingUser] = useState(null)
   const [editUserForm, setEditUserForm] = useState({ balance: '', points: '', vipLevel: '', email: '', role: '', withdrawEnabled: true })
-  
+
   // User Detail View Modal
   const [viewingUser, setViewingUser] = useState(null)
   const [userDetailTab, setUserDetailTab] = useState('overview')
   const [showActivityHistory, setShowActivityHistory] = useState(false)
   const [userActivities, setUserActivities] = useState([])
-  
+
   // Admin Detail View Modal
   const [viewingAdmin, setViewingAdmin] = useState(null)
 
@@ -134,7 +134,9 @@ export default function MasterAdminDashboard() {
     email: '',
     password: '',
     role: 'admin',
-    permissions: []
+    permissions: [],
+    userAccessMode: 'all',
+    assignedUsers: []
   })
 
   const [activityFilter, setActivityFilter] = useState('all')
@@ -253,7 +255,7 @@ export default function MasterAdminDashboard() {
   // Load all data after authentication - single batch load
   const loadAllData = useCallback(async () => {
     console.log('Loading all data...')
-    
+
     // Helper for timeout-protected API calls
     const withTimeout = (promise, ms = 10000) => {
       return Promise.race([
@@ -261,7 +263,7 @@ export default function MasterAdminDashboard() {
         new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
       ])
     }
-    
+
     // Fetch users from backend database
     try {
       const backendUsers = await withTimeout(userAPI.getAll())
@@ -516,7 +518,7 @@ export default function MasterAdminDashboard() {
     setAdminAuditLogs(getFromStorage('adminAuditLogs', defaultData.adminAuditLogs))
     setTradeOptions(getFromStorage('tradeOptions', defaultData.tradeOptions))
     setVipRequests(getFromStorage('adminVIPRequests', []))
-    
+
     // ALWAYS mark data as loaded
     console.log('Data loading complete')
     setIsDataLoaded(true)
@@ -538,7 +540,7 @@ export default function MasterAdminDashboard() {
         // Fallback to localStorage for any trades that might be there
         console.log('Using localStorage for active trades fallback')
       }
-      
+
       // Fallback to localStorage
       const trades = getFromStorage('activeTrades', [])
       const now = Date.now()
@@ -571,7 +573,7 @@ export default function MasterAdminDashboard() {
       try {
         const adminSession = localStorage.getItem('masterAdminSession')
         const adminToken = localStorage.getItem('adminToken')
-        
+
         // Must have both session AND token to be authenticated
         if (adminSession && adminToken) {
           const session = JSON.parse(adminSession)
@@ -635,8 +637,8 @@ export default function MasterAdminDashboard() {
   useEffect(() => {
     if (!isAuthenticated || !isDataLoaded) return
 
-    let unsubscribeChats = () => {}
-    let unsubscribeLogs = () => {}
+    let unsubscribeChats = () => { }
+    let unsubscribeLogs = () => { }
 
     // Request notification permission
     if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
@@ -646,7 +648,7 @@ export default function MasterAdminDashboard() {
     // Subscribe to active chats (real-time from Firebase)
     unsubscribeChats = subscribeToActiveChats((chats) => {
       setActiveChats(chats)
-      
+
       // Auto-select chat if there's a waiting customer and no chat selected
       if (!selectedChat && chats.some(c => c.status === 'waiting_agent')) {
         const waitingChat = chats.find(c => c.status === 'waiting_agent')
@@ -774,19 +776,19 @@ export default function MasterAdminDashboard() {
 
   // Loading state for login
   const [isLoggingIn, setIsLoggingIn] = useState(false)
-  
+
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoginError('')
-    
+
     console.log('[LOGIN] Attempting login for:', loginData.username)
-    
+
     // Validate inputs
     if (!loginData.username || !loginData.password) {
       setLoginError('Please enter username and password')
       return
     }
-    
+
     // Check if localStorage is available
     try {
       localStorage.setItem('test', 'test')
@@ -795,16 +797,16 @@ export default function MasterAdminDashboard() {
       setLoginError('Storage access blocked. Please enable cookies/localStorage in your browser settings.')
       return
     }
-    
+
     setIsLoggingIn(true)
-    
+
     try {
       // Call backend API for authentication
       console.log('[LOGIN] Calling authAPI.login...')
       const response = await authAPI.login(loginData.username, loginData.password)
-      
+
       console.log('[LOGIN] Backend response:', response)
-      
+
       if (response.success && response.token) {
         // Store JWT token for API calls
         localStorage.setItem('adminToken', response.token)
@@ -814,7 +816,7 @@ export default function MasterAdminDashboard() {
           permissions: response.user.permissions,
           timestamp: Date.now()
         }))
-        
+
         setLoginError('') // Clear any loading message
         setIsAuthenticated(true)
         setIsDataLoaded(false) // Reset to trigger data load
@@ -886,8 +888,8 @@ export default function MasterAdminDashboard() {
         await userAPI.update(user._id, { balance: parseFloat(newBalance) })
       }
       setUsers(prev => prev.map(u =>
-        (u.id === userId || u._id === userId || u.userId === userId) 
-          ? { ...u, balance: parseFloat(newBalance) } 
+        (u.id === userId || u._id === userId || u.userId === userId)
+          ? { ...u, balance: parseFloat(newBalance) }
           : u
       ))
     } catch (error) {
@@ -959,9 +961,9 @@ export default function MasterAdminDashboard() {
       // Use MongoDB _id for API call
       const deposit = deposits.find(d => d.id === id || d._id === id)
       const mongoId = deposit?._id || id
-      
+
       await uploadAPI.updateStatus(mongoId, action)
-      
+
       // Update local state
       setDeposits(prev => prev.map(d =>
         (d.id === id || d._id === id) ? { ...d, status: action } : d
@@ -969,56 +971,56 @@ export default function MasterAdminDashboard() {
       setPendingDeposits(prev => prev.map(d =>
         (d.id === id || d._id === id) ? { ...d, status: action } : d
       ))
-      
+
       console.log(`Deposit ${id} ${action} via backend`)
     } catch (error) {
       console.error('Failed to update deposit:', error)
       alert('Failed to update deposit: ' + error.message)
     }
   }
-  
+
   // Approve/Reject pending deposit proof - uses backend API
   const handlePendingDepositAction = async (deposit, action) => {
     try {
       const mongoId = deposit._id || deposit.id
       const amount = action === 'confirmed' ? (deposit.amount || 0) : 0
-      
+
       if (action === 'confirmed') {
         await uploadAPI.approve(mongoId, amount)
       } else {
         await uploadAPI.reject(mongoId, 'Rejected by admin')
       }
-      
+
       // Update local state
       setPendingDeposits(prev => prev.map(d =>
         (d.id === deposit.id || d._id === deposit._id) ? { ...d, status: action } : d
       ))
-      
+
       // Refresh data from backend
       const backendUploads = await uploadAPI.getAll()
       if (Array.isArray(backendUploads)) {
         setPendingDeposits(backendUploads.filter(u => u.status === 'pending'))
         setDeposits(backendUploads)
       }
-      
+
       alert(`Deposit ${action}!`)
     } catch (error) {
       console.error('Failed to update deposit:', error)
       alert('Failed to update deposit: ' + error.message)
     }
   }
-  
-  // Approve/Reject KYC - uses backend API  
+
+  // Approve/Reject KYC - uses backend API
   const handleKYCAction = async (user, action) => {
     try {
       const mongoId = user._id || user.id
       await userAPI.reviewKYC(mongoId, action)
-      
+
       // Update local state
       setUsers(prev => prev.map(u =>
         (u.id === user.id || u._id === user._id) ? { ...u, kycStatus: action } : u
       ))
-      
+
       alert(`KYC ${action} for ${user.username}!`)
     } catch (error) {
       console.error('Failed to review KYC:', error)
@@ -1319,7 +1321,7 @@ export default function MasterAdminDashboard() {
             <div className="section-header">
               <h1>User Management</h1>
               <p>Manage and monitor all users in the system</p>
-              <button 
+              <button
                 onClick={async () => {
                   try {
                     const backendUsers = await userAPI.getAll()
@@ -1331,13 +1333,13 @@ export default function MasterAdminDashboard() {
                     alert('Failed to refresh: ' + error.message)
                   }
                 }}
-                style={{ 
-                  marginTop: '10px', 
-                  padding: '8px 16px', 
-                  background: 'linear-gradient(135deg, #10b981, #059669)', 
-                  border: 'none', 
-                  borderRadius: '8px', 
-                  color: '#fff', 
+                style={{
+                  marginTop: '10px',
+                  padding: '8px 16px',
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#fff',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -1347,7 +1349,7 @@ export default function MasterAdminDashboard() {
                 🔄 Refresh Users from Database
               </button>
             </div>
-            
+
             {/* Search and Filter */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', background: '#1e293b', padding: '20px', borderRadius: '12px' }}>
               <div style={{ flex: 1 }}>
@@ -1398,10 +1400,10 @@ export default function MasterAdminDashboard() {
                       <td><a href={`mailto:${user.email}`} style={{ color: '#3b82f6' }}>{user.email || '-'}</a></td>
                       <td style={{ fontFamily: 'monospace', color: '#94a3b8' }}>{user.ipAddress || '0.0.0.0'}</td>
                       <td>
-                        <span style={{ 
-                          padding: '4px 12px', 
-                          borderRadius: '20px', 
-                          background: user.frozen ? '#dc2626' : '#10b981', 
+                        <span style={{
+                          padding: '4px 12px',
+                          borderRadius: '20px',
+                          background: user.frozen ? '#dc2626' : '#10b981',
                           color: '#fff',
                           fontSize: '12px'
                         }}>
@@ -1409,10 +1411,10 @@ export default function MasterAdminDashboard() {
                         </span>
                       </td>
                       <td>
-                        <span style={{ 
-                          padding: '4px 12px', 
-                          borderRadius: '20px', 
-                          background: user.role === 'admin' ? '#3b82f6' : '#374151', 
+                        <span style={{
+                          padding: '4px 12px',
+                          borderRadius: '20px',
+                          background: user.role === 'admin' ? '#3b82f6' : '#374151',
                           color: '#fff',
                           fontSize: '12px'
                         }}>
@@ -1422,11 +1424,11 @@ export default function MasterAdminDashboard() {
                       <td style={{ fontFamily: 'monospace' }}>{user.referralCode || '-'}</td>
                       <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{user.creditScore || 100}</td>
                       <td>
-                        <button 
-                          style={{ 
-                            padding: '4px 12px', 
-                            borderRadius: '8px', 
-                            background: user.tradeMode === 'lose' ? '#dc2626' : '#10b981', 
+                        <button
+                          style={{
+                            padding: '4px 12px',
+                            borderRadius: '8px',
+                            background: user.tradeMode === 'lose' ? '#dc2626' : '#10b981',
                             color: '#fff',
                             border: 'none',
                             cursor: 'pointer',
@@ -1444,11 +1446,11 @@ export default function MasterAdminDashboard() {
                         </button>
                       </td>
                       <td>
-                        <button 
-                          style={{ 
-                            padding: '4px 12px', 
-                            borderRadius: '8px', 
-                            background: user.withdrawEnabled === false ? '#dc2626' : '#10b981', 
+                        <button
+                          style={{
+                            padding: '4px 12px',
+                            borderRadius: '8px',
+                            background: user.withdrawEnabled === false ? '#dc2626' : '#10b981',
                             color: '#fff',
                             border: 'none',
                             cursor: 'pointer',
@@ -1466,11 +1468,11 @@ export default function MasterAdminDashboard() {
                         </button>
                       </td>
                       <td>
-                        <button 
-                          style={{ 
-                            padding: '8px 16px', 
-                            borderRadius: '8px', 
-                            background: '#3b82f6', 
+                        <button
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            background: '#3b82f6',
                             color: '#fff',
                             border: 'none',
                             cursor: 'pointer',
@@ -1498,7 +1500,7 @@ export default function MasterAdminDashboard() {
             {viewingUser && (
               <div className="modal-overlay" onClick={() => setViewingUser(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '20px', overflow: 'auto' }}>
                 <div onClick={e => e.stopPropagation()} style={{ background: '#0f172a', borderRadius: '16px', width: '100%', maxWidth: '1000px', marginTop: '20px' }}>
-                  
+
                   {/* User Header */}
                   <div style={{ background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', padding: '30px', borderRadius: '16px 16px 0 0', textAlign: 'center', position: 'relative' }}>
                     <button onClick={() => setViewingUser(null)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer', borderRadius: '50%', width: '40px', height: '40px' }}>×</button>
@@ -1596,9 +1598,9 @@ export default function MasterAdminDashboard() {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
                       <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
                         <label style={{ color: '#64748b', fontSize: '12px', display: 'block', marginBottom: '8px' }}>USDT (TRC20) Address</label>
-                        <input 
-                          type="text" 
-                          value={viewingUser.depositAddressUSDT || ''} 
+                        <input
+                          type="text"
+                          value={viewingUser.depositAddressUSDT || ''}
                           placeholder="Enter USDT TRC20 address for this user"
                           onChange={async (e) => {
                             const val = e.target.value
@@ -1614,9 +1616,9 @@ export default function MasterAdminDashboard() {
                       </div>
                       <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
                         <label style={{ color: '#64748b', fontSize: '12px', display: 'block', marginBottom: '8px' }}>USDT (ERC20) Address</label>
-                        <input 
-                          type="text" 
-                          value={viewingUser.depositAddressERC20 || ''} 
+                        <input
+                          type="text"
+                          value={viewingUser.depositAddressERC20 || ''}
                           placeholder="Enter USDT ERC20 address for this user"
                           onChange={async (e) => {
                             const val = e.target.value
@@ -1632,9 +1634,9 @@ export default function MasterAdminDashboard() {
                       </div>
                       <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
                         <label style={{ color: '#64748b', fontSize: '12px', display: 'block', marginBottom: '8px' }}>BTC Address</label>
-                        <input 
-                          type="text" 
-                          value={viewingUser.depositAddressBTC || ''} 
+                        <input
+                          type="text"
+                          value={viewingUser.depositAddressBTC || ''}
                           placeholder="Enter BTC address for this user"
                           onChange={async (e) => {
                             const val = e.target.value
@@ -1650,9 +1652,9 @@ export default function MasterAdminDashboard() {
                       </div>
                       <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
                         <label style={{ color: '#64748b', fontSize: '12px', display: 'block', marginBottom: '8px' }}>ETH Address</label>
-                        <input 
-                          type="text" 
-                          value={viewingUser.depositAddressETH || ''} 
+                        <input
+                          type="text"
+                          value={viewingUser.depositAddressETH || ''}
                           placeholder="Enter ETH address for this user"
                           onChange={async (e) => {
                             const val = e.target.value
@@ -1818,22 +1820,22 @@ export default function MasterAdminDashboard() {
                       <div style={{ gridColumn: '1 / -1' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px' }}>
                           <span style={{ color: '#64748b' }}>Current Status:</span>
-                          <span style={{ 
-                            padding: '8px 20px', 
-                            borderRadius: '20px', 
+                          <span style={{
+                            padding: '8px 20px',
+                            borderRadius: '20px',
                             fontWeight: 'bold',
-                            background: viewingUser.kycStatus === 'verified' ? '#10b981' : 
-                                       viewingUser.kycStatus === 'pending' ? '#f59e0b' : 
-                                       viewingUser.kycStatus === 'rejected' ? '#dc2626' : '#6b7280',
+                            background: viewingUser.kycStatus === 'verified' ? '#10b981' :
+                              viewingUser.kycStatus === 'pending' ? '#f59e0b' :
+                                viewingUser.kycStatus === 'rejected' ? '#dc2626' : '#6b7280',
                             color: '#fff'
                           }}>
-                            {viewingUser.kycStatus === 'verified' ? '✅ Verified' : 
-                             viewingUser.kycStatus === 'pending' ? '⏳ Pending Review' : 
-                             viewingUser.kycStatus === 'rejected' ? '❌ Rejected' : '⚪ Not Submitted'}
+                            {viewingUser.kycStatus === 'verified' ? '✅ Verified' :
+                              viewingUser.kycStatus === 'pending' ? '⏳ Pending Review' :
+                                viewingUser.kycStatus === 'rejected' ? '❌ Rejected' : '⚪ Not Submitted'}
                           </span>
                         </div>
                       </div>
-                      
+
                       {/* KYC Details */}
                       {viewingUser.kycStatus && viewingUser.kycStatus !== 'none' && (
                         <>
@@ -1853,7 +1855,7 @@ export default function MasterAdminDashboard() {
                             <label style={{ color: '#64748b', fontSize: '12px', display: 'block', marginBottom: '8px' }}>Submitted At</label>
                             <div style={{ color: '#fff', fontSize: '14px' }}>{viewingUser.kycSubmittedAt ? new Date(viewingUser.kycSubmittedAt).toLocaleString() : 'N/A'}</div>
                           </div>
-                          
+
                           {/* Document Images */}
                           <div style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '15px' }}>
                             <div style={{ background: '#0f172a', padding: '15px', borderRadius: '8px' }}>
@@ -1879,10 +1881,10 @@ export default function MasterAdminDashboard() {
                           </div>
                         </>
                       )}
-                      
+
                       {/* KYC Action Buttons */}
                       <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '15px', marginTop: '10px' }}>
-                        <button 
+                        <button
                           onClick={async () => {
                             try {
                               if (viewingUser._id) {
@@ -1894,22 +1896,22 @@ export default function MasterAdminDashboard() {
                             } catch (err) { alert('Error: ' + err.message) }
                           }}
                           disabled={viewingUser.kycStatus === 'verified' || viewingUser.kycStatus === 'none' || !viewingUser.kycStatus}
-                          style={{ 
-                            flex: 1, 
-                            padding: '15px', 
-                            background: viewingUser.kycStatus === 'verified' ? '#374151' : '#10b981', 
-                            color: '#fff', 
-                            border: 'none', 
-                            borderRadius: '8px', 
-                            cursor: viewingUser.kycStatus === 'verified' ? 'not-allowed' : 'pointer', 
-                            fontWeight: 'bold', 
+                          style={{
+                            flex: 1,
+                            padding: '15px',
+                            background: viewingUser.kycStatus === 'verified' ? '#374151' : '#10b981',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: viewingUser.kycStatus === 'verified' ? 'not-allowed' : 'pointer',
+                            fontWeight: 'bold',
                             fontSize: '16px',
                             opacity: viewingUser.kycStatus === 'verified' || viewingUser.kycStatus === 'none' || !viewingUser.kycStatus ? 0.5 : 1
                           }}
                         >
                           ✅ Approve KYC
                         </button>
-                        <button 
+                        <button
                           onClick={async () => {
                             const reason = prompt('Enter rejection reason (optional):')
                             try {
@@ -1922,22 +1924,22 @@ export default function MasterAdminDashboard() {
                             } catch (err) { alert('Error: ' + err.message) }
                           }}
                           disabled={viewingUser.kycStatus === 'rejected' || viewingUser.kycStatus === 'none' || !viewingUser.kycStatus}
-                          style={{ 
-                            flex: 1, 
-                            padding: '15px', 
-                            background: viewingUser.kycStatus === 'rejected' ? '#374151' : '#dc2626', 
-                            color: '#fff', 
-                            border: 'none', 
-                            borderRadius: '8px', 
-                            cursor: viewingUser.kycStatus === 'rejected' ? 'not-allowed' : 'pointer', 
-                            fontWeight: 'bold', 
+                          style={{
+                            flex: 1,
+                            padding: '15px',
+                            background: viewingUser.kycStatus === 'rejected' ? '#374151' : '#dc2626',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: viewingUser.kycStatus === 'rejected' ? 'not-allowed' : 'pointer',
+                            fontWeight: 'bold',
                             fontSize: '16px',
                             opacity: viewingUser.kycStatus === 'rejected' || viewingUser.kycStatus === 'none' || !viewingUser.kycStatus ? 0.5 : 1
                           }}
                         >
                           ❌ Reject KYC
                         </button>
-                        <button 
+                        <button
                           onClick={async () => {
                             try {
                               if (viewingUser._id) {
@@ -1994,7 +1996,7 @@ export default function MasterAdminDashboard() {
             {showActivityHistory && viewingUser && (
               <div className="modal-overlay" onClick={() => setShowActivityHistory(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1002, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '20px', overflow: 'auto' }}>
                 <div onClick={e => e.stopPropagation()} style={{ background: '#0f172a', borderRadius: '16px', width: '100%', maxWidth: '900px', marginTop: '20px' }}>
-                  
+
                   {/* Header */}
                   <div style={{ background: 'linear-gradient(135deg, #e11d48, #be123c)', padding: '25px', borderRadius: '16px 16px 0 0', position: 'relative' }}>
                     <button onClick={() => setShowActivityHistory(false)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer', borderRadius: '50%', width: '40px', height: '40px' }}>×</button>
@@ -2027,19 +2029,19 @@ export default function MasterAdminDashboard() {
                             <tr key={activity.id || idx} style={{ borderBottom: '1px solid #374151' }}>
                               <td style={{ padding: '15px', color: '#fff' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                  <span style={{ 
-                                    width: '36px', 
-                                    height: '36px', 
-                                    borderRadius: '8px', 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
+                                  <span style={{
+                                    width: '36px',
+                                    height: '36px',
+                                    borderRadius: '8px',
+                                    display: 'flex',
+                                    alignItems: 'center',
                                     justifyContent: 'center',
-                                    background: activity.action === 'Login' ? '#3b82f6' : 
-                                               activity.action === 'Deposit' ? '#10b981' : 
-                                               activity.action === 'Trade' ? '#f59e0b' : 
-                                               activity.action === 'AI Arbitrage' ? '#8b5cf6' : 
-                                               activity.action === 'Staking' ? '#06b6d4' : 
-                                               activity.action === 'Withdrawal' ? '#dc2626' : '#6b7280'
+                                    background: activity.action === 'Login' ? '#3b82f6' :
+                                      activity.action === 'Deposit' ? '#10b981' :
+                                        activity.action === 'Trade' ? '#f59e0b' :
+                                          activity.action === 'AI Arbitrage' ? '#8b5cf6' :
+                                            activity.action === 'Staking' ? '#06b6d4' :
+                                              activity.action === 'Withdrawal' ? '#dc2626' : '#6b7280'
                                   }}>
                                     {activity.action === 'Login' && '🔐'}
                                     {activity.action === 'Deposit' && '💰'}
@@ -2055,13 +2057,13 @@ export default function MasterAdminDashboard() {
                               </td>
                               <td style={{ padding: '15px', color: '#94a3b8', fontSize: '14px' }}>{activity.detail}</td>
                               <td style={{ padding: '15px' }}>
-                                <span style={{ 
-                                  padding: '4px 12px', 
-                                  borderRadius: '20px', 
+                                <span style={{
+                                  padding: '4px 12px',
+                                  borderRadius: '20px',
                                   fontSize: '12px',
-                                  background: activity.status === 'completed' || activity.status === 'won' || activity.status === 'verified' ? '#10b981' : 
-                                             activity.status === 'pending' || activity.status === 'active' || activity.status === 'locked' ? '#f59e0b' : 
-                                             activity.status === 'lost' || activity.status === 'frozen' || activity.status === 'rejected' ? '#dc2626' : '#6b7280',
+                                  background: activity.status === 'completed' || activity.status === 'won' || activity.status === 'verified' ? '#10b981' :
+                                    activity.status === 'pending' || activity.status === 'active' || activity.status === 'locked' ? '#f59e0b' :
+                                      activity.status === 'lost' || activity.status === 'frozen' || activity.status === 'rejected' ? '#dc2626' : '#6b7280',
                                   color: '#fff'
                                 }}>
                                   {activity.status || 'N/A'}
@@ -2114,15 +2116,15 @@ export default function MasterAdminDashboard() {
                     <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '600', color: '#1f2937' }}>Edit User</h2>
                     <button onClick={() => setEditingUser(null)} style={{ background: 'none', border: 'none', fontSize: '24px', color: '#9ca3af', cursor: 'pointer', padding: '0', lineHeight: '1' }}>×</button>
                   </div>
-                  
+
                   {/* Modal Body */}
                   <div style={{ padding: '25px' }}>
                     {/* Email Address */}
                     <div style={{ marginBottom: '20px' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#374151' }}>Email address</label>
-                      <input 
-                        type="email" 
-                        value={editUserForm.email || editingUser.email || ''} 
+                      <input
+                        type="email"
+                        value={editUserForm.email || editingUser.email || ''}
                         onChange={e => setEditUserForm(prev => ({ ...prev, email: e.target.value }))}
                         style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', color: '#1f2937', boxSizing: 'border-box' }}
                         placeholder="user@example.com"
@@ -2131,7 +2133,7 @@ export default function MasterAdminDashboard() {
                     {/* Role */}
                     <div style={{ marginBottom: '20px' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#374151' }}>Role</label>
-                      <select 
+                      <select
                         value={editUserForm.role || editingUser.role || 'user'}
                         onChange={e => setEditUserForm(prev => ({ ...prev, role: e.target.value }))}
                         style={{ width: '100%', padding: '12px 16px', border: '2px solid #3b82f6', borderRadius: '8px', fontSize: '14px', color: '#1f2937', background: '#fff', boxSizing: 'border-box', cursor: 'pointer' }}
@@ -2140,15 +2142,15 @@ export default function MasterAdminDashboard() {
                         <option value="admin">Admin</option>
                       </select>
                     </div>
-                    
+
                     {/* Withdraw Effect */}
                     <div style={{ marginBottom: '20px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', padding: '15px' }}>
                       <label style={{ display: 'block', marginBottom: '12px', fontSize: '14px', fontWeight: '500', color: '#dc2626' }}>Withdraw Effect</label>
                       <div style={{ display: 'flex', gap: '30px' }}>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                          <input 
-                            type="radio" 
-                            name="withdrawEffect" 
+                          <input
+                            type="radio"
+                            name="withdrawEffect"
                             checked={editUserForm.withdrawEnabled === false || editingUser.withdrawEnabled === false}
                             onChange={() => setEditUserForm(prev => ({ ...prev, withdrawEnabled: false }))}
                             style={{ width: '18px', height: '18px', accentColor: '#6b7280' }}
@@ -2156,9 +2158,9 @@ export default function MasterAdminDashboard() {
                           <span style={{ color: '#374151', fontSize: '14px' }}>Freezed</span>
                         </label>
                         <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                          <input 
-                            type="radio" 
-                            name="withdrawEffect" 
+                          <input
+                            type="radio"
+                            name="withdrawEffect"
                             checked={editUserForm.withdrawEnabled !== false && editingUser.withdrawEnabled !== false}
                             onChange={() => setEditUserForm(prev => ({ ...prev, withdrawEnabled: true }))}
                             style={{ width: '18px', height: '18px', accentColor: '#3b82f6' }}
@@ -2167,11 +2169,11 @@ export default function MasterAdminDashboard() {
                         </label>
                       </div>
                     </div>
-                    
+
                     {/* VIP Level */}
                     <div style={{ marginBottom: '20px' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#374151' }}>VIP Level</label>
-                      <select 
+                      <select
                         value={editUserForm.vipLevel || editingUser.vipLevel || 1}
                         onChange={e => setEditUserForm(prev => ({ ...prev, vipLevel: parseInt(e.target.value) }))}
                         style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', color: '#1f2937', background: '#fff', boxSizing: 'border-box', cursor: 'pointer' }}
@@ -2183,33 +2185,33 @@ export default function MasterAdminDashboard() {
                         <option value={5}>VIP Level 5</option>
                       </select>
                     </div>
-                    
+
                     {/* Balance */}
                     <div style={{ marginBottom: '20px' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#374151' }}>Balance (USD)</label>
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         value={editUserForm.balance}
                         onChange={e => setEditUserForm(prev => ({ ...prev, balance: e.target.value }))}
                         style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', color: '#1f2937', boxSizing: 'border-box' }}
                         placeholder="0.00"
                       />
                     </div>
-                    
+
                     {/* Points */}
                     <div style={{ marginBottom: '25px' }}>
                       <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#374151' }}>Points</label>
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         value={editUserForm.points}
                         onChange={e => setEditUserForm(prev => ({ ...prev, points: e.target.value }))}
                         style={{ width: '100%', padding: '12px 16px', border: '1px solid #d1d5db', borderRadius: '8px', fontSize: '14px', color: '#1f2937', boxSizing: 'border-box' }}
                         placeholder="0"
                       />
                     </div>
-                    
+
                     {/* Save Button */}
-                    <button 
+                    <button
                       onClick={async () => {
                         try {
                           const updates = {
@@ -2291,7 +2293,7 @@ export default function MasterAdminDashboard() {
                           <a href={user.kycBackPhoto} target="_blank" rel="noopener noreferrer" className="doc-btn">ID Back</a>
                         )}
                         {!user.kycFrontPhoto && !user.kycBackPhoto && (
-                          <span style={{color: '#666'}}>No docs</span>
+                          <span style={{ color: '#666' }}>No docs</span>
                         )}
                       </td>
                       <td>
@@ -2511,7 +2513,7 @@ export default function MasterAdminDashboard() {
                         {request.status === 'pending' && (
                           <>
                             <button className="action-btn approve" onClick={() => {
-                              setVipRequests(prev => prev.map(v => 
+                              setVipRequests(prev => prev.map(v =>
                                 v.id === request.id ? { ...v, status: 'approved' } : v
                               ))
                               localStorage.setItem('adminVIPRequests', JSON.stringify(
@@ -2523,7 +2525,7 @@ export default function MasterAdminDashboard() {
                               alert('VIP access approved!')
                             }}>Approve</button>
                             <button className="action-btn reject" onClick={() => {
-                              setVipRequests(prev => prev.map(v => 
+                              setVipRequests(prev => prev.map(v =>
                                 v.id === request.id ? { ...v, status: 'rejected' } : v
                               ))
                               localStorage.setItem('adminVIPRequests', JSON.stringify(
@@ -2608,7 +2610,7 @@ export default function MasterAdminDashboard() {
                           </>
                         )}
                         {deposit.imageUrl && (
-                          <a href={deposit.imageUrl} target="_blank" rel="noopener noreferrer" className="doc-btn" style={{marginLeft: '4px'}}>📷 View</a>
+                          <a href={deposit.imageUrl} target="_blank" rel="noopener noreferrer" className="doc-btn" style={{ marginLeft: '4px' }}>📷 View</a>
                         )}
                       </td>
                     </tr>
@@ -4806,154 +4808,177 @@ export default function MasterAdminDashboard() {
 
             {/* Only Master account can create new admins */}
             {isMasterAccount && (
-            <div className="add-admin-section">
-              <h3>➕ Add New Admin</h3>
-              <div className="add-admin-form">
-                <div className="form-row">
-                  <div className="form-field">
-                    <label>Username</label>
-                    <input
-                      type="text"
-                      placeholder="Enter username"
-                      value={newAdmin.username}
-                      onChange={(e) => setNewAdmin({ ...newAdmin, username: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-field">
-                    <label>Email</label>
-                    <input
-                      type="email"
-                      placeholder="Enter email"
-                      value={newAdmin.email}
-                      onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
-                    />
-                  </div>
-                  <div className="form-field">
-                    <label>Password</label>
-                    <input
-                      type="password"
-                      placeholder="Enter password"
-                      value={newAdmin.password}
-                      onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
-                    />
-                  </div>
-                </div>
-                <div className="form-row">
-                  <div className="form-field">
-                    <label>Role</label>
-                    <div className="role-info">
-                      <span className="role-badge role-admin">👤 Admin</span>
-                      <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', marginTop: '8px' }}>Admins can access the dashboard. Use permissions below to control what they can manage.</p>
+              <div className="add-admin-section">
+                <h3>➕ Add New Admin</h3>
+                <div className="add-admin-form">
+                  <div className="form-row">
+                    <div className="form-field">
+                      <label>Username</label>
+                      <input
+                        type="text"
+                        placeholder="Enter username"
+                        value={newAdmin.username}
+                        onChange={(e) => setNewAdmin({ ...newAdmin, username: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Email</label>
+                      <input
+                        type="email"
+                        placeholder="Enter email"
+                        value={newAdmin.email}
+                        onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
+                      />
+                    </div>
+                    <div className="form-field">
+                      <label>Password</label>
+                      <input
+                        type="password"
+                        placeholder="Enter password"
+                        value={newAdmin.password}
+                        onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
+                      />
                     </div>
                   </div>
-                </div>
-                <div className="permissions-section">
-                  <label>Admin Permissions (Select what this admin can manage):</label>
-                  <div className="permissions-grid">
-                    {[
-                      { key: 'dashboard', label: '📊 View Dashboard' },
-                      { key: 'users', label: '👥 Manage Users' },
-                      { key: 'deposits', label: '💰 Manage Deposits' },
-                      { key: 'withdrawals', label: '🏦 Manage Withdrawals' },
-                      { key: 'kyc', label: '📋 Manage KYC' },
-                      { key: 'live_trades', label: '🔴 Control Live Trades' },
-                      { key: 'ai_arbitrage', label: '🤖 Manage AI Arbitrage' },
-                      { key: 'balances', label: '💵 Edit User Balances' },
-                      { key: 'customer_service', label: '💬 Customer Service Chat' },
-                      { key: 'staking', label: '🔒 Manage Staking' },
-                      { key: 'settings', label: '⚙️ Site Settings' },
-                      { key: 'logs', label: '📝 View Activity Logs' },
-                    ].map(perm => (
-                      <label key={perm.key} className="permission-checkbox">
-                        <input
-                          type="checkbox"
-                          checked={newAdmin.permissions.includes(perm.key)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setNewAdmin({ ...newAdmin, permissions: [...newAdmin.permissions, perm.key] })
-                            } else {
-                              setNewAdmin({ ...newAdmin, permissions: newAdmin.permissions.filter(p => p !== perm.key) })
-                            }
-                          }}
-                        />
-                        <span>{perm.label}</span>
-                      </label>
-                    ))}
+                  <div className="form-row">
+                    <div className="form-field">
+                      <label>Role</label>
+                      <div className="role-info">
+                        <span className="role-badge role-admin">👤 Admin</span>
+                        <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)', marginTop: '8px' }}>Admins can access the dashboard. Use permissions below to control what they can manage.</p>
+                      </div>
+                    </div>
+                    <div className="form-field">
+                      <label>User Access Mode</label>
+                      <select
+                        value={newAdmin.userAccessMode || 'all'}
+                        onChange={(e) => setNewAdmin({ ...newAdmin, userAccessMode: e.target.value })}
+                        style={{ width: '100%', padding: '10px', background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: '#fff' }}
+                      >
+                        <option value="all">🌐 All Users - Can manage any user</option>
+                        <option value="assigned">🎯 Assigned Only - Can only manage assigned users</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="permissions-section">
+                    <label>Admin Permissions (Select what this admin can manage):</label>
+                    <div className="permissions-grid">
+                      {[
+                        { key: 'dashboard', label: '📊 View Dashboard' },
+                        { key: 'users', label: '👥 Manage Users' },
+                        { key: 'deposits', label: '💰 Manage Deposits' },
+                        { key: 'withdrawals', label: '🏦 Manage Withdrawals' },
+                        { key: 'kyc', label: '📋 Manage KYC' },
+                        { key: 'live_trades', label: '🔴 Control Live Trades' },
+                        { key: 'ai_arbitrage', label: '🤖 Manage AI Arbitrage' },
+                        { key: 'balances', label: '💵 Edit User Balances' },
+                        { key: 'customer_service', label: '💬 Customer Service Chat' },
+                        { key: 'staking', label: '🔒 Manage Staking' },
+                        { key: 'settings', label: '⚙️ Site Settings' },
+                        { key: 'logs', label: '📝 View Activity Logs' },
+                      ].map(perm => (
+                        <label key={perm.key} className="permission-checkbox">
+                          <input
+                            type="checkbox"
+                            checked={newAdmin.permissions.includes(perm.key)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setNewAdmin({ ...newAdmin, permissions: [...newAdmin.permissions, perm.key] })
+                              } else {
+                                setNewAdmin({ ...newAdmin, permissions: newAdmin.permissions.filter(p => p !== perm.key) })
+                              }
+                            }}
+                          />
+                          <span>{perm.label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      className="select-all-btn"
+                      onClick={() => setNewAdmin({ ...newAdmin, permissions: ['dashboard', 'users', 'deposits', 'withdrawals', 'kyc', 'live_trades', 'ai_arbitrage', 'balances', 'customer_service', 'staking', 'settings', 'logs'] })}
+                      style={{ marginTop: '10px', padding: '8px 16px', background: 'rgba(124, 58, 237, 0.3)', border: '1px solid #7c3aed', borderRadius: '6px', color: '#fff', cursor: 'pointer' }}
+                    >
+                      Select All Permissions
+                    </button>
                   </div>
                   <button
-                    type="button"
-                    className="select-all-btn"
-                    onClick={() => setNewAdmin({ ...newAdmin, permissions: ['dashboard', 'users', 'deposits', 'withdrawals', 'kyc', 'live_trades', 'ai_arbitrage', 'balances', 'customer_service', 'staking', 'settings', 'logs'] })}
-                    style={{ marginTop: '10px', padding: '8px 16px', background: 'rgba(124, 58, 237, 0.3)', border: '1px solid #7c3aed', borderRadius: '6px', color: '#fff', cursor: 'pointer' }}
+                    className="add-admin-btn"
+                    onClick={async () => {
+                      if (newAdmin.username && newAdmin.email && newAdmin.password) {
+                        if (newAdmin.permissions.length === 0) {
+                          alert('Please select at least one permission for the admin')
+                          return
+                        }
+
+                        try {
+                          // Create admin in backend database
+                          const response = await authAPI.createAdmin({
+                            username: newAdmin.username.trim(),
+                            password: newAdmin.password.trim(),
+                            email: newAdmin.email.trim().toLowerCase(),
+                            userAccessMode: newAdmin.userAccessMode || 'all',
+                            permissions: {
+                              manageUsers: newAdmin.permissions.includes('users'),
+                              manageBalances: newAdmin.permissions.includes('balances'),
+                              manageKYC: newAdmin.permissions.includes('kyc'),
+                              manageTrades: newAdmin.permissions.includes('live_trades'),
+                              manageStaking: newAdmin.permissions.includes('staking'),
+                              manageAIArbitrage: newAdmin.permissions.includes('ai_arbitrage'),
+                              manageDeposits: newAdmin.permissions.includes('deposits'),
+                              manageWithdrawals: newAdmin.permissions.includes('withdrawals'),
+                              customerService: newAdmin.permissions.includes('customer_service'),
+                              viewReports: newAdmin.permissions.includes('dashboard'),
+                              viewLogs: newAdmin.permissions.includes('logs'),
+                              siteSettings: newAdmin.permissions.includes('settings'),
+                              createAdmins: false
+                            }
+                          })
+
+                          if (response.success) {
+                            const newAdminEntry = {
+                              _id: response.admin._id,
+                              username: response.admin.username,
+                              email: newAdmin.email.trim().toLowerCase(),
+                              role: 'admin',
+                              permissions: newAdmin.permissions,
+                              userAccessMode: newAdmin.userAccessMode || 'all',
+                              assignedUsers: [],
+                              status: 'active',
+                              createdAt: response.admin.createdAt
+                            }
+                            setAdminRoles(prev => [...prev, newAdminEntry])
+
+                            const savedPassword = newAdmin.password
+                            setNewAdmin({
+                              username: '',
+                              email: '',
+                              password: '',
+                              role: 'admin',
+                              permissions: [],
+                              userAccessMode: 'all'
+                            })
+
+                            alert(`✅ Admin account created successfully!\n\n📝 Login Credentials:\n━━━━━━━━━━━━━━━━━━━━\nUsername: ${newAdminEntry.username}\nEmail: ${newAdminEntry.email}\nPassword: ${savedPassword}\nAccess Mode: ${newAdminEntry.userAccessMode === 'all' ? 'All Users' : 'Assigned Users Only'}\n━━━━━━━━━━━━━━━━━━━━\n\n✅ Account saved to database - can login from any browser!`)
+                          }
+                        } catch (error) {
+                          console.error('Failed to create admin:', error)
+                          alert(`❌ Failed to create admin: ${error.message}`)
+                        }
+                      } else {
+                        alert('Please fill in username, email, and password')
+                      }
+                    }}
                   >
-                    Select All Permissions
+                    ➕ Create Admin Account
                   </button>
                 </div>
-                <button
-                  className="add-admin-btn"
-                  onClick={async () => {
-                    if (newAdmin.username && newAdmin.email && newAdmin.password) {
-                      if (newAdmin.permissions.length === 0) {
-                        alert('Please select at least one permission for the admin')
-                        return
-                      }
-                      
-                      try {
-                        // Create admin in backend database
-                        const response = await authAPI.createAdmin({
-                          username: newAdmin.username.trim(),
-                          password: newAdmin.password.trim(),
-                          permissions: {
-                            manageUsers: newAdmin.permissions.includes('users'),
-                            manageBalances: newAdmin.permissions.includes('balances'),
-                            manageKYC: newAdmin.permissions.includes('kyc'),
-                            manageTrades: newAdmin.permissions.includes('live_trades'),
-                            viewReports: newAdmin.permissions.includes('dashboard'),
-                            createAdmins: false
-                          }
-                        })
-                        
-                        if (response.success) {
-                          const newAdminEntry = {
-                            _id: response.admin._id,
-                            username: response.admin.username,
-                            email: newAdmin.email.trim().toLowerCase(),
-                            role: 'admin',
-                            permissions: newAdmin.permissions,
-                            status: 'active',
-                            createdAt: response.admin.createdAt
-                          }
-                          setAdminRoles(prev => [...prev, newAdminEntry])
-                          
-                          const savedPassword = newAdmin.password
-                          setNewAdmin({
-                            username: '',
-                            email: '',
-                            password: '',
-                            role: 'admin',
-                            permissions: []
-                          })
-                          
-                          alert(`✅ Admin account created successfully!\n\n📝 Login Credentials:\n━━━━━━━━━━━━━━━━━━━━\nUsername: ${newAdminEntry.username}\nEmail: ${newAdminEntry.email}\nPassword: ${savedPassword}\n━━━━━━━━━━━━━━━━━━━━\n\n✅ Account saved to database - can login from any browser!`)
-                        }
-                      } catch (error) {
-                        console.error('Failed to create admin:', error)
-                        alert(`❌ Failed to create admin: ${error.message}`)
-                      }
-                    } else {
-                      alert('Please fill in username, email, and password')
-                    }
-                  }}
-                >
-                  ➕ Create Admin Account
-                </button>
               </div>
-            </div>
             )}
 
             <div className="existing-admins">
               <h3>📋 Existing Administrators</h3>
-              
+
               {/* Search and Filter Bar */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', background: '#1e293b', padding: '15px', borderRadius: '12px' }}>
                 <div className="search-box" style={{ margin: 0, flex: 1, maxWidth: '400px' }}>
@@ -4961,7 +4986,7 @@ export default function MasterAdminDashboard() {
                   <input type="text" placeholder="Search admins by username or email..." />
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <button 
+                  <button
                     onClick={async () => {
                       try {
                         const response = await authAPI.getAdmins()
@@ -4992,7 +5017,7 @@ export default function MasterAdminDashboard() {
                   </button>
                 </div>
               </div>
-              
+
               <div className="data-table" style={{ background: '#0f172a', borderRadius: '12px', overflow: 'hidden' }}>
                 <table>
                   <thead>
@@ -5018,10 +5043,10 @@ export default function MasterAdminDashboard() {
                           <a href={`mailto:${admin.email}`} style={{ color: '#3b82f6' }}>{admin.email || '-'}</a>
                         </td>
                         <td>
-                          <span style={{ 
-                            padding: '4px 12px', 
-                            borderRadius: '20px', 
-                            background: admin.role === 'super_admin' ? '#f59e0b' : '#3b82f6', 
+                          <span style={{
+                            padding: '4px 12px',
+                            borderRadius: '20px',
+                            background: admin.role === 'super_admin' ? '#f59e0b' : '#3b82f6',
                             color: '#fff',
                             fontSize: '12px'
                           }}>
@@ -5046,7 +5071,7 @@ export default function MasterAdminDashboard() {
                                 <span className="perm-badge none">None</span>
                               )}
                               {isMasterAccount && (
-                                <button 
+                                <button
                                   className="assign-users-btn"
                                   onClick={async () => {
                                     const userIds = prompt(
@@ -5054,7 +5079,7 @@ export default function MasterAdminDashboard() {
                                     )
                                     if (userIds !== null) {
                                       const newAssignedUsers = userIds.split(',').map(id => id.trim()).filter(id => id)
-                                      
+
                                       // Call backend API to persist assignment
                                       try {
                                         if (admin._id) {
@@ -5064,10 +5089,10 @@ export default function MasterAdminDashboard() {
                                       } catch (error) {
                                         console.error('Failed to assign users via backend:', error)
                                       }
-                                      
+
                                       // Update local state
-                                      const updatedAdmins = adminRoles.map(a => 
-                                        a.username === admin.username 
+                                      const updatedAdmins = adminRoles.map(a =>
+                                        a.username === admin.username
                                           ? { ...a, assignedUsers: newAssignedUsers }
                                           : a
                                       )
@@ -5102,10 +5127,10 @@ export default function MasterAdminDashboard() {
                           )}
                         </td>
                         <td>
-                          <span style={{ 
-                            padding: '4px 12px', 
-                            borderRadius: '20px', 
-                            background: admin.status === 'active' ? '#10b981' : '#dc2626', 
+                          <span style={{
+                            padding: '4px 12px',
+                            borderRadius: '20px',
+                            background: admin.status === 'active' ? '#10b981' : '#dc2626',
                             color: '#fff',
                             fontSize: '12px'
                           }}>
@@ -5134,12 +5159,12 @@ export default function MasterAdminDashboard() {
                 </table>
               </div>
             </div>
-            
+
             {/* Admin Detail View Modal */}
             {viewingAdmin && (
               <div className="modal-overlay" onClick={() => setViewingAdmin(null)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '20px', overflow: 'auto' }}>
                 <div onClick={e => e.stopPropagation()} style={{ background: '#0f172a', borderRadius: '16px', width: '100%', maxWidth: '800px', marginTop: '20px' }}>
-                  
+
                   {/* Admin Header */}
                   <div style={{ background: viewingAdmin.role === 'super_admin' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : 'linear-gradient(135deg, #3b82f6, #2563eb)', padding: '30px', borderRadius: '16px 16px 0 0', textAlign: 'center', position: 'relative' }}>
                     <button onClick={() => setViewingAdmin(null)} style={{ position: 'absolute', top: '15px', right: '15px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', cursor: 'pointer', borderRadius: '50%', width: '40px', height: '40px' }}>×</button>
@@ -5192,9 +5217,9 @@ export default function MasterAdminDashboard() {
                           { key: 'settings', label: '⚙️ Settings', icon: '⚙️' },
                           { key: 'logs', label: '📝 Logs', icon: '📝' }
                         ].map(perm => (
-                          <span key={perm.key} style={{ 
-                            padding: '8px 16px', 
-                            borderRadius: '8px', 
+                          <span key={perm.key} style={{
+                            padding: '8px 16px',
+                            borderRadius: '8px',
                             background: viewingAdmin.permissions?.includes(perm.key) ? '#10b981' : '#374151',
                             color: '#fff',
                             fontSize: '12px',
@@ -5210,8 +5235,8 @@ export default function MasterAdminDashboard() {
                   {/* Admin Actions */}
                   <div style={{ margin: '20px' }}>
                     <h3 style={{ color: '#fff', marginBottom: '15px' }}>Admin Actions</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-                      <button 
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '15px' }}>
+                      <button
                         onClick={async () => {
                           const newPassword = prompt(`Enter new password for ${viewingAdmin.username} (min 6 characters):`)
                           if (newPassword && newPassword.trim().length >= 6) {
@@ -5227,45 +5252,25 @@ export default function MasterAdminDashboard() {
                       >
                         🔑 Reset Password
                       </button>
-                      <button 
-                        onClick={() => {
-                          const updated = adminRoles.map(a => a.username === viewingAdmin.username ? { ...a, status: a.status === 'active' ? 'inactive' : 'active' } : a)
+                      <button
+                        onClick={async () => {
+                          if (viewingAdmin.role === 'super_admin') return
+                          const newStatus = viewingAdmin.status === 'active' ? 'inactive' : 'active'
+                          try {
+                            if (viewingAdmin._id) {
+                              await authAPI.updateAdmin(viewingAdmin._id, { status: newStatus })
+                            }
+                          } catch (err) { console.error('Failed to update status:', err) }
+                          const updated = adminRoles.map(a => a.username === viewingAdmin.username ? { ...a, status: newStatus } : a)
                           setAdminRoles(updated)
-                          setViewingAdmin(prev => ({ ...prev, status: prev.status === 'active' ? 'inactive' : 'active' }))
-                          alert(`Admin ${viewingAdmin.status === 'active' ? 'deactivated' : 'activated'}!`)
+                          setViewingAdmin(prev => ({ ...prev, status: newStatus }))
+                          alert(`Admin ${newStatus === 'active' ? 'activated' : 'deactivated'}!`)
                         }}
                         style={{ padding: '12px', background: viewingAdmin.status === 'active' ? '#dc2626' : '#10b981', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                       >
                         {viewingAdmin.status === 'active' ? '🔴 Deactivate' : '🟢 Activate'}
                       </button>
-                      <button 
-                        onClick={async () => {
-                          const userIds = prompt(`Assign UserIDs to ${viewingAdmin.username}\n\nCurrent: ${(viewingAdmin.assignedUsers || []).join(', ') || 'None'}\n\nEnter UserIDs separated by commas:`)
-                          if (userIds !== null) {
-                            const newAssignedUsers = userIds.split(',').map(id => id.trim()).filter(id => id)
-                            
-                            // Call backend API to persist assignment
-                            try {
-                              if (viewingAdmin._id) {
-                                await authAPI.assignUsersToAdmin(viewingAdmin._id, newAssignedUsers)
-                                console.log('Users assigned via backend:', viewingAdmin.username, newAssignedUsers)
-                              }
-                            } catch (error) {
-                              console.error('Failed to assign users via backend:', error)
-                            }
-                            
-                            const updated = adminRoles.map(a => a.username === viewingAdmin.username ? { ...a, assignedUsers: newAssignedUsers } : a)
-                            setAdminRoles(updated)
-                            setViewingAdmin(prev => ({ ...prev, assignedUsers: newAssignedUsers }))
-                            alert(`✅ Assigned ${newAssignedUsers.length} user(s)!`)
-                          }
-                        }}
-                        style={{ padding: '12px', background: '#6366f1', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                        disabled={viewingAdmin.role === 'super_admin'}
-                      >
-                        👥 Assign Users
-                      </button>
-                      <button 
+                      <button
                         onClick={async () => {
                           if (viewingAdmin.role === 'super_admin') {
                             alert('Cannot delete master account!')
@@ -5286,6 +5291,100 @@ export default function MasterAdminDashboard() {
                         🗑️ Delete Admin
                       </button>
                     </div>
+
+                    {/* User Assignment Section */}
+                    {viewingAdmin.role !== 'super_admin' && (
+                      <div style={{ background: '#1e293b', borderRadius: '12px', padding: '20px', marginTop: '15px' }}>
+                        <h4 style={{ color: '#fff', marginBottom: '15px' }}>👥 Assign Users to This Admin</h4>
+                        <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
+                          <select
+                            value={viewingAdmin.userAccessMode || 'all'}
+                            onChange={async (e) => {
+                              const newMode = e.target.value
+                              try {
+                                if (viewingAdmin._id) {
+                                  await authAPI.updateAdmin(viewingAdmin._id, { userAccessMode: newMode })
+                                }
+                              } catch (err) { console.error('Failed to update access mode:', err) }
+                              const updated = adminRoles.map(a => a.username === viewingAdmin.username ? { ...a, userAccessMode: newMode } : a)
+                              setAdminRoles(updated)
+                              setViewingAdmin(prev => ({ ...prev, userAccessMode: newMode }))
+                            }}
+                            style={{ flex: 1, padding: '12px', background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff' }}
+                          >
+                            <option value="all">🌐 All Users - Can manage any user</option>
+                            <option value="assigned">🎯 Assigned Only - Can only manage assigned users</option>
+                          </select>
+                        </div>
+
+                        <div style={{ marginBottom: '15px' }}>
+                          <label style={{ color: '#94a3b8', fontSize: '12px', display: 'block', marginBottom: '8px' }}>
+                            Currently Assigned Users ({(viewingAdmin.assignedUsers || []).length}):
+                          </label>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', minHeight: '40px', background: '#0f172a', padding: '10px', borderRadius: '8px' }}>
+                            {(viewingAdmin.assignedUsers || []).length > 0 ? (
+                              viewingAdmin.assignedUsers.map((userId, i) => (
+                                <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 12px', background: '#3b82f6', borderRadius: '20px', fontSize: '12px', color: '#fff' }}>
+                                  {userId}
+                                  <button
+                                    onClick={async () => {
+                                      const newAssignedUsers = viewingAdmin.assignedUsers.filter(id => id !== userId)
+                                      try {
+                                        if (viewingAdmin._id) {
+                                          await authAPI.assignUsersToAdmin(viewingAdmin._id, newAssignedUsers, viewingAdmin.userAccessMode || 'assigned')
+                                        }
+                                      } catch (err) { console.error('Failed to remove user:', err) }
+                                      const updated = adminRoles.map(a => a.username === viewingAdmin.username ? { ...a, assignedUsers: newAssignedUsers } : a)
+                                      setAdminRoles(updated)
+                                      setViewingAdmin(prev => ({ ...prev, assignedUsers: newAssignedUsers }))
+                                    }}
+                                    style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '14px', padding: 0 }}
+                                  >×</button>
+                                </span>
+                              ))
+                            ) : (
+                              <span style={{ color: '#64748b', fontSize: '12px' }}>No users assigned</span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '10px' }}>
+                          <input
+                            type="text"
+                            placeholder="Enter User ID to assign..."
+                            id="assignUserInput"
+                            style={{ flex: 1, padding: '12px', background: '#0f172a', border: '1px solid #334155', borderRadius: '8px', color: '#fff' }}
+                          />
+                          <button
+                            onClick={async () => {
+                              const input = document.getElementById('assignUserInput')
+                              const userId = input.value.trim()
+                              if (!userId) return alert('Please enter a User ID')
+                              if ((viewingAdmin.assignedUsers || []).includes(userId)) return alert('User already assigned')
+
+                              const newAssignedUsers = [...(viewingAdmin.assignedUsers || []), userId]
+                              try {
+                                if (viewingAdmin._id) {
+                                  await authAPI.assignUsersToAdmin(viewingAdmin._id, newAssignedUsers, viewingAdmin.userAccessMode || 'assigned')
+                                }
+                              } catch (err) { console.error('Failed to assign user:', err) }
+                              const updated = adminRoles.map(a => a.username === viewingAdmin.username ? { ...a, assignedUsers: newAssignedUsers } : a)
+                              setAdminRoles(updated)
+                              setViewingAdmin(prev => ({ ...prev, assignedUsers: newAssignedUsers }))
+                              input.value = ''
+                              alert(`✅ User ${userId} assigned to ${viewingAdmin.username}`)
+                            }}
+                            style={{ padding: '12px 24px', background: '#10b981', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+                          >
+                            ➕ Add
+                          </button>
+                        </div>
+
+                        <p style={{ color: '#64748b', fontSize: '11px', marginTop: '10px' }}>
+                          💡 Tip: You can find User IDs in the Users section. When "Assigned Only" mode is enabled, this admin will only see and manage the users listed above.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Last Login Info */}
