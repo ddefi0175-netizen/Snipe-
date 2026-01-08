@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useWallet } from '../lib/wallet.jsx'
+import { useWallet } from '../lib/walletConnect.jsx'
 import { notificationAPI } from '../lib/api.js'
 
 // Generate a unique 5-digit numeric ID for Real account
