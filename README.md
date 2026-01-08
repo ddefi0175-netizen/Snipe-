@@ -97,7 +97,9 @@ For detailed information, see [Real-Time Data Architecture](REALTIME_DATA_ARCHIT
 5. **Production Env Vars (Render/Vercel):**
 
    - Backend: `MONGO_URI`, `JWT_SECRET`, `MASTER_USERNAME`, `MASTER_PASSWORD`, `SEED_ADMIN_PASSWORD`
-   - Frontend: `VITE_API_BASE=https://snipe-api.onrender.com/api`
+   - Frontend: `VITE_API_BASE=https://snipe-api.onrender.com/api`, `VITE_WALLETCONNECT_PROJECT_ID=your-project-id`
+   
+   **IMPORTANT:** WalletConnect requires a Project ID to function. Get your free Project ID from [WalletConnect Cloud](https://cloud.walletconnect.com) and set it as `VITE_WALLETCONNECT_PROJECT_ID`.
 
 ## Tech Stack
 
