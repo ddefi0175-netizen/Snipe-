@@ -27,7 +27,8 @@ and live chat functionality. Built with Node.js, React, and MongoDB.
 - **User Dashboard**: Track your trading activity, points, and performance metrics
 - **Live Chat**: Real-time chat system for community engagement
 - **Wallet Integration**: Connect your Web3 wallet to view balances and interact
-  with the platform
+  with the platform. Supports browser extensions and WalletConnect QR code for mobile wallets.
+  - See [WalletConnect Implementation Guide](WALLETCONNECT_IMPLEMENTATION.md) for setup
 - **Admin Activity Tracking**: All admin actions are logged and monitored in real-time
 - **Accessible UI**: Built with accessibility-first principles for all users
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices

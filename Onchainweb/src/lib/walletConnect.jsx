@@ -306,22 +306,158 @@ const connectInjected = async (walletId) => {
     }
 }
 
-const connectWalletConnect = async () => {
-    // WalletConnect v2 implementation
-    // For now, we'll use a simplified QR code modal approach
+// WalletConnect v2 implementation using UniversalProvider
+let walletConnectProvider = null
 
+const initWalletConnectProvider = async () => {
+    if (walletConnectProvider) return walletConnectProvider
+
+    try {
+        // Dynamically import WalletConnect
+        const UniversalProvider = (await import('@walletconnect/universal-provider')).default
+
+        // Get project ID from environment
+        // IMPORTANT: For production, set VITE_WALLETCONNECT_PROJECT_ID in your .env file
+        // Get your free Project ID from https://cloud.walletconnect.com
+        const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID
+
+        if (!projectId) {
+            console.error('❌ WalletConnect Project ID is not configured!')
+            throw new Error(
+                'WalletConnect requires a Project ID. ' +
+                'Get your free Project ID from https://cloud.walletconnect.com ' +
+                'and set VITE_WALLETCONNECT_PROJECT_ID in your .env file.'
+            )
+        }
+
+        walletConnectProvider = await UniversalProvider.init({
+            projectId,
+            metadata: {
+                name: 'Snipe DeFi Platform',
+                description: 'Advanced crypto trading platform with real-time data',
+                url: window.location.origin,
+                icons: [`${window.location.origin}/favicon.ico`]
+            },
+            relayUrl: 'wss://relay.walletconnect.com'
+        })
+
+        return walletConnectProvider
+    } catch (error) {
+        console.error('Failed to initialize WalletConnect:', error)
+        throw new Error('Failed to initialize WalletConnect. Please try again.')
+    }
+}
+
+const connectWalletConnect = () => {
     return new Promise((resolve, reject) => {
-        // Create WalletConnect modal
-        const modal = createWalletConnectModal(
-            (result) => resolve(result),
-            (error) => reject(error)
-        )
-        document.body.appendChild(modal)
+        let modal = null
+        let provider = null
+
+        const initAndConnect = async () => {
+            try {
+                // Initialize provider
+                provider = await initWalletConnectProvider()
+
+                // Create modal
+                modal = createWalletConnectModal(
+                    () => {
+                        // User closed modal
+                        if (provider) {
+                            provider.disconnect().catch(console.error)
+                        }
+                        reject(new Error('User closed WalletConnect modal'))
+                    }
+                )
+                document.body.appendChild(modal)
+
+                // Listen for display_uri event to show QR code
+                provider.on('display_uri', (uri) => {
+                    updateModalWithQR(modal, uri)
+                })
+
+                // Connect and wait for session
+                const session = await provider.connect({
+                    namespaces: {
+                        eip155: {
+                            methods: [
+                                'eth_sendTransaction',
+                                'eth_signTransaction',
+                                'eth_sign',
+                                'personal_sign',
+                                'eth_signTypedData'
+                            ],
+                            chains: ['eip155:1', 'eip155:56', 'eip155:137'], // Ethereum, BSC, Polygon
+                            events: ['chainChanged', 'accountsChanged'],
+                            rpcMap: {
+                                1: 'https://eth.llamarpc.com',
+                                56: 'https://bsc-dataseed.binance.org',
+                                137: 'https://polygon-rpc.com'
+                            }
+                        }
+                    }
+                })
+
+                // Get account and chain info
+                const accounts = provider.session?.namespaces?.eip155?.accounts || []
+                if (accounts.length === 0) {
+                    throw new Error('No accounts found in WalletConnect session')
+                }
+
+                // Parse account (format: "eip155:1:0x...")
+                const [namespace, chainId, address] = accounts[0].split(':')
+                const parsedChainId = parseInt(chainId)
+
+                // Get balance
+                let balance = 0
+                try {
+                    const balanceHex = await provider.request({
+                        method: 'eth_getBalance',
+                        params: [address, 'latest']
+                    })
+                    balance = parseInt(balanceHex, 16) / 1e18
+                } catch (err) {
+                    console.warn('Failed to get balance:', err)
+                }
+
+                // Remove modal
+                if (modal && modal.parentNode) {
+                    modal.remove()
+                }
+
+                // Return connection result
+                resolve({
+                    address,
+                    chainId: parsedChainId,
+                    balance,
+                    provider,
+                    connectorType: 'walletconnect',
+                    walletId: 'walletconnect',
+                })
+
+            } catch (error) {
+                // Clean up
+                if (modal && modal.parentNode) {
+                    modal.remove()
+                }
+                if (provider) {
+                    provider.disconnect().catch(console.error)
+                }
+
+                if (error.message === 'User closed WalletConnect modal') {
+                    reject(error)
+                } else {
+                    reject(new Error(`WalletConnect failed: ${error.message || 'Unknown error'}`))
+                }
+            }
+        }
+
+        // Start the async initialization and connection
+        initAndConnect()
     })
 }
 
-// Simple WalletConnect modal (placeholder for full WC2 integration)
-const createWalletConnectModal = (onSuccess, onError) => {
+// Create WalletConnect modal with QR code support
+const createWalletConnectModal = (onClose) => {
     const modal = document.createElement('div')
     modal.className = 'wc-modal-overlay'
     modal.innerHTML = `
@@ -334,10 +470,10 @@ const createWalletConnectModal = (onSuccess, onError) => {
         <div class="wc-qr-placeholder">
           <div class="wc-qr-loading">
             <div class="spinner"></div>
-            <p>Generating QR Code...</p>
+            <p>Initializing WalletConnect...</p>
           </div>
         </div>
-        <p class="wc-instruction">Scan with your mobile wallet</p>
+        <p class="wc-instruction">Scan QR code with your mobile wallet</p>
         <div class="wc-wallets">
           <p>Compatible wallets:</p>
           <div class="wc-wallet-icons">
@@ -403,14 +539,19 @@ const createWalletConnectModal = (onSuccess, onError) => {
       text-align: center;
     }
     .wc-qr-placeholder {
-      width: 200px;
-      height: 200px;
+      width: 256px;
+      height: 256px;
       margin: 0 auto 16px;
       background: #fff;
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 16px;
+    }
+    .wc-qr-code {
+      width: 100%;
+      height: 100%;
     }
     .wc-qr-loading {
       text-align: center;
@@ -473,46 +614,63 @@ const createWalletConnectModal = (onSuccess, onError) => {
     const closeBtn = modal.querySelector('.wc-close-btn')
     closeBtn.onclick = () => {
         modal.remove()
-        onError(new Error('User closed WalletConnect modal'))
+        onClose()
     }
 
     // Click outside to close
     modal.onclick = (e) => {
         if (e.target === modal) {
             modal.remove()
-            onError(new Error('User closed WalletConnect modal'))
+            onClose()
         }
     }
 
-    // Simulate QR generation (in production, use @walletconnect/web3modal)
-    setTimeout(() => {
-        const qrDiv = modal.querySelector('.wc-qr-placeholder')
-        qrDiv.innerHTML = `
-      <div style="padding: 16px; text-align: center;">
-        <div style="width: 168px; height: 168px; background: linear-gradient(45deg, #3B99FC 25%, #fff 25%, #fff 50%, #3B99FC 50%, #3B99FC 75%, #fff 75%); background-size: 16px 16px; border-radius: 8px;"></div>
-      </div>
-    `
-
-        // For demo - simulate successful connection after 5 seconds
-        // In production, this would be handled by WalletConnect SDK
-        setTimeout(() => {
-            modal.remove()
-            const mockAddress = '0x' + Array.from({ length: 40 }, () =>
-                Math.floor(Math.random() * 16).toString(16)
-            ).join('')
-
-            onSuccess({
-                address: mockAddress,
-                chainId: 1,
-                balance: 0,
-                provider: null,
-                connectorType: 'walletconnect',
-                walletId: 'walletconnect',
-            })
-        }, 5000)
-    }, 1000)
-
     return modal
+}
+
+// Update modal with QR code
+const updateModalWithQR = (modal, uri) => {
+    const qrDiv = modal.querySelector('.wc-qr-placeholder')
+    if (!qrDiv) return
+
+    try {
+        // Use qrcode-generator library
+        import('qrcode-generator').then(({ default: qrcode }) => {
+            const qr = qrcode(0, 'M')
+            qr.addData(uri)
+            qr.make()
+
+            // Generate SVG
+            const cellSize = 4
+            const margin = 2
+            const size = qr.getModuleCount()
+            const svg = qr.createSvgTag(cellSize, margin)
+
+            qrDiv.innerHTML = `<div class="wc-qr-code">${svg}</div>`
+
+            // Update instruction
+            const instruction = modal.querySelector('.wc-instruction')
+            if (instruction) {
+                instruction.textContent = 'Scan this QR code with your mobile wallet'
+            }
+        }).catch(err => {
+            console.error('Failed to generate QR code:', err)
+            qrDiv.innerHTML = `
+                <div class="wc-qr-loading">
+                    <p style="color: #666;">QR Code Generation Failed</p>
+                    <p style="color: #888; font-size: 12px; margin-top: 8px;">Please try refreshing</p>
+                </div>
+            `
+        })
+    } catch (error) {
+        console.error('Error generating QR code:', error)
+        qrDiv.innerHTML = `
+            <div class="wc-qr-loading">
+                <p style="color: #666;">QR Code Error</p>
+                <p style="color: #888; font-size: 12px; margin-top: 8px;">${error.message}</p>
+            </div>
+        `
+    }
 }
 
 // ============ Wallet Context ============
@@ -570,6 +728,80 @@ export function UniversalWalletProvider({ children }) {
         }
     }, [])
 
+    // Helper: Reconnect injected wallet
+    const reconnectInjectedWallet = async (savedAddress, savedWalletId) => {
+        if (!window.ethereum) return false
+
+        try {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' })
+            if (accounts.length > 0 && accounts[0].toLowerCase() === savedAddress.toLowerCase()) {
+                const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' })
+                const balanceHex = await window.ethereum.request({
+                    method: 'eth_getBalance',
+                    params: [accounts[0], 'latest']
+                })
+
+                setState(prev => ({
+                    ...prev,
+                    isConnected: true,
+                    address: accounts[0],
+                    chainId: parseInt(chainIdHex, 16),
+                    balance: parseInt(balanceHex, 16) / 1e18,
+                    connectorType: 'injected',
+                    walletId: savedWalletId,
+                    provider: window.ethereum,
+                }))
+                return true
+            }
+        } catch (err) {
+            console.warn('Failed to reconnect injected wallet:', err)
+        }
+        return false
+    }
+
+    // Helper: Reconnect WalletConnect
+    const reconnectWalletConnect = async (savedAddress) => {
+        try {
+            const provider = await initWalletConnectProvider()
+
+            // Check if there's an active session
+            if (provider.session) {
+                const accounts = provider.session?.namespaces?.eip155?.accounts || []
+                if (accounts.length > 0) {
+                    const [namespace, chainId, address] = accounts[0].split(':')
+
+                    if (address.toLowerCase() === savedAddress.toLowerCase()) {
+                        let balance = 0
+                        try {
+                            const balanceHex = await provider.request({
+                                method: 'eth_getBalance',
+                                params: [address, 'latest']
+                            })
+                            balance = parseInt(balanceHex, 16) / 1e18
+                        } catch (err) {
+                            console.warn('Failed to get balance:', err)
+                        }
+
+                        setState(prev => ({
+                            ...prev,
+                            isConnected: true,
+                            address,
+                            chainId: parseInt(chainId),
+                            balance,
+                            connectorType: 'walletconnect',
+                            walletId: 'walletconnect',
+                            provider,
+                        }))
+                        return true
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn('Failed to restore WalletConnect session:', err)
+        }
+        return false
+    }
+
     // Restore previous session
     const restoreSession = useCallback(async () => {
         const wasConnected = localStorage.getItem(STORAGE_KEYS.CONNECTED) === 'true'
@@ -577,34 +809,17 @@ export function UniversalWalletProvider({ children }) {
         const savedConnectorType = localStorage.getItem(STORAGE_KEYS.CONNECTOR_TYPE)
         const savedWalletId = localStorage.getItem('walletType')
 
-        if (wasConnected && savedAddress && savedConnectorType === 'injected') {
-            try {
-                // Try to reconnect silently
-                if (window.ethereum) {
-                    const accounts = await window.ethereum.request({ method: 'eth_accounts' })
-                    if (accounts.length > 0 && accounts[0].toLowerCase() === savedAddress.toLowerCase()) {
-                        const chainIdHex = await window.ethereum.request({ method: 'eth_chainId' })
-                        const balanceHex = await window.ethereum.request({
-                            method: 'eth_getBalance',
-                            params: [accounts[0], 'latest']
-                        })
+        if (!wasConnected || !savedAddress) return
 
-                        setState(prev => ({
-                            ...prev,
-                            isConnected: true,
-                            address: accounts[0],
-                            chainId: parseInt(chainIdHex, 16),
-                            balance: parseInt(balanceHex, 16) / 1e18,
-                            connectorType: savedConnectorType,
-                            walletId: savedWalletId,
-                            provider: window.ethereum,
-                        }))
-                    }
-                }
-            } catch (err) {
-                console.warn('Failed to restore session:', err)
-                clearSession()
+        try {
+            if (savedConnectorType === 'injected') {
+                await reconnectInjectedWallet(savedAddress, savedWalletId)
+            } else if (savedConnectorType === 'walletconnect') {
+                await reconnectWalletConnect(savedAddress)
             }
+        } catch (err) {
+            console.warn('Failed to restore session:', err)
+            clearSession()
         }
     }, [])
 
@@ -708,7 +923,16 @@ export function UniversalWalletProvider({ children }) {
     }, [])
 
     // Disconnect function
-    const disconnect = useCallback(() => {
+    const disconnect = useCallback(async () => {
+        // Disconnect WalletConnect if connected
+        if (state.connectorType === 'walletconnect' && walletConnectProvider) {
+            try {
+                await walletConnectProvider.disconnect()
+            } catch (err) {
+                console.warn('Failed to disconnect WalletConnect:', err)
+            }
+        }
+
         clearSession()
 
         // Clear compatibility storage
@@ -727,7 +951,7 @@ export function UniversalWalletProvider({ children }) {
             provider: null,
             error: null,
         }))
-    }, [])
+    }, [state.connectorType])
 
     // Switch chain
     const switchChain = useCallback(async (targetChainId) => {
