@@ -32,3 +32,16 @@ DEPLOYMENT_STATUS.md
 
 # Local Netlify folder
 .netlify
+
+# Backup and versioned files
+*_Version*.* 
+*.txt
+*.download
+*.bak
+*.backup
+*-old.*
+*-backup.*
+
+# Temporary and manifest files
+*.ndjson
+latest-update-manifest.*
