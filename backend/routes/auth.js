@@ -4,13 +4,21 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const Admin = require('../models/Admin');
 
-// JWT Secret (use environment variable in production)
-const JWT_SECRET = process.env.JWT_SECRET || 'snipe-jwt-secret-2025-change-in-production';
+// JWT Secret - REQUIRED in production (no insecure fallback)
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET environment variable is required');
+  process.exit(1);
+}
 const JWT_EXPIRES = '24h';
 
-// Master credentials from environment variables
-const MASTER_USERNAME = process.env.MASTER_USERNAME || 'master';
-const MASTER_PASSWORD = process.env.MASTER_PASSWORD || 'OnchainWeb2025!';
+// Master credentials - REQUIRED in production (no insecure fallbacks)
+const MASTER_USERNAME = process.env.MASTER_USERNAME;
+const MASTER_PASSWORD = process.env.MASTER_PASSWORD;
+if (!MASTER_USERNAME || !MASTER_PASSWORD) {
+  console.error('FATAL: MASTER_USERNAME and MASTER_PASSWORD environment variables are required');
+  process.exit(1);
+}
 
 // Middleware to verify JWT token
 const verifyToken = (req, res, next) => {

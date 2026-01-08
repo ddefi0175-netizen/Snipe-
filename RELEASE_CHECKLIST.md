@@ -25,6 +25,12 @@ Final checklist for making Snipe publicly available.
 - [x] Created security audit workflow
 - [x] Documented credential rotation procedures
 - [x] CORS configured with specific allowed origins (not wildcard)
+- [x] Removed hardcoded credentials from DEPLOYMENT.md
+- [x] Removed fallback credentials from frontend code
+- [x] Backend now requires environment variables (no insecure defaults)
+- [x] seed.js uses environment variables for admin passwords
+- [x] LICENSE updated with correct copyright year and owner
+- [x] DEPLOYMENT_STATUS.md added to .gitignore
 
 ### Automation
 

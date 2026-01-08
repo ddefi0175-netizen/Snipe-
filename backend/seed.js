@@ -1,7 +1,7 @@
 /**
  * Database Seed Script for Snipe
  * Run: node seed.js
- * 
+ *
  * This script populates MongoDB with essential initial data:
  * - Site settings
  * - Master admin account
@@ -15,6 +15,12 @@
 
 require('dotenv').config();
 const mongoose = require('mongoose');
+
+// Admin credentials from environment (with secure defaults for seed only)
+const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD || process.env.DEFAULT_ADMIN_PASSWORD;
+if (!SEED_ADMIN_PASSWORD) {
+  console.warn('WARNING: Set SEED_ADMIN_PASSWORD or DEFAULT_ADMIN_PASSWORD env var for production');
+}
 
 // Import models
 const Admin = require('./models/Admin');
@@ -45,11 +51,11 @@ const seedData = {
     welcomeBonus: 100
   },
 
-  // Admin accounts (passwords are stored as plain text - add bcrypt in production!)
+  // Admin accounts - password from environment variable
   admins: [
     {
-      username: 'aqiang',
-      password: 'Aqiang2026!',
+      username: process.env.SEED_ADMIN_USERNAME || 'aqiang',
+      password: SEED_ADMIN_PASSWORD || 'CHANGE_ME_IN_PRODUCTION',
       role: 'admin',
       permissions: {
         manageUsers: true,
