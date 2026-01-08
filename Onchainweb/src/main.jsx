@@ -2,6 +2,8 @@ import React, { lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { UniversalWalletProvider } from './lib/walletConnect.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
+import { APIStatusBanner } from './components/APIStatus.jsx'
 import './index.css'
 import './styles/master-admin.css'
 
@@ -40,17 +42,20 @@ const LoadingSpinner = () => (
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <UniversalWalletProvider>
-        <Suspense fallback={<LoadingSpinner />}>
-          <Routes>
-            <Route path="/" element={<MainApp />} />
-            <Route path="/admin" element={<AdminPanel isOpen={true} onClose={() => window.location.href = '/'} />} />
-            <Route path="/master" element={<MasterAdminDashboard />} />
-            <Route path="/master-admin" element={<MasterAdminDashboard />} />
-          </Routes>
-        </Suspense>
-      </UniversalWalletProvider>
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <UniversalWalletProvider>
+          <APIStatusBanner />
+          <Suspense fallback={<LoadingSpinner />}>
+            <Routes>
+              <Route path="/" element={<MainApp />} />
+              <Route path="/admin" element={<AdminPanel isOpen={true} onClose={() => window.location.href = '/'} />} />
+              <Route path="/master" element={<MasterAdminDashboard />} />
+              <Route path="/master-admin" element={<MasterAdminDashboard />} />
+            </Routes>
+          </Suspense>
+        </UniversalWalletProvider>
+      </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>
 )

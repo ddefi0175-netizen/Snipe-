@@ -50,8 +50,21 @@ async function apiCall(endpoint, options = {}, retries = 2) {
 
 // ============== USER API ==============
 export const userAPI = {
-  // Get all users
+  // Get all users (legacy - returns all)
   getAll: () => apiCall('/users'),
+
+  // Get users with pagination
+  // Options: { page, limit, search, sortBy, sortOrder }
+  getPaginated: (options = {}) => {
+    const params = new URLSearchParams();
+    if (options.page) params.append('page', options.page);
+    if (options.limit) params.append('limit', options.limit);
+    if (options.search) params.append('search', options.search);
+    if (options.sortBy) params.append('sortBy', options.sortBy);
+    if (options.sortOrder) params.append('sortOrder', options.sortOrder);
+    const queryString = params.toString();
+    return apiCall(`/users${queryString ? '?' + queryString : ''}`);
+  },
 
   // Get user by wallet address
   getByWallet: (wallet) => apiCall(`/users/wallet/${wallet}`),

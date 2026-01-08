@@ -15,6 +15,8 @@ Final checklist for making Snipe publicly available.
 - [x] MAINTENANCE.md created with operational procedures
 - [x] BACKUP_RECOVERY.md created with database backup guides
 - [x] ADMIN_ONLY.md created (gitignored, not public)
+- [x] Wallet connection system documented in README
+- [x] Admin management system documented in README
 
 ### Security
 
@@ -22,6 +24,7 @@ Final checklist for making Snipe publicly available.
 - [x] Removed admin/master references from public docs
 - [x] Created security audit workflow
 - [x] Documented credential rotation procedures
+- [x] CORS configured with specific allowed origins (not wildcard)
 
 ### Automation
 
@@ -37,6 +40,77 @@ Final checklist for making Snipe publicly available.
 - [x] Live chat functionality verified
 - [x] Master/admin login tested
 - [x] Database seed script created and tested
+- [x] Error boundary added for crash recovery
+- [x] API status banner for connection feedback
+- [x] User pagination implemented (50 per page, max 100)
+- [x] API retry logic for cold starts
+
+---
+
+## 🛠️ Troubleshooting Guide
+
+### Common Issues Summary
+
+| Cause | Prevention/Fix |
+|-------|----------------|
+| Backend/API cold start | Paid hosting or keep-alive service |
+| Bad DB connection | Whitelist IPs, monitor, optimize queries |
+| Wrong API URL | Set and test frontend `.env` |
+| CORS/network errors | Correct backend CORS, use valid domains |
+| Heavy data loads | Paginate, lazy load in dashboard |
+| Unseeded master/admin | Confirm DB seed/init for admin users |
+| Missing error messages | Add user feedback in frontend |
+| JWT/session issues | Always use fresh login token |
+
+### Detailed Troubleshooting
+
+#### 1. Backend/API Issues
+
+**Symptoms**: Slow first load, timeouts, connection errors
+
+**Fixes**:
+
+- Use paid hosting plan to avoid cold starts (Render free tier sleeps)
+- Check MongoDB Atlas is whitelisted and healthy
+- Test `/api/health` endpoint - expect `{"status":"ok","mongoConnected":true}`
+- Check backend logs on Render for errors
+
+#### 2. Frontend Configuration
+
+**Symptoms**: API calls fail, wrong server
+
+**Fixes**:
+
+- Verify `VITE_API_BASE_URL` in `.env` points to live backend
+- Rebuild and redeploy frontend after changing `.env`
+- Use pagination and lazy loading for dashboard data
+
+#### 3. CORS and Networking
+
+**Symptoms**: Browser console shows CORS errors
+
+**Fixes**:
+
+- Backend must allow your frontend domain (not just `*`)
+- Check server firewalls and DNS resolution
+- Verify SSL certificates are valid
+
+#### 4. Authentication Issues
+
+**Symptoms**: Login fails, stuck loading, invalid token
+
+**Fixes**:
+
+- Confirm database seed ran and master/admin accounts exist
+- Clear localStorage and try fresh login
+- Check JWT token hasn't expired
+- Avoid multiple logins in different tabs
+
+#### 5. Browser Tips
+
+- Hard refresh: `Ctrl+Shift+R` (Windows) or `Cmd+Shift+R` (Mac)
+- Clear site data: DevTools → Application → Clear Storage
+- Check console for errors: `F12` → Console tab
 
 ---
 

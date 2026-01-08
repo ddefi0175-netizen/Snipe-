@@ -2,11 +2,50 @@ const express = require('express');
 const User = require('../models/User');
 const router = express.Router();
 
-// Get all users (admin/master only)
+// Get all users with pagination (admin/master only)
+// Query params: page (default 1), limit (default 50, max 100), search, sortBy, sortOrder
 router.get('/', async (req, res) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 });
-    res.json(users);
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
+    const skip = (page - 1) * limit;
+    const search = req.query.search || '';
+    const sortBy = req.query.sortBy || 'createdAt';
+    const sortOrder = req.query.sortOrder === 'asc' ? 1 : -1;
+
+    // Build search query
+    let query = {};
+    if (search) {
+      query = {
+        $or: [
+          { wallet: { $regex: search, $options: 'i' } },
+          { username: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+          { userId: { $regex: search, $options: 'i' } }
+        ]
+      };
+    }
+
+    // Execute query with pagination
+    const [users, total] = await Promise.all([
+      User.find(query)
+        .sort({ [sortBy]: sortOrder })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      User.countDocuments(query)
+    ]);
+
+    res.json({
+      users,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+        hasMore: page * limit < total
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -42,13 +81,13 @@ router.get('/id/:userId', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { wallet, walletType, username, email } = req.body;
-    
+
     // Get IP and user agent from request
     const ipAddress = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '';
     const userAgent = req.headers['user-agent'] || '';
-    
+
     let user = await User.findOne({ wallet });
-    
+
     if (user) {
       // Update last login and activity info
       user.lastLogin = new Date();
@@ -61,7 +100,7 @@ router.post('/', async (req, res) => {
       await user.save();
     } else {
       // Create new user
-      user = new User({ 
+      user = new User({
         wallet,
         walletType: walletType || '',
         username: username || '',
@@ -80,7 +119,7 @@ router.post('/', async (req, res) => {
       await user.save();
       console.log('New user created:', user.userId, user.wallet.substring(0, 10) + '...');
     }
-    
+
     res.status(201).json(user);
   } catch (err) {
     console.error('User creation error:', err);
@@ -92,7 +131,7 @@ router.post('/', async (req, res) => {
 router.patch('/:id', async (req, res) => {
   try {
     const allowedUpdates = [
-      'role', 'points', 'creditScore', 'frozen', 'level', 'balance', 
+      'role', 'points', 'creditScore', 'frozen', 'level', 'balance',
       'email', 'username', 'vipLevel', 'allowedTradingLevel', 'tradeMode',
       'kycStatus', 'kycFullName', 'kycDocType', 'kycDocNumber',
       'kycFrontPhoto', 'kycBackPhoto', 'kycSubmittedAt', 'kycVerifiedAt',
@@ -103,13 +142,13 @@ router.patch('/:id', async (req, res) => {
       'depositCount', 'withdrawCount', 'tradeCount', 'stakeCount', 'referralCode'
     ];
     const updates = {};
-    
+
     for (const key of allowedUpdates) {
       if (req.body[key] !== undefined) {
         updates[key] = req.body[key];
       }
     }
-    
+
     const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -124,7 +163,7 @@ router.patch('/:id', async (req, res) => {
 router.patch('/wallet/:wallet', async (req, res) => {
   try {
     const allowedUpdates = [
-      'points', 'creditScore', 'frozen', 'level', 'balance', 
+      'points', 'creditScore', 'frozen', 'level', 'balance',
       'email', 'username', 'vipLevel', 'allowedTradingLevel', 'tradeMode',
       'kycStatus', 'kycFullName', 'kycDocType', 'kycDocNumber',
       'kycFrontPhoto', 'kycBackPhoto', 'kycSubmittedAt', 'kycVerifiedAt',
@@ -135,16 +174,16 @@ router.patch('/wallet/:wallet', async (req, res) => {
       'depositCount', 'withdrawCount', 'tradeCount', 'stakeCount', 'referralCode'
     ];
     const updates = {};
-    
+
     for (const key of allowedUpdates) {
       if (req.body[key] !== undefined) {
         updates[key] = req.body[key];
       }
     }
-    
+
     const user = await User.findOneAndUpdate(
-      { wallet: req.params.wallet }, 
-      updates, 
+      { wallet: req.params.wallet },
+      updates,
       { new: true }
     );
     if (!user) {
@@ -160,7 +199,7 @@ router.patch('/wallet/:wallet', async (req, res) => {
 router.post('/:id/kyc', async (req, res) => {
   try {
     const { fullName, docType, docNumber, frontPhoto, backPhoto } = req.body;
-    
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
       {
@@ -174,7 +213,7 @@ router.post('/:id/kyc', async (req, res) => {
       },
       { new: true }
     );
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -188,19 +227,19 @@ router.post('/:id/kyc', async (req, res) => {
 router.patch('/:id/kyc/review', async (req, res) => {
   try {
     const { status } = req.body; // 'verified' or 'rejected'
-    
+
     if (!['verified', 'rejected'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
-    
+
     const updates = {
       kycStatus: status
     };
-    
+
     if (status === 'verified') {
       updates.kycVerifiedAt = new Date();
     }
-    
+
     const user = await User.findByIdAndUpdate(req.params.id, updates, { new: true });
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -216,8 +255,8 @@ router.patch('/:id/freeze', async (req, res) => {
   try {
     const { frozen } = req.body;
     const user = await User.findByIdAndUpdate(
-      req.params.id, 
-      { frozen: frozen }, 
+      req.params.id,
+      { frozen: frozen },
       { new: true }
     );
     if (!user) {
@@ -233,17 +272,17 @@ router.patch('/:id/freeze', async (req, res) => {
 router.patch('/:id/trade-mode', async (req, res) => {
   try {
     const { tradeMode } = req.body;
-    
+
     if (!['auto', 'win', 'lose'].includes(tradeMode)) {
       return res.status(400).json({ error: 'Invalid trade mode' });
     }
-    
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { tradeMode },
       { new: true }
     );
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -258,11 +297,11 @@ router.patch('/:id/points', async (req, res) => {
   try {
     const { amount, type } = req.body; // type: 'add', 'subtract', 'set'
     const user = await User.findById(req.params.id);
-    
+
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    
+
     if (type === 'add') {
       user.points += amount;
     } else if (type === 'subtract') {
@@ -270,7 +309,7 @@ router.patch('/:id/points', async (req, res) => {
     } else if (type === 'set') {
       user.points = amount;
     }
-    
+
     await user.save();
     res.json(user);
   } catch (err) {
@@ -286,8 +325,8 @@ router.patch('/:id/role', async (req, res) => {
       return res.status(400).json({ error: 'Invalid role' });
     }
     const user = await User.findByIdAndUpdate(
-      req.params.id, 
-      { role }, 
+      req.params.id,
+      { role },
       { new: true }
     );
     if (!user) {
