@@ -8,6 +8,7 @@ import {
   isFirebaseEnabled
 } from '../lib/firebase.js'
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
+import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js'
 
 // Lazy localStorage helper to avoid blocking initial render
 const getFromStorage = (key, defaultValue) => {
@@ -789,12 +790,16 @@ export default function MasterAdminDashboard() {
       return
     }
 
+    // Validate password
+    const passwordValidation = validatePassword(loginData.password, 6)
+    if (!passwordValidation.valid) {
+      setLoginError(passwordValidation.error)
+      return
+    }
+
     // Check if localStorage is available
-    try {
-      localStorage.setItem('test', 'test')
-      localStorage.removeItem('test')
-    } catch (storageError) {
-      setLoginError('Storage access blocked. Please enable cookies/localStorage in your browser settings.')
+    if (!isLocalStorageAvailable()) {
+      setLoginError('❌ Storage access blocked. Please enable cookies/localStorage in your browser settings.')
       return
     }
 
@@ -825,14 +830,13 @@ export default function MasterAdminDashboard() {
         return
       } else {
         console.log('[LOGIN] Response missing success or token:', response)
-        setLoginError(response.error || 'Login failed - invalid response from server')
+        setLoginError(response.error || '❌ Login failed - invalid response from server')
         return
       }
     } catch (error) {
       console.error('[LOGIN] Backend error:', error.message)
-      // No fallback credentials - backend authentication is required
-      // This ensures security by requiring proper database-backed authentication
-      setLoginError('Server unavailable. Please try again later or contact support.')
+      // Use shared error handling utility
+      setLoginError(formatApiError(error, { isColdStartAware: true }))
       return
     } finally {
       setIsLoggingIn(false)

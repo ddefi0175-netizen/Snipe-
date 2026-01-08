@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { userAPI, uploadAPI, authAPI, tradingLevelsAPI, currenciesAPI, networksAPI, depositWalletsAPI, ratesAPI, settingsAPI } from '../lib/api'
+import { formatApiError, validatePassword } from '../lib/errorHandling'
 
 // API Base URL for authentication
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api'
@@ -265,6 +266,13 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       return
     }
 
+    // Validate password
+    const passwordValidation = validatePassword(loginPassword, 6)
+    if (!passwordValidation.valid) {
+      setLoginError(passwordValidation.error)
+      return
+    }
+
     setIsLoggingIn(true)
 
     try {
@@ -300,15 +308,14 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         setLoginPassword('')
         console.log('[AdminPanel] Login successful!')
       } else {
-        setLoginError(data.error || 'Invalid username or password')
+        // Use shared error handling for response errors
+        const error = new Error(data.error || 'Invalid username or password')
+        error.response = { status: response.status, data }
+        setLoginError(formatApiError(error))
       }
     } catch (error) {
       console.error('[AdminPanel] Login error:', error)
-      if (error.name === 'AbortError') {
-        setLoginError('Request timed out. Server may be starting, please wait 30 seconds and try again.')
-      } else {
-        setLoginError('Connection error: ' + error.message)
-      }
+      setLoginError(formatApiError(error, { isColdStartAware: true }))
     } finally {
       setIsLoggingIn(false)
     }
