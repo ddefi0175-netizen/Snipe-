@@ -48,24 +48,78 @@ app.get('/', (req, res) => {
 });
 
 // Health check endpoints (root and /api for flexibility)
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    mongoConnected: mongoose.connection.readyState === 1,
-    timestamp: new Date().toISOString()
-  });
+app.get('/health', async (req, res) => {
+  try {
+    const User = require('./models/User');
+    const Admin = require('./models/Admin');
+    
+    // Test database query to ensure real-time data access
+    const userCount = await User.countDocuments();
+    const adminCount = await Admin.countDocuments();
+    
+    res.json({
+      status: 'ok',
+      mongoConnected: mongoose.connection.readyState === 1,
+      realTimeData: {
+        users: userCount,
+        admins: adminCount,
+        lastChecked: new Date().toISOString()
+      },
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      mongoConnected: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    mongoConnected: mongoose.connection.readyState === 1,
-    timestamp: new Date().toISOString()
-  });
+app.get('/api/health', async (req, res) => {
+  try {
+    const User = require('./models/User');
+    const Admin = require('./models/Admin');
+    const Trade = require('./models/Trade');
+    const Staking = require('./models/Staking');
+    
+    // Comprehensive health check with real-time counts
+    const [userCount, adminCount, tradeCount, stakingCount] = await Promise.all([
+      User.countDocuments(),
+      Admin.countDocuments(),
+      Trade.countDocuments(),
+      Staking.countDocuments()
+    ]);
+    
+    res.json({
+      status: 'ok',
+      mongoConnected: mongoose.connection.readyState === 1,
+      realTimeData: {
+        users: userCount,
+        admins: adminCount,
+        trades: tradeCount,
+        stakingPlans: stakingCount,
+        lastChecked: new Date().toISOString()
+      },
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      nodeVersion: process.version
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      mongoConnected: false,
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // --- API Routes ---
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/admin-activity', require('./routes/adminActivity'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/uploads', require('./routes/uploads'));

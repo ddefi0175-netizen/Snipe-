@@ -2,9 +2,12 @@ const express = require('express');
 const User = require('../models/User');
 const router = express.Router();
 
-// Get all users with pagination (admin/master only)
+// Middleware to verify token (import from auth)
+const { verifyToken, requireAdmin } = require('./auth');
+
+// Get all users with pagination (admin/master only with real-time filtering)
 // Query params: page (default 1), limit (default 50, max 100), search, sortBy, sortOrder
-router.get('/', async (req, res) => {
+router.get('/', verifyToken, requireAdmin, async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 50));
@@ -26,17 +29,20 @@ router.get('/', async (req, res) => {
       };
     }
 
-    // Execute query with pagination
+    // Execute query with pagination - real-time from MongoDB
     const [users, total] = await Promise.all([
       User.find(query)
         .sort({ [sortBy]: sortOrder })
         .skip(skip)
         .limit(limit)
-        .lean(),
+        .lean()
+        .select('-__v'),  // Exclude version field
       User.countDocuments(query)
     ]);
 
-    res.json({
+    // Add real-time metadata
+    const response = {
+      success: true,
       users,
       pagination: {
         page,
@@ -44,10 +50,18 @@ router.get('/', async (req, res) => {
         total,
         pages: Math.ceil(total / limit),
         hasMore: page * limit < total
+      },
+      realTime: {
+        timestamp: new Date().toISOString(),
+        source: 'mongodb',
+        queryTime: Date.now()
       }
-    });
+    };
+
+    res.json(response);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('[USERS] Error fetching users:', err);
+    res.status(500).json({ error: err.message, success: false });
   }
 });
 
