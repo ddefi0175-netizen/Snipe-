@@ -27,9 +27,11 @@ const AdminActivitySchema = new mongoose.Schema({
 });
 
 // Compound indexes for efficient querying
-AdminActivitySchema.index({ adminUsername: 1, timestamp: -1 });
+// Primary index for filtering by admin and sorting by time
 AdminActivitySchema.index({ adminUsername: 1, actionType: 1, timestamp: -1 });
+// For queries filtering by action type across all admins
 AdminActivitySchema.index({ actionType: 1, timestamp: -1 });
+// For queries filtering by target type
 AdminActivitySchema.index({ targetType: 1, timestamp: -1 });
 
 module.exports = mongoose.model('AdminActivity', AdminActivitySchema);

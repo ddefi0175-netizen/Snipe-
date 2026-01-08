@@ -121,6 +121,7 @@ NEW_ADMIN_PASSWORD="TestAdmin123!$RANDOM_ID"
 
 echo -e "${YELLOW}[TEST 6] Create New Admin Account...${NC}"
 echo "  Username: $NEW_ADMIN_USERNAME"
+echo "  Note: Using RANDOM for test ID - not cryptographically secure, only for testing"
 CREATE_ADMIN_RESPONSE=$(curl -s -X POST "$API_BASE/auth/admin" \
   -H "Authorization: Bearer $MASTER_TOKEN" \
   -H "Content-Type: application/json" \
