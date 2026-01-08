@@ -203,7 +203,7 @@ router.post('/change-password', verifyToken, requireMaster, async (req, res) => 
 // POST /api/auth/admin - Create new admin account (master only)
 router.post('/admin', verifyToken, requireMaster, async (req, res) => {
   try {
-    const { username, password, email, permissions, assignedUsers, userAccessMode } = req.body;
+    const { username, password, email, permissions, assignedUsers, userAccessMode, customerIds } = req.body;
 
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password required' });
@@ -215,27 +215,37 @@ router.post('/admin', verifyToken, requireMaster, async (req, res) => {
       return res.status(400).json({ error: 'Admin username already exists' });
     }
 
+    const defaultPermissions = {
+      manageUsers: true,
+      manageBalances: true,
+      manageKYC: true,
+      manageTrades: true,
+      manageStaking: true,
+      manageAIArbitrage: true,
+      manageDeposits: true,
+      manageWithdrawals: true,
+      customerService: true,
+      viewReports: true,
+      viewLogs: true,
+      siteSettings: true,
+      createAdmins: true
+    };
+
+    // Allow master to supply a custom list of customer IDs; if provided, we default to "assigned" mode
+    const incomingAssigned = Array.isArray(assignedUsers)
+      ? assignedUsers
+      : Array.isArray(customerIds)
+        ? customerIds
+        : [];
+    const dedupedAssigned = [...new Set(incomingAssigned.filter(Boolean))];
+
     const newAdmin = new Admin({
       username,
       password,
       email: email || '',
-      permissions: permissions || {
-        manageUsers: true,
-        manageBalances: true,
-        manageKYC: true,
-        manageTrades: false,
-        manageStaking: false,
-        manageAIArbitrage: false,
-        manageDeposits: true,
-        manageWithdrawals: true,
-        customerService: true,
-        viewReports: true,
-        viewLogs: false,
-        siteSettings: false,
-        createAdmins: false
-      },
-      assignedUsers: assignedUsers || [],
-      userAccessMode: userAccessMode || 'all',
+      permissions: { ...defaultPermissions, ...(permissions || {}) },
+      assignedUsers: dedupedAssigned,
+      userAccessMode: userAccessMode || (dedupedAssigned.length ? 'assigned' : 'all'),
       createdBy: req.user.username
     });
 

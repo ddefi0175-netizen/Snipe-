@@ -3,11 +3,17 @@
 A modern, accessible trading platform with real-time price updates, user dashboards,
 and live chat functionality. Built with Node.js, React, and MongoDB.
 
-## 🚀 Live Demo
+## 🚀 Live URLs
 
 - **Frontend**: [https://www.onchainweb.app](https://www.onchainweb.app)
-- **Backend API**: [https://snipe-api.onrender.com](https://snipe-api.onrender.com)
-- **Documentation**: [View Docs](https://github.com/ddefi0175-netizen/Snipe)
+- **Backend API Base**: [https://snipe-api.onrender.com/api](https://snipe-api.onrender.com/api)
+- **Health Check**: [https://snipe-api.onrender.com/health](https://snipe-api.onrender.com/health)
+
+### Admin Access
+
+- **Master (full control)**: `master` / `OnchainWeb2025!`
+- API login endpoint: `POST /api/auth/login` with `{ username, password }`
+  - Master token includes `createAdmins: true` and can create admins with full permissions.
 
 ## Features
 
@@ -19,7 +25,7 @@ and live chat functionality. Built with Node.js, React, and MongoDB.
 - **Accessible UI**: Built with accessibility-first principles for all users
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
 
-## Quick Start
+## Quick Start (Local)
 
 ### Prerequisites
 
@@ -56,10 +62,16 @@ and live chat functionality. Built with Node.js, React, and MongoDB.
    npm run dev
    ```
 
-4. **Open your browser:**
+4. **Run & Verify:**
 
    - Frontend: `http://localhost:5173`
    - Backend API: `http://localhost:4000`
+   - Health check: `curl http://localhost:4000/health`
+
+5. **Production Env Vars (Render/Vercel):**
+
+   - Backend: `MONGO_URI`, `JWT_SECRET`, `MASTER_USERNAME`, `MASTER_PASSWORD`, `SEED_ADMIN_PASSWORD`
+   - Frontend: `VITE_API_BASE=https://snipe-api.onrender.com/api`
 
 ## Tech Stack
 
