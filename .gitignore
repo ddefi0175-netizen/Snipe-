@@ -4,6 +4,7 @@ backend/node_modules/
 Onchainweb/node_modules/
 Onchainweb/dist/
 **/.package-lock.json
+**/node_modules/.package-lock.json
 
 # Logs
 *.log
