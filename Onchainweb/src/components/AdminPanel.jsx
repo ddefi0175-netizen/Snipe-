@@ -345,7 +345,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         // Refresh users from backend
         const response = await userAPI.getAll()
         const users = Array.isArray(response) ? response : (response?.users || [])
-        if (users.length > 0) {
+        if (users.length >= 0) { // Update even if empty to reflect backend state
           setAllUsers(users)
         }
         
@@ -368,12 +368,18 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       }
     }
 
-    // Initial refresh
-    refreshBackendData()
+    // Wait 2 seconds before initial refresh to avoid duplicate with mount effects
+    const initialTimeout = setTimeout(() => {
+      refreshBackendData()
+      
+      // Set up periodic refresh every 30 seconds
+      const interval = setInterval(refreshBackendData, 30000)
+      
+      // Clean up on unmount
+      return () => clearInterval(interval)
+    }, 2000)
     
-    // Set up periodic refresh every 30 seconds
-    const interval = setInterval(refreshBackendData, 30000)
-    return () => clearInterval(interval)
+    return () => clearTimeout(initialTimeout)
   }, [isAuthenticated])
 
   // Create new admin via backend API
@@ -718,7 +724,9 @@ export default function AdminPanel({ isOpen = true, onClose }) {
               <button className="admin-login-btn" onClick={handleLogin} disabled={isLoggingIn}>
                 {isLoggingIn ? (
                   <>
-                    <span className="loading-spinner"></span>
+                    <div className="loading-spinner">
+                      <div className="spin-animation" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', marginRight: '8px' }}></div>
+                    </div>
                     Authenticating...
                   </>
                 ) : 'Login'}

@@ -1085,7 +1085,9 @@ export default function MasterAdminDashboard() {
             <button type="submit" className="login-btn" disabled={isLoggingIn}>
               {isLoggingIn ? (
                 <>
-                  <span className="loading-spinner"></span>
+                  <div className="loading-spinner">
+                    <div className="spin-animation" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', marginRight: '8px' }}></div>
+                  </div>
                   Authenticating...
                 </>
               ) : 'Login'}
