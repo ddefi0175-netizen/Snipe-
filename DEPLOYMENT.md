@@ -1,6 +1,34 @@
 # 🚀 Snipe Deployment Guide
 
-Complete guide for deploying the Snipe trading platform with real-time data.
+**⚠️ IMPORTANT UPDATE**: This guide describes the deprecated MongoDB + Express.js backend.
+
+**For new deployments**, please use Firebase instead:
+- 📖 [Firebase Setup Guide](FIREBASE_SETUP.md) - Complete Firebase setup
+- 🚀 [Quick Start Guide](QUICK_START_FIREBASE.md) - 10-minute quick start
+- 🔥 [Backend Replacement Guide](BACKEND_REPLACEMENT.md) - Why Firebase is better
+
+---
+
+## Why Firebase Instead?
+
+The platform has migrated from MongoDB backend to Firebase for:
+- ✅ **No Cold Starts**: Instant response (vs 30-60s with MongoDB backend)
+- ✅ **Real-Time Updates**: WebSocket listeners (vs 3-second polling)
+- ✅ **Lower Costs**: $0-5/month (vs $7-24/month for servers)
+- ✅ **Better Reliability**: 99.95% uptime SLA
+- ✅ **Easier Deployment**: Frontend-only (no backend server)
+
+---
+
+## Legacy MongoDB Deployment (Deprecated)
+
+**Note**: The following instructions are for the deprecated MongoDB + Express.js backend.  
+**For new projects**: Use [Firebase Setup Guide](FIREBASE_SETUP.md) instead.
+
+<details>
+<summary>View MongoDB Backend Deployment Instructions (Not Recommended)</summary>
+
+Complete guide for deploying the deprecated Snipe backend with MongoDB.
 
 ## 📋 Table of Contents
 
@@ -341,3 +369,26 @@ Snipe/
 - **Repository**: <https://github.com/ddefi0175-netizen/Snipe>
 - **Backend URL**: <https://snipe-api.onrender.com>
 - **Frontend URL**: <https://www.onchainweb.app>
+
+
+</details>
+
+---
+
+## Recommended: Use Firebase
+
+For better reliability, performance, and lower costs, migrate to Firebase:
+
+1. Follow [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for complete setup
+2. Use [BACKEND_REPLACEMENT.md](BACKEND_REPLACEMENT.md) to understand the benefits
+3. Deploy frontend only (no backend server needed)
+
+**Support**:
+- [GitHub Issues](https://github.com/ddefi0175-netizen/Snipe/issues) - Report problems
+- [Firebase Documentation](https://firebase.google.com/docs) - Firebase help
+
+---
+
+**Last Updated**: January 2026  
+**Status**: MongoDB backend deprecated, use Firebase instead  
+**Version**: 2.0.0
