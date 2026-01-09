@@ -43,24 +43,56 @@ Try it now:
 
 ### Admin Access
 
-- **Master Account**: Username is `master` (password set via `MASTER_PASSWORD` environment variable)
-- **Admin Panel**: [https://www.onchainweb.app/admin](https://www.onchainweb.app/admin)
+**🔑 No Wallet Required for Admin Login!**
+
+Admin and Master accounts use **username + password** authentication only. No wallet connection needed!
+
 - **Master Dashboard**: [https://www.onchainweb.app/master-admin](https://www.onchainweb.app/master-admin)
-- API login endpoint: `POST /api/auth/login` with `{ username, password }`
-  - Master token includes full permissions and can create admins with custom permissions.
-- **📖 For detailed admin usage**: See [Admin User Guide](ADMIN_USER_GUIDE.md)
-- **📊 Real-time data architecture**: See [Real-Time Data Architecture](REALTIME_DATA_ARCHITECTURE.md)
+  - Username: `master`
+  - Password: (set via `MASTER_PASSWORD` environment variable)
+  - **Access**: Full system control, can create admins
+
+- **Admin Panel**: [https://www.onchainweb.app/admin](https://www.onchainweb.app/admin)
+  - Username: Created by master admin
+  - Password: Set when admin account is created
+  - **Access**: Permission-based (configured by master)
+
+- **Authentication**: 
+  - API endpoint: `POST /api/auth/login` with `{ username, password }`
+  - JWT token-based (24-hour expiration)
+  - Completely separate from wallet-based user authentication
+  - Works on any browser without wallet extensions
+
+- **📖 Documentation**:
+  - [Admin Wallet-Free Login Guide](ADMIN_WALLET_FREE_LOGIN.md) - Complete details on admin authentication
+  - [Admin User Guide](ADMIN_USER_GUIDE.md) - How to use admin features
+  - [Real-Time Data Architecture](REALTIME_DATA_ARCHITECTURE.md) - Data flow and updates
+
 - **IMPORTANT**: Never commit real credentials to the repository. Always use environment variables.
 
 ## Features
+
+### Dual Authentication System
+
+- **👥 Regular Users (Wallet-Based)**: 
+  - Connect MetaMask, Trust Wallet, or 11+ supported Web3 wallets
+  - Access trading, deposits, withdrawals, and live chat
+  - Wallet connection required for all user functions
+  - See [WalletConnect Implementation Guide](WALLETCONNECT_IMPLEMENTATION.md) for setup
+
+- **🔑 Admin/Master (Username + Password)**:
+  - **No wallet required!** Login with username and password only
+  - Access admin dashboard from `/admin` or `/master-admin` routes
+  - JWT token-based authentication (completely separate from wallet auth)
+  - Works on any browser without needing wallet extensions
+  - See [Admin Wallet-Free Login Guide](ADMIN_WALLET_FREE_LOGIN.md) for details
+
+### Core Features
 
 - **Real-Time Price Updates**: Live cryptocurrency price feeds powered by CoinGecko
 - **Real-Time Admin Control**: Master and admin accounts control all platform functions with live data from MongoDB
 - **User Dashboard**: Track your trading activity, points, and performance metrics
 - **Live Chat**: Real-time chat system for community engagement
-- **Wallet Integration**: Connect your Web3 wallet to view balances and interact
-  with the platform. Supports browser extensions and WalletConnect QR code for mobile wallets.
-  - See [WalletConnect Implementation Guide](WALLETCONNECT_IMPLEMENTATION.md) for setup
 - **Admin Activity Tracking**: All admin actions are logged and monitored in real-time
 - **Accessible UI**: Built with accessibility-first principles for all users
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
