@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { userAPI, uploadAPI, authAPI, tradingLevelsAPI, currenciesAPI, networksAPI, depositWalletsAPI, ratesAPI, settingsAPI } from '../lib/api'
 import { formatApiError, validatePassword } from '../lib/errorHandling'
 
-// API Base URL for authentication
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api'
-
 // Default Trading Levels
 const DEFAULT_TRADING_LEVELS = [
   { level: 1, minCapital: 100, maxCapital: 19999, profit: 18, duration: 180 },
@@ -323,43 +320,22 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     setIsLoggingIn(true)
 
     try {
-      // Create abort controller for timeout
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 second timeout
-
       console.log('[AdminPanel] Attempting login for:', loginUsername)
-      console.log('[AdminPanel] API URL:', `${API_BASE}/auth/login`)
+      
+      // Use centralized authAPI with automatic retry logic
+      const data = await authAPI.login(loginUsername, loginPassword)
+      
+      console.log('[AdminPanel] Login successful!')
 
-      const response = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: loginUsername, password: loginPassword }),
-        signal: controller.signal
-      })
+      // Store token in localStorage
+      localStorage.setItem('adminToken', data.token)
+      localStorage.setItem('adminUser', JSON.stringify(data.user))
 
-      clearTimeout(timeoutId)
-      console.log('[AdminPanel] Response status:', response.status)
-
-      const data = await response.json()
-      console.log('[AdminPanel] Response data:', data)
-
-      if (response.ok && data.success) {
-        // Store token in localStorage
-        localStorage.setItem('adminToken', data.token)
-        localStorage.setItem('adminUser', JSON.stringify(data.user))
-
-        setLoginError('')
-        setIsAuthenticated(true)
-        setCurrentAdmin(data.user)
-        setLoginUsername('')
-        setLoginPassword('')
-        console.log('[AdminPanel] Login successful!')
-      } else {
-        // Use shared error handling for response errors
-        const error = new Error(data.error || 'Invalid username or password')
-        error.response = { status: response.status, data }
-        setLoginError(formatApiError(error))
-      }
+      setLoginError('')
+      setIsAuthenticated(true)
+      setCurrentAdmin(data.user)
+      setLoginUsername('')
+      setLoginPassword('')
     } catch (error) {
       console.error('[AdminPanel] Login error:', error)
       setLoginError(formatApiError(error, { isColdStartAware: true }))
@@ -407,19 +383,10 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     }
 
     try {
-      const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${API_BASE}/auth/admin`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(newAdminForm)
-      })
+      // Use centralized authAPI with automatic retry logic
+      const data = await authAPI.createAdmin(newAdminForm)
 
-      const data = await response.json()
-
-      if (response.ok && data.success) {
+      if (data.success) {
         // Also add to local state for display
         const newAdmin = {
           id: Date.now().toString(),
@@ -447,7 +414,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       }
     } catch (error) {
       console.error('Create admin error:', error)
-      alert('Connection error. Please try again.')
+      alert(formatApiError(error, { isColdStartAware: true }))
     }
   }
 
@@ -455,25 +422,18 @@ export default function AdminPanel({ isOpen = true, onClose }) {
   const deleteAdmin = async (adminId, username) => {
     if (confirm('Are you sure you want to delete this admin account?')) {
       try {
-        const token = localStorage.getItem('adminToken')
-        const response = await fetch(`${API_BASE}/auth/admin/${username}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
+        // Use centralized authAPI with automatic retry logic
+        const data = await authAPI.deleteAdmin(username)
 
-        if (response.ok) {
+        if (data.success) {
           setAdminAccounts(adminAccounts.filter(a => a.id !== adminId))
           alert('Admin deleted successfully')
         } else {
-          const data = await response.json()
           alert(data.error || 'Failed to delete admin')
         }
       } catch (error) {
         console.error('Delete admin error:', error)
-        // Still remove from local state
-        setAdminAccounts(adminAccounts.filter(a => a.id !== adminId))
+        alert(formatApiError(error, { isColdStartAware: true }))
       }
     }
   }
