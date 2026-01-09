@@ -88,7 +88,7 @@ const connectToMongoDB = async (attempt = 1) => {
     console.error(`✗ MongoDB connection error (attempt ${attempt}/${MAX_RETRIES}):`, err.message);
     
     if (attempt < MAX_RETRIES) {
-      // Exponential backoff: 5s, 10s, 20s, 40s, 80s
+      // Exponential backoff: 5s, 10s, 20s, 40s
       const retryDelay = BASE_RETRY_INTERVAL * Math.pow(2, attempt - 1);
       console.log(`  Retrying in ${retryDelay / 1000} seconds...`);
       setTimeout(() => connectToMongoDB(attempt + 1), retryDelay);
