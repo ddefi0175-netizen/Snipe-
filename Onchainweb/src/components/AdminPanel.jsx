@@ -219,6 +219,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       intervalId = setInterval(refreshBackendData, 30000)
     }, 2000)
     
+    // Cleanup: clear timeout and interval (if set) on unmount or when isAuthenticated changes
     return () => {
       clearTimeout(initialTimeout)
       if (intervalId) {
@@ -231,7 +232,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     try {
       // Load trading levels from backend
       const levels = await tradingLevelsAPI.getAll()
-      if (Array.isArray(levels) && levels.length >= 0) {
+      if (Array.isArray(levels)) {
         const mappedLevels = levels.map((l, idx) => ({
           level: l.level || idx + 1,
           minCapital: l.minCapital,
@@ -249,7 +250,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     try {
       // Load deposit wallets from backend
       const wallets = await depositWalletsAPI.getAll()
-      if (Array.isArray(wallets) && wallets.length >= 0) {
+      if (Array.isArray(wallets)) {
         const mappedAddresses = wallets.map(w => ({
           network: w.network,
           name: w.label || w.network,
@@ -790,7 +791,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
                     <li>✅ <strong>Easy Login</strong> - Automatic session restoration</li>
                     <li>✅ <strong>Real-Time Data</strong> - Auto-refresh every 30 seconds</li>
                     <li>✅ <strong>Smart Retry</strong> - Automatic retry on connection issues</li>
-                    <li>⏱️ <strong>Login Time</strong> - Usually &lt;2s (up to 60s on cold start)</li>
+                    <li>⏱️ <strong>Login Time</strong> - Usually {'<'}2s (up to 60s on cold start)</li>
                   </ul>
                 </div>
               )}
