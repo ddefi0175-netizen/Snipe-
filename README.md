@@ -1,12 +1,38 @@
-# Snipe – Real-Time Trading Platform
+# Snipe – Real-Time Trading Platform 🚀
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 A modern, accessible trading platform with real-time price updates, user dashboards,
 and live chat functionality. Built with Node.js, React, and MongoDB.
 
-## 🚀 Live URLs
+**✨ Features**: 11 Wallet Providers • Real-Time Data • Live Chat • Admin System • Security-First Design
 
+---
+
+## 🎉 Public Release v1.0.0
+
+Snipe is **production-ready** and verified for public use! All systems operational:
+
+✅ **Wallet Connections**: 11 providers tested and working  
+✅ **Real-Time Data**: All features use live MongoDB data  
+✅ **Admin Control**: Master and admin accounts fully functional  
+✅ **Security**: No hardcoded credentials, JWT auth, bcrypt hashing  
+✅ **Documentation**: Complete guides for deployment and maintenance  
+
+**📖 Quick Links**:
+- [Public Release Guide](PUBLIC_RELEASE_GUIDE.md) - Complete release verification and steps
+- [Deployment Guide](DEPLOYMENT.md) - How to deploy your own instance
+- [Maintenance Plan](MAINTENANCE.md) - Long-term operational procedures
+
+---
+
+## 🚀 Live Demo
+
+Try it now:
 - **Frontend**: [https://www.onchainweb.app](https://www.onchainweb.app)
-- **Backend API Base**: [https://snipe-api.onrender.com/api](https://snipe-api.onrender.com/api)
+- **Backend API**: [https://snipe-api.onrender.com/api](https://snipe-api.onrender.com/api)
 - **Health Check**: [https://snipe-api.onrender.com/health](https://snipe-api.onrender.com/health)
 
 ### Admin Access
@@ -51,55 +77,46 @@ All admin and master account operations work with **real-time data from MongoDB*
 
 For detailed information, see [Real-Time Data Architecture](REALTIME_DATA_ARCHITECTURE.md).
 
-## Quick Start (Local)
+## 🚀 Quick Start
 
-### Prerequisites
+### For Users
 
+1. **Visit the Live Site**: [https://www.onchainweb.app](https://www.onchainweb.app)
+2. **Connect Your Wallet**: Click "Connect Wallet" and choose from 11 supported wallets
+3. **Start Trading**: Explore real-time prices, live chat, and user dashboard
+
+### For Developers
+
+Want to run your own instance? Follow our comprehensive setup guide:
+
+**Prerequisites**:
 - Node.js 18+
+- MongoDB (Atlas or local)
 - npm or yarn
-- Modern web browser
 
-### Installation
+**Quick Setup**:
 
-1. **Clone the repository:**
+```bash
+# 1. Clone the repository
+git clone https://github.com/ddefi0175-netizen/Snipe.git
+cd Snipe
 
-   ```bash
-   git clone https://github.com/ddefi0175-netizen/Snipe.git
-   cd Snipe
-   ```
+# 2. Setup Backend
+cd backend
+cp .env.example .env
+# Edit .env with your MongoDB URI and credentials
+npm install
+npm start
 
-2. **Setup Backend:**
+# 3. Setup Frontend
+cd ../Onchainweb
+cp .env.example .env
+# Edit .env with your backend URL and WalletConnect Project ID
+npm install
+npm run dev
+```
 
-   ```bash
-   cd backend
-   cp .env.example .env
-   # Edit .env with your MongoDB URI and other configuration
-   npm install
-   npm run dev
-   ```
-
-3. **Setup Frontend:**
-
-   ```bash
-   cd ../Onchainweb
-   cp .env.example .env
-   # Edit .env with your backend URL
-   npm install
-   npm run dev
-   ```
-
-4. **Run & Verify:**
-
-   - Frontend: `http://localhost:5173`
-   - Backend API: `http://localhost:4000`
-   - Health check: `curl http://localhost:4000/health`
-
-5. **Production Env Vars (Render/Vercel):**
-
-   - Backend: `MONGO_URI`, `JWT_SECRET`, `MASTER_USERNAME`, `MASTER_PASSWORD`, `SEED_ADMIN_PASSWORD`
-   - Frontend: `VITE_API_BASE=https://snipe-api.onrender.com/api`, `VITE_WALLETCONNECT_PROJECT_ID=your-project-id`
-   
-   **IMPORTANT:** WalletConnect requires a Project ID to function. Get your free Project ID from [WalletConnect Cloud](https://cloud.walletconnect.com) and set it as `VITE_WALLETCONNECT_PROJECT_ID`.
+**📖 Detailed Setup**: See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment instructions.
 
 ## Tech Stack
 
@@ -286,13 +303,28 @@ For detailed instructions, see [Admin User Guide](ADMIN_USER_GUIDE.md).
 
 ## Support
 
-For issues, questions, or feature requests, please open an issue on GitHub.
+For issues, questions, or feature requests, please [open an issue](https://github.com/ddefi0175-netizen/Snipe/issues) on GitHub.
+
+## Contributing
+
+We welcome contributions! Here's how you can help:
+
+1. **Report Bugs**: [Open an issue](https://github.com/ddefi0175-netizen/Snipe/issues) with details
+2. **Suggest Features**: Share your ideas via [GitHub Issues](https://github.com/ddefi0175-netizen/Snipe/issues)
+3. **Submit PRs**: Fork the repo, make changes, and submit a pull request
+4. **Improve Docs**: Help make our documentation better
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
 
 ## License
 
 See [LICENSE](LICENSE) for details.
 
 ---
+
+**Made with ❤️ by the Snipe Team**
+
+⭐ Star us on GitHub if you find this project useful!
 
 **Note**: For advanced deployment and configuration, see the
 [DEPLOYMENT.md](DEPLOYMENT.md) guide.
