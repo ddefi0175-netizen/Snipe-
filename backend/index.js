@@ -1,4 +1,11 @@
 // Backend entry point for Snipe
+
+// Uncaught exception handler - must be at the very beginning
+process.on('uncaughtException', (error) => {
+  console.error('[UNCAUGHT EXCEPTION]', error);
+  process.exit(1);
+});
+
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -56,21 +63,21 @@ app.use((req, res, next) => {
 app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  // Only set HSTS header when served over HTTPS
+  if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
   next();
 });
 
 // --- MongoDB connection with retry logic ---
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/snipe';
 const MAX_RETRIES = 5;
-const RETRY_INTERVAL = 5000; // 5 seconds
+const BASE_RETRY_INTERVAL = 5000; // 5 seconds base interval
 
 const connectToMongoDB = async (attempt = 1) => {
   try {
     await mongoose.connect(MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
@@ -81,8 +88,10 @@ const connectToMongoDB = async (attempt = 1) => {
     console.error(`✗ MongoDB connection error (attempt ${attempt}/${MAX_RETRIES}):`, err.message);
     
     if (attempt < MAX_RETRIES) {
-      console.log(`  Retrying in ${RETRY_INTERVAL / 1000} seconds...`);
-      setTimeout(() => connectToMongoDB(attempt + 1), RETRY_INTERVAL);
+      // Exponential backoff: 5s, 10s, 20s, 40s
+      const retryDelay = BASE_RETRY_INTERVAL * Math.pow(2, attempt - 1);
+      console.log(`  Retrying in ${retryDelay / 1000} seconds...`);
+      setTimeout(() => connectToMongoDB(attempt + 1), retryDelay);
     } else {
       console.error('✗ Failed to connect to MongoDB after maximum retries');
       console.error('  Please check your MONGO_URI configuration and network connection');
@@ -242,12 +251,28 @@ app.use((err, req, res, next) => {
 });
 
 // Graceful shutdown handling
+let server;
+
 const gracefulShutdown = (signal) => {
   console.log(`\n[${signal}] Received, shutting down gracefully...`);
-  mongoose.connection.close(() => {
-    console.log('MongoDB connection closed');
-    process.exit(0);
-  });
+  
+  // Close HTTP server first
+  if (server) {
+    server.close(() => {
+      console.log('HTTP server closed');
+      // Then close MongoDB connection
+      mongoose.connection.close(() => {
+        console.log('MongoDB connection closed');
+        process.exit(0);
+      });
+    });
+  } else {
+    // If server not yet started, just close MongoDB
+    mongoose.connection.close(() => {
+      console.log('MongoDB connection closed');
+      process.exit(0);
+    });
+  }
 };
 
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
@@ -258,13 +283,7 @@ process.on('unhandledRejection', (reason, promise) => {
   console.error('[UNHANDLED REJECTION]', promise, 'reason:', reason);
 });
 
-// Uncaught exception handler
-process.on('uncaughtException', (error) => {
-  console.error('[UNCAUGHT EXCEPTION]', error);
-  gracefulShutdown('UNCAUGHT_EXCEPTION');
-});
-
-app.listen(PORT, () => {
+server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`MongoDB: ${mongoose.connection.readyState === 1 ? 'Connected' : 'Connecting...'}`);

@@ -39,7 +39,7 @@ mongoose.connect(MONGO_URI)
 
 **After**: Robust connection with retry logic and event handling
 - Automatic retry on connection failure (up to 5 attempts)
-- Exponential backoff between retries (5 seconds)
+- Exponential backoff between retries (5s, 10s, 20s, 40s)
 - Connection event handlers for disconnect/reconnect
 - Detailed logging with connection status
 - Graceful error messages with troubleshooting hints
