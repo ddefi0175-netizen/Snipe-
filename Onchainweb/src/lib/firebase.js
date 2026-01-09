@@ -350,26 +350,6 @@ export const getUser = async (walletOrId) => {
   }
 };
 
-export const subscribeToUsers = (callback) => {
-  if (!isFirebaseAvailable) {
-    callback([]);
-    return () => {};
-  }
-
-  const q = query(collection(db, 'users'));
-
-  return onSnapshot(q, (snapshot) => {
-    const users = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
-    callback(users);
-  }, (error) => {
-    console.error('Subscribe to users error:', error);
-    callback([]);
-  });
-};
-
 // ==========================================
 // USER DATA FUNCTIONS (For Admin Dashboards)
 // ==========================================

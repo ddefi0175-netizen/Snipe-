@@ -300,9 +300,6 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     }
   }
 
-  // Loading state for login
-  const [isLoggingIn, setIsLoggingIn] = useState(false)
-
   // Handle login via backend API
   const handleLogin = async () => {
     setLoginError('')
