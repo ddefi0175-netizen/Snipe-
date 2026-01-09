@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { userAPI, uploadAPI, authAPI, tradingLevelsAPI, currenciesAPI, networksAPI, depositWalletsAPI, ratesAPI, settingsAPI } from '../lib/api'
 import { formatApiError, validatePassword } from '../lib/errorHandling'
 
+// API Base URL for authentication
+const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api'
+
 // Default Trading Levels
 const DEFAULT_TRADING_LEVELS = [
   { level: 1, minCapital: 100, maxCapital: 19999, profit: 18, duration: 180 },
@@ -178,11 +181,58 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     }
   }, [isAuthenticated])
 
+  // Periodic refresh of backend data (every 30 seconds)
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    const refreshBackendData = async () => {
+      try {
+        // Refresh users from backend
+        const response = await userAPI.getAll()
+        const users = Array.isArray(response) ? response : (response?.users || [])
+        if (Array.isArray(users)) {
+          setAllUsers(users)
+        }
+        
+        // Refresh trading levels
+        const levels = await tradingLevelsAPI.getAll()
+        if (Array.isArray(levels)) {
+          const mappedLevels = levels.map((l, idx) => ({
+            level: l.level || idx + 1,
+            minCapital: l.minCapital,
+            maxCapital: l.maxCapital,
+            profit: l.profitPercent,
+            duration: l.countdown
+          }))
+          setTradingLevels(mappedLevels)
+        }
+      } catch (error) {
+        console.log('Background refresh error:', error)
+      }
+    }
+
+    let intervalId
+    const initialTimeout = setTimeout(() => {
+      refreshBackendData()
+      
+      // Set up periodic refresh every 30 seconds
+      intervalId = setInterval(refreshBackendData, 30000)
+    }, 2000)
+    
+    // Cleanup: clear timeout and interval (if set) on unmount or when isAuthenticated changes
+    return () => {
+      clearTimeout(initialTimeout)
+      if (intervalId) {
+        clearInterval(intervalId)
+      }
+    }
+  }, [isAuthenticated])
+
   const loadConfigFromBackend = async () => {
     try {
       // Load trading levels from backend
       const levels = await tradingLevelsAPI.getAll()
-      if (Array.isArray(levels) && levels.length > 0) {
+      if (Array.isArray(levels)) {
         const mappedLevels = levels.map((l, idx) => ({
           level: l.level || idx + 1,
           minCapital: l.minCapital,
@@ -200,7 +250,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     try {
       // Load deposit wallets from backend
       const wallets = await depositWalletsAPI.getAll()
-      if (Array.isArray(wallets) && wallets.length > 0) {
+      if (Array.isArray(wallets)) {
         const mappedAddresses = wallets.map(w => ({
           network: w.network,
           name: w.label || w.network,
@@ -273,27 +323,42 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     setIsLoggingIn(true)
 
     try {
+      // Create abort controller for timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 second timeout
+
       console.log('[AdminPanel] Attempting login for:', loginUsername)
+      console.log('[AdminPanel] API URL:', `${API_BASE}/auth/login`)
 
-      // Use centralized authAPI from lib/api.js
-      const response = await authAPI.login(loginUsername, loginPassword)
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: loginUsername, password: loginPassword }),
+        signal: controller.signal
+      })
 
-      console.log('[AdminPanel] Response data:', response)
+      clearTimeout(timeoutId)
+      console.log('[AdminPanel] Response status:', response.status)
 
-      if (response.success && response.token) {
+      const data = await response.json()
+      console.log('[AdminPanel] Response data:', data)
+
+      if (response.ok && data.success) {
         // Store token in localStorage
-        localStorage.setItem('adminToken', response.token)
-        localStorage.setItem('adminUser', JSON.stringify(response.user))
+        localStorage.setItem('adminToken', data.token)
+        localStorage.setItem('adminUser', JSON.stringify(data.user))
 
         setLoginError('')
         setIsAuthenticated(true)
-        setCurrentAdmin(response.user)
+        setCurrentAdmin(data.user)
         setLoginUsername('')
         setLoginPassword('')
         console.log('[AdminPanel] Login successful!')
       } else {
-        // Use consistent error formatting
-        setLoginError(formatApiError(new Error(response.error || 'Invalid username or password')))
+        // Use shared error handling for response errors
+        const error = new Error(data.error || 'Invalid username or password')
+        error.response = { status: response.status, data }
+        setLoginError(formatApiError(error))
       }
     } catch (error) {
       console.error('[AdminPanel] Login error:', error)
@@ -334,54 +399,6 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     }
   }, [])
 
-  // Periodic refresh of backend data (every 30 seconds) - for real-time updates
-  useEffect(() => {
-    if (!isAuthenticated) return
-
-    const refreshBackendData = async () => {
-      try {
-        console.log('[AdminPanel] Refreshing data from backend...')
-        
-        // Refresh users from backend
-        const response = await userAPI.getAll()
-        const users = Array.isArray(response) ? response : (response?.users || [])
-        if (users.length >= 0) { // Update even if empty to reflect backend state
-          setAllUsers(users)
-        }
-        
-        // Refresh trading levels
-        const levels = await tradingLevelsAPI.getAll()
-        if (Array.isArray(levels) && levels.length > 0) {
-          const mappedLevels = levels.map((l, idx) => ({
-            level: l.level || idx + 1,
-            minCapital: l.minCapital,
-            maxCapital: l.maxCapital,
-            profit: l.profitPercent,
-            duration: l.countdown
-          }))
-          setTradingLevels(mappedLevels)
-        }
-        
-        console.log('[AdminPanel] Data refresh complete')
-      } catch (error) {
-        console.log('[AdminPanel] Background refresh error:', error.message)
-      }
-    }
-
-    // Wait 2 seconds before initial refresh to avoid duplicate with mount effects
-    const initialTimeout = setTimeout(() => {
-      refreshBackendData()
-      
-      // Set up periodic refresh every 30 seconds
-      const interval = setInterval(refreshBackendData, 30000)
-      
-      // Clean up on unmount
-      return () => clearInterval(interval)
-    }, 2000)
-    
-    return () => clearTimeout(initialTimeout)
-  }, [isAuthenticated])
-
   // Create new admin via backend API
   const createAdmin = async () => {
     if (!newAdminForm.username || !newAdminForm.password) {
@@ -390,10 +407,19 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     }
 
     try {
-      // Use centralized authAPI from lib/api.js
-      const response = await authAPI.createAdmin(newAdminForm)
+      const token = localStorage.getItem('adminToken')
+      const response = await fetch(`${API_BASE}/auth/admin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newAdminForm)
+      })
 
-      if (response.success) {
+      const data = await response.json()
+
+      if (response.ok && data.success) {
         // Also add to local state for display
         const newAdmin = {
           id: Date.now().toString(),
@@ -417,7 +443,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         })
         alert('Admin account created successfully!')
       } else {
-        alert(response.error || 'Failed to create admin')
+        alert(data.error || 'Failed to create admin')
       }
     } catch (error) {
       console.error('Create admin error:', error)
@@ -429,19 +455,25 @@ export default function AdminPanel({ isOpen = true, onClose }) {
   const deleteAdmin = async (adminId, username) => {
     if (confirm('Are you sure you want to delete this admin account?')) {
       try {
-        // Use centralized authAPI from lib/api.js
-        const response = await authAPI.deleteAdmin(username)
+        const token = localStorage.getItem('adminToken')
+        const response = await fetch(`${API_BASE}/auth/admin/${username}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
 
-        if (response && response.success) {
+        if (response.ok) {
           setAdminAccounts(adminAccounts.filter(a => a.id !== adminId))
           alert('Admin deleted successfully')
         } else {
-          alert(response?.error || 'Failed to delete admin')
+          const data = await response.json()
+          alert(data.error || 'Failed to delete admin')
         }
       } catch (error) {
         console.error('Delete admin error:', error)
-        // Remove from local state on network errors (may have succeeded on backend)
-        alert('Network error. The admin may have been deleted. Please refresh to verify.')
+        // Still remove from local state
+        setAdminAccounts(adminAccounts.filter(a => a.id !== adminId))
       }
     }
   }
@@ -722,30 +754,44 @@ export default function AdminPanel({ isOpen = true, onClose }) {
               {loginError && <div className="login-error">{loginError}</div>}
 
               <button className="admin-login-btn" onClick={handleLogin} disabled={isLoggingIn}>
-                {isLoggingIn ? (
-                  <>
-                    <div className="loading-spinner">
-                      <div className="spin-animation" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', marginRight: '8px' }}></div>
-                    </div>
-                    Authenticating...
-                  </>
-                ) : 'Login'}
+                {isLoggingIn ? 'Connecting...' : 'Login'}
               </button>
-              
+
               {isLoggingIn && (
-                <div className="login-status-message">
+                <div style={{ 
+                  marginTop: '15px', 
+                  padding: '12px', 
+                  background: 'rgba(59, 130, 246, 0.1)', 
+                  borderRadius: '8px', 
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                  color: '#60a5fa',
+                  fontSize: '13px',
+                  textAlign: 'center'
+                }}>
                   🔄 Connecting to server... This may take up to 60 seconds if the server is waking up.
                 </div>
               )}
-              
+
               {!isLoggingIn && !loginError && (
-                <div className="login-info-box">
-                  <h4>✨ Features:</h4>
-                  <ul>
+                <div style={{ 
+                  marginTop: '15px', 
+                  padding: '15px', 
+                  background: 'rgba(34, 197, 94, 0.1)', 
+                  borderRadius: '8px', 
+                  border: '1px solid rgba(34, 197, 94, 0.3)',
+                  fontSize: '12px'
+                }}>
+                  <h4 style={{ color: '#4ade80', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>✨ Features:</h4>
+                  <ul style={{ 
+                    color: '#94a3b8', 
+                    lineHeight: '1.8', 
+                    paddingLeft: '20px',
+                    margin: 0
+                  }}>
                     <li>✅ <strong>Easy Login</strong> - Automatic session restoration</li>
                     <li>✅ <strong>Real-Time Data</strong> - Auto-refresh every 30 seconds</li>
                     <li>✅ <strong>Smart Retry</strong> - Automatic retry on connection issues</li>
-                    <li>⏱️ <strong>Login Time</strong> - Usually &lt;2s (up to 60s on cold start)</li>
+                    <li>⏱️ <strong>Login Time</strong> - Usually {'<'}2s (up to 60s on cold start)</li>
                   </ul>
                 </div>
               )}
