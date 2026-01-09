@@ -334,6 +334,48 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     }
   }, [])
 
+  // Periodic refresh of backend data (every 30 seconds) - for real-time updates
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    const refreshBackendData = async () => {
+      try {
+        console.log('[AdminPanel] Refreshing data from backend...')
+        
+        // Refresh users from backend
+        const response = await userAPI.getAll()
+        const users = Array.isArray(response) ? response : (response?.users || [])
+        if (users.length > 0) {
+          setAllUsers(users)
+        }
+        
+        // Refresh trading levels
+        const levels = await tradingLevelsAPI.getAll()
+        if (Array.isArray(levels) && levels.length > 0) {
+          const mappedLevels = levels.map((l, idx) => ({
+            level: l.level || idx + 1,
+            minCapital: l.minCapital,
+            maxCapital: l.maxCapital,
+            profit: l.profitPercent,
+            duration: l.countdown
+          }))
+          setTradingLevels(mappedLevels)
+        }
+        
+        console.log('[AdminPanel] Data refresh complete')
+      } catch (error) {
+        console.log('[AdminPanel] Background refresh error:', error.message)
+      }
+    }
+
+    // Initial refresh
+    refreshBackendData()
+    
+    // Set up periodic refresh every 30 seconds
+    const interval = setInterval(refreshBackendData, 30000)
+    return () => clearInterval(interval)
+  }, [isAuthenticated])
+
   // Create new admin via backend API
   const createAdmin = async () => {
     if (!newAdminForm.username || !newAdminForm.password) {
@@ -674,8 +716,31 @@ export default function AdminPanel({ isOpen = true, onClose }) {
               {loginError && <div className="login-error">{loginError}</div>}
 
               <button className="admin-login-btn" onClick={handleLogin} disabled={isLoggingIn}>
-                {isLoggingIn ? 'Connecting...' : 'Login'}
+                {isLoggingIn ? (
+                  <>
+                    <span className="loading-spinner"></span>
+                    Authenticating...
+                  </>
+                ) : 'Login'}
               </button>
+              
+              {isLoggingIn && (
+                <div className="login-status-message">
+                  🔄 Connecting to server... This may take up to 60 seconds if the server is waking up.
+                </div>
+              )}
+              
+              {!isLoggingIn && !loginError && (
+                <div className="login-info-box">
+                  <h4>✨ Features:</h4>
+                  <ul>
+                    <li>✅ <strong>Easy Login</strong> - Automatic session restoration</li>
+                    <li>✅ <strong>Real-Time Data</strong> - Auto-refresh every 30 seconds</li>
+                    <li>✅ <strong>Smart Retry</strong> - Automatic retry on connection issues</li>
+                    <li>⏱️ <strong>Login Time</strong> - Usually &lt;2s (up to 60s on cold start)</li>
+                  </ul>
+                </div>
+              )}
             </div>
 
             <button className="admin-close-btn" onClick={onClose}>×</button>

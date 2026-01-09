@@ -1083,9 +1083,33 @@ export default function MasterAdminDashboard() {
             </div>
             {loginError && <div className="login-error">{loginError}</div>}
             <button type="submit" className="login-btn" disabled={isLoggingIn}>
-              {isLoggingIn ? 'Connecting to server...' : 'Login'}
+              {isLoggingIn ? (
+                <>
+                  <span className="loading-spinner"></span>
+                  Authenticating...
+                </>
+              ) : 'Login'}
             </button>
+            
+            {isLoggingIn && (
+              <div className="login-status-message" style={{ marginTop: '12px', padding: '10px', background: 'rgba(124, 58, 237, 0.1)', borderRadius: '8px', fontSize: '12px', color: '#a78bfa' }}>
+                🔄 Connecting to server... This may take up to 60 seconds if the server is waking up.
+              </div>
+            )}
           </form>
+
+          {/* Real-Time Data Info */}
+          {!isLoggingIn && !loginError && (
+            <div style={{ marginTop: '15px', padding: '15px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', fontSize: '12px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+              <p style={{ color: '#34d399', marginBottom: '8px', fontWeight: 'bold' }}>✨ System Features:</p>
+              <div style={{ color: '#94a3b8', lineHeight: '1.6' }}>
+                <p>✅ <strong>Easy Login</strong> - Session persists across refreshes</p>
+                <p>✅ <strong>Real-Time Data</strong> - Auto-refresh every 30 seconds</p>
+                <p>✅ <strong>Smart Retry</strong> - Automatic retry on connection issues</p>
+                <p>⏱️ <strong>Login Time</strong> - Usually &lt;2s (up to 60s on cold start)</p>
+              </div>
+            </div>
+          )}
 
           {/* Admin Account Info */}
           <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', fontSize: '12px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
