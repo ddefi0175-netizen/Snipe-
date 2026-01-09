@@ -1,137 +1,136 @@
-// Real-time Chat using Backend API
-// Replaces Firebase with MongoDB backend for persistent storage
+// Firebase Configuration and Initialization
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, updateDoc, deleteDoc, addDoc, onSnapshot, orderBy, limit, serverTimestamp } from 'firebase/firestore';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api';
+// Firebase configuration from environment variables
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+};
 
-// Helper for API calls
-async function chatApiCall(endpoint, options = {}) {
-  const url = `${API_BASE}/chat${endpoint}`;
-  const token = localStorage.getItem('adminToken');
-  
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
-      ...options.headers,
-    },
-    ...options,
-  };
+// Initialize Firebase
+let app;
+let db;
+let auth;
+let isFirebaseAvailable = false;
 
-  try {
-    const response = await fetch(url, config);
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || 'API request failed');
-    }
-    return data;
-  } catch (error) {
-    console.error(`Chat API Error [${endpoint}]:`, error);
-    throw error;
+try {
+  // Only initialize if we have required config
+  if (firebaseConfig.apiKey && firebaseConfig.projectId) {
+    app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+    auth = getAuth(app);
+    isFirebaseAvailable = true;
+    console.log('Firebase initialized successfully');
+  } else {
+    console.warn('Firebase config incomplete. Some features may use fallback storage.');
   }
+} catch (error) {
+  console.error('Firebase initialization error:', error);
+  isFirebaseAvailable = false;
 }
 
-let isFirebaseAvailable = true; // Now using backend API
-let pollingIntervals = new Map();
+// ==========================================
+// AUTHENTICATION FUNCTIONS
+// ==========================================
+
+export const firebaseSignIn = async (email, password) => {
+  if (!isFirebaseAvailable) throw new Error('Firebase not available');
+  return signInWithEmailAndPassword(auth, email, password);
+};
+
+export const firebaseSignUp = async (email, password) => {
+  if (!isFirebaseAvailable) throw new Error('Firebase not available');
+  return createUserWithEmailAndPassword(auth, email, password);
+};
+
+export const firebaseSignOut = async () => {
+  if (!isFirebaseAvailable) throw new Error('Firebase not available');
+  return signOut(auth);
+};
+
+export const onAuthChange = (callback) => {
+  if (!isFirebaseAvailable) return () => {};
+  return onAuthStateChanged(auth, callback);
+};
 
 // ==========================================
 // CHAT MESSAGES FUNCTIONS
 // ==========================================
 
-// Save a new chat message
 export const saveChatMessage = async (message) => {
-  try {
-    const result = await chatApiCall('/messages', {
-      method: 'POST',
-      body: JSON.stringify({
-        sessionId: message.sessionId,
-        message: message.message || message.text,
-        senderName: message.username || message.senderName || 'User',
-        senderWallet: message.wallet || message.senderWallet
-      })
-    });
-    return result.message?._id || result.message?.id || Date.now();
-  } catch (error) {
-    console.error('Save message error:', error);
+  if (!isFirebaseAvailable) {
     // Fallback to localStorage
     const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]');
-    const newMsg = { ...message, id: Date.now(), createdAt: Date.now() };
+    const newMsg = { 
+      ...message, 
+      id: Date.now().toString(), 
+      createdAt: new Date().toISOString() 
+    };
     logs.push(newMsg);
     localStorage.setItem('customerChatLogs', JSON.stringify(logs));
     window.dispatchEvent(new Event('storage'));
     return newMsg.id;
   }
+
+  try {
+    const docRef = await addDoc(collection(db, 'chatMessages'), {
+      sessionId: message.sessionId,
+      message: message.message || message.text,
+      senderName: message.username || message.senderName || 'User',
+      senderWallet: message.wallet || message.senderWallet,
+      sender: message.sender || 'user',
+      createdAt: serverTimestamp(),
+      delivered: false
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Save message error:', error);
+    throw error;
+  }
 };
 
-// Subscribe to chat messages (polling-based for backend)
 export const subscribeToChatMessages = (callback) => {
-  let lastTimestamp = 0;
-  
-  const fetchMessages = async () => {
-    try {
-      // Get all recent messages
-      const messages = await chatApiCall(`/admin/messages?since=${lastTimestamp}`);
-      if (Array.isArray(messages) && messages.length > 0) {
-        // Update last timestamp
-        const newest = messages.reduce((max, m) => {
-          const t = new Date(m.createdAt).getTime();
-          return t > max ? t : max;
-        }, lastTimestamp);
-        lastTimestamp = newest;
-        
-        // Convert to expected format
-        const formattedMessages = messages.map(m => ({
-          id: m._id,
-          sessionId: m.sessionId,
-          sender: m.sender,
-          text: m.message,
-          message: m.message,
-          username: m.senderName,
-          wallet: m.senderWallet,
-          adminName: m.adminName,
-          createdAt: new Date(m.createdAt).getTime(),
-          timestamp: new Date(m.createdAt).getTime()
-        }));
-        
-        callback(formattedMessages);
-      }
-    } catch (error) {
-      console.error('Fetch messages error:', error);
-      // Fallback to localStorage
-      const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]');
-      callback(logs);
-    }
-  };
-  
-  fetchMessages();
-  const interval = setInterval(fetchMessages, 2000); // Poll every 2 seconds
-  pollingIntervals.set('messages', interval);
-  
-  return () => {
-    clearInterval(interval);
-    pollingIntervals.delete('messages');
-  };
+  if (!isFirebaseAvailable) {
+    // Fallback to localStorage
+    const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]');
+    callback(logs);
+    return () => {};
+  }
+
+  const q = query(
+    collection(db, 'chatMessages'),
+    orderBy('createdAt', 'desc'),
+    limit(100)
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const messages = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toMillis() || Date.now(),
+      timestamp: doc.data().createdAt?.toMillis() || Date.now()
+    }));
+    callback(messages);
+  }, (error) => {
+    console.error('Subscribe to messages error:', error);
+    const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]');
+    callback(logs);
+  });
 };
 
 // ==========================================
 // ACTIVE CHATS FUNCTIONS
 // ==========================================
 
-// Save or update active chat
 export const saveActiveChat = async (chat) => {
-  try {
-    const result = await chatApiCall('/session', {
-      method: 'POST',
-      body: JSON.stringify({
-        sessionId: chat.sessionId,
-        username: chat.username,
-        wallet: chat.wallet,
-        userId: chat.userId,
-        metadata: chat.metadata
-      })
-    });
-    return result.chat?.sessionId || chat.sessionId;
-  } catch (error) {
-    console.error('Save active chat error:', error);
+  if (!isFirebaseAvailable) {
     // Fallback to localStorage
     const chats = JSON.parse(localStorage.getItem('activeChats') || '[]');
     const existingIndex = chats.findIndex(c => c.sessionId === chat.sessionId);
@@ -144,17 +143,22 @@ export const saveActiveChat = async (chat) => {
     window.dispatchEvent(new Event('storage'));
     return chat.sessionId;
   }
+
+  try {
+    const chatRef = doc(db, 'activeChats', chat.sessionId);
+    await setDoc(chatRef, {
+      ...chat,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    return chat.sessionId;
+  } catch (error) {
+    console.error('Save active chat error:', error);
+    throw error;
+  }
 };
 
-// Update active chat partially
 export const updateActiveChat = async (sessionId, updates) => {
-  try {
-    await chatApiCall(`/admin/chat/${sessionId}`, {
-      method: 'PATCH',
-      body: JSON.stringify(updates)
-    });
-  } catch (error) {
-    console.error('Update active chat error:', error);
+  if (!isFirebaseAvailable) {
     // Fallback to localStorage
     const chats = JSON.parse(localStorage.getItem('activeChats') || '[]');
     const chat = chats.find(c => c.sessionId === sessionId);
@@ -163,188 +167,220 @@ export const updateActiveChat = async (sessionId, updates) => {
       localStorage.setItem('activeChats', JSON.stringify(chats));
       window.dispatchEvent(new Event('storage'));
     }
+    return;
+  }
+
+  try {
+    const chatRef = doc(db, 'activeChats', sessionId);
+    await updateDoc(chatRef, {
+      ...updates,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('Update active chat error:', error);
+    throw error;
   }
 };
 
-// Subscribe to active chats (for admin dashboard)
 export const subscribeToActiveChats = (callback) => {
-  const fetchChats = async () => {
-    try {
-      const chats = await chatApiCall('/admin/chats');
-      if (Array.isArray(chats)) {
-        const formattedChats = chats.map(c => ({
-          sessionId: c.sessionId,
-          username: c.username,
-          wallet: c.wallet,
-          userId: c.userId,
-          status: c.status,
-          lastMessage: c.lastMessage,
-          lastMessageTime: c.lastMessageTime,
-          unreadCount: c.unreadCount,
-          assignedAdmin: c.assignedAdmin,
-          assignedAdminName: c.assignedAdminName,
-          priority: c.priority,
-          updatedAt: c.updatedAt,
-          createdAt: c.createdAt
-        }));
-        callback(formattedChats);
-      }
-    } catch (error) {
-      console.error('Fetch active chats error:', error);
-      // Fallback to localStorage
-      const chats = JSON.parse(localStorage.getItem('activeChats') || '[]');
-      callback(chats);
-    }
-  };
-  
-  fetchChats();
-  const interval = setInterval(fetchChats, 2000); // Poll every 2 seconds
-  pollingIntervals.set('activeChats', interval);
-  
-  return () => {
-    clearInterval(interval);
-    pollingIntervals.delete('activeChats');
-  };
+  if (!isFirebaseAvailable) {
+    // Fallback to localStorage
+    const chats = JSON.parse(localStorage.getItem('activeChats') || '[]');
+    callback(chats);
+    return () => {};
+  }
+
+  const q = query(collection(db, 'activeChats'), orderBy('updatedAt', 'desc'));
+
+  return onSnapshot(q, (snapshot) => {
+    const chats = snapshot.docs.map(doc => ({
+      sessionId: doc.id,
+      ...doc.data()
+    }));
+    callback(chats);
+  }, (error) => {
+    console.error('Subscribe to active chats error:', error);
+    const chats = JSON.parse(localStorage.getItem('activeChats') || '[]');
+    callback(chats);
+  });
 };
 
 // ==========================================
 // ADMIN REPLIES FUNCTIONS
 // ==========================================
 
-// Save admin reply
 export const saveAdminReply = async (reply) => {
-  try {
-    const result = await chatApiCall('/admin/reply', {
-      method: 'POST',
-      body: JSON.stringify({
-        sessionId: reply.sessionId,
-        message: reply.message || reply.text
-      })
-    });
-    return result.message?._id || result.message?.id || Date.now();
-  } catch (error) {
-    console.error('Save admin reply error:', error);
+  if (!isFirebaseAvailable) {
     // Fallback to localStorage
     const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]');
-    const newReply = { ...reply, id: Date.now(), createdAt: Date.now() };
+    const newReply = { 
+      ...reply, 
+      id: Date.now().toString(), 
+      createdAt: new Date().toISOString() 
+    };
     replies.push(newReply);
     localStorage.setItem('adminChatReplies', JSON.stringify(replies));
     window.dispatchEvent(new Event('storage'));
     return newReply.id;
   }
-};
 
-// Subscribe to admin replies for a specific session (user-side polling)
-export const subscribeToAdminReplies = (sessionId, callback) => {
-  let lastTimestamp = 0;
-  
-  const fetchReplies = async () => {
-    try {
-      const messages = await chatApiCall(`/poll/${sessionId}?since=${lastTimestamp}`);
-      if (Array.isArray(messages) && messages.length > 0) {
-        // Update last timestamp
-        const newest = messages.reduce((max, m) => {
-          const t = new Date(m.createdAt).getTime();
-          return t > max ? t : max;
-        }, lastTimestamp);
-        lastTimestamp = newest;
-        
-        const formattedReplies = messages.map(m => ({
-          id: m._id,
-          sessionId: m.sessionId,
-          message: m.message,
-          text: m.message,
-          adminName: m.adminName,
-          createdAt: new Date(m.createdAt).getTime(),
-          delivered: m.delivered
-        }));
-        
-        callback(formattedReplies);
-      }
-    } catch (error) {
-      console.error('Fetch admin replies error:', error);
-      // Fallback to localStorage
-      const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]');
-      const sessionReplies = replies.filter(r => r.sessionId === sessionId && !r.delivered);
-      callback(sessionReplies);
-    }
-  };
-  
-  fetchReplies();
-  const intervalKey = `replies_${sessionId}`;
-  const interval = setInterval(fetchReplies, 2000); // Poll every 2 seconds
-  pollingIntervals.set(intervalKey, interval);
-  
-  return () => {
-    clearInterval(interval);
-    pollingIntervals.delete(intervalKey);
-  };
-};
-
-// Mark reply as delivered
-export const markReplyDelivered = async (replyId, firebaseKey) => {
-  // With backend, messages are tracked by read status
-  // This is handled server-side when admin marks as read
-  const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]');
-  const reply = replies.find(r => r.id === replyId);
-  if (reply) {
-    reply.delivered = true;
-    localStorage.setItem('adminChatReplies', JSON.stringify(replies));
+  try {
+    const docRef = await addDoc(collection(db, 'chatMessages'), {
+      sessionId: reply.sessionId,
+      message: reply.message || reply.text,
+      sender: 'admin',
+      adminName: reply.adminName,
+      adminId: reply.adminId,
+      createdAt: serverTimestamp(),
+      delivered: false
+    });
+    return docRef.id;
+  } catch (error) {
+    console.error('Save admin reply error:', error);
+    throw error;
   }
 };
 
-// Get all admin replies (for admin dashboard)
-export const subscribeToAllAdminReplies = (callback) => {
-  const fetchReplies = async () => {
-    try {
-      const messages = await chatApiCall('/admin/messages');
-      if (Array.isArray(messages)) {
-        const adminReplies = messages
-          .filter(m => m.sender === 'admin')
-          .map(m => ({
-            id: m._id,
-            sessionId: m.sessionId,
-            message: m.message,
-            text: m.message,
-            adminName: m.adminName,
-            adminId: m.adminId,
-            createdAt: new Date(m.createdAt).getTime(),
-            delivered: m.delivered
-          }));
-        callback(adminReplies);
-      }
-    } catch (error) {
-      console.error('Fetch all admin replies error:', error);
-      const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]');
-      callback(replies);
-    }
-  };
-  
-  fetchReplies();
-  const interval = setInterval(fetchReplies, 3000);
-  pollingIntervals.set('allReplies', interval);
-  
-  return () => {
-    clearInterval(interval);
-    pollingIntervals.delete('allReplies');
-  };
+export const subscribeToAdminReplies = (sessionId, callback) => {
+  if (!isFirebaseAvailable) {
+    // Fallback to localStorage
+    const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]');
+    const sessionReplies = replies.filter(r => r.sessionId === sessionId);
+    callback(sessionReplies);
+    return () => {};
+  }
+
+  const q = query(
+    collection(db, 'chatMessages'),
+    where('sessionId', '==', sessionId),
+    where('sender', '==', 'admin'),
+    orderBy('createdAt', 'asc')
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const replies = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toMillis() || Date.now()
+    }));
+    callback(replies);
+  }, (error) => {
+    console.error('Subscribe to admin replies error:', error);
+    const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]');
+    callback(replies.filter(r => r.sessionId === sessionId));
+  });
 };
 
-// Check if Firebase/Backend is available
+export const markReplyDelivered = async (replyId) => {
+  if (!isFirebaseAvailable) {
+    const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]');
+    const reply = replies.find(r => r.id === replyId);
+    if (reply) {
+      reply.delivered = true;
+      localStorage.setItem('adminChatReplies', JSON.stringify(replies));
+    }
+    return;
+  }
+
+  try {
+    const replyRef = doc(db, 'chatMessages', replyId);
+    await updateDoc(replyRef, { delivered: true });
+  } catch (error) {
+    console.error('Mark reply delivered error:', error);
+  }
+};
+
+export const subscribeToAllAdminReplies = (callback) => {
+  if (!isFirebaseAvailable) {
+    const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]');
+    callback(replies);
+    return () => {};
+  }
+
+  const q = query(
+    collection(db, 'chatMessages'),
+    where('sender', '==', 'admin'),
+    orderBy('createdAt', 'desc')
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const replies = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toMillis() || Date.now()
+    }));
+    callback(replies);
+  }, (error) => {
+    console.error('Subscribe to all admin replies error:', error);
+    const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]');
+    callback(replies);
+  });
+};
+
+// ==========================================
+// USER DATA FUNCTIONS
+// ==========================================
+
+export const saveUser = async (userData) => {
+  if (!isFirebaseAvailable) throw new Error('Firebase not available');
+  
+  try {
+    const userRef = doc(db, 'users', userData.wallet || userData.id);
+    await setDoc(userRef, {
+      ...userData,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    return userData.wallet || userData.id;
+  } catch (error) {
+    console.error('Save user error:', error);
+    throw error;
+  }
+};
+
+export const getUser = async (walletOrId) => {
+  if (!isFirebaseAvailable) throw new Error('Firebase not available');
+  
+  try {
+    const userRef = doc(db, 'users', walletOrId);
+    const userSnap = await getDoc(userRef);
+    return userSnap.exists() ? { id: userSnap.id, ...userSnap.data() } : null;
+  } catch (error) {
+    console.error('Get user error:', error);
+    throw error;
+  }
+};
+
+export const subscribeToUsers = (callback) => {
+  if (!isFirebaseAvailable) {
+    callback([]);
+    return () => {};
+  }
+
+  const q = query(collection(db, 'users'));
+
+  return onSnapshot(q, (snapshot) => {
+    const users = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    callback(users);
+  }, (error) => {
+    console.error('Subscribe to users error:', error);
+    callback([]);
+  });
+};
+
+// ==========================================
+// UTILITY FUNCTIONS
+// ==========================================
+
 export const isFirebaseEnabled = () => isFirebaseAvailable;
 
-// Clean up all polling intervals
 export const cleanupChatPolling = () => {
-  pollingIntervals.forEach((interval) => clearInterval(interval));
-  pollingIntervals.clear();
+  // No polling needed with Firebase real-time listeners
+  console.log('Firebase uses real-time listeners, no polling to cleanup');
 };
 
-// Export for compatibility (no longer using Firebase directly)
-export const database = null;
-export const ref = () => null;
-export const push = () => null;
-export const onValue = () => () => {};
-export const set = () => Promise.resolve();
-export const get = () => Promise.resolve({ val: () => null });
-export const update = () => Promise.resolve();
-export const remove = () => Promise.resolve();
+// Export Firebase instances for direct use if needed
+export { db, auth };
+export const database = db;

@@ -25,6 +25,12 @@ Thumbs.db
 .env.local
 .env.*.local
 
+# Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+
 # Admin Documentation (Private)
 ADMIN_ONLY.md
 DEPLOYMENT_STATUS.md
