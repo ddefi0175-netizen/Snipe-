@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { fetchPrices } from '../lib/coingecko.jsx'
-import { useWallet } from '../lib/wallet.jsx'
+import { useWallet } from '../lib/walletConnect.jsx'
 
 export default function Hero() {
   const [priceData, setPriceData] = useState(null)
