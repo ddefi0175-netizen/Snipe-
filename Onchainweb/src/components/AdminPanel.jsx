@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { userAPI, uploadAPI, authAPI, tradingLevelsAPI, currenciesAPI, networksAPI, depositWalletsAPI, ratesAPI, settingsAPI } from '../lib/api'
 import { formatApiError, validatePassword } from '../lib/errorHandling'
+import { firebaseSignIn, firebaseSignOut } from '../lib/firebase'
+import { convertToAdminEmail, determineAdminRole, getDefaultPermissions } from '../lib/adminAuth'
 
 // Default Trading Levels
 const DEFAULT_TRADING_LEVELS = [
@@ -32,6 +34,7 @@ const DEFAULT_DEPOSIT_ADDRESSES = [
 
 export default function AdminPanel({ isOpen = true, onClose }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [loginUsername, setLoginUsername] = useState('')
   const [loginPassword, setLoginPassword] = useState('')
   const [loginError, setLoginError] = useState('')
@@ -298,9 +301,6 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     }
   }
 
-  // Loading state for login
-  const [isLoggingIn, setIsLoggingIn] = useState(false)
-
   // Handle login via backend API
   const handleLogin = async () => {
     setLoginError('')
@@ -322,32 +322,76 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     try {
       console.log('[AdminPanel] Attempting login for:', loginUsername)
       
-      // Use centralized authAPI with automatic retry logic
-      const data = await authAPI.login(loginUsername, loginPassword)
+      // Use Firebase Authentication for admin login (email-based)
+      const email = convertToAdminEmail(loginUsername)
       
-      console.log('[AdminPanel] Login successful!')
+      console.log('[AdminPanel] Using Firebase Authentication...')
+      const userCredential = await firebaseSignIn(email, loginPassword)
+      const user = userCredential.user
+      
+      console.log('[AdminPanel] Firebase auth successful for:', user.email)
 
-      // Store token in localStorage
-      localStorage.setItem('adminToken', data.token)
-      localStorage.setItem('adminUser', JSON.stringify(data.user))
+      // Get Firebase ID token for API authorization
+      const token = await user.getIdToken()
+      
+      // Determine role and permissions based on email
+      const role = determineAdminRole(user.email)
+      const permissions = getDefaultPermissions(role)
+      
+      // Store auth data
+      const adminUser = {
+        username: loginUsername,
+        email: user.email,
+        uid: user.uid,
+        role: role,
+        permissions: permissions
+      }
+      
+      localStorage.setItem('adminToken', token)
+      localStorage.setItem('firebaseAdminUid', user.uid)
+      localStorage.setItem('adminUser', JSON.stringify(adminUser))
 
       setLoginError('')
       setIsAuthenticated(true)
-      setCurrentAdmin(data.user)
+      setCurrentAdmin(adminUser)
       setLoginUsername('')
       setLoginPassword('')
+      console.log('[AdminPanel] Login successful! Role:', role)
     } catch (error) {
       console.error('[AdminPanel] Login error:', error)
-      setLoginError(formatApiError(error, { isColdStartAware: true }))
+      
+      // Handle Firebase-specific errors
+      if (error.code === 'auth/user-not-found') {
+        setLoginError('❌ Admin account not found. Please check your credentials.')
+      } else if (error.code === 'auth/wrong-password') {
+        setLoginError('❌ Incorrect password. Please try again.')
+      } else if (error.code === 'auth/invalid-email') {
+        setLoginError('❌ Invalid email format.')
+      } else if (error.code === 'auth/too-many-requests') {
+        setLoginError('❌ Too many failed login attempts. Please try again later.')
+      } else if (error.message === 'Firebase not available') {
+        setLoginError('❌ Firebase authentication is not configured. Please contact support.')
+      } else {
+        setLoginError(`❌ Login failed: ${error.message}`)
+      }
     } finally {
       setIsLoggingIn(false)
     }
   }
 
   // Handle logout
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // Sign out from Firebase
+      await firebaseSignOut()
+    } catch (error) {
+      console.error('Firebase signout error:', error)
+    }
+    
+    // Clear local session
     localStorage.removeItem('adminToken')
     localStorage.removeItem('adminUser')
+    localStorage.removeItem('firebaseAdminUid')
     setIsAuthenticated(false)
     setCurrentAdmin(null)
     setLoginUsername('')

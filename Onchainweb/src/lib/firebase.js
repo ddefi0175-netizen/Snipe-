@@ -350,23 +350,123 @@ export const getUser = async (walletOrId) => {
   }
 };
 
+// ==========================================
+// USER DATA FUNCTIONS (For Admin Dashboards)
+// ==========================================
+
+// Helper function to convert Firestore timestamp to milliseconds
+const convertTimestamp = (timestamp) => {
+  return timestamp?.toMillis?.() || timestamp || Date.now();
+};
+
+// Helper function to get localStorage fallback data
+const getLocalStorageFallback = (key, defaultValue = []) => {
+  try {
+    return JSON.parse(localStorage.getItem(key) || JSON.stringify(defaultValue));
+  } catch (e) {
+    console.error(`Failed to parse localStorage key "${key}":`, e);
+    return defaultValue;
+  }
+};
+
 export const subscribeToUsers = (callback) => {
   if (!isFirebaseAvailable) {
-    callback([]);
+    console.warn('Firebase not available, using localStorage fallback');
+    callback(getLocalStorageFallback('registeredUsers'));
     return () => {};
   }
 
-  const q = query(collection(db, 'users'));
+  const q = query(
+    collection(db, 'users'),
+    orderBy('createdAt', 'desc')
+  );
 
   return onSnapshot(q, (snapshot) => {
     const users = snapshot.docs.map(doc => ({
       id: doc.id,
-      ...doc.data()
+      ...doc.data(),
+      createdAt: convertTimestamp(doc.data().createdAt)
     }));
     callback(users);
   }, (error) => {
     console.error('Subscribe to users error:', error);
-    callback([]);
+    callback(getLocalStorageFallback('registeredUsers'));
+  });
+};
+
+export const subscribeToDeposits = (callback) => {
+  if (!isFirebaseAvailable) {
+    console.warn('Firebase not available, using localStorage fallback');
+    callback(getLocalStorageFallback('adminDeposits'));
+    return () => {};
+  }
+
+  const q = query(
+    collection(db, 'deposits'),
+    orderBy('createdAt', 'desc')
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const deposits = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: convertTimestamp(doc.data().createdAt)
+    }));
+    callback(deposits);
+  }, (error) => {
+    console.error('Subscribe to deposits error:', error);
+    callback(getLocalStorageFallback('adminDeposits'));
+  });
+};
+
+export const subscribeToWithdrawals = (callback) => {
+  if (!isFirebaseAvailable) {
+    console.warn('Firebase not available, using localStorage fallback');
+    callback(getLocalStorageFallback('adminWithdrawals'));
+    return () => {};
+  }
+
+  const q = query(
+    collection(db, 'withdrawals'),
+    orderBy('createdAt', 'desc')
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const withdrawals = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: convertTimestamp(doc.data().createdAt)
+    }));
+    callback(withdrawals);
+  }, (error) => {
+    console.error('Subscribe to withdrawals error:', error);
+    callback(getLocalStorageFallback('adminWithdrawals'));
+  });
+};
+
+export const subscribeToTrades = (callback) => {
+  if (!isFirebaseAvailable) {
+    console.warn('Firebase not available, using localStorage fallback');
+    callback(getLocalStorageFallback('tradeHistory'));
+    return () => {};
+  }
+
+  const q = query(
+    collection(db, 'trades'),
+    orderBy('timestamp', 'desc'),
+    limit(100)
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const trades = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      timestamp: convertTimestamp(doc.data().timestamp)
+    }));
+    callback(trades);
+  }, (error) => {
+    console.error('Subscribe to trades error:', error);
+    callback(getLocalStorageFallback('tradeHistory'));
   });
 };
 
