@@ -269,7 +269,11 @@ echo -e "Failed: ${RED}$FAILED_TESTS${NC}"
 echo ""
 
 # Calculate success rate using awk (more portable than bc)
-SUCCESS_RATE=$(awk "BEGIN {printf \"%.1f\", ($PASSED_TESTS + $WARNING_TESTS) * 100 / $TOTAL_TESTS}")
+if [ "$TOTAL_TESTS" -eq 0 ]; then
+    SUCCESS_RATE="0.0"
+else
+    SUCCESS_RATE=$(awk "BEGIN {printf \"%.1f\", ($PASSED_TESTS + $WARNING_TESTS) * 100 / $TOTAL_TESTS}")
+fi
 
 echo -e "Success Rate: ${BLUE}${SUCCESS_RATE}%${NC}"
 echo ""
