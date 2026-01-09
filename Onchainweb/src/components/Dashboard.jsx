@@ -458,7 +458,7 @@ export default function Dashboard() {
                   onClick={() => setSelectedNews(item)}
                 >
                   {item.imageurl && (
-                    <img src={item.imageurl} alt="" className="news-thumb" />
+                    <img src={item.imageurl} alt={item.title} className="news-thumb" />
                   )}
                   <div className="news-content">
                     <span className="news-title">{item.title}</span>
