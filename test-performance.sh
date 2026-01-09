@@ -63,18 +63,18 @@ measure_time() {
         HTTP_RESPONSE=$(curl -s -w '\n%{http_code}\n%{time_total}' -X "$method" "$url" \
             -H 'Content-Type: application/json' \
             -H "Authorization: Bearer $auth" \
-            -d "$data" 2>/dev/null || echo '{"error":"connection failed"}\n000\n999')
+            -d "$data" 2>/dev/null || echo -e '{"error":"connection failed"}\n000\n999')
     elif [ -n "$auth" ]; then
         HTTP_RESPONSE=$(curl -s -w '\n%{http_code}\n%{time_total}' -X "$method" "$url" \
             -H 'Content-Type: application/json' \
-            -H "Authorization: Bearer $auth" 2>/dev/null || echo '{"error":"connection failed"}\n000\n999')
+            -H "Authorization: Bearer $auth" 2>/dev/null || echo -e '{"error":"connection failed"}\n000\n999')
     elif [ -n "$data" ]; then
         HTTP_RESPONSE=$(curl -s -w '\n%{http_code}\n%{time_total}' -X "$method" "$url" \
             -H 'Content-Type: application/json' \
-            -d "$data" 2>/dev/null || echo '{"error":"connection failed"}\n000\n999')
+            -d "$data" 2>/dev/null || echo -e '{"error":"connection failed"}\n000\n999')
     else
         HTTP_RESPONSE=$(curl -s -w '\n%{http_code}\n%{time_total}' -X "$method" "$url" \
-            -H 'Content-Type: application/json' 2>/dev/null || echo '{"error":"connection failed"}\n000\n999')
+            -H 'Content-Type: application/json' 2>/dev/null || echo -e '{"error":"connection failed"}\n000\n999')
     fi
     
     # Parse response
@@ -88,27 +88,27 @@ measure_time() {
     # Determine status based on time and HTTP code
     if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
         if [ "$TIME_MS" -lt "$THRESHOLD_EXCELLENT" ]; then
-            echo -e " ${GREEN}✅ EXCELLENT${NC} (${TIME_MS}ms | HTTP $HTTP_CODE)"
+            echo -e " ${GREEN}✅ EXCELLENT${NC} (${TIME_MS}ms | HTTP $HTTP_CODE)" >&2
             PASSED_TESTS=$((PASSED_TESTS + 1))
         elif [ "$TIME_MS" -lt "$THRESHOLD_GOOD" ]; then
-            echo -e " ${GREEN}✅ GOOD${NC} (${TIME_MS}ms | HTTP $HTTP_CODE)"
+            echo -e " ${GREEN}✅ GOOD${NC} (${TIME_MS}ms | HTTP $HTTP_CODE)" >&2
             PASSED_TESTS=$((PASSED_TESTS + 1))
         elif [ "$TIME_MS" -lt "$THRESHOLD_ACCEPTABLE" ]; then
-            echo -e " ${YELLOW}⚠️  ACCEPTABLE${NC} (${TIME_MS}ms | HTTP $HTTP_CODE)"
+            echo -e " ${YELLOW}⚠️  ACCEPTABLE${NC} (${TIME_MS}ms | HTTP $HTTP_CODE)" >&2
             WARNING_TESTS=$((WARNING_TESTS + 1))
         elif [ "$TIME_MS" -lt "$THRESHOLD_SLOW" ]; then
-            echo -e " ${YELLOW}⚠️  SLOW${NC} (${TIME_MS}ms | HTTP $HTTP_CODE)"
+            echo -e " ${YELLOW}⚠️  SLOW${NC} (${TIME_MS}ms | HTTP $HTTP_CODE)" >&2
             WARNING_TESTS=$((WARNING_TESTS + 1))
         else
-            echo -e " ${RED}❌ TOO SLOW${NC} (${TIME_MS}ms | HTTP $HTTP_CODE)"
+            echo -e " ${RED}❌ TOO SLOW${NC} (${TIME_MS}ms | HTTP $HTTP_CODE)" >&2
             FAILED_TESTS=$((FAILED_TESTS + 1))
         fi
     else
-        echo -e " ${RED}❌ FAILED${NC} (${TIME_MS}ms | HTTP $HTTP_CODE)"
+        echo -e " ${RED}❌ FAILED${NC} (${TIME_MS}ms | HTTP $HTTP_CODE)" >&2
         FAILED_TESTS=$((FAILED_TESTS + 1))
     fi
     
-    # Return the time for further use
+    # Return the time for further use (only numeric value to stdout)
     echo "$TIME_MS"
 }
 
