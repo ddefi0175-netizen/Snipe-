@@ -68,9 +68,9 @@ echo ""
 # Check Node.js version
 echo "2. Checking Node.js Version..."
 echo "-----------------------------------"
-NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-if [ "$NODE_VERSION" -ge 18 ]; then
-    echo -e "${GREEN}✓${NC} Node.js version is 18+ (v$(node -v))"
+NODE_VERSION=$(node -v | sed 's/v//' | cut -d'.' -f1 | sed 's/[^0-9].*$//')
+if [ -n "$NODE_VERSION" ] && [ "$NODE_VERSION" -ge 18 ] 2>/dev/null; then
+    echo -e "${GREEN}✓${NC} Node.js version is 18+ ($(node -v))"
     ((passed++))
 else
     echo -e "${RED}✗${NC} Node.js version is too old (need 18+, have $(node -v))"
@@ -166,15 +166,20 @@ echo ""
 # Test backend package imports
 echo "7. Testing Backend Package Imports..."
 echo "-----------------------------------"
-cd backend 2>/dev/null
-if node -e "require('express'); require('mongoose'); require('bcryptjs')" 2>/dev/null; then
-    echo -e "${GREEN}✓${NC} Backend packages can be imported successfully"
-    ((passed++))
+if [ -d "backend" ]; then
+    cd backend 2>/dev/null
+    if node -e "require('express'); require('mongoose'); require('bcryptjs')" 2>/dev/null; then
+        echo -e "${GREEN}✓${NC} Backend packages can be imported successfully"
+        ((passed++))
+    else
+        echo -e "${RED}✗${NC} Backend packages import failed"
+        ((failed++))
+    fi
+    cd .. 2>/dev/null
 else
-    echo -e "${RED}✗${NC} Backend packages import failed"
+    echo -e "${RED}✗${NC} Backend directory not found"
     ((failed++))
 fi
-cd .. 2>/dev/null
 echo ""
 
 # Summary

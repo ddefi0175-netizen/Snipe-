@@ -622,4 +622,4 @@ Have suggestions for other performance improvements? Open an issue or submit a P
 
 **Made with ❤️ for the Snipe platform**
 
-*Last updated: January 2026*
+*Last updated: January 9, 2026*
