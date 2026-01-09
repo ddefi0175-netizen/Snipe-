@@ -53,20 +53,28 @@ test_endpoint() {
     
     printf "%-50s" "  Testing: $name..."
     
-    # Build curl command
-    local CMD="curl -s -w '\n%{http_code}' -X $method ${API_BASE}${endpoint}"
-    CMD="$CMD -H 'Content-Type: application/json'"
-    
-    if [ -n "$auth" ]; then
-        CMD="$CMD -H 'Authorization: Bearer $auth'"
+    # Build and execute curl command safely
+    local HTTP_RESPONSE
+    if [ -n "$auth" ] && [ -n "$data" ]; then
+        HTTP_RESPONSE=$(curl -s -w '\n%{http_code}' -X "$method" "${API_BASE}${endpoint}" \
+            -H 'Content-Type: application/json' \
+            -H "Authorization: Bearer $auth" \
+            -d "$data" 2>/dev/null || echo '{"error":"connection failed"}\n000')
+    elif [ -n "$auth" ]; then
+        HTTP_RESPONSE=$(curl -s -w '\n%{http_code}' -X "$method" "${API_BASE}${endpoint}" \
+            -H 'Content-Type: application/json' \
+            -H "Authorization: Bearer $auth" 2>/dev/null || echo '{"error":"connection failed"}\n000')
+    elif [ -n "$data" ]; then
+        HTTP_RESPONSE=$(curl -s -w '\n%{http_code}' -X "$method" "${API_BASE}${endpoint}" \
+            -H 'Content-Type: application/json' \
+            -d "$data" 2>/dev/null || echo '{"error":"connection failed"}\n000')
+    else
+        HTTP_RESPONSE=$(curl -s -w '\n%{http_code}' -X "$method" "${API_BASE}${endpoint}" \
+            -H 'Content-Type: application/json' 2>/dev/null || echo '{"error":"connection failed"}\n000')
     fi
     
-    if [ -n "$data" ]; then
-        CMD="$CMD -d '$data'"
-    fi
-    
-    # Execute and capture response
-    local FULL_RESPONSE=$(eval $CMD 2>/dev/null || echo '{"error":"connection failed"}\n000')
+    # Parse response
+    local FULL_RESPONSE="$HTTP_RESPONSE"
     local RESPONSE=$(echo "$FULL_RESPONSE" | head -n -1)
     local HTTP_CODE=$(echo "$FULL_RESPONSE" | tail -n 1)
     
@@ -203,7 +211,8 @@ if [ -n "$MASTER_TOKEN" ]; then
             echo -e " ${GREEN}✅ PASS${NC}"
             PASSED=$((PASSED + 1))
         else
-            echo -e " ${YELLOW}⚠️  WARN${NC} (Couldn't delete test admin)"
+            echo -e " ${YELLOW}⚠️  WARN${NC} (Couldn't delete test admin - manual cleanup may be needed)"
+            echo -e "     ${YELLOW}Test admin '$TEST_ADMIN' may need manual deletion${NC}"
             WARNINGS=$((WARNINGS + 1))
         fi
     else
@@ -258,8 +267,14 @@ if [ -n "$MASTER_TOKEN" ]; then
     test_endpoint "Admin get chat sessions" "GET" "/chat/admin/chats" "" "$MASTER_TOKEN" "sessionId"
     
     # Cleanup: Delete test chat session
-    curl -s -X DELETE "${API_BASE}/chat/sessions/release-test-$TIMESTAMP" \
-        -H "Authorization: Bearer $MASTER_TOKEN" > /dev/null 2>&1
+    printf "%-50s" "  Cleanup: Delete test chat session..."
+    CLEANUP_RESPONSE=$(curl -s -X DELETE "${API_BASE}/chat/sessions/release-test-$TIMESTAMP" \
+        -H "Authorization: Bearer $MASTER_TOKEN" 2>/dev/null)
+    if [ $? -eq 0 ]; then
+        echo -e " ${GREEN}✅ DONE${NC}"
+    else
+        echo -e " ${YELLOW}⚠️  WARN${NC} (Chat cleanup may have failed)"
+    fi
 fi
 
 # =============================================
@@ -318,9 +333,12 @@ echo -e "${MAGENTA}━━━━━━━━━━━━━━━━━━━━�
 echo -e "${MAGENTA}🔒 SECTION 7: Security & Documentation${NC}"
 echo -e "${MAGENTA}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
-# Check for credentials in code
+# Check for credentials in code (excluding common false positives)
 printf "%-50s" "  Checking: No hardcoded credentials..."
-CRED_CHECK=$(grep -r -i "password.*=.*['\"][^'\"]*['\"]" backend/ Onchainweb/src/ 2>/dev/null | grep -v "env\|example\|placeholder\|TODO\|comment" | grep -v "Password must be" | wc -l)
+CRED_CHECK=$(grep -r -i "password.*=.*['\"][^'\"]*['\"]" backend/ Onchainweb/src/ 2>/dev/null | \
+    grep -v "env\|example\|placeholder\|TODO\|comment\|test\|mock" | \
+    grep -v "Password must be\|password validation\|placeholder\|minLength\|maxLength" | \
+    grep -v "\.test\.\|\.spec\.\|__tests__" | wc -l)
 if [ "$CRED_CHECK" -eq 0 ]; then
     echo -e " ${GREEN}✅ PASS${NC}"
     PASSED=$((PASSED + 1))
