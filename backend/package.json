@@ -9,7 +9,9 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "build": "echo 'No build step required'"
+    "build": "echo 'No build step required'",
+    "health": "node healthcheck.js",
+    "health:prod": "node healthcheck.js https://snipe-api.onrender.com/health"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
