@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { userAPI, uploadAPI, authAPI, tradingLevelsAPI, currenciesAPI, networksAPI, depositWalletsAPI, ratesAPI, settingsAPI } from '../lib/api'
 import { formatApiError, validatePassword } from '../lib/errorHandling'
 import { firebaseSignIn, firebaseSignOut } from '../lib/firebase'
+import { convertToAdminEmail, determineAdminRole, getDefaultPermissions } from '../lib/adminAuth'
 
 // Default Trading Levels
 const DEFAULT_TRADING_LEVELS = [
@@ -322,8 +323,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       console.log('[AdminPanel] Attempting login for:', loginUsername)
       
       // Use Firebase Authentication for admin login (email-based)
-      // Username is treated as email for Firebase Auth
-      const email = loginUsername.includes('@') ? loginUsername : `${loginUsername}@admin.onchainweb.app`
+      const email = convertToAdminEmail(loginUsername)
       
       console.log('[AdminPanel] Using Firebase Authentication...')
       const userCredential = await firebaseSignIn(email, loginPassword)
@@ -334,13 +334,17 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       // Get Firebase ID token for API authorization
       const token = await user.getIdToken()
       
+      // Determine role and permissions based on email
+      const role = determineAdminRole(user.email)
+      const permissions = getDefaultPermissions(role)
+      
       // Store auth data
       const adminUser = {
         username: loginUsername,
         email: user.email,
         uid: user.uid,
-        role: 'admin',
-        permissions: ['manageUsers', 'manageBalances', 'manageKYC', 'manageTrades', 'viewReports']
+        role: role,
+        permissions: permissions
       }
       
       localStorage.setItem('adminToken', token)
@@ -352,7 +356,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       setCurrentAdmin(adminUser)
       setLoginUsername('')
       setLoginPassword('')
-      console.log('[AdminPanel] Login successful!')
+      console.log('[AdminPanel] Login successful! Role:', role)
     } catch (error) {
       console.error('[AdminPanel] Login error:', error)
       

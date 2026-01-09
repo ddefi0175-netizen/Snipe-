@@ -15,6 +15,7 @@ import {
 } from '../lib/firebase.js'
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
 import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js'
+import { convertToAdminEmail, determineAdminRole, getDefaultPermissions } from '../lib/adminAuth.js'
 
 // Lazy localStorage helper to avoid blocking initial render
 const getFromStorage = (key, defaultValue) => {
@@ -827,8 +828,7 @@ export default function MasterAdminDashboard() {
 
     try {
       // Use Firebase Authentication for admin login (email-based)
-      // Username is treated as email for Firebase Auth
-      const email = loginData.username.includes('@') ? loginData.username : `${loginData.username}@admin.onchainweb.app`
+      const email = convertToAdminEmail(loginData.username)
       
       console.log('[LOGIN] Using Firebase Authentication...')
       const userCredential = await firebaseSignIn(email, loginData.password)
@@ -839,6 +839,10 @@ export default function MasterAdminDashboard() {
       // Get Firebase ID token for API authorization
       const token = await user.getIdToken()
       
+      // Determine role based on email
+      const role = determineAdminRole(user.email)
+      const permissions = getDefaultPermissions(role)
+      
       // Store auth data
       localStorage.setItem('adminToken', token)
       localStorage.setItem('firebaseAdminUid', user.uid)
@@ -846,16 +850,16 @@ export default function MasterAdminDashboard() {
         username: loginData.username,
         email: user.email,
         uid: user.uid,
-        role: 'master', // Determine role based on email or Firestore data
-        permissions: ['all'],
+        role: role,
+        permissions: permissions,
         timestamp: Date.now()
       }))
 
       setLoginError('')
       setIsAuthenticated(true)
       setIsDataLoaded(false) // Reset to trigger data load
-      setIsMasterAccount(true) // Set as master by default for now
-      console.log('[LOGIN] Success! Firebase UID:', user.uid)
+      setIsMasterAccount(role === 'master')
+      console.log('[LOGIN] Success! Role:', role, 'Firebase UID:', user.uid)
       return
     } catch (error) {
       console.error('[LOGIN] Firebase auth error:', error.message)

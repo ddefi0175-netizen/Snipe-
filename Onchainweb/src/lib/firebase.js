@@ -354,11 +354,25 @@ export const getUser = async (walletOrId) => {
 // USER DATA FUNCTIONS (For Admin Dashboards)
 // ==========================================
 
+// Helper function to convert Firestore timestamp to milliseconds
+const convertTimestamp = (timestamp) => {
+  return timestamp?.toMillis?.() || timestamp || Date.now();
+};
+
+// Helper function to get localStorage fallback data
+const getLocalStorageFallback = (key, defaultValue = []) => {
+  try {
+    return JSON.parse(localStorage.getItem(key) || JSON.stringify(defaultValue));
+  } catch (e) {
+    console.error(`Failed to parse localStorage key "${key}":`, e);
+    return defaultValue;
+  }
+};
+
 export const subscribeToUsers = (callback) => {
   if (!isFirebaseAvailable) {
     console.warn('Firebase not available, using localStorage fallback');
-    const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    callback(users);
+    callback(getLocalStorageFallback('registeredUsers'));
     return () => {};
   }
 
@@ -371,21 +385,19 @@ export const subscribeToUsers = (callback) => {
     const users = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
-      createdAt: doc.data().createdAt?.toMillis?.() || doc.data().createdAt || Date.now()
+      createdAt: convertTimestamp(doc.data().createdAt)
     }));
     callback(users);
   }, (error) => {
     console.error('Subscribe to users error:', error);
-    const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    callback(users);
+    callback(getLocalStorageFallback('registeredUsers'));
   });
 };
 
 export const subscribeToDeposits = (callback) => {
   if (!isFirebaseAvailable) {
     console.warn('Firebase not available, using localStorage fallback');
-    const deposits = JSON.parse(localStorage.getItem('adminDeposits') || '[]');
-    callback(deposits);
+    callback(getLocalStorageFallback('adminDeposits'));
     return () => {};
   }
 
@@ -398,21 +410,19 @@ export const subscribeToDeposits = (callback) => {
     const deposits = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
-      createdAt: doc.data().createdAt?.toMillis?.() || doc.data().createdAt || Date.now()
+      createdAt: convertTimestamp(doc.data().createdAt)
     }));
     callback(deposits);
   }, (error) => {
     console.error('Subscribe to deposits error:', error);
-    const deposits = JSON.parse(localStorage.getItem('adminDeposits') || '[]');
-    callback(deposits);
+    callback(getLocalStorageFallback('adminDeposits'));
   });
 };
 
 export const subscribeToWithdrawals = (callback) => {
   if (!isFirebaseAvailable) {
     console.warn('Firebase not available, using localStorage fallback');
-    const withdrawals = JSON.parse(localStorage.getItem('adminWithdrawals') || '[]');
-    callback(withdrawals);
+    callback(getLocalStorageFallback('adminWithdrawals'));
     return () => {};
   }
 
@@ -425,21 +435,19 @@ export const subscribeToWithdrawals = (callback) => {
     const withdrawals = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
-      createdAt: doc.data().createdAt?.toMillis?.() || doc.data().createdAt || Date.now()
+      createdAt: convertTimestamp(doc.data().createdAt)
     }));
     callback(withdrawals);
   }, (error) => {
     console.error('Subscribe to withdrawals error:', error);
-    const withdrawals = JSON.parse(localStorage.getItem('adminWithdrawals') || '[]');
-    callback(withdrawals);
+    callback(getLocalStorageFallback('adminWithdrawals'));
   });
 };
 
 export const subscribeToTrades = (callback) => {
   if (!isFirebaseAvailable) {
     console.warn('Firebase not available, using localStorage fallback');
-    const trades = JSON.parse(localStorage.getItem('tradeHistory') || '[]');
-    callback(trades);
+    callback(getLocalStorageFallback('tradeHistory'));
     return () => {};
   }
 
@@ -453,13 +461,12 @@ export const subscribeToTrades = (callback) => {
     const trades = snapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
-      timestamp: doc.data().timestamp?.toMillis?.() || doc.data().timestamp || Date.now()
+      timestamp: convertTimestamp(doc.data().timestamp)
     }));
     callback(trades);
   }, (error) => {
     console.error('Subscribe to trades error:', error);
-    const trades = JSON.parse(localStorage.getItem('tradeHistory') || '[]');
-    callback(trades);
+    callback(getLocalStorageFallback('tradeHistory'));
   });
 };
 
