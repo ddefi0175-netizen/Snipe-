@@ -7,7 +7,7 @@
 [![Performance](https://img.shields.io/badge/performance-optimized-green.svg)](FINAL_PUBLIC_RELEASE_SUMMARY.md)
 
 A modern, accessible trading platform with real-time price updates, user dashboards,
-and live chat functionality. Built with Node.js, React, and MongoDB.
+and live chat functionality. Built with React and Firebase.
 
 **✨ Features**: 11 Wallet Providers • Real-Time Data • Live Chat • Admin System • Security-First Design • **Mobile Optimized**
 
@@ -27,6 +27,7 @@ Snipe is **production-ready** and verified for public use! All systems operation
 
 **📖 Quick Links**:
 - [🚀 Final Release Summary](FINAL_PUBLIC_RELEASE_SUMMARY.md) - Complete verification and release status
+- [🔥 Firebase Migration Summary](FIREBASE_MIGRATION_SUMMARY.md) - New Firebase architecture overview
 - [📱 Device Compatibility Guide](DEVICE_COMPATIBILITY_TEST.md) - Mobile and tablet testing procedures
 - [🎯 Public Release Guide](PUBLIC_RELEASE_GUIDE.md) - Complete release verification and steps
 - [🔧 Deployment Guide](DEPLOYMENT.md) - How to deploy your own instance
@@ -38,37 +39,36 @@ Snipe is **production-ready** and verified for public use! All systems operation
 
 Try it now:
 - **Frontend**: [https://www.onchainweb.app](https://www.onchainweb.app)
-- **Backend API**: [https://snipe-api.onrender.com/api](https://snipe-api.onrender.com/api)
-- **Health Check**: [https://snipe-api.onrender.com/health](https://snipe-api.onrender.com/health)
+- **Database**: Firebase Firestore (Real-time)
+- **Authentication**: Firebase Auth
 
 ### Admin Access
 
-**🔑 No Wallet Required for Admin Login!**
+**🔑 Firebase Authentication for Admin Login!**
 
-Admin and Master accounts use **username + password** authentication only. No wallet connection needed!
+Admin and Master accounts use **Firebase Authentication** with email + password.
 
 - **Master Dashboard**: [https://www.onchainweb.app/master-admin](https://www.onchainweb.app/master-admin)
-  - Username: `master`
-  - Password: (set via `MASTER_PASSWORD` environment variable)
+  - Email: Set in Firebase Console
+  - Password: Set in Firebase Console
   - **Access**: Full system control, can create admins
 
 - **Admin Panel**: [https://www.onchainweb.app/admin](https://www.onchainweb.app/admin)
-  - Username: Created by master admin
+  - Email: Created by master admin
   - Password: Set when admin account is created
   - **Access**: Permission-based (configured by master)
 
 - **Authentication**: 
-  - API endpoint: `POST /api/auth/login` with `{ username, password }`
-  - JWT token-based (24-hour expiration)
+  - Firebase Authentication (Email/Password provider)
+  - Token-based session management
   - Completely separate from wallet-based user authentication
   - Works on any browser without wallet extensions
 
 - **📖 Documentation**:
-  - [Admin Wallet-Free Login Guide](ADMIN_WALLET_FREE_LOGIN.md) - Complete details on admin authentication
   - [Admin User Guide](ADMIN_USER_GUIDE.md) - How to use admin features
   - [Real-Time Data Architecture](REALTIME_DATA_ARCHITECTURE.md) - Data flow and updates
 
-- **IMPORTANT**: Never commit real credentials to the repository. Always use environment variables.
+- **IMPORTANT**: Configure admin users in Firebase Console. Never commit credentials to the repository.
 
 ## Features
 
@@ -99,7 +99,7 @@ Admin and Master accounts use **username + password** authentication only. No wa
 
 ## Real-Time Data System
 
-All admin and master account operations work with **real-time data from MongoDB**:
+All admin and master account operations work with **real-time data from Firebase Firestore**:
 
 - ✅ User management with live balance updates
 - ✅ Real-time deposit and withdrawal processing
@@ -108,10 +108,11 @@ All admin and master account operations work with **real-time data from MongoDB*
 - ✅ Real-time KYC approval workflow
 - ✅ Activity logs for all admin actions
 
-**Data Sources**: All data comes from MongoDB Atlas with automatic refresh intervals:
-- User data: 30-second refresh
-- Active trades: 3-second refresh
-- Deposits/Withdrawals: 30-second refresh
+**Data Sources**: All data comes from Firebase Firestore with automatic real-time synchronization:
+- User data: Real-time listeners
+- Active trades: Real-time updates
+- Deposits/Withdrawals: Instant notifications
+- Chat messages: Real-time chat system
 
 For detailed information, see [Real-Time Data Architecture](REALTIME_DATA_ARCHITECTURE.md).
 
@@ -129,7 +130,7 @@ Want to run your own instance? Follow our comprehensive setup guide:
 
 **Prerequisites**:
 - Node.js 18+
-- MongoDB (Atlas or local)
+- Firebase Account (https://firebase.google.com)
 - npm or yarn
 
 **Quick Setup**:
@@ -139,17 +140,16 @@ Want to run your own instance? Follow our comprehensive setup guide:
 git clone https://github.com/ddefi0175-netizen/Snipe.git
 cd Snipe
 
-# 2. Setup Backend
-cd backend
-cp .env.example .env
-# Edit .env with your MongoDB URI and credentials
-npm install
-npm start
+# 2. Setup Firebase Project
+# - Create a new Firebase project at https://console.firebase.google.com
+# - Enable Firestore Database
+# - Enable Authentication (Email/Password)
+# - Get your Firebase config credentials
 
 # 3. Setup Frontend
-cd ../Onchainweb
+cd Onchainweb
 cp .env.example .env
-# Edit .env with your backend URL and WalletConnect Project ID
+# Edit .env with your Firebase config and WalletConnect Project ID
 npm install
 npm run dev
 ```
@@ -161,10 +161,11 @@ npm run dev
 | Component   | Technology             |
 | ----------- | ---------------------- |
 | Frontend    | React + Vite           |
-| Backend     | Node.js + Express      |
-| Database    | MongoDB                |
+| Backend     | Firebase (Firestore)   |
+| Database    | Firebase Firestore     |
+| Auth        | Firebase Authentication|
 | Price Feed  | CoinGecko API          |
-| Deployment  | Vercel, Render         |
+| Deployment  | Vercel, Firebase       |
 
 ## Public API Endpoints
 

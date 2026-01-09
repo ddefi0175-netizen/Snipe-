@@ -2,17 +2,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, updateDoc, deleteDoc, addDoc, onSnapshot, orderBy, limit, serverTimestamp } from 'firebase/firestore';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-
-// Firebase configuration from environment variables
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
-};
+import { FIREBASE_CONFIG, COLLECTIONS, LISTENER_CONFIG } from '../config/firebase.config.js';
 
 // Initialize Firebase
 let app;
@@ -22,8 +12,8 @@ let isFirebaseAvailable = false;
 
 try {
   // Only initialize if we have required config
-  if (firebaseConfig.apiKey && firebaseConfig.projectId) {
-    app = initializeApp(firebaseConfig);
+  if (FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId) {
+    app = initializeApp(FIREBASE_CONFIG);
     db = getFirestore(app);
     auth = getAuth(app);
     isFirebaseAvailable = true;
@@ -80,7 +70,7 @@ export const saveChatMessage = async (message) => {
   }
 
   try {
-    const docRef = await addDoc(collection(db, 'chatMessages'), {
+    const docRef = await addDoc(collection(db, COLLECTIONS.CHAT_MESSAGES), {
       sessionId: message.sessionId,
       message: message.message || message.text,
       senderName: message.username || message.senderName || 'User',
@@ -105,9 +95,9 @@ export const subscribeToChatMessages = (callback) => {
   }
 
   const q = query(
-    collection(db, 'chatMessages'),
+    collection(db, COLLECTIONS.CHAT_MESSAGES),
     orderBy('createdAt', 'desc'),
-    limit(100)
+    limit(LISTENER_CONFIG.CHAT_LIMIT)
   );
 
   return onSnapshot(q, (snapshot) => {
@@ -225,7 +215,7 @@ export const saveAdminReply = async (reply) => {
   }
 
   try {
-    const docRef = await addDoc(collection(db, 'chatMessages'), {
+    const docRef = await addDoc(collection(db, COLLECTIONS.CHAT_MESSAGES), {
       sessionId: reply.sessionId,
       message: reply.message || reply.text,
       sender: 'admin',
@@ -251,7 +241,7 @@ export const subscribeToAdminReplies = (sessionId, callback) => {
   }
 
   const q = query(
-    collection(db, 'chatMessages'),
+    collection(db, COLLECTIONS.CHAT_MESSAGES),
     where('sessionId', '==', sessionId),
     where('sender', '==', 'admin'),
     orderBy('createdAt', 'asc')
@@ -298,7 +288,7 @@ export const subscribeToAllAdminReplies = (callback) => {
   }
 
   const q = query(
-    collection(db, 'chatMessages'),
+    collection(db, COLLECTIONS.CHAT_MESSAGES),
     where('sender', '==', 'admin'),
     orderBy('createdAt', 'desc')
   );
