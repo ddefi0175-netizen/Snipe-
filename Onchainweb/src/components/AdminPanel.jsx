@@ -181,11 +181,57 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     }
   }, [isAuthenticated])
 
+  // Periodic refresh of backend data (every 30 seconds)
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    const refreshBackendData = async () => {
+      try {
+        // Refresh users from backend
+        const response = await userAPI.getAll()
+        const users = Array.isArray(response) ? response : (response?.users || [])
+        if (Array.isArray(users)) {
+          setAllUsers(users)
+        }
+        
+        // Refresh trading levels
+        const levels = await tradingLevelsAPI.getAll()
+        if (Array.isArray(levels)) {
+          const mappedLevels = levels.map((l, idx) => ({
+            level: l.level || idx + 1,
+            minCapital: l.minCapital,
+            maxCapital: l.maxCapital,
+            profit: l.profitPercent,
+            duration: l.countdown
+          }))
+          setTradingLevels(mappedLevels)
+        }
+      } catch (error) {
+        console.log('Background refresh error:', error)
+      }
+    }
+
+    let intervalId
+    const initialTimeout = setTimeout(() => {
+      refreshBackendData()
+      
+      // Set up periodic refresh every 30 seconds
+      intervalId = setInterval(refreshBackendData, 30000)
+    }, 2000)
+    
+    return () => {
+      clearTimeout(initialTimeout)
+      if (intervalId) {
+        clearInterval(intervalId)
+      }
+    }
+  }, [isAuthenticated])
+
   const loadConfigFromBackend = async () => {
     try {
       // Load trading levels from backend
       const levels = await tradingLevelsAPI.getAll()
-      if (Array.isArray(levels) && levels.length > 0) {
+      if (Array.isArray(levels) && levels.length >= 0) {
         const mappedLevels = levels.map((l, idx) => ({
           level: l.level || idx + 1,
           minCapital: l.minCapital,
@@ -203,7 +249,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     try {
       // Load deposit wallets from backend
       const wallets = await depositWalletsAPI.getAll()
-      if (Array.isArray(wallets) && wallets.length > 0) {
+      if (Array.isArray(wallets) && wallets.length >= 0) {
         const mappedAddresses = wallets.map(w => ({
           network: w.network,
           name: w.label || w.network,
@@ -709,6 +755,45 @@ export default function AdminPanel({ isOpen = true, onClose }) {
               <button className="admin-login-btn" onClick={handleLogin} disabled={isLoggingIn}>
                 {isLoggingIn ? 'Connecting...' : 'Login'}
               </button>
+
+              {isLoggingIn && (
+                <div style={{ 
+                  marginTop: '15px', 
+                  padding: '12px', 
+                  background: 'rgba(59, 130, 246, 0.1)', 
+                  borderRadius: '8px', 
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                  color: '#60a5fa',
+                  fontSize: '13px',
+                  textAlign: 'center'
+                }}>
+                  🔄 Connecting to server... This may take up to 60 seconds if the server is waking up.
+                </div>
+              )}
+
+              {!isLoggingIn && !loginError && (
+                <div style={{ 
+                  marginTop: '15px', 
+                  padding: '15px', 
+                  background: 'rgba(34, 197, 94, 0.1)', 
+                  borderRadius: '8px', 
+                  border: '1px solid rgba(34, 197, 94, 0.3)',
+                  fontSize: '12px'
+                }}>
+                  <h4 style={{ color: '#4ade80', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>✨ Features:</h4>
+                  <ul style={{ 
+                    color: '#94a3b8', 
+                    lineHeight: '1.8', 
+                    paddingLeft: '20px',
+                    margin: 0
+                  }}>
+                    <li>✅ <strong>Easy Login</strong> - Automatic session restoration</li>
+                    <li>✅ <strong>Real-Time Data</strong> - Auto-refresh every 30 seconds</li>
+                    <li>✅ <strong>Smart Retry</strong> - Automatic retry on connection issues</li>
+                    <li>⏱️ <strong>Login Time</strong> - Usually &lt;2s (up to 60s on cold start)</li>
+                  </ul>
+                </div>
+              )}
             </div>
 
             <button className="admin-close-btn" onClick={onClose}>×</button>
