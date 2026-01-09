@@ -3,6 +3,7 @@ node_modules/
 backend/node_modules/
 Onchainweb/node_modules/
 Onchainweb/dist/
+**/.package-lock.json
 
 # Logs
 *.log
