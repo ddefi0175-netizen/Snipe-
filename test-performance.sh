@@ -87,8 +87,8 @@ measure_time() {
     local HTTP_CODE=$(echo "$HTTP_RESPONSE" | tail -n 2 | head -n 1)
     local CURL_TIME=$(echo "$HTTP_RESPONSE" | tail -n 1)
     
-    # Calculate time in milliseconds
-    local TIME_MS=$(echo "$CURL_TIME * 1000" | bc | cut -d. -f1)
+    # Calculate time in milliseconds using awk (more portable than bc)
+    local TIME_MS=$(echo "$CURL_TIME" | awk '{printf "%.0f", $1 * 1000}')
     
     # Determine status based on time and HTTP code
     if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
@@ -132,8 +132,8 @@ measure_frontend() {
     local HTTP_CODE=$(echo "$CURL_OUTPUT" | cut -d, -f2)
     local SIZE=$(echo "$CURL_OUTPUT" | cut -d, -f3)
     
-    # Convert to milliseconds
-    local TIME_MS=$(echo "$TIME_TOTAL * 1000" | bc | cut -d. -f1)
+    # Convert to milliseconds using awk (more portable than bc)
+    local TIME_MS=$(echo "$TIME_TOTAL" | awk '{printf "%.0f", $1 * 1000}')
     
     # Determine status
     if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
@@ -231,7 +231,8 @@ echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━�
 # Ping-like test for network latency
 echo "  Running 5 quick health checks to measure latency..."
 LATENCIES=()
-for i in {1..5}; do
+# Use POSIX-compliant loop instead of brace expansion
+for i in 1 2 3 4 5; do
     LATENCY=$(measure_time "Health Check #$i" "$API_BASE/../health" "GET" "" "" 2>/dev/null)
     LATENCIES+=($LATENCY)
 done
@@ -267,8 +268,8 @@ echo -e "Warnings (Slow): ${YELLOW}$WARNING_TESTS${NC}"
 echo -e "Failed: ${RED}$FAILED_TESTS${NC}"
 echo ""
 
-# Calculate success rate
-SUCCESS_RATE=$(echo "scale=1; ($PASSED_TESTS + $WARNING_TESTS) * 100 / $TOTAL_TESTS" | bc)
+# Calculate success rate using awk (more portable than bc)
+SUCCESS_RATE=$(awk "BEGIN {printf \"%.1f\", ($PASSED_TESTS + $WARNING_TESTS) * 100 / $TOTAL_TESTS}")
 
 echo -e "Success Rate: ${BLUE}${SUCCESS_RATE}%${NC}"
 echo ""
