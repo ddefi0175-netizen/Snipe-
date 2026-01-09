@@ -58,10 +58,7 @@ measure_time() {
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     printf "%-50s" "  Testing: $name..."
     
-    # Measure time in milliseconds
-    local start_time=$(date +%s%3N)
-    
-    # Make the request
+    # Make the request (timing handled by curl's %{time_total})
     if [ -n "$auth" ] && [ -n "$data" ]; then
         HTTP_RESPONSE=$(curl -s -w '\n%{http_code}\n%{time_total}' -X "$method" "$url" \
             -H 'Content-Type: application/json' \
@@ -79,8 +76,6 @@ measure_time() {
         HTTP_RESPONSE=$(curl -s -w '\n%{http_code}\n%{time_total}' -X "$method" "$url" \
             -H 'Content-Type: application/json' 2>/dev/null || echo '{"error":"connection failed"}\n000\n999')
     fi
-    
-    local end_time=$(date +%s%3N)
     
     # Parse response
     local RESPONSE=$(echo "$HTTP_RESPONSE" | head -n -2)
