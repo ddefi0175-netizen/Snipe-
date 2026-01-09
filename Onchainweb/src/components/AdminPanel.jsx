@@ -292,7 +292,8 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         setLoginPassword('')
         console.log('[AdminPanel] Login successful!')
       } else {
-        setLoginError(response.error || 'Invalid username or password')
+        // Use consistent error formatting
+        setLoginError(formatApiError(new Error(response.error || 'Invalid username or password')))
       }
     } catch (error) {
       console.error('[AdminPanel] Login error:', error)
@@ -391,8 +392,8 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         }
       } catch (error) {
         console.error('Delete admin error:', error)
-        // Still remove from local state on any error (could be network issue)
-        setAdminAccounts(adminAccounts.filter(a => a.id !== adminId))
+        // Remove from local state on network errors (may have succeeded on backend)
+        alert('Network error. The admin may have been deleted. Please refresh to verify.')
       }
     }
   }
