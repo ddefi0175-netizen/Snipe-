@@ -4,6 +4,12 @@ const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+// Import models at the top for performance
+const User = require('./models/User');
+const Admin = require('./models/Admin');
+const Trade = require('./models/Trade');
+const Staking = require('./models/Staking');
+
 const app = express();
 const PORT = process.env.PORT || 4000;
 
@@ -60,7 +66,7 @@ const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/snipe';
 const MAX_RETRIES = 5;
 const RETRY_INTERVAL = 5000; // 5 seconds
 
-const connectToMongoDB = async (retries = 0) => {
+const connectToMongoDB = async (attempt = 1) => {
   try {
     await mongoose.connect(MONGO_URI, {
       useNewUrlParser: true,
@@ -72,11 +78,11 @@ const connectToMongoDB = async (retries = 0) => {
     console.log(`  Database: ${mongoose.connection.name}`);
     console.log(`  Host: ${mongoose.connection.host}`);
   } catch (err) {
-    console.error(`✗ MongoDB connection error (attempt ${retries + 1}/${MAX_RETRIES}):`, err.message);
+    console.error(`✗ MongoDB connection error (attempt ${attempt}/${MAX_RETRIES}):`, err.message);
     
-    if (retries < MAX_RETRIES) {
+    if (attempt < MAX_RETRIES) {
       console.log(`  Retrying in ${RETRY_INTERVAL / 1000} seconds...`);
-      setTimeout(() => connectToMongoDB(retries + 1), RETRY_INTERVAL);
+      setTimeout(() => connectToMongoDB(attempt + 1), RETRY_INTERVAL);
     } else {
       console.error('✗ Failed to connect to MongoDB after maximum retries');
       console.error('  Please check your MONGO_URI configuration and network connection');
@@ -109,9 +115,6 @@ app.get('/', (req, res) => {
 // Health check endpoints (root and /api for flexibility)
 app.get('/health', async (req, res) => {
   try {
-    const User = require('./models/User');
-    const Admin = require('./models/Admin');
-    
     // Test database query to ensure real-time data access
     const userCount = await User.countDocuments();
     const adminCount = await Admin.countDocuments();
@@ -139,11 +142,6 @@ app.get('/health', async (req, res) => {
 
 app.get('/api/health', async (req, res) => {
   try {
-    const User = require('./models/User');
-    const Admin = require('./models/Admin');
-    const Trade = require('./models/Trade');
-    const Staking = require('./models/Staking');
-    
     // Comprehensive health check with real-time counts
     const [userCount, adminCount, tradeCount, stakingCount] = await Promise.all([
       User.countDocuments(),

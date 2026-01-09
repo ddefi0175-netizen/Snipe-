@@ -31,16 +31,23 @@ const req = protocol.get(url, { timeout: 10000 }, (res) => {
       if (res.statusCode === 200 && json.status === 'ok') {
         console.log('✓ Backend is healthy');
         console.log(`  MongoDB Connected: ${json.mongoConnected}`);
+        
         if (json.realTimeData) {
-          console.log(`  Users: ${json.realTimeData.users}`);
-          console.log(`  Admins: ${json.realTimeData.admins}`);
-          if (json.realTimeData.trades !== undefined) {
-            console.log(`  Trades: ${json.realTimeData.trades}`);
-          }
-          if (json.realTimeData.stakingPlans !== undefined) {
-            console.log(`  Staking Plans: ${json.realTimeData.stakingPlans}`);
-          }
+          // Dynamic field logging
+          const dataFields = [
+            { key: 'users', label: 'Users' },
+            { key: 'admins', label: 'Admins' },
+            { key: 'trades', label: 'Trades' },
+            { key: 'stakingPlans', label: 'Staking Plans' }
+          ];
+          
+          dataFields.forEach(({ key, label }) => {
+            if (json.realTimeData[key] !== undefined) {
+              console.log(`  ${label}: ${json.realTimeData[key]}`);
+            }
+          });
         }
+        
         console.log(`  Uptime: ${Math.floor(json.uptime)}s`);
         console.log(`  Last Checked: ${json.timestamp}`);
         process.exit(0);
