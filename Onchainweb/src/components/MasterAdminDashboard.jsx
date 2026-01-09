@@ -5,7 +5,13 @@ import {
   saveAdminReply,
   updateActiveChat,
   saveChatMessage,
-  isFirebaseEnabled
+  isFirebaseEnabled,
+  firebaseSignIn,
+  firebaseSignOut,
+  subscribeToUsers,
+  subscribeToDeposits,
+  subscribeToWithdrawals,
+  subscribeToTrades
 } from '../lib/firebase.js'
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
 import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js'
@@ -608,30 +614,44 @@ export default function MasterAdminDashboard() {
     }
   }, [isAuthenticated, isDataLoaded, loadAllData])
 
-  // Periodic refresh of backend data (every 30 seconds)
+  // Subscribe to Firebase real-time data (users, deposits, withdrawals, trades)
   useEffect(() => {
     if (!isAuthenticated || !isDataLoaded) return
 
-    const refreshBackendData = async () => {
-      try {
-        // Refresh users from backend
-        const backendUsers = await userAPI.getAll()
-        if (Array.isArray(backendUsers) && backendUsers.length > 0) {
-          setUsers(backendUsers)
-        }
-        // Refresh uploads from backend
-        const backendUploads = await uploadAPI.getAll()
-        if (Array.isArray(backendUploads)) {
-          setPendingDeposits(backendUploads.filter(u => u.status === 'pending'))
-          setDeposits(backendUploads)
-        }
-      } catch (error) {
-        console.log('Background refresh error:', error)
-      }
-    }
+    console.log('[Firebase] Setting up real-time listeners...')
+    
+    // Subscribe to users in real-time
+    const unsubscribeUsers = subscribeToUsers((users) => {
+      console.log('[Firebase] Users updated:', users.length)
+      setUsers(users)
+    })
 
-    const interval = setInterval(refreshBackendData, 30000) // Refresh every 30 seconds
-    return () => clearInterval(interval)
+    // Subscribe to deposits in real-time
+    const unsubscribeDeposits = subscribeToDeposits((deposits) => {
+      console.log('[Firebase] Deposits updated:', deposits.length)
+      setDeposits(deposits)
+      setPendingDeposits(deposits.filter(d => d.status === 'pending'))
+    })
+
+    // Subscribe to withdrawals in real-time
+    const unsubscribeWithdrawals = subscribeToWithdrawals((withdrawals) => {
+      console.log('[Firebase] Withdrawals updated:', withdrawals.length)
+      setWithdrawals(withdrawals)
+    })
+
+    // Subscribe to trades in real-time
+    const unsubscribeTrades = subscribeToTrades((trades) => {
+      console.log('[Firebase] Trades updated:', trades.length)
+      setTradeHistory(trades)
+    })
+
+    // Cleanup subscriptions on unmount
+    return () => {
+      if (typeof unsubscribeUsers === 'function') unsubscribeUsers()
+      if (typeof unsubscribeDeposits === 'function') unsubscribeDeposits()
+      if (typeof unsubscribeWithdrawals === 'function') unsubscribeWithdrawals()
+      if (typeof unsubscribeTrades === 'function') unsubscribeTrades()
+    }
   }, [isAuthenticated, isDataLoaded])
 
   // Subscribe to Firebase real-time chat data
@@ -806,48 +826,74 @@ export default function MasterAdminDashboard() {
     setIsLoggingIn(true)
 
     try {
-      // Call backend API for authentication
-      console.log('[LOGIN] Calling authAPI.login...')
-      const response = await authAPI.login(loginData.username, loginData.password)
+      // Use Firebase Authentication for admin login (email-based)
+      // Username is treated as email for Firebase Auth
+      const email = loginData.username.includes('@') ? loginData.username : `${loginData.username}@admin.onchainweb.app`
+      
+      console.log('[LOGIN] Using Firebase Authentication...')
+      const userCredential = await firebaseSignIn(email, loginData.password)
+      const user = userCredential.user
+      
+      console.log('[LOGIN] Firebase auth successful for:', user.email)
 
-      console.log('[LOGIN] Backend response:', response)
+      // Get Firebase ID token for API authorization
+      const token = await user.getIdToken()
+      
+      // Store auth data
+      localStorage.setItem('adminToken', token)
+      localStorage.setItem('firebaseAdminUid', user.uid)
+      localStorage.setItem('masterAdminSession', JSON.stringify({
+        username: loginData.username,
+        email: user.email,
+        uid: user.uid,
+        role: 'master', // Determine role based on email or Firestore data
+        permissions: ['all'],
+        timestamp: Date.now()
+      }))
 
-      if (response.success && response.token) {
-        // Store JWT token for API calls
-        localStorage.setItem('adminToken', response.token)
-        localStorage.setItem('masterAdminSession', JSON.stringify({
-          username: response.user.username,
-          role: response.user.role,
-          permissions: response.user.permissions,
-          timestamp: Date.now()
-        }))
-
-        setLoginError('') // Clear any loading message
-        setIsAuthenticated(true)
-        setIsDataLoaded(false) // Reset to trigger data load
-        setIsMasterAccount(response.user.role === 'master')
-        console.log('[LOGIN] Success! Role:', response.user.role, 'Token stored:', !!localStorage.getItem('adminToken'))
-        return
-      } else {
-        console.log('[LOGIN] Response missing success or token:', response)
-        setLoginError(response.error || '❌ Login failed - invalid response from server')
-        return
-      }
+      setLoginError('')
+      setIsAuthenticated(true)
+      setIsDataLoaded(false) // Reset to trigger data load
+      setIsMasterAccount(true) // Set as master by default for now
+      console.log('[LOGIN] Success! Firebase UID:', user.uid)
+      return
     } catch (error) {
-      console.error('[LOGIN] Backend error:', error.message)
-      // Use shared error handling utility
-      setLoginError(formatApiError(error, { isColdStartAware: true }))
+      console.error('[LOGIN] Firebase auth error:', error.message)
+      
+      // Handle Firebase-specific errors
+      if (error.code === 'auth/user-not-found') {
+        setLoginError('❌ Admin account not found. Please check your credentials.')
+      } else if (error.code === 'auth/wrong-password') {
+        setLoginError('❌ Incorrect password. Please try again.')
+      } else if (error.code === 'auth/invalid-email') {
+        setLoginError('❌ Invalid email format.')
+      } else if (error.code === 'auth/too-many-requests') {
+        setLoginError('❌ Too many failed login attempts. Please try again later.')
+      } else if (error.message === 'Firebase not available') {
+        setLoginError('❌ Firebase authentication is not configured. Please contact support.')
+      } else {
+        setLoginError(`❌ Login failed: ${error.message}`)
+      }
       return
     } finally {
       setIsLoggingIn(false)
     }
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      // Sign out from Firebase
+      await firebaseSignOut()
+    } catch (error) {
+      console.error('Firebase signout error:', error)
+    }
+    
+    // Clear local session
     setIsAuthenticated(false)
     setIsDataLoaded(false)
     localStorage.removeItem('masterAdminSession')
     localStorage.removeItem('adminToken')
+    localStorage.removeItem('firebaseAdminUid')
   }
 
   // Filter function for search

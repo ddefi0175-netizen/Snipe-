@@ -371,6 +371,119 @@ export const subscribeToUsers = (callback) => {
 };
 
 // ==========================================
+// USER DATA FUNCTIONS (For Admin Dashboards)
+// ==========================================
+
+export const subscribeToUsers = (callback) => {
+  if (!isFirebaseAvailable) {
+    console.warn('Firebase not available, using localStorage fallback');
+    const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    callback(users);
+    return () => {};
+  }
+
+  const q = query(
+    collection(db, 'users'),
+    orderBy('createdAt', 'desc')
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const users = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toMillis?.() || doc.data().createdAt || Date.now()
+    }));
+    callback(users);
+  }, (error) => {
+    console.error('Subscribe to users error:', error);
+    const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
+    callback(users);
+  });
+};
+
+export const subscribeToDeposits = (callback) => {
+  if (!isFirebaseAvailable) {
+    console.warn('Firebase not available, using localStorage fallback');
+    const deposits = JSON.parse(localStorage.getItem('adminDeposits') || '[]');
+    callback(deposits);
+    return () => {};
+  }
+
+  const q = query(
+    collection(db, 'deposits'),
+    orderBy('createdAt', 'desc')
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const deposits = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toMillis?.() || doc.data().createdAt || Date.now()
+    }));
+    callback(deposits);
+  }, (error) => {
+    console.error('Subscribe to deposits error:', error);
+    const deposits = JSON.parse(localStorage.getItem('adminDeposits') || '[]');
+    callback(deposits);
+  });
+};
+
+export const subscribeToWithdrawals = (callback) => {
+  if (!isFirebaseAvailable) {
+    console.warn('Firebase not available, using localStorage fallback');
+    const withdrawals = JSON.parse(localStorage.getItem('adminWithdrawals') || '[]');
+    callback(withdrawals);
+    return () => {};
+  }
+
+  const q = query(
+    collection(db, 'withdrawals'),
+    orderBy('createdAt', 'desc')
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const withdrawals = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      createdAt: doc.data().createdAt?.toMillis?.() || doc.data().createdAt || Date.now()
+    }));
+    callback(withdrawals);
+  }, (error) => {
+    console.error('Subscribe to withdrawals error:', error);
+    const withdrawals = JSON.parse(localStorage.getItem('adminWithdrawals') || '[]');
+    callback(withdrawals);
+  });
+};
+
+export const subscribeToTrades = (callback) => {
+  if (!isFirebaseAvailable) {
+    console.warn('Firebase not available, using localStorage fallback');
+    const trades = JSON.parse(localStorage.getItem('tradeHistory') || '[]');
+    callback(trades);
+    return () => {};
+  }
+
+  const q = query(
+    collection(db, 'trades'),
+    orderBy('timestamp', 'desc'),
+    limit(100)
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const trades = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      timestamp: doc.data().timestamp?.toMillis?.() || doc.data().timestamp || Date.now()
+    }));
+    callback(trades);
+  }, (error) => {
+    console.error('Subscribe to trades error:', error);
+    const trades = JSON.parse(localStorage.getItem('tradeHistory') || '[]');
+    callback(trades);
+  });
+};
+
+// ==========================================
 // UTILITY FUNCTIONS
 // ==========================================
 
