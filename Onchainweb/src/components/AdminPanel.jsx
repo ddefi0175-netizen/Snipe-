@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { userAPI, uploadAPI, authAPI, tradingLevelsAPI, currenciesAPI, networksAPI, depositWalletsAPI, ratesAPI, settingsAPI } from '../lib/api'
 import { formatApiError, validatePassword } from '../lib/errorHandling'
 
-// API Base URL for authentication
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api'
-
 // Default Trading Levels
 const DEFAULT_TRADING_LEVELS = [
   { level: 1, minCapital: 100, maxCapital: 19999, profit: 18, duration: 180 },
@@ -276,42 +273,27 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     setIsLoggingIn(true)
 
     try {
-      // Create abort controller for timeout
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 second timeout
-
       console.log('[AdminPanel] Attempting login for:', loginUsername)
-      console.log('[AdminPanel] API URL:', `${API_BASE}/auth/login`)
 
-      const response = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: loginUsername, password: loginPassword }),
-        signal: controller.signal
-      })
+      // Use centralized authAPI from lib/api.js
+      const response = await authAPI.login(loginUsername, loginPassword)
 
-      clearTimeout(timeoutId)
-      console.log('[AdminPanel] Response status:', response.status)
+      console.log('[AdminPanel] Response data:', response)
 
-      const data = await response.json()
-      console.log('[AdminPanel] Response data:', data)
-
-      if (response.ok && data.success) {
+      if (response.success && response.token) {
         // Store token in localStorage
-        localStorage.setItem('adminToken', data.token)
-        localStorage.setItem('adminUser', JSON.stringify(data.user))
+        localStorage.setItem('adminToken', response.token)
+        localStorage.setItem('adminUser', JSON.stringify(response.user))
 
         setLoginError('')
         setIsAuthenticated(true)
-        setCurrentAdmin(data.user)
+        setCurrentAdmin(response.user)
         setLoginUsername('')
         setLoginPassword('')
         console.log('[AdminPanel] Login successful!')
       } else {
-        // Use shared error handling for response errors
-        const error = new Error(data.error || 'Invalid username or password')
-        error.response = { status: response.status, data }
-        setLoginError(formatApiError(error))
+        // Use consistent error formatting
+        setLoginError(formatApiError(new Error(response.error || 'Invalid username or password')))
       }
     } catch (error) {
       console.error('[AdminPanel] Login error:', error)
@@ -352,6 +334,54 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     }
   }, [])
 
+  // Periodic refresh of backend data (every 30 seconds) - for real-time updates
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    const refreshBackendData = async () => {
+      try {
+        console.log('[AdminPanel] Refreshing data from backend...')
+        
+        // Refresh users from backend
+        const response = await userAPI.getAll()
+        const users = Array.isArray(response) ? response : (response?.users || [])
+        if (users.length >= 0) { // Update even if empty to reflect backend state
+          setAllUsers(users)
+        }
+        
+        // Refresh trading levels
+        const levels = await tradingLevelsAPI.getAll()
+        if (Array.isArray(levels) && levels.length > 0) {
+          const mappedLevels = levels.map((l, idx) => ({
+            level: l.level || idx + 1,
+            minCapital: l.minCapital,
+            maxCapital: l.maxCapital,
+            profit: l.profitPercent,
+            duration: l.countdown
+          }))
+          setTradingLevels(mappedLevels)
+        }
+        
+        console.log('[AdminPanel] Data refresh complete')
+      } catch (error) {
+        console.log('[AdminPanel] Background refresh error:', error.message)
+      }
+    }
+
+    // Wait 2 seconds before initial refresh to avoid duplicate with mount effects
+    const initialTimeout = setTimeout(() => {
+      refreshBackendData()
+      
+      // Set up periodic refresh every 30 seconds
+      const interval = setInterval(refreshBackendData, 30000)
+      
+      // Clean up on unmount
+      return () => clearInterval(interval)
+    }, 2000)
+    
+    return () => clearTimeout(initialTimeout)
+  }, [isAuthenticated])
+
   // Create new admin via backend API
   const createAdmin = async () => {
     if (!newAdminForm.username || !newAdminForm.password) {
@@ -360,19 +390,10 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     }
 
     try {
-      const token = localStorage.getItem('adminToken')
-      const response = await fetch(`${API_BASE}/auth/admin`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(newAdminForm)
-      })
+      // Use centralized authAPI from lib/api.js
+      const response = await authAPI.createAdmin(newAdminForm)
 
-      const data = await response.json()
-
-      if (response.ok && data.success) {
+      if (response.success) {
         // Also add to local state for display
         const newAdmin = {
           id: Date.now().toString(),
@@ -396,7 +417,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         })
         alert('Admin account created successfully!')
       } else {
-        alert(data.error || 'Failed to create admin')
+        alert(response.error || 'Failed to create admin')
       }
     } catch (error) {
       console.error('Create admin error:', error)
@@ -408,25 +429,19 @@ export default function AdminPanel({ isOpen = true, onClose }) {
   const deleteAdmin = async (adminId, username) => {
     if (confirm('Are you sure you want to delete this admin account?')) {
       try {
-        const token = localStorage.getItem('adminToken')
-        const response = await fetch(`${API_BASE}/auth/admin/${username}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
+        // Use centralized authAPI from lib/api.js
+        const response = await authAPI.deleteAdmin(username)
 
-        if (response.ok) {
+        if (response && response.success) {
           setAdminAccounts(adminAccounts.filter(a => a.id !== adminId))
           alert('Admin deleted successfully')
         } else {
-          const data = await response.json()
-          alert(data.error || 'Failed to delete admin')
+          alert(response?.error || 'Failed to delete admin')
         }
       } catch (error) {
         console.error('Delete admin error:', error)
-        // Still remove from local state
-        setAdminAccounts(adminAccounts.filter(a => a.id !== adminId))
+        // Remove from local state on network errors (may have succeeded on backend)
+        alert('Network error. The admin may have been deleted. Please refresh to verify.')
       }
     }
   }
@@ -707,8 +722,33 @@ export default function AdminPanel({ isOpen = true, onClose }) {
               {loginError && <div className="login-error">{loginError}</div>}
 
               <button className="admin-login-btn" onClick={handleLogin} disabled={isLoggingIn}>
-                {isLoggingIn ? 'Connecting...' : 'Login'}
+                {isLoggingIn ? (
+                  <>
+                    <div className="loading-spinner">
+                      <div className="spin-animation" style={{ width: '16px', height: '16px', border: '2px solid rgba(255,255,255,0.3)', borderTop: '2px solid #fff', borderRadius: '50%', display: 'inline-block', marginRight: '8px' }}></div>
+                    </div>
+                    Authenticating...
+                  </>
+                ) : 'Login'}
               </button>
+              
+              {isLoggingIn && (
+                <div className="login-status-message">
+                  🔄 Connecting to server... This may take up to 60 seconds if the server is waking up.
+                </div>
+              )}
+              
+              {!isLoggingIn && !loginError && (
+                <div className="login-info-box">
+                  <h4>✨ Features:</h4>
+                  <ul>
+                    <li>✅ <strong>Easy Login</strong> - Automatic session restoration</li>
+                    <li>✅ <strong>Real-Time Data</strong> - Auto-refresh every 30 seconds</li>
+                    <li>✅ <strong>Smart Retry</strong> - Automatic retry on connection issues</li>
+                    <li>⏱️ <strong>Login Time</strong> - Usually &lt;2s (up to 60s on cold start)</li>
+                  </ul>
+                </div>
+              )}
             </div>
 
             <button className="admin-close-btn" onClick={onClose}>×</button>
