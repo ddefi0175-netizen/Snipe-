@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 import WalletGate from './components/WalletGateUniversal.jsx'
 import Header from './components/Header.jsx'
 import Sidebar from './components/Sidebar.jsx'
@@ -453,6 +454,7 @@ export default function App() {
           </div>
         )}
       </div>
+      <Analytics />
     </WalletGate>
   )
 }
