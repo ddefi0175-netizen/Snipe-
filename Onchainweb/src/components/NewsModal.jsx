@@ -48,7 +48,7 @@ export default function NewsModal({ news, onClose }) {
               {/* Featured Image */}
               {news.imageurl && (
                 <div className="news-modal-image">
-                  <img src={news.imageurl} alt="" />
+                  <img src={news.imageurl} alt={news.title} />
                 </div>
               )}
 
