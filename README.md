@@ -27,6 +27,7 @@ Snipe is **production-ready** and verified for public use! All systems operation
 
 **📖 Quick Links**:
 - [🚀 Final Release Summary](FINAL_PUBLIC_RELEASE_SUMMARY.md) - Complete verification and release status
+- [🔥 Firebase Migration Summary](FIREBASE_MIGRATION_SUMMARY.md) - New Firebase architecture overview
 - [📱 Device Compatibility Guide](DEVICE_COMPATIBILITY_TEST.md) - Mobile and tablet testing procedures
 - [🎯 Public Release Guide](PUBLIC_RELEASE_GUIDE.md) - Complete release verification and steps
 - [🔧 Deployment Guide](DEPLOYMENT.md) - How to deploy your own instance
