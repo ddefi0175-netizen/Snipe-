@@ -218,11 +218,12 @@ cd backend
 npm start  # Runs on http://localhost:4000
 ```
 
-### 4. Configure Firebase
+### 4. Configure Firebase & WalletConnect
 ```
 - Create Firebase project
 - Enable Firestore + Authentication
 - Copy credentials to Onchainweb/.env
+- WalletConnect Project ID: ✅ Already configured
 ```
 
 ### 5. Start Frontend
