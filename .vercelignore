@@ -1,6 +1,7 @@
 # Deploy only the frontend app
 /*
 !.vercel.json
+!Onchainweb
 !Onchainweb/**
 !README.md
 !LICENSE
