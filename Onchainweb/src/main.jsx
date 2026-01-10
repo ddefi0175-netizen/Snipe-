@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { UniversalWalletProvider } from './lib/walletConnect.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { APIStatusBanner } from './components/APIStatus.jsx'
+import { ROUTES, ADMIN_GUARD } from './config/constants.js'
 import './index.css'
 import './styles/master-admin.css'
 
@@ -48,10 +49,13 @@ createRoot(document.getElementById('root')).render(
           <APIStatusBanner />
           <Suspense fallback={<LoadingSpinner />}>
             <Routes>
-              <Route path="/" element={<MainApp />} />
-              <Route path="/admin" element={<AdminPanel isOpen={true} onClose={() => window.location.href = '/'} />} />
-              <Route path="/master" element={<MasterAdminDashboard />} />
-              <Route path="/master-admin" element={<MasterAdminDashboard />} />
+              <Route path={ROUTES.HOME} element={<MainApp />} />
+              {ADMIN_GUARD.ENABLED && (
+                <Route path={ROUTES.ADMIN} element={<AdminPanel isOpen={true} onClose={() => window.location.href = '/'} />} />
+              )}
+              {ADMIN_GUARD.ENABLED && (
+                <Route path={ROUTES.MASTER_ADMIN} element={<MasterAdminDashboard />} />
+              )}
             </Routes>
           </Suspense>
         </UniversalWalletProvider>

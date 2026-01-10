@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { userAPI, uploadAPI, authAPI, tradingLevelsAPI, currenciesAPI, networksAPI, depositWalletsAPI, ratesAPI, settingsAPI } from '../lib/api'
 import { formatApiError, validatePassword } from '../lib/errorHandling'
 import { firebaseSignIn, firebaseSignOut } from '../lib/firebase'
-import { convertToAdminEmail, determineAdminRole, getDefaultPermissions } from '../lib/adminAuth'
+import { convertToAdminEmail, determineAdminRole, getDefaultPermissions, isEmailAllowed } from '../lib/adminAuth'
 
 // Default Trading Levels
 const DEFAULT_TRADING_LEVELS = [
@@ -193,7 +193,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         if (Array.isArray(users)) {
           setAllUsers(users)
         }
-        
+
         // Refresh trading levels
         const levels = await tradingLevelsAPI.getAll()
         if (Array.isArray(levels)) {
@@ -214,11 +214,11 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     let intervalId
     const initialTimeout = setTimeout(() => {
       refreshBackendData()
-      
+
       // Set up periodic refresh every 30 seconds
       intervalId = setInterval(refreshBackendData, 30000)
     }, 2000)
-    
+
     // Cleanup: clear timeout and interval (if set) on unmount or when isAuthenticated changes
     return () => {
       clearTimeout(initialTimeout)
@@ -321,23 +321,36 @@ export default function AdminPanel({ isOpen = true, onClose }) {
 
     try {
       console.log('[AdminPanel] Attempting login for:', loginUsername)
-      
+
       // Use Firebase Authentication for admin login (email-based)
       const email = convertToAdminEmail(loginUsername)
-      
+
       console.log('[AdminPanel] Using Firebase Authentication...')
       const userCredential = await firebaseSignIn(email, loginPassword)
       const user = userCredential.user
-      
+
       console.log('[AdminPanel] Firebase auth successful for:', user.email)
 
       // Get Firebase ID token for API authorization
       const token = await user.getIdToken()
-      
+
       // Determine role and permissions based on email
       const role = determineAdminRole(user.email)
       const permissions = getDefaultPermissions(role)
-      
+
+      if (!isEmailAllowed(user.email)) {
+        await firebaseSignOut()
+        localStorage.removeItem('adminToken')
+        localStorage.removeItem('firebaseAdminUid')
+        localStorage.removeItem('adminUser')
+        setLoginError('❌ This account is not authorized for admin access.')
+        setIsAuthenticated(false)
+        setCurrentAdmin(null)
+        setLoginUsername('')
+        setLoginPassword('')
+        return
+      }
+
       // Store auth data
       const adminUser = {
         username: loginUsername,
@@ -346,7 +359,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         role: role,
         permissions: permissions
       }
-      
+
       localStorage.setItem('adminToken', token)
       localStorage.setItem('firebaseAdminUid', user.uid)
       localStorage.setItem('adminUser', JSON.stringify(adminUser))
@@ -359,7 +372,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       console.log('[AdminPanel] Login successful! Role:', role)
     } catch (error) {
       console.error('[AdminPanel] Login error:', error)
-      
+
       // Handle Firebase-specific errors
       if (error.code === 'auth/user-not-found') {
         setLoginError('❌ Admin account not found. Please check your credentials.')
@@ -387,7 +400,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     } catch (error) {
       console.error('Firebase signout error:', error)
     }
-    
+
     // Clear local session
     localStorage.removeItem('adminToken')
     localStorage.removeItem('adminUser')
@@ -762,11 +775,11 @@ export default function AdminPanel({ isOpen = true, onClose }) {
               </button>
 
               {isLoggingIn && (
-                <div style={{ 
-                  marginTop: '15px', 
-                  padding: '12px', 
-                  background: 'rgba(59, 130, 246, 0.1)', 
-                  borderRadius: '8px', 
+                <div style={{
+                  marginTop: '15px',
+                  padding: '12px',
+                  background: 'rgba(59, 130, 246, 0.1)',
+                  borderRadius: '8px',
                   border: '1px solid rgba(59, 130, 246, 0.3)',
                   color: '#60a5fa',
                   fontSize: '13px',
@@ -777,18 +790,18 @@ export default function AdminPanel({ isOpen = true, onClose }) {
               )}
 
               {!isLoggingIn && !loginError && (
-                <div style={{ 
-                  marginTop: '15px', 
-                  padding: '15px', 
-                  background: 'rgba(34, 197, 94, 0.1)', 
-                  borderRadius: '8px', 
+                <div style={{
+                  marginTop: '15px',
+                  padding: '15px',
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  borderRadius: '8px',
                   border: '1px solid rgba(34, 197, 94, 0.3)',
                   fontSize: '12px'
                 }}>
                   <h4 style={{ color: '#4ade80', marginBottom: '10px', fontSize: '14px', fontWeight: 'bold' }}>✨ Features:</h4>
-                  <ul style={{ 
-                    color: '#94a3b8', 
-                    lineHeight: '1.8', 
+                  <ul style={{
+                    color: '#94a3b8',
+                    lineHeight: '1.8',
                     paddingLeft: '20px',
                     margin: 0
                   }}>

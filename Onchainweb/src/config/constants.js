@@ -1,6 +1,20 @@
 // Application Constants
 // Central location for all app-wide constants
 
+const normalizeRoute = (value, fallback) => {
+  const candidate = (value || '').trim();
+  if (!candidate) return fallback;
+  return candidate.startsWith('/') ? candidate : `/${candidate}`;
+};
+
+const ADMIN_FEATURE_ENABLED = import.meta.env?.VITE_ENABLE_ADMIN === 'true';
+const ADMIN_ROUTE = normalizeRoute(import.meta.env?.VITE_ADMIN_ROUTE, '/admin');
+const MASTER_ADMIN_ROUTE = normalizeRoute(import.meta.env?.VITE_MASTER_ADMIN_ROUTE, '/master-admin');
+const ADMIN_ALLOWLIST = (import.meta.env?.VITE_ADMIN_ALLOWLIST || '')
+  .split(',')
+  .map(entry => entry.trim().toLowerCase())
+  .filter(Boolean);
+
 export const APP_CONFIG = {
   NAME: import.meta.env.VITE_APP_NAME || 'OnchainWeb',
   URL: import.meta.env.VITE_APP_URL || 'https://onchainweb.app',
@@ -60,7 +74,8 @@ export const FEATURES = {
   ENABLE_ANALYTICS: import.meta.env.VITE_ENABLE_ANALYTICS === 'true',
   ENABLE_DEBUG: import.meta.env.VITE_ENABLE_DEBUG === 'true',
   ENABLE_FIREBASE: true,
-  ENABLE_LEGACY_API: !!import.meta.env.VITE_API_BASE
+  ENABLE_LEGACY_API: !!import.meta.env.VITE_API_BASE,
+  ENABLE_ADMIN: ADMIN_FEATURE_ENABLED
 };
 
 // Routes
@@ -69,8 +84,8 @@ export const ROUTES = {
   DASHBOARD: '/dashboard',
   TRADE: '/trade',
   WALLET: '/wallet',
-  ADMIN: '/admin',
-  MASTER_ADMIN: '/master-admin',
+  ADMIN: ADMIN_ROUTE,
+  MASTER_ADMIN: MASTER_ADMIN_ROUTE,
   CUSTOMER_SERVICE: '/customer-service'
 };
 
@@ -97,4 +112,12 @@ export const TRADE_STATUS = {
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
   FAILED: 'failed'
+};
+
+// Admin guard configuration
+export const ADMIN_GUARD = {
+  ENABLED: ADMIN_FEATURE_ENABLED,
+  ROUTE: ADMIN_ROUTE,
+  MASTER_ROUTE: MASTER_ADMIN_ROUTE,
+  ALLOWLIST: ADMIN_ALLOWLIST
 };
