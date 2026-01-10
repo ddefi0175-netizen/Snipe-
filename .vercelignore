@@ -3,5 +3,15 @@
 !.vercel.json
 !Onchainweb
 !Onchainweb/**
+
+# Exclude build outputs and dependencies
+node_modules
+Onchainweb/node_modules
+Onchainweb/dist
+Onchainweb/.vercel
+Onchainweb/.cache
+Onchainweb/.turbo
+Onchainweb/.next
+Onchainweb/.git
 !README.md
 !LICENSE
