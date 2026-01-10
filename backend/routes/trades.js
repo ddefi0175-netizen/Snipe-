@@ -1,3 +1,27 @@
+/*
+ * ========================================
+ * DEPRECATION NOTICE (Phase 3C)
+ * ========================================
+ * This file contains legacy MongoDB-based trade endpoints.
+ * These endpoints are now DEPRECATED in favor of Firestore.
+ *
+ * MIGRATION GUIDE:
+ * Old (MongoDB): GET /api/trades → New (Firestore): onSnapshot('trades')
+ * Old (MongoDB): POST /api/trades → New: setDoc(collection('trades'), ...)
+ * Old (MongoDB): PATCH /api/trades/:id → New: updateDoc(doc('trades', id), ...)
+ *
+ * All REST trade endpoints are PRESERVED for backward compatibility but
+ * will be REMOVED in Phase 4. New code should use Firestore exclusively.
+ *
+ * FRONTEND EQUIVALENT:
+ * - See src/components/TradeHistory.jsx for Firestore migration example
+ * - Use Firestore onSnapshot for real-time updates
+ * - Use setDoc/updateDoc for mutations
+ *
+ * Status: DEPRECATED | Backward compatible | Use Firestore for new features
+ * Last Updated: Phase 3C
+ */
+
 const express = require('express');
 const Trade = require('../models/Trade');
 const User = require('../models/User');

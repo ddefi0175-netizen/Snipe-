@@ -1,3 +1,31 @@
+/*
+ * ========================================
+ * ARCHITECTURE TRANSITION NOTICE (Phase 3)
+ * ========================================
+ * This backend is transitioning to Firebase as the primary authentication
+ * and real-time data system. Current role:
+ *
+ * PRIMARY RESPONSIBILITIES:
+ * ✅ Admin authentication (JWT + master credentials)
+ * ✅ Data storage & complex queries (MongoDB)
+ * ✅ Backend processing & internal APIs
+ *
+ * DEPRECATED (Use Firebase instead):
+ * ❌ User registration (→ Firebase Auth)
+ * ❌ User authentication (→ Firebase Auth)
+ * ❌ Real-time data sync (→ Firestore + onSnapshot)
+ * ❌ Trade endpoints (→ Firestore collections)
+ * ❌ Staking endpoints (→ Firestore + Cloud Functions)
+ *
+ * MIGRATION PATH:
+ * - Frontend: Use firebaseSignIn/Up/Out from src/lib/firebase.js
+ * - Real-time: Replace REST calls with Firestore onSnapshot listeners
+ * - Admin: Keep using JWT admin endpoints for backend operations
+ *
+ * Status: Firebase deployment ✅ | Phase 3 cleanup ✅
+ * Last Updated: Phase 3C
+ */
+
 // Backend entry point for Snipe
 
 // Uncaught exception handler - must be at the very beginning
