@@ -370,15 +370,56 @@ export const tradeAPI = {
   }),
 };
 
-// ============== SETTINGS API (Master only) ==============
+// ============== SETTINGS API (Master/Admin) ==============
 export const settingsAPI = {
-  // Get site settings
+  // Get all site settings (public access)
   get: () => apiCall('/settings'),
 
-  // Update settings (master only)
+  // Update all settings (master only)
   update: (settings) => apiCall('/settings', {
     method: 'PUT',
     body: JSON.stringify(settings),
+  }),
+
+  // Partial update settings (master only)
+  patch: (updates) => apiCall('/settings', {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  }),
+
+  // Trade Control Settings (master only)
+  getTradeControl: () => apiCall('/settings/trade-control'),
+  updateTradeControl: (tradeControl) => apiCall('/settings/trade-control', {
+    method: 'PATCH',
+    body: JSON.stringify(tradeControl),
+  }),
+
+  // Trading Levels (admin can read, master can write)
+  getTradingLevels: () => apiCall('/settings/trading-levels'),
+  updateTradingLevels: (tradingLevels) => apiCall('/settings/trading-levels', {
+    method: 'PATCH',
+    body: JSON.stringify({ tradingLevels }),
+  }),
+
+  // AI Arbitrage Levels (admin can read, master can write)
+  getArbitrageLevels: () => apiCall('/settings/arbitrage-levels'),
+  updateArbitrageLevels: (aiArbitrageLevels) => apiCall('/settings/arbitrage-levels', {
+    method: 'PATCH',
+    body: JSON.stringify({ aiArbitrageLevels }),
+  }),
+
+  // Bonus Programs (admin can read, master can write)
+  getBonusPrograms: () => apiCall('/settings/bonus-programs'),
+  updateBonusPrograms: (bonusPrograms) => apiCall('/settings/bonus-programs', {
+    method: 'PATCH',
+    body: JSON.stringify({ bonusPrograms }),
+  }),
+
+  // Deposit Addresses (admin can read, master can write)
+  getDepositAddresses: () => apiCall('/settings/deposit-addresses'),
+  updateDepositAddresses: (depositAddresses) => apiCall('/settings/deposit-addresses', {
+    method: 'PATCH',
+    body: JSON.stringify({ depositAddresses }),
   }),
 };
 

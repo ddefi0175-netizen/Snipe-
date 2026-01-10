@@ -716,12 +716,9 @@ export default function MasterAdminDashboard() {
   }, [isAuthenticated, isDataLoaded, lastMessageCount, selectedChat])
 
   // Save to localStorage - only when data is loaded and changed
-  useEffect(() => {
-    if (isDataLoaded && Object.keys(bonusPrograms).length > 0) {
-      localStorage.setItem('bonusPrograms', JSON.stringify(bonusPrograms))
-    }
-  }, [bonusPrograms, isDataLoaded])
-
+  // NOTE: Removed localStorage saves for bonusPrograms, siteSettings, depositWallets, and tradingLevels
+  // These are now only stored in backend for security
+  
   useEffect(() => {
     if (isDataLoaded && userAgents.length > 0) {
       localStorage.setItem('userAgents', JSON.stringify(userAgents))
@@ -733,12 +730,6 @@ export default function MasterAdminDashboard() {
       localStorage.setItem('stakingPlans', JSON.stringify(stakingPlans))
     }
   }, [stakingPlans, isDataLoaded])
-
-  useEffect(() => {
-    if (isDataLoaded && Object.keys(siteSettings).length > 0) {
-      localStorage.setItem('siteSettings', JSON.stringify(siteSettings))
-    }
-  }, [siteSettings, isDataLoaded])
 
   useEffect(() => {
     if (isDataLoaded && Object.keys(tradeOptions).length > 0) {
@@ -778,23 +769,13 @@ export default function MasterAdminDashboard() {
     }
   }, [networks, isDataLoaded])
 
-  useEffect(() => {
-    if (isDataLoaded && depositWallets.length > 0) {
-      localStorage.setItem('adminDepositWallets', JSON.stringify(depositWallets))
-    }
-  }, [depositWallets, isDataLoaded])
+  // NOTE: Removed localStorage saves for depositWallets and tradingLevels for security
 
   useEffect(() => {
     if (isDataLoaded && exchangeRates.length > 0) {
       localStorage.setItem('adminExchangeRates', JSON.stringify(exchangeRates))
     }
   }, [exchangeRates, isDataLoaded])
-
-  useEffect(() => {
-    if (isDataLoaded && tradingLevels.length > 0) {
-      localStorage.setItem('adminTradingLevels', JSON.stringify(tradingLevels))
-    }
-  }, [tradingLevels, isDataLoaded])
 
   // Loading state for login
   const [isLoggingIn, setIsLoggingIn] = useState(false)
