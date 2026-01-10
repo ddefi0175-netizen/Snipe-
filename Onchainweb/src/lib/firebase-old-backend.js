@@ -1,13 +1,14 @@
 // Real-time Chat using Backend API
-// Replaces Firebase with MongoDB backend for persistent storage
+// DEPRECATED: This file is no longer used
+// Firebase is now the primary and only backend
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api';
+const API_BASE = import.meta.env.VITE_API_BASE || '';
 
 // Helper for API calls
 async function chatApiCall(endpoint, options = {}) {
   const url = `${API_BASE}/chat${endpoint}`;
   const token = localStorage.getItem('adminToken');
-  
+
   const config = {
     headers: {
       'Content-Type': 'application/json',
@@ -65,7 +66,7 @@ export const saveChatMessage = async (message) => {
 // Subscribe to chat messages (polling-based for backend)
 export const subscribeToChatMessages = (callback) => {
   let lastTimestamp = 0;
-  
+
   const fetchMessages = async () => {
     try {
       // Get all recent messages
@@ -77,7 +78,7 @@ export const subscribeToChatMessages = (callback) => {
           return t > max ? t : max;
         }, lastTimestamp);
         lastTimestamp = newest;
-        
+
         // Convert to expected format
         const formattedMessages = messages.map(m => ({
           id: m._id,
@@ -91,7 +92,7 @@ export const subscribeToChatMessages = (callback) => {
           createdAt: new Date(m.createdAt).getTime(),
           timestamp: new Date(m.createdAt).getTime()
         }));
-        
+
         callback(formattedMessages);
       }
     } catch (error) {
@@ -101,11 +102,11 @@ export const subscribeToChatMessages = (callback) => {
       callback(logs);
     }
   };
-  
+
   fetchMessages();
   const interval = setInterval(fetchMessages, 2000); // Poll every 2 seconds
   pollingIntervals.set('messages', interval);
-  
+
   return () => {
     clearInterval(interval);
     pollingIntervals.delete('messages');
@@ -196,11 +197,11 @@ export const subscribeToActiveChats = (callback) => {
       callback(chats);
     }
   };
-  
+
   fetchChats();
   const interval = setInterval(fetchChats, 2000); // Poll every 2 seconds
   pollingIntervals.set('activeChats', interval);
-  
+
   return () => {
     clearInterval(interval);
     pollingIntervals.delete('activeChats');
@@ -237,7 +238,7 @@ export const saveAdminReply = async (reply) => {
 // Subscribe to admin replies for a specific session (user-side polling)
 export const subscribeToAdminReplies = (sessionId, callback) => {
   let lastTimestamp = 0;
-  
+
   const fetchReplies = async () => {
     try {
       const messages = await chatApiCall(`/poll/${sessionId}?since=${lastTimestamp}`);
@@ -248,7 +249,7 @@ export const subscribeToAdminReplies = (sessionId, callback) => {
           return t > max ? t : max;
         }, lastTimestamp);
         lastTimestamp = newest;
-        
+
         const formattedReplies = messages.map(m => ({
           id: m._id,
           sessionId: m.sessionId,
@@ -258,7 +259,7 @@ export const subscribeToAdminReplies = (sessionId, callback) => {
           createdAt: new Date(m.createdAt).getTime(),
           delivered: m.delivered
         }));
-        
+
         callback(formattedReplies);
       }
     } catch (error) {
@@ -269,12 +270,12 @@ export const subscribeToAdminReplies = (sessionId, callback) => {
       callback(sessionReplies);
     }
   };
-  
+
   fetchReplies();
   const intervalKey = `replies_${sessionId}`;
   const interval = setInterval(fetchReplies, 2000); // Poll every 2 seconds
   pollingIntervals.set(intervalKey, interval);
-  
+
   return () => {
     clearInterval(interval);
     pollingIntervals.delete(intervalKey);
@@ -319,11 +320,11 @@ export const subscribeToAllAdminReplies = (callback) => {
       callback(replies);
     }
   };
-  
+
   fetchReplies();
   const interval = setInterval(fetchReplies, 3000);
   pollingIntervals.set('allReplies', interval);
-  
+
   return () => {
     clearInterval(interval);
     pollingIntervals.delete('allReplies');

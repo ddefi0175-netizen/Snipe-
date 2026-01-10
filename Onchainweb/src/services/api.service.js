@@ -1,7 +1,8 @@
-// API Configuration for Snipe Backend
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api';
+// DEPRECATED: Legacy API service - use Firebase services instead
+// This file is kept for backward compatibility only
+const API_BASE = import.meta.env.VITE_API_BASE || '';
 
-// Helper function for API calls with retry logic for Render cold starts
+// Helper function for API calls (legacy - not used with Firebase)
 async function apiCall(endpoint, options = {}, retries = 2) {
   const url = `${API_BASE}${endpoint}`;
   const token = localStorage.getItem('adminToken');
@@ -35,7 +36,7 @@ async function apiCall(endpoint, options = {}, retries = 2) {
       const isTimeout = error.name === 'AbortError' || error.message.includes('timeout');
       const isNetworkError = error.message.includes('Failed to fetch') || error.message.includes('NetworkError');
 
-      // Retry on timeout or network errors (Render cold start)
+      // Retry on timeout or network errors (legacy backend)
       if ((isTimeout || isNetworkError) && attempt < retries) {
         console.log(`API retry ${attempt + 1}/${retries} for ${endpoint} (server may be waking up)...`);
         await new Promise(r => setTimeout(r, 2000)); // Wait 2s before retry
@@ -78,7 +79,7 @@ export const userAPI = {
     body: JSON.stringify(userData),
   }),
 
-  // Update user by MongoDB ID
+  // Update user by ID (legacy)
   update: (id, userData) => apiCall(`/users/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(userData),

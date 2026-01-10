@@ -53,3 +53,5 @@ DEPLOYMENT_STATUS.md
 # Temporary and manifest files
 *.ndjson
 latest-update-manifest.*
+.vercel
+.env*.local

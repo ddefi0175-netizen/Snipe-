@@ -22,9 +22,9 @@ export const APP_CONFIG = {
   DESCRIPTION: 'Real-Time Trading Platform with Firebase'
 };
 
-// API Configuration (Legacy - for backward compatibility)
+// API Configuration (Disabled - using Firebase only)
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_BASE || '',
+  BASE_URL: '', // No legacy API - Firebase only
   TIMEOUT: 30000
 };
 
@@ -74,7 +74,7 @@ export const FEATURES = {
   ENABLE_ANALYTICS: import.meta.env.VITE_ENABLE_ANALYTICS === 'true',
   ENABLE_DEBUG: import.meta.env.VITE_ENABLE_DEBUG === 'true',
   ENABLE_FIREBASE: true,
-  ENABLE_LEGACY_API: !!import.meta.env.VITE_API_BASE,
+  ENABLE_LEGACY_API: false, // Disabled - Firebase only
   ENABLE_ADMIN: ADMIN_FEATURE_ENABLED
 };
 

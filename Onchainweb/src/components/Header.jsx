@@ -169,25 +169,13 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
 
       {/* Brand - Image Logo with Fallbacks */}
       <div className="brand" aria-label="OnchainWeb home">
-        {/* Primary: User-provided PNG logo */}
+        {/* Use custom logo */}
         <img
           src="/logo.png"
           alt="OnchainWeb Logo"
           className="brand-logo"
           onError={(e) => {
-            // Fallback 1: Try images/ folder
-            if (!e.target.dataset.altpath) {
-              e.target.dataset.altpath = 'true';
-              e.target.src = '/images/logo.png';
-              return;
-            }
-            // Fallback 2: Try SVG placeholder
-            if (!e.target.dataset.svgpath) {
-              e.target.dataset.svgpath = 'true';
-              e.target.src = '/logo.svg';
-              return;
-            }
-            // Fallback 3: Hide image and show SVG fallback
+            // Fallback: Show inline SVG if PNG fails to load
             e.target.style.display = 'none';
             if (e.target.nextSibling?.style) {
               e.target.nextSibling.style.display = 'inline';
