@@ -11592,14 +11592,14 @@ input[type="submit"] {
     overflow-x: hidden;
     max-width: 100vw;
   }
-  
+
   /* Optimize touch scrolling on iOS */
   .news-modal-content,
   .profile-dropdown,
   .notifications-dropdown {
     -webkit-overflow-scrolling: touch;
   }
-  
+
   /* Improve tap targets on mobile */
   .connect-btn,
   .notification-btn,

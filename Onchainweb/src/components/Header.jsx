@@ -36,7 +36,7 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
     // Check if user has existing real account ID
     const savedId = localStorage.getItem('realAccountId')
     if (savedId && /^\d{5}$/.test(savedId)) return savedId
-    
+
     // Generate new 5-digit numeric ID
     const newId = generateRealAccountId()
     localStorage.setItem('realAccountId', newId)
@@ -157,7 +157,7 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
   return (
     <header className="site-header" role="banner" aria-label="Site header">
       {/* Hamburger Menu Button */}
-      <button 
+      <button
         className="hamburger-btn"
         onClick={onMenuToggle}
         aria-label="Open navigation menu"
@@ -194,7 +194,7 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
             }
           }}
         />
-        
+
         {/* Fallback SVG - Shown if all image paths fail */}
         <svg
           width="32"
@@ -263,7 +263,7 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
 
         {/* Notification Bell (only if unread notifications) */}
         {address && notifications.some(n => !n.read) && (
-          <button 
+          <button
             className="notification-btn"
             onClick={handleNotifications}
             aria-label="Notifications"
@@ -300,7 +300,7 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
 
         {/* Profile Icon */}
         <div className="profile-container">
-          <button 
+          <button
             className="profile-btn"
             onClick={() => setProfileOpen(!profileOpen)}
             aria-label="Open profile menu"
@@ -339,7 +339,7 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
                   </svg>
                   About Us
                 </button>
-                
+
                 <button onClick={handleWhitepaper}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
