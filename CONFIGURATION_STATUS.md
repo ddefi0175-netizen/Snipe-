@@ -3,7 +3,7 @@
 ## Summary
 
 | Category | Status | Action |
-|----------|--------|--------|
+| -------- | ------ | ------ |
 | **Frontend Build** | ✅ Ready | Ready to run with `npm run dev` |
 | **Backend Build** | ✅ Ready | Ready to run with `npm run dev` |
 | **Firebase Setup** | ⚠️ Partial | Missing 7 credentials |
@@ -16,12 +16,14 @@
 ## Configuration Status - Onchainweb/.env
 
 ### Configured ✅
-```
+
+```text
 ✅ VITE_WALLETCONNECT_PROJECT_ID=42039c73d0dacb66d82c12faabf27c9b
 ```
 
 ### Missing ❌ (REQUIRED)
-```
+
+```text
 ❌ VITE_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY_HERE
 ❌ VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
 ❌ VITE_FIREBASE_PROJECT_ID=your-firebase-project-id
@@ -32,6 +34,7 @@
 ```
 
 **Impact**:
+
 - ❌ Authentication won't work
 - ❌ Firestore sync won't work
 - ❌ App will show Firebase error on startup
@@ -41,7 +44,8 @@
 ## What's Needed to Make App Functional
 
 ### 🔴 CRITICAL (Blocking)
-```
+
+```text
 Firebase Credentials (7 values)
 ├─ API Key
 ├─ Auth Domain
@@ -52,10 +56,11 @@ Firebase Credentials (7 values)
 └─ Measurement ID
 ```
 
-**Where to get**: https://console.firebase.google.com
+**Where to get**: [Firebase Console](https://console.firebase.google.com)
 
 ### ⚠️ IMPORTANT (Optional)
-```
+
+```text
 Backend Configuration (for MongoDB legacy support)
 ├─ JWT Secret
 ├─ Master Username
@@ -69,24 +74,29 @@ Backend Configuration (for MongoDB legacy support)
 ## How to Get Firebase Credentials
 
 ### 1. Go to Firebase Console
-```
+
+```text
 https://console.firebase.google.com
 ```
 
 ### 2. Select or Create Project
+
 - Use existing project (recommended)
 - Or create new: "Create a project" button
 
 ### 3. Go to Project Settings
+
 - Click ⚙️ (gear icon) in top left
 - Select "Project Settings"
 
 ### 4. Find "Your apps" Section
+
 - Scroll down to "Your apps"
 - Click on your **Web** app (shows: `</> Web`)
 - If none exists, create one: "Add app" → "Web"
 
 ### 5. Copy Configuration
+
 You'll see JavaScript config like:
 
 ```javascript
@@ -104,7 +114,7 @@ const firebaseConfig = {
 ### 6. Copy Values into Onchainweb/.env
 
 | Firebase Config | → | Onchainweb/.env |
-|---|---|---|
+| --------------- | - | --------------- |
 | `apiKey` | → | `VITE_FIREBASE_API_KEY` |
 | `authDomain` | → | `VITE_FIREBASE_AUTH_DOMAIN` |
 | `projectId` | → | `VITE_FIREBASE_PROJECT_ID` |
@@ -118,41 +128,49 @@ const firebaseConfig = {
 ## Setup Options
 
 ### Option 1: Frontend Only (RECOMMENDED) ⭐
+
 **Firebase Backend** - Modern, fast, secure
 
 **Time to setup**: 5 minutes
+
 **Requirements**:
+
 - Firebase project
 - 7 credentials from Firebase Console
 - Modern browser
 
 **Steps**:
+
 1. Get Firebase credentials (3 min)
 2. Update `Onchainweb/.env` (1 min)
 3. Run: `cd Onchainweb && npm run dev` (1 min)
-4. Open: http://localhost:5173
+4. Open: [http://localhost:5173](http://localhost:5173)
 
 **Result**: Full-featured app with real-time sync
 
 ---
 
 ### Option 2: Full Stack (Legacy) ⚠️
+
 **MongoDB Backend + Firebase Frontend** - Deprecated
 
 > Per v2.0.0 architecture: MongoDB is optional/legacy
 > Use only if maintaining existing MongoDB deployment
 
 **Time to setup**: 15 minutes
+
 **Requirements**:
+
 - MongoDB (local or Atlas)
 - Firebase credentials
 - Backend configured
 
 **Steps**:
+
 1. Start MongoDB
 2. Run backend: `cd backend && npm run dev`
 3. Run frontend: `cd Onchainweb && npm run dev`
-4. Open: http://localhost:5173
+4. Open: [http://localhost:5173](http://localhost:5173)
 
 **Note**: Backend will try to sync with MongoDB
 Firebase is still primary for user auth & real-time features
@@ -162,7 +180,8 @@ Firebase is still primary for user auth & real-time features
 ## Dependencies Status
 
 ### Frontend Dependencies ✅
-```
+
+```text
 React 18.3.1
 Vite 5.4.21
 Firebase SDK 12.7.0
@@ -173,7 +192,8 @@ WalletConnect Integration
 **npm list**: 50+ packages installed
 
 ### Backend Dependencies ✅
-```
+
+```text
 Express 4.22.1
 Mongoose 7.8.8 (deprecated but available)
 JWT 9.0.3
@@ -184,7 +204,8 @@ bcryptjs 3.0.3
 **npm list**: 7 core packages
 
 ### Vulnerabilities ⚠️
-```
+
+```text
 2 moderate vulnerabilities detected
 Fix: npm audit fix
 Non-critical - can address anytime
@@ -195,7 +216,7 @@ Non-critical - can address anytime
 ## Timeline to Production
 
 | Step | Time | Blocker |
-|------|------|---------|
+| ---- | ---- | ------- |
 | Get Firebase creds | 3 min | YES 🔴 |
 | Update .env | 1 min | Blocked by ↑ |
 | Start frontend | 1 min | Blocked by ↑ |
@@ -208,7 +229,7 @@ Non-critical - can address anytime
 ## Files to Configure
 
 | File | Status | Lines | Action |
-|------|--------|-------|--------|
+| ---- | ------ | ----- | ------ |
 | `Onchainweb/.env` | ❌ Missing 7/8 | 1-8 | Add Firebase values |
 | `backend/.env` | ✅ Optional | 1-52 | Only if running backend |
 | `.firebaserc` | ✅ Optional | 3 | Already configured |
@@ -218,7 +239,7 @@ Non-critical - can address anytime
 
 ## Quick Checklist
 
-```
+```text
 Get Firebase Credentials:
   [ ] Go to console.firebase.google.com
   [ ] Find "Your apps" Web config
@@ -243,7 +264,7 @@ Start App:
 
 ## What NOT to Do
 
-```
+```text
 ❌ Commit .env to git (security risk)
 ❌ Share credentials in messages/docs
 ❌ Leave placeholder values in .env
@@ -257,7 +278,7 @@ Start App:
 
 When everything is configured correctly, you should see:
 
-```
+```text
 ✅ No Firebase errors in browser console
 ✅ App loads at http://localhost:5173
 ✅ Can create account / log in
@@ -270,10 +291,10 @@ When everything is configured correctly, you should see:
 
 ## Support Resources
 
-- **Firebase Docs**: https://firebase.google.com/docs
-- **Config Helper**: https://console.firebase.google.com
+- **Firebase Docs**: [https://firebase.google.com/docs](https://firebase.google.com/docs)
+- **Config Helper**: [Firebase Console](https://console.firebase.google.com)
 - **Error Messages**: Check browser console (F12)
-- **Vite Guide**: https://vitejs.dev/
+- **Vite Guide**: [https://vitejs.dev/](https://vitejs.dev/)
 
 ---
 

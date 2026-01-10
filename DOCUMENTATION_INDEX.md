@@ -1,4 +1,5 @@
 # 📚 Snipe Platform - Documentation Index
+
 **Last Updated**: January 9, 2026
 **Project Status**: 🟢 Phase 1 Complete (22% overall)
 
@@ -29,7 +30,7 @@
 ### Getting Started
 
 | Document | Purpose | Read Time | When to Use |
-|----------|---------|-----------|------------|
+| -------- | ------- | --------- | ----------- |
 | [QUICK_START.md](QUICK_START.md) | 15-min quick start | 5 min | First time setup |
 | [FIREBASE_SETUP_QUICK_START.md](FIREBASE_SETUP_QUICK_START.md) | Firebase configuration | 10 min | Setting up Firebase |
 | [README.md](README.md) | Project overview | 10 min | Understanding the project |
@@ -37,7 +38,7 @@
 ### Planning & Analysis
 
 | Document | Purpose | Read Time | When to Use |
-|----------|---------|-----------|------------|
+| -------- | ------- | --------- | ----------- |
 | [ERROR_AUDIT_REPORT.md](ERROR_AUDIT_REPORT.md) | All 11 issues found | 15 min | Planning fixes |
 | [PHASE_1_COMPLETION_REPORT.md](PHASE_1_COMPLETION_REPORT.md) | Current progress | 10 min | Tracking progress |
 | [PROJECT_STATUS.md](PROJECT_STATUS.md) | Overall status | 10 min | High-level overview |
@@ -45,7 +46,7 @@
 ### Configuration
 
 | File | Purpose | Status |
-|------|---------|--------|
+| ---- | ------- | ------ |
 | [backend/.env](backend/.env) | Backend config | ✅ Created (needs values) |
 | [Onchainweb/.env](Onchainweb/.env) | Frontend config | ✅ Created (needs values) |
 | [.firebaserc](.firebaserc) | Firebase project | ⏳ Needs project ID |
@@ -54,7 +55,7 @@
 ### Deployment Guides
 
 | Document | Purpose | When to Use |
-|----------|---------|------------|
+| -------- | ------- | ----------- |
 | [BUILD_GUIDE.md](BUILD_GUIDE.md) | Building for production | Production build |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | Deploying to servers | Deployment |
 | [VERCEL_DEPLOYMENT_GUIDE.md](VERCEL_DEPLOYMENT_GUIDE.md) | Vercel deployment | Vercel users |
@@ -62,7 +63,7 @@
 ### Feature Documentation
 
 | Document | Purpose |
-|----------|---------|
+| -------- | ------- |
 | [WALLETCONNECT_IMPLEMENTATION.md](WALLETCONNECT_IMPLEMENTATION.md) | Wallet integration |
 | [FIREBASE_MIGRATION_GUIDE.md](FIREBASE_MIGRATION_GUIDE.md) | Migration to Firebase |
 | [REALTIME_DATA_ARCHITECTURE.md](REALTIME_DATA_ARCHITECTURE.md) | Real-time data design |
@@ -77,7 +78,7 @@ You're reading it! ✓
 
 ### Step 2: Quick Start (Choose One)
 
-```bash
+```bashbash
 # Option A: 15-minute quick start
 cat QUICK_START.md
 
@@ -112,7 +113,7 @@ open http://localhost:5173
 
 ### Phase Breakdown
 
-```
+```text
 Phase 1: Installation & Setup
 ├── ✅ Identify all issues
 ├── ✅ Install dependencies
@@ -256,7 +257,7 @@ cd Onchainweb && npm install
 ## 🔗 GitHub Pull Requests
 
 | PR | Status | Purpose |
-|----|--------|---------|
+| -- | ------ | ------- |
 | [#7](https://github.com/ddefi0175-netizen/Snipe-/pull/7) | Open | Error Audit Report |
 | [#8](https://github.com/ddefi0175-netizen/Snipe-/pull/8) | Open | Phase 1 Setup Complete |
 
