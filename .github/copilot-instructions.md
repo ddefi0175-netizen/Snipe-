@@ -182,11 +182,11 @@ Admins have granular permissions:
 ## Documentation
 
 For detailed information on specific topics, refer to:
-- **Quick Start**: [../QUICK_START_GUIDE.md](../QUICK_START_GUIDE.md)
-- **Backend Migration**: [../BACKEND_REPLACEMENT.md](../BACKEND_REPLACEMENT.md)
-- **Real-Time Data**: [../REALTIME_DATA_ARCHITECTURE.md](../REALTIME_DATA_ARCHITECTURE.md)
-- **Admin Guide**: [../ADMIN_USER_GUIDE.md](../ADMIN_USER_GUIDE.md)
-- **Deployment**: [../VERCEL_DEPLOYMENT_GUIDE.md](../VERCEL_DEPLOYMENT_GUIDE.md)
+- **Quick Start**: [QUICK_START_GUIDE.md](../QUICK_START_GUIDE.md)
+- **Backend Migration**: [BACKEND_REPLACEMENT.md](../BACKEND_REPLACEMENT.md)
+- **Real-Time Data**: [REALTIME_DATA_ARCHITECTURE.md](../REALTIME_DATA_ARCHITECTURE.md)
+- **Admin Guide**: [ADMIN_USER_GUIDE.md](../ADMIN_USER_GUIDE.md)
+- **Deployment**: [VERCEL_DEPLOYMENT_GUIDE.md](../VERCEL_DEPLOYMENT_GUIDE.md)
 
 ## Security Best Practices
 
