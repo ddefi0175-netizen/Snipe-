@@ -47,6 +47,7 @@ VITE_FIREBASE_MEASUREMENT_ID=G-XXXXX
 ```
 
 **Quick Copy Template**:
+
 ```bash
 # Update these with your actual Firebase credentials
 VITE_FIREBASE_API_KEY=
@@ -108,6 +109,7 @@ curl -X POST http://localhost:4000/api/auth/register \
 ## 📋 Complete Checklist
 
 ### Frontend Setup
+
 - [ ] Got Firebase credentials from Console
 - [ ] Updated `Onchainweb/.env` with all 7 values
 - [ ] Verified `VITE_FIREBASE_PROJECT_ID` is not undefined
@@ -115,6 +117,7 @@ curl -X POST http://localhost:4000/api/auth/register \
 - [ ] Can see app loading at localhost:5173
 
 ### Backend Setup
+
 - [ ] Created strong JWT_SECRET
 - [ ] Changed MASTER_USERNAME from 'master'
 - [ ] Changed MASTER_PASSWORD to something secure
@@ -122,12 +125,14 @@ curl -X POST http://localhost:4000/api/auth/register \
 - [ ] Backend starts without errors
 
 ### Firebase Project
+
 - [ ] Created Firebase project (or have existing one)
 - [ ] Enabled Email/Password authentication
 - [ ] Created Firestore database
 - [ ] Set security rules
 
 ### Database
+
 - [ ] Firebase connection working
 - [ ] Can write to Firestore
 - [ ] Can read from Firestore
@@ -137,11 +142,12 @@ curl -X POST http://localhost:4000/api/auth/register \
 
 ## 🚨 Common Issues & Fixes
 
-### Issue: "Firebase not initialized" or "firebaseConfig error"
+### Issue - "Firebase not initialized" or "firebaseConfig error"
 
 **Cause**: Missing/incorrect credentials in `.env`
 
 **Fix**:
+
 ```bash
 # 1. Double-check spelling in .env
 # 2. Verify no extra spaces: VITE_FIREBASE_API_KEY=abc (not = abc)
@@ -149,11 +155,12 @@ curl -X POST http://localhost:4000/api/auth/register \
 # 4. Clear browser cache (Ctrl+Shift+Del)
 ```
 
-### Issue: "Authentication failed" when trying to connect wallet
+### Issue - "Authentication failed" when trying to connect wallet
 
 **Cause**: Firebase Auth not enabled or no credentials
 
 **Fix**:
+
 ```bash
 # 1. Go to Firebase Console → Authentication
 # 2. Click "Get Started"
@@ -161,11 +168,12 @@ curl -X POST http://localhost:4000/api/auth/register \
 # 4. Deploy Firestore rules (see below)
 ```
 
-### Issue: "VITE_FIREBASE_API_KEY is undefined"
+### Issue - "VITE_FIREBASE_API_KEY is undefined"
 
 **Cause**: .env file not loaded or wrong location
 
 **Fix**:
+
 ```bash
 # 1. Verify .env is in Onchainweb/ directory (not backend/)
 # 2. Restart dev server: npm run dev
@@ -177,7 +185,8 @@ curl -X POST http://localhost:4000/api/auth/register \
 **Cause**: MONGO_URI not set (expected with Firebase)
 
 **Fix**: This is NORMAL. Backend should show:
-```
+
+```text
 MongoDB connection failed (expected - using Firebase instead)
 Backend running on port 4000
 ```
@@ -186,7 +195,8 @@ Backend running on port 4000
 
 ## 🔒 Security Notes
 
-### For Development:
+### For Development
+
 ```bash
 # Use placeholder values
 VITE_FIREBASE_API_KEY=AIz_SynpKP_placeholder
@@ -197,7 +207,8 @@ MASTER_USERNAME=admin
 MASTER_PASSWORD=admin123
 ```
 
-### For Production:
+### For Production
+
 ```bash
 # USE REAL CREDENTIALS FROM FIREBASE
 # NEVER commit .env to Git
@@ -211,7 +222,8 @@ export MASTER_PASSWORD=$(openssl rand -base64 32)
 ```
 
 ### .gitignore (ensure these are never committed)
-```
+
+```text
 .env
 .env.local
 .env.*.local
@@ -271,13 +283,15 @@ curl http://localhost:4000/api/health
 
 ## 📞 Need Help?
 
-### If Firebase credentials are missing:
+### If Firebase credentials are missing
+
 1. Check email for Firebase project invite
-2. Create new project: https://console.firebase.google.com
+2. Create new project: [https://console.firebase.google.com](https://console.firebase.google.com)
 3. Add Web app to your project
 4. Copy credentials to .env
 
-### If still getting errors:
+### If still getting errors
+
 1. Check browser DevTools (F12) → Console for errors
 2. Check backend terminal for error messages
 3. Verify .env files have no extra spaces
