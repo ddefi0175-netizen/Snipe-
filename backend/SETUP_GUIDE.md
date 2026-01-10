@@ -12,7 +12,7 @@
 
 ## Dependencies Installed
 
-```
+```text
 snipe-backend@1.0.0
 ├── bcryptjs@3.0.3          (Password hashing)
 ├── cors@2.8.5              (Cross-origin requests)
@@ -67,7 +67,8 @@ npm run dev
 ```
 
 **Expected Output:**
-```
+
+```text
 ✅ Server running on http://localhost:4000
 ✅ Firebase initialized
 ✅ Ready to accept requests
@@ -78,6 +79,7 @@ npm run dev
 ### node_modules is NOT in Git
 
 ✅ **This is intentional** - best practice
+
 - node_modules is in .gitignore
 - Dependencies are defined in package-lock.json
 - After cloning, run `npm install` to restore
@@ -85,6 +87,7 @@ npm run dev
 ### .env File is NOT in Git
 
 ✅ **This is intentional** - security practice
+
 - .env is in .gitignore
 - Contains sensitive credentials
 - Never commit secrets to git
@@ -93,6 +96,7 @@ npm run dev
 ### MongoDB Backend is Deprecated
 
 ⚠️ **Note for v2.0.0+**:
+
 - MongoDB (mongoose) is kept for legacy compatibility
 - Primary database is Firebase Firestore
 - New deployments: use Firebase only
@@ -110,6 +114,7 @@ npm install
 ### "Cannot find module 'express'"
 
 Same solution:
+
 ```bash
 npm install
 ```
@@ -117,6 +122,7 @@ npm install
 ### ".env file not found"
 
 Create from example:
+
 ```bash
 cp .env.example .env
 # Then edit .env with your values
@@ -131,7 +137,7 @@ cp .env.example .env
 
 ## What NOT to Commit
 
-```
+```text
 ❌ node_modules/           (too large, auto-generated)
 ❌ .env                    (contains secrets)
 ❌ .DS_Store               (macOS files)
@@ -140,7 +146,7 @@ cp .env.example .env
 
 ## What IS Committed
 
-```
+```text
 ✅ package.json            (dependencies list)
 ✅ package-lock.json       (locked versions)
 ✅ .env.example            (template only)
@@ -153,6 +159,7 @@ cp .env.example .env
 When deploying to production:
 
 1. **On target server**, run:
+
    ```bash
    npm install --production
    ```
@@ -164,6 +171,7 @@ When deploying to production:
    - NODE_ENV=production
 
 3. **Start with**:
+
    ```bash
    npm start
    # or with PM2:
@@ -173,6 +181,7 @@ When deploying to production:
 ## Support
 
 For issues with dependencies:
+
 - Check [package.json](package.json) for versions
 - Run `npm audit` to check for vulnerabilities
 - Run `npm update` to update packages safely
