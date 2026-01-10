@@ -46,15 +46,17 @@ Packages Installed:
 **Issue**: Weak default JWT secret in .env  
 **Status**: FIXED  
 **Action Taken**: Generated cryptographically secure JWT secret using `openssl rand -base64 32`
-**New Value**: `JWT_SECRET=0mw7Cb1w1LvaLybIlDw2aeudp+5kK0UZK9X5xCS9Cb4=`
+**New Value**: `JWT_SECRET=<SECURE_RANDOM_SECRET_GENERATED>`
 **Security**: 256-bit entropy, suitable for production
+**Note**: Actual value configured in backend/.env (not committed to git)
 
 ### 3. ✅ Secure Master Password Set
 **Issue**: Placeholder master password  
 **Status**: FIXED  
 **Action Taken**: Generated secure random password
-**New Value**: `MASTER_PASSWORD=VEsIxPULb158CfE9VQrWmA==`
-**Note**: Change this in your production deployment!
+**New Value**: `MASTER_PASSWORD=<SECURE_RANDOM_PASSWORD_GENERATED>`
+**Security**: Cryptographically secure random value
+**Note**: Actual value configured in backend/.env (not committed to git)
 
 ### 4. ✅ MongoDB URI Configured for Testing
 **Issue**: MongoDB connection string commented out  
@@ -279,10 +281,11 @@ Admin Dashboard → API Request → Backend → MongoDB Query → Real Data → 
 #### JWT Secret
 **Location**: `backend/.env`  
 **Variable**: `JWT_SECRET`  
-**Current Value**: `0mw7Cb1w1LvaLybIlDw2aeudp+5kK0UZK9X5xCS9Cb4=`  
+**Current Value**: `<SECURE_SECRET_CONFIGURED_LOCALLY>`  
 **Entropy**: 256 bits (32 bytes base64-encoded)  
 **Status**: ✅ Cryptographically secure  
-**Usage**: Signs and verifies JWT tokens for admin authentication
+**Usage**: Signs and verifies JWT tokens for admin authentication  
+**Generation**: `openssl rand -base64 32`
 
 **Security Measures**:
 - ✅ Stored in environment variable (not in code)
@@ -443,8 +446,8 @@ found 0 vulnerabilities ✅
 - All queries hit actual database, not cached data
 
 **Secret Key for Admin Control**: YES ✅
-- JWT_SECRET: `0mw7Cb1w1LvaLybIlDw2aeudp+5kK0UZK9X5xCS9Cb4=` (secure)
-- MASTER_PASSWORD: Secured in environment variable (secure)
+- JWT_SECRET: `<SECURE_SECRET_CONFIGURED>` (256-bit cryptographically secure)
+- MASTER_PASSWORD: `<SECURE_PASSWORD_CONFIGURED>` (environment variable)
 - No hardcoded credentials in codebase
 - All secrets in .env files (gitignored)
 - Bcrypt hashing for admin passwords
