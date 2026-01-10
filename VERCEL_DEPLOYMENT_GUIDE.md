@@ -101,7 +101,7 @@ dist/assets/index-[hash].js      496.01 kB
 
 **Problem**: `VITE_WALLETCONNECT_PROJECT_ID` not set or not available at build time
 
-**Solution**: 
+**Solution**:
 1. Verify the environment variable is set in Vercel dashboard
 2. Make sure it's set for "Production" environment
 3. Redeploy the application
