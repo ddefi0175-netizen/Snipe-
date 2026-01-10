@@ -1,214 +1,357 @@
-# Snipe Trading Platform - AI Agent Instructions
+# GitHub Copilot Instructions for Snipe Platform
 
-## Architecture Overview
+This document provides context and guidelines for GitHub Copilot when working on the Snipe trading platform codebase.
 
-**Snipe** is a Web3 trading platform with a **serverless Firebase backend** (migrated from MongoDB). The platform has two distinct authentication systems:
-1. **User Auth**: Web3 wallet-based (MetaMask, Trust Wallet, etc.) via WalletConnect
-2. **Admin Auth**: Firebase email/password (no wallet required)
+## Project Overview
 
-### Key Architectural Decisions
+Snipe is a modern, accessible real-time trading platform built with React and Firebase. It features:
+- Real-time cryptocurrency price updates
+- Multi-wallet connection support (11+ wallet providers)
+- Admin and user management systems
+- Live chat functionality
+- Real-time data synchronization
 
-- **Frontend-Only Deployment**: No backend server. All logic in React + Firebase SDK.
-- **Real-Time First**: Uses Firestore `onSnapshot` listeners, not REST polling.
-- **Route Separation**: Admin routes (`/admin`, `/master-admin`) bypass wallet authentication.
-- **Mobile-First**: Responsive design with bottom nav, works in wallet in-app browsers.
+## Tech Stack
 
-## Project Structure
+- **Frontend**: React 18 + Vite
+- **Backend**: Firebase (Serverless)
+- **Database**: Firebase Firestore
+- **Authentication**: Firebase Authentication + Web3 Wallet Connect
+- **Styling**: Tailwind CSS
+- **State Management**: React Context API
+- **Real-time Updates**: Firebase Realtime Database & Firestore listeners
 
+## Architecture
+
+### Backend Architecture
+The platform uses Firebase as a serverless backend, replacing the previous MongoDB + Express.js setup:
+- Firebase Firestore for data storage
+- Firebase Authentication for user management
+- Firebase Realtime Database for live updates
+- Cloud Functions for serverless logic (when needed)
+
+### Frontend Architecture
+- React-based SPA with Vite build system
+- Component-based architecture
+- Custom hooks for wallet connections and Firebase integration
+- Responsive design with Tailwind CSS
+
+## Code Style Guidelines
+
+### JavaScript/React
+- Use functional components with hooks
+- Follow React best practices for component composition
+- Use async/await for asynchronous operations
+- Implement proper error handling with try-catch blocks
+- Use descriptive variable and function names
+- Add JSDoc comments for complex functions
+
+### File Organization
 ```
-Onchainweb/                    # Frontend (React + Vite)
-  src/
-    services/                   # Business logic layer
-      firebase.service.js       # Firebase SDK initialization & auth
-      database.service.js       # Firestore CRUD operations
-      api.service.js           # Legacy API (backward compat only)
-    components/                 # UI components
-      WalletGateUniversal.jsx  # Wallet auth wrapper (users only)
-      AdminPanel.jsx           # Admin dashboard (no wallet)
-      MasterAdminDashboard.jsx # Master admin (no wallet)
-    lib/                        # Legacy utilities
-      walletConnect.jsx        # 11 wallet providers (MetaMask, Trust, etc.)
-      firebase.js             # Old Firebase wrapper (being phased out)
-    config/
-      firebase.config.js       # Firebase config & collection names
-      constants.js            # Routes, feature flags, roles
-    main.jsx                   # Router setup (critical for auth flow)
-firebase.json                  # Firebase hosting config
-firestore.rules                # Security rules (MUST sync with code)
-firestore.indexes.json         # Query indexes
-```
-
-## Critical Workflows
-
-### Development
-```bash
-cd Onchainweb
-npm install
-npm run dev  # Starts Vite at localhost:5173
-```
-
-### Testing
-```bash
-./run-all-tests.sh  # Runs all 4 test suites
-./test-firebase-realtime.sh  # Tests Firebase integration
-```
-
-### Deployment (Vercel/Firebase)
-```bash
-cd Onchainweb && npm run build  # Builds to Onchainweb/dist
-firebase deploy --only hosting  # Deploy to Firebase
-```
-
-**Important**: Always build from `Onchainweb/` directory. `vercel.json` specifies `buildCommand` and `outputDirectory`.
-
-## Authentication Patterns
-
-### User Auth (Wallet-Based)
-```jsx
-// main.jsx - User route REQUIRES WalletGate
-<Route path="/" element={
-  <WalletGate>  {/* Enforces wallet connection */}
-    <MainApp />
-  </WalletGate>
-} />
+Onchainweb/
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── pages/         # Page-level components
+│   ├── lib/           # Utility functions and helpers
+│   ├── hooks/         # Custom React hooks
+│   ├── context/       # React Context providers
+│   └── config/        # Configuration files
 ```
 
-### Admin Auth (Firebase Email/Password)
-```jsx
-// main.jsx - Admin routes BYPASS WalletGate
-<Route path="/admin" element={<AdminPanel />} />
-<Route path="/master-admin" element={<MasterAdminDashboard />} />
+### Naming Conventions
+- Components: PascalCase (e.g., `UserDashboard.jsx`)
+- Utilities: camelCase (e.g., `formatPrice.js`)
+- Constants: UPPER_SNAKE_CASE (e.g., `MAX_RETRY_COUNT`)
+- CSS classes: kebab-case (e.g., `user-profile-card`)
 
-// AdminPanel.jsx - Own login form
-const handleLogin = async (e) => {
-  const userCredential = await firebaseSignIn(email, password);
-  // Verify admin role in Firestore
-  const adminDoc = await getDoc(doc(db, 'admins', userCredential.user.uid));
-};
-```
+## Authentication System
 
-**NEVER** mix wallet auth and admin auth. Admin components must NOT import `useWallet` or `WalletGate`.
+### Dual Authentication
+The platform supports two authentication methods:
+
+1. **Wallet-Based (Regular Users)**
+   - Connect via MetaMask, Trust Wallet, or other Web3 wallets
+   - Uses WalletConnect protocol for mobile support
+   - EIP-6963 multi-wallet detection
+
+2. **Email/Password (Admin Users)**
+   - Firebase Authentication with email/password
+   - JWT token-based sessions
+   - Permission-based access control
+
+### Implementation Guidelines
+- Always validate user authentication before allowing access to protected routes
+- Use Firebase Auth state listeners for real-time auth status
+- Implement proper error handling for wallet connection failures
+- Separate user and admin authentication flows clearly
 
 ## Firebase Integration
 
-### Service Layer Pattern
-Always use `Onchainweb/src/services/` modules, not direct Firebase SDK calls:
+### Firestore Usage
+- Use real-time listeners for live data updates
+- Implement proper error handling for all Firebase operations
+- Follow Firebase security rules for data access
+- Use batch operations for multiple writes when possible
 
+### Example Patterns
 ```javascript
-// ✅ CORRECT: Use service layer
-import { db } from '../services/firebase.service.js';
-import { getUsers, updateUserBalance } from '../services/database.service.js';
-
-// ❌ WRONG: Direct Firebase import
-import { getFirestore } from 'firebase/firestore';
-```
-
-### Real-Time Listeners
-**Pattern**: Setup listener in `useEffect`, cleanup on unmount:
-
-```javascript
+// Listening to real-time updates
 useEffect(() => {
-  const unsubscribe = subscribeToChatMessages((messages) => {
-    setMessages(messages);
+  const unsubscribe = onSnapshot(doc(db, 'users', userId), (doc) => {
+    setUserData(doc.data());
   });
-  return () => unsubscribe();  // CRITICAL: Prevent memory leaks
-}, []);
+  return () => unsubscribe();
+}, [userId]);
+
+// Writing data
+await setDoc(doc(db, 'users', userId), {
+  balance: newBalance,
+  updatedAt: serverTimestamp()
+}, { merge: true });
 ```
 
-### Firestore Collections
-Defined in `config/firebase.config.js`:
-- `users` - User profiles, balances, wallet addresses
-- `admins` - Admin accounts with permissions
-- `trades` - Trading history
-- `chatMessages` - Live chat (with sessionId)
-- `activityLogs` - Admin action audit trail
+## Wallet Connection
 
-**Security**: Firestore rules in `firestore.rules` enforce read/write permissions. If adding new queries, update rules AND `firestore.indexes.json`.
+### Supported Wallets
+- MetaMask (injected + WalletConnect)
+- Trust Wallet (deep link + WalletConnect)
+- Coinbase Wallet
+- OKX Wallet
+- Phantom (EVM mode)
+- Binance Web3 Wallet
+- TokenPocket
+- Rainbow
+- Ledger Live
+- imToken
+- WalletConnect (universal)
 
-## Multi-Wallet System
+### Implementation Notes
+- Use environment detection for optimal connection method
+- Implement fallback strategies (injected → deep link → WalletConnect)
+- Handle mobile dApp browser detection
+- Provide clear error messages for connection issues
 
-11 providers supported via `lib/walletConnect.jsx`:
-- **Injected**: MetaMask, Trust Wallet, Coinbase, OKX, Phantom, Rabby, Brave, Rainbow
-- **WalletConnect**: QR code fallback for mobile wallets
-- **Requires**: `VITE_WALLETCONNECT_PROJECT_ID` in `.env`
+## Real-Time Data
 
-### Wallet Connection Flow
-```jsx
-const { connectWallet, address, disconnect } = useUniversalWallet();
+### Architecture
+All data updates use Firebase Firestore real-time listeners (WebSocket):
+- User balances: Real-time synchronization
+- Trade updates: Instant notifications
+- Chat messages: WebSocket-based delivery
+- Admin actions: Live activity logs
 
-// User clicks wallet button
-await connectWallet('metamask');  // or 'trustwallet', 'coinbase', etc.
+### Performance
+- Updates delivered in <50ms
+- No polling required
+- Automatic reconnection on connection loss
 
-// QR fallback if no injected provider
-await connectWallet('walletconnect');
+## Admin System
+
+### Permission Structure
+Admins have granular permissions:
+- `manageUsers`: View/edit user profiles
+- `manageBalances`: Modify account balances
+- `manageKYC`: Review KYC submissions
+- `manageTrades`: Monitor trades
+- `viewReports`: Access analytics
+- `manageDeposits`: Process deposits
+- `manageWithdrawals`: Approve withdrawals
+- `customerService`: Support tickets
+- `viewLogs`: System audit logs
+- `siteSettings`: Platform settings
+- `createAdmins`: Create admin accounts
+
+### User Access Modes
+- `all`: Access to all users
+- `assigned`: Access to specific user IDs only
+
+## Testing Guidelines
+
+### Unit Tests
+- Test utility functions and helpers
+- Mock Firebase operations in tests
+- Use Jest for test runner
+- Aim for >80% code coverage
+
+### Integration Tests
+- Test wallet connection flows
+- Verify Firebase operations
+- Test authentication flows
+- Validate admin permission checks
+
+## Documentation
+
+For detailed information on specific topics, refer to:
+- **Quick Start**: [QUICK_START_GUIDE.md](../QUICK_START_GUIDE.md)
+- **Backend Migration**: [BACKEND_REPLACEMENT.md](../BACKEND_REPLACEMENT.md)
+- **Real-Time Data**: [REALTIME_DATA_ARCHITECTURE.md](../REALTIME_DATA_ARCHITECTURE.md)
+- **Admin Guide**: [ADMIN_USER_GUIDE.md](../ADMIN_USER_GUIDE.md)
+- **Deployment**: [VERCEL_DEPLOYMENT_GUIDE.md](../VERCEL_DEPLOYMENT_GUIDE.md)
+
+## Security Best Practices
+
+### General
+- Never commit API keys, secrets, or credentials
+- Use environment variables for sensitive data
+- Validate all user inputs
+- Implement rate limiting for API calls
+- Use HTTPS in production
+
+### Firebase Security
+- Deploy proper Firestore security rules
+- Validate authentication on server side
+- Use Firebase Admin SDK for privileged operations
+- Implement proper CORS policies
+
+### Wallet Security
+- Never request private keys
+- Validate all transaction data
+- Implement proper signature verification
+- Use secure random number generation
+
+## Common Patterns
+
+### Error Handling
+```javascript
+try {
+  await performOperation();
+} catch (error) {
+  console.error('Operation failed:', error);
+  // Show user-friendly error message
+  showNotification('Operation failed. Please try again.');
+}
 ```
 
-## Environment Configuration
+### Loading States
+```javascript
+const [loading, setLoading] = useState(false);
 
-### Required Variables (`.env`)
+const handleAction = async () => {
+  setLoading(true);
+  try {
+    await performAction();
+  } finally {
+    setLoading(false);
+  }
+};
+```
+
+### Form Validation
+```javascript
+const validateForm = (formData) => {
+  const errors = {};
+  if (!formData.email) errors.email = 'Email is required';
+  if (!formData.amount || formData.amount <= 0) {
+    errors.amount = 'Amount must be positive';
+  }
+  return errors;
+};
+```
+
+## Deployment
+
+### Vercel Deployment
+- Platform is optimized for Vercel deployment
+- Environment variables configured in Vercel dashboard
+- Automatic deployments on git push
+
+### Firebase Deployment
+- Deploy Firestore rules: `firebase deploy --only firestore:rules`
+- Deploy indexes: `firebase deploy --only firestore:indexes`
+- Deploy Cloud Functions: `firebase deploy --only functions`
+
+## Performance Optimization
+
+### React Performance
+- Use React.memo for expensive components
+- Implement lazy loading for routes
+- Optimize re-renders with useCallback and useMemo
+- Use React Suspense for code splitting
+
+### Firebase Performance
+- Use pagination for large lists
+- Implement proper indexing
+- Cache frequently accessed data
+- Use Firebase Performance Monitoring
+
+## Accessibility
+
+- Follow WCAG 2.1 Level AA guidelines
+- Implement proper ARIA labels
+- Ensure keyboard navigation
+- Provide text alternatives for images
+- Test with screen readers
+
+## Mobile Responsiveness
+
+- Use Tailwind's responsive utilities
+- Test on multiple device sizes
+- Implement touch-friendly UI elements
+- Optimize for mobile performance
+
+## Development Workflow
+
+### Local Development
 ```bash
-# Firebase (REQUIRED)
-VITE_FIREBASE_API_KEY=...
-VITE_FIREBASE_PROJECT_ID=...
-VITE_FIREBASE_AUTH_DOMAIN=...
+# Start frontend
+cd Onchainweb
+npm run dev
 
-# WalletConnect (REQUIRED for mobile wallets)
-VITE_WALLETCONNECT_PROJECT_ID=...
+# Build for production
+npm run build
 
-# Legacy API (DEPRECATED - leave empty)
-VITE_API_BASE=
+# Preview production build
+npm run preview
 ```
 
-**Never commit** `.env` file. Use `.env.example` as template.
+### Environment Setup
+- Copy `.env.example` to `.env`
+- Fill in Firebase credentials
+- Set WalletConnect Project ID
+- Configure other API keys as needed
 
-## Common Pitfalls
+## Git Workflow
 
-1. **Cold Start Confusion**: Old docs mention MongoDB cold starts. Firebase has NONE.
-2. **Polling vs Real-Time**: Never use `setInterval` for data updates. Use `onSnapshot` listeners.
-3. **Admin Wallet Dependency**: Admin routes must NOT check `isConnected` or require wallet.
-4. **Build Directory**: Always `cd Onchainweb` before `npm run build`. Root has no package.json.
-5. **Firestore Rules**: When adding queries, update `firestore.rules` AND `firestore.indexes.json`.
-6. **Listener Cleanup**: Always return cleanup function from `useEffect` to unsubscribe.
+- Create feature branches from `main`
+- Use descriptive commit messages
+- Keep commits atomic and focused
+- Run tests before committing
+- Submit pull requests for review
 
-## Testing Strategy
+## Troubleshooting
 
-Test scripts verify production readiness:
-- `test-firebase-realtime.sh` - Firebase integration
-- `test-admin-access-control.sh` - Admin permissions
-- `test-login-functionality.sh` - Auth flows
-- `test-performance.sh` - Load times
+### Common Issues
 
-**Before PR**: Run `./run-all-tests.sh` and ensure all pass.
+1. **Firebase not initialized**
+   - Check `.env` file has all VITE_FIREBASE_* variables
+   - Verify Firebase project is active
 
-## Documentation Quick Links
+2. **Wallet connection fails**
+   - Check WalletConnect Project ID is set
+   - Verify wallet extension is installed
+   - Try WalletConnect QR code fallback
 
-- **Setup**: [QUICK_START_GUIDE.md](/QUICK_START_GUIDE.md)
-- **Firebase Migration**: [BACKEND_REPLACEMENT.md](/BACKEND_REPLACEMENT.md)
-- **Real-Time Data**: [REALTIME_DATA_ARCHITECTURE.md](/REALTIME_DATA_ARCHITECTURE.md)
-- **Admin Guide**: [ADMIN_USER_GUIDE.md](/ADMIN_USER_GUIDE.md)
-- **Deployment**: [VERCEL_DEPLOYMENT_GUIDE.md](/VERCEL_DEPLOYMENT_GUIDE.md)
+3. **Build errors**
+   - Clear node_modules and reinstall
+   - Check Node.js version (18+ required)
+   - Verify all dependencies are installed
 
-## Code Style Conventions
+## Additional Resources
 
-- **Components**: PascalCase files (`AdminPanel.jsx`)
-- **Services**: camelCase with `.service.js` suffix
-- **Config**: camelCase with `.config.js` suffix
-- **Async/Await**: Preferred over `.then()` chains
-- **Error Handling**: Use try/catch blocks, log to console, show user-friendly messages
-- **Accessibility**: All interactive elements must be keyboard navigable
+- [Firebase Documentation](https://firebase.google.com/docs)
+- [React Documentation](https://react.dev)
+- [WalletConnect Docs](https://docs.walletconnect.com)
+- [Vite Documentation](https://vitejs.dev)
+- [Tailwind CSS Docs](https://tailwindcss.com/docs)
 
-## When Adding Features
+## Support
 
-1. **Check Firebase limits**: Free tier = 50k reads/day, 20k writes/day
-2. **Update Firestore rules**: Security rules in `firestore.rules`
-3. **Add indexes**: Complex queries need indexes in `firestore.indexes.json`
-4. **Test offline**: Firebase SDK caches data, test with network throttling
-5. **Document in README**: Update relevant guide in root directory
+For questions or issues:
+- Check the documentation files in the repository root
+- Open an issue on GitHub
+- Contact: ddefi0175@gmail.com
 
-## Deprecated Patterns (DO NOT USE)
+---
 
-- `backend/` directory (old MongoDB Express server)
-- `lib/api.js` direct imports (use `services/api.service.js`)
-- REST API endpoints (replaced with Firebase SDK)
-- Polling with `setInterval` (use `onSnapshot`)
-- `WalletGate` for admin routes (admin has own auth)
+**Last Updated**: January 2026
+**Maintained By**: Snipe Development Team
