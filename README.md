@@ -17,35 +17,62 @@ and live chat functionality. Built with React and Firebase.
 
 **Major Improvement**: The platform has been upgraded to use **Firebase** as the backend, replacing the previous MongoDB + Express.js setup. This provides:
 
-✅ **Serverless Architecture** - No backend server to maintain  
-✅ **Better Reliability** - 99.95% uptime, no cold starts  
-✅ **Real-Time Updates** - WebSocket listeners instead of polling  
-✅ **Lower Costs** - Pay-per-use instead of fixed server costs  
-✅ **Easier Deployment** - Frontend-only deployment  
+✅ **Serverless Architecture** - No backend server to maintain
+✅ **Better Reliability** - 99.95% uptime, no cold starts
+✅ **Real-Time Updates** - WebSocket listeners instead of polling
+✅ **Lower Costs** - Pay-per-use instead of fixed server costs
+✅ **Easier Deployment** - Frontend-only deployment
 
 📖 **[Read the Backend Replacement Guide](BACKEND_REPLACEMENT.md)** for full details.
 
 ---
 
-## 🎉 Public Release v2.0.0
+## ⚡ Quick Start (5 Minutes)
 
-Snipe is **production-ready** with Firebase backend! All systems operational:
+### Prerequisites
+```bash
+Node.js 18+
+npm or yarn
+```
 
-✅ **Wallet Connections**: 11 providers tested and working  
-✅ **Real-Time Data**: All features use Firebase Firestore with real-time listeners  
-✅ **Admin Control**: Master and admin accounts with Firebase Authentication  
-✅ **Security**: Firebase security rules, no hardcoded credentials  
-✅ **Device Compatible**: Works on desktop, tablet, and mobile devices  
-✅ **Performance**: Fast loading (<500ms), no cold starts with Firebase  
-✅ **Documentation**: Complete guides for deployment and maintenance  
+### 1️⃣ Get Firebase Credentials (3 min)
+Go to **[https://console.firebase.google.com](https://console.firebase.google.com)**
+- Create/select project
+- Settings → Your apps → Web
+- Copy configuration values
 
-**📖 Quick Links**:
-- [🔥 Backend Replacement Guide](BACKEND_REPLACEMENT.md) - Why and how we replaced MongoDB with Firebase
-- [🚀 Firebase Migration Summary](FIREBASE_MIGRATION_SUMMARY.md) - Firebase architecture overview
-- [📖 Firebase Setup Guide](FIREBASE_SETUP.md) - How to set up Firebase for your deployment
-- [🚀 Quick Start Guide](QUICK_START_FIREBASE.md) - 10-minute Firebase setup
-- [🔧 Deployment Guide](DEPLOYMENT.md) - How to deploy your own instance
-- [📊 Maintenance Plan](MAINTENANCE.md) - Long-term operational procedures
+### 2️⃣ Configure Frontend (1 min)
+```bash
+# Update these 7 values in Onchainweb/.env
+VITE_FIREBASE_API_KEY=your-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-auth-domain
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-storage
+VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+VITE_FIREBASE_APP_ID=your-app-id
+VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
+```
+
+### 3️⃣ Run (1 min)
+```bash
+cd Onchainweb
+npm run dev
+```
+
+🎉 **App running at**: http://localhost:5173
+
+---
+
+## 📖 Configuration & Setup Guides
+
+| Guide | Purpose | Time |
+|-------|---------|------|
+| **[QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)** | Setup overview with both options | 5 min |
+| **[CONFIGURATION_STATUS.md](CONFIGURATION_STATUS.md)** | Current config status + how to get credentials | 10 min |
+| **[FIREBASE_CREDENTIALS_REPORT.md](FIREBASE_CREDENTIALS_REPORT.md)** | Detailed credentials breakdown | Reference |
+| **[backend/SETUP_GUIDE.md](backend/SETUP_GUIDE.md)** | Backend setup (optional, legacy) | 10 min |
+| **[DEPLOYMENT.md](DEPLOYMENT.md)** | Production deployment | 30 min |
+| **[VERCEL_DEPLOYMENT_GUIDE.md](VERCEL_DEPLOYMENT_GUIDE.md)** | Deploy to Vercel | 15 min |
 
 ---
 
@@ -72,7 +99,7 @@ Admin and Master accounts use **Firebase Authentication** with email + password.
   - Password: Set when admin account is created
   - **Access**: Permission-based (configured by master)
 
-- **Authentication**: 
+- **Authentication**:
   - Firebase Authentication (Email/Password provider)
   - Token-based session management
   - Completely separate from wallet-based user authentication
@@ -88,7 +115,7 @@ Admin and Master accounts use **Firebase Authentication** with email + password.
 
 ### Dual Authentication System
 
-- **👥 Regular Users (Wallet-Based)**: 
+- **👥 Regular Users (Wallet-Based)**:
   - Connect MetaMask, Trust Wallet, or 11+ supported Web3 wallets
   - Access trading, deposits, withdrawals, and live chat
   - Wallet connection required for all user functions
