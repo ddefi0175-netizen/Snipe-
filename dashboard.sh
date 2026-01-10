@@ -317,7 +317,7 @@ if [ $pass_checks -eq 12 ]; then
   echo "   Next steps:"
   echo "   1. Run ./validate-config.sh for detailed verification"
   echo "   2. Test database connection: curl http://localhost:4000/api/health"
-  echo "   3. Check app at http://localhost:5174"
+  echo "   3. Check app at http://localhost:5173"
 elif [ $pass_checks -ge 6 ]; then
   echo -e "${YELLOW}⚠️  PARTIALLY CONFIGURED${NC}"
   echo "   Some credentials are set, but missing or incomplete values remain."

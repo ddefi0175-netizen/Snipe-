@@ -179,7 +179,7 @@ npm run dev
 
 **Expected Output**:
 ```
-✓ VITE v5.4.21 running at http://localhost:5174
+✓ VITE v5.4.21 running at http://localhost:5173
 ✓ Firebase initialized
 ✓ WalletConnect loaded
 ```
@@ -215,7 +215,7 @@ npm run dev
 
 ### STEP 7: Test Database Connection (2 min)
 
-**In Browser Console** (http://localhost:5174):
+**In Browser Console** (http://localhost:5173):
 ```javascript
 // Check Firebase is initialized
 console.log(import.meta.env.VITE_FIREBASE_PROJECT_ID)

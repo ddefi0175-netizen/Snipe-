@@ -90,12 +90,12 @@ else
 fi
 
 # Check frontend server
-if lsof -Pi :5174 -sTCP:LISTEN -t >/dev/null 2>&1; then
-  echo -e "  ${GREEN}✅${NC} Frontend Server: RUNNING on port 5174"
-  frontend_pid=$(lsof -ti :5174)
-  echo "     Process ID: $frontend_pid"
+if lsof -Pi :5173 -sTCP:LISTEN -t >/dev/null 2>&1; then
+  echo -e "  ${GREEN}✅${NC} Frontend Server: RUNNING on port 5173"
+  frontend_pid=$(lsof -ti :5173)
+    echo "     Process ID: $frontend_pid"
 else
-  echo -e "  ${RED}❌${NC} Frontend Server: NOT RUNNING (expected port 5174)"
+  echo -e "  ${RED}❌${NC} Frontend Server: NOT RUNNING (expected port 5173)"
   echo "     Start with: cd Onchainweb && npm run dev"
 fi
 
@@ -125,10 +125,10 @@ fi
 
 echo ""
 echo -e "${CYAN}Frontend Connectivity:${NC}"
-if timeout 3 curl -s http://localhost:5174 >/dev/null 2>&1; then
-  echo -e "  ${GREEN}✅${NC} Frontend responding on port 5174"
+if timeout 3 curl -s http://localhost:5173 >/dev/null 2>&1; then
+  echo -e "  ${GREEN}✅${NC} Frontend responding on port 5173"
 else
-  echo -e "  ${RED}❌${NC} Frontend not responding on port 5174"
+  echo -e "  ${RED}❌${NC} Frontend not responding on port 5173"
 fi
 
 echo ""
@@ -149,7 +149,7 @@ grep -q "VITE_FIREBASE_API_KEY=AIzaSyD" Onchainweb/.env && passes=$((passes + 1)
 grep -q '"default": "onchainweb-37d30"' .firebaserc && passes=$((passes + 1))
 [ -f "firestore.rules" ] && passes=$((passes + 1))
 lsof -Pi :4000 -sTCP:LISTEN -t >/dev/null 2>&1 && passes=$((passes + 1))
-lsof -Pi :5174 -sTCP:LISTEN -t >/dev/null 2>&1 && passes=$((passes + 1))
+lsof -Pi :5173 -sTCP:LISTEN -t >/dev/null 2>&1 && passes=$((passes + 1))
 
 echo "Configuration & Servers: $passes/$total passing ($(( passes * 100 / total ))%)"
 echo ""
@@ -177,7 +177,7 @@ echo ""
 echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
 echo -e "${CYAN}🔗 QUICK ACCESS:${NC}"
 echo ""
-echo "   Frontend:  http://localhost:5174"
+echo "   Frontend:  http://localhost:5173"
 echo "   Backend:   http://localhost:4000"
 echo "   DevTools:  F12 in browser → Console"
 echo ""

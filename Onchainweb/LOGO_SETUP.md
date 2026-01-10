@@ -23,7 +23,7 @@
    ```bash
    cd Onchainweb
    npm run dev
-   # Visit http://localhost:5174
+   # Visit http://localhost:5173
    # Your logo should appear in the top-left corner
    ```
 
@@ -140,6 +140,6 @@ That's it! Your logo will appear in the header with automatic fallbacks and styl
 
 ---
 
-**Status**: Ready to use with your custom logo  
-**Fallback**: SVG placeholder active until logo is added  
+**Status**: Ready to use with your custom logo
+**Fallback**: SVG placeholder active until logo is added
 **Theme**: Matches dark blue theme with cyan accents

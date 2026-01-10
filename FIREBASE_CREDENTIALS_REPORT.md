@@ -220,7 +220,7 @@ npm run dev
 **Expected Output**:
 ```
 ✓ Backend running on http://localhost:4000
-✓ Frontend running at http://localhost:5174
+✓ Frontend running at http://localhost:5173
 ✓ Firebase initialized
 ```
 
@@ -228,7 +228,7 @@ npm run dev
 
 ### Phase 7: Test Connection (1 min)
 
-**In Browser** (http://localhost:5174):
+**In Browser** (http://localhost:5173):
 1. Open DevTools → Console
 2. Paste: `console.log(import.meta.env.VITE_FIREBASE_PROJECT_ID)`
 3. Should show: `onchainweb-37d30` (NOT "your-firebase-project-id")

@@ -74,12 +74,12 @@ npm run dev
 # Terminal 2 - Frontend
 cd Onchainweb
 npm run dev
-# Expected: ✓ VITE v5.4.21 running at http://localhost:5174
+# Expected: ✓ VITE v5.4.21 running at http://localhost:5173
 ```
 
 ### Step 6: Test Connection (1 min)
 
-**In Browser DevTools Console** (http://localhost:5174):
+**In Browser DevTools Console** (http://localhost:5173):
 ```javascript
 // Should show your Firebase project ID (not "your-")
 console.log(import.meta.env.VITE_FIREBASE_PROJECT_ID)

@@ -148,7 +148,7 @@ if [ $fail_count -eq 0 ]; then
   echo "Next steps:"
   echo "1. Start backend: cd backend && npm run dev"
   echo "2. Start frontend: cd Onchainweb && npm run dev"
-  echo "3. Test wallet connection at http://localhost:5174"
+  echo "3. Test wallet connection at http://localhost:5173"
 else
   echo -e "${YELLOW}⚠️  Some configuration items need attention${NC}"
   echo ""

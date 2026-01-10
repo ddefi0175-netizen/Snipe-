@@ -114,6 +114,6 @@ echo "────────────────────────�
 echo ""
 echo "1. Start backend:  cd backend && npm run dev"
 echo "2. Start frontend: cd Onchainweb && npm run dev"
-echo "3. Test at: http://localhost:5174"
+echo "3. Test at: http://localhost:5173"
 echo ""
 echo "═════════════════════════════════════════════════════════════════"

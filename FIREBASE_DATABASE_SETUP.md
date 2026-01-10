@@ -112,7 +112,7 @@ curl -X POST http://localhost:4000/api/auth/register \
 - [ ] Updated `Onchainweb/.env` with all 7 values
 - [ ] Verified `VITE_FIREBASE_PROJECT_ID` is not undefined
 - [ ] Dev server starts without errors
-- [ ] Can see app loading at localhost:5174
+- [ ] Can see app loading at localhost:5173
 
 ### Backend Setup
 - [ ] Created strong JWT_SECRET
