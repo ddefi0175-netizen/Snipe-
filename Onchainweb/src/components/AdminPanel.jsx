@@ -72,100 +72,53 @@ export default function AdminPanel({ isOpen = true, onClose }) {
   })
 
   // Global settings
-  const [globalSettings, setGlobalSettings] = useState(() => {
-    const saved = localStorage.getItem('globalAdminSettings')
-    return saved ? JSON.parse(saved) : {
-      welcomeBonus: 100,
-      referralBonus: 50,
-      tradingFee: 0.1,
-      withdrawalFee: 1,
-      minDeposit: 10,
-      minWithdrawal: 20,
-      maxWithdrawal: 10000,
-      kycRequired: true,
-      maintenanceMode: false,
-      announcement: ''
-    }
+  const [globalSettings, setGlobalSettings] = useState({
+    welcomeBonus: 100,
+    referralBonus: 50,
+    tradingFee: 0.1,
+    withdrawalFee: 1,
+    minDeposit: 10,
+    minWithdrawal: 20,
+    maxWithdrawal: 10000,
+    kycRequired: true,
+    maintenanceMode: false,
+    announcement: ''
   })
 
   // Trade outcome control
-  const [tradeControl, setTradeControl] = useState(() => {
-    const saved = localStorage.getItem('adminTradeControl')
-    return saved ? JSON.parse(saved) : {
-      mode: 'auto', // 'auto', 'win', 'lose'
-      winRate: 50,
-      targetUserId: ''
-    }
+  const [tradeControl, setTradeControl] = useState({
+    mode: 'auto', // 'auto', 'win', 'lose'
+    winRate: 50,
+    targetUserId: ''
   })
 
   // Binary Trading Levels
-  const [tradingLevels, setTradingLevels] = useState(() => {
-    const saved = localStorage.getItem('tradingLevels')
-    return saved ? JSON.parse(saved) : DEFAULT_TRADING_LEVELS
-  })
+  const [tradingLevels, setTradingLevels] = useState(DEFAULT_TRADING_LEVELS)
 
   // AI Arbitrage Levels
-  const [arbitrageLevels, setArbitrageLevels] = useState(() => {
-    const saved = localStorage.getItem('aiArbitrageLevels')
-    return saved ? JSON.parse(saved) : DEFAULT_ARBITRAGE_LEVELS
-  })
+  const [arbitrageLevels, setArbitrageLevels] = useState(DEFAULT_ARBITRAGE_LEVELS)
 
   // Bonus Programs
-  const [bonusPrograms, setBonusPrograms] = useState(() => {
-    const saved = localStorage.getItem('adminBonusPrograms')
-    return saved ? JSON.parse(saved) : {
-      welcomeBonus: { amount: 100, enabled: true, description: 'Welcome bonus for new users' },
-      referralBonus: { amount: 50, enabled: true, description: 'Referral bonus per friend' },
-      tradingCashback: { percentage: 20, enabled: true, description: 'Trading cashback percentage' },
-      stakingRewards: { apy: 12, enabled: true, description: 'Annual staking rewards' },
-      vipBonus: {
-        enabled: true,
-        levels: [
-          { level: 1, bonus: 0 },
-          { level: 2, bonus: 5 },
-          { level: 3, bonus: 10 },
-          { level: 4, bonus: 15 },
-          { level: 5, bonus: 25 }
-        ]
-      },
-      promotionEnd: '2025-01-31'
-    }
+  const [bonusPrograms, setBonusPrograms] = useState({
+    welcomeBonus: { amount: 100, enabled: true, description: 'Welcome bonus for new users' },
+    referralBonus: { amount: 50, enabled: true, description: 'Referral bonus per friend' },
+    tradingCashback: { percentage: 20, enabled: true, description: 'Trading cashback percentage' },
+    stakingRewards: { apy: 12, enabled: true, description: 'Annual staking rewards' },
+    vipBonus: {
+      enabled: true,
+      levels: [
+        { level: 1, bonus: 0 },
+        { level: 2, bonus: 5 },
+        { level: 3, bonus: 10 },
+        { level: 4, bonus: 15 },
+        { level: 5, bonus: 25 }
+      ]
+    },
+    promotionEnd: '2025-01-31'
   })
 
   // Deposit Addresses
-  const [depositAddresses, setDepositAddresses] = useState(() => {
-    const saved = localStorage.getItem('adminDepositAddresses')
-    return saved ? JSON.parse(saved) : DEFAULT_DEPOSIT_ADDRESSES
-  })
-
-  // Save to localStorage
-  useEffect(() => {
-    localStorage.setItem('adminAccounts', JSON.stringify(adminAccounts))
-  }, [adminAccounts])
-
-  useEffect(() => {
-    localStorage.setItem('globalAdminSettings', JSON.stringify(globalSettings))
-  }, [globalSettings])
-
-  useEffect(() => {
-    localStorage.setItem('adminTradeControl', JSON.stringify(tradeControl))
-  }, [tradeControl])
-
-  useEffect(() => {
-    localStorage.setItem('tradingLevels', JSON.stringify(tradingLevels))
-  }, [tradingLevels])
-
-  useEffect(() => {
-    localStorage.setItem('aiArbitrageLevels', JSON.stringify(arbitrageLevels))
-  }, [arbitrageLevels])
-
-  useEffect(() => {
-    localStorage.setItem('adminBonusPrograms', JSON.stringify(bonusPrograms))
-  }, [bonusPrograms])
-
-  useEffect(() => {
-    localStorage.setItem('adminDepositAddresses', JSON.stringify(depositAddresses))
-  }, [depositAddresses])
+  const [depositAddresses, setDepositAddresses] = useState(DEFAULT_DEPOSIT_ADDRESSES)
 
   // Load current user data
   useEffect(() => {
@@ -194,18 +147,8 @@ export default function AdminPanel({ isOpen = true, onClose }) {
           setAllUsers(users)
         }
         
-        // Refresh trading levels
-        const levels = await tradingLevelsAPI.getAll()
-        if (Array.isArray(levels)) {
-          const mappedLevels = levels.map((l, idx) => ({
-            level: l.level || idx + 1,
-            minCapital: l.minCapital,
-            maxCapital: l.maxCapital,
-            profit: l.profitPercent,
-            duration: l.countdown
-          }))
-          setTradingLevels(mappedLevels)
-        }
+        // Refresh settings from backend
+        loadConfigFromBackend()
       } catch (error) {
         console.log('Background refresh error:', error)
       }
@@ -230,38 +173,57 @@ export default function AdminPanel({ isOpen = true, onClose }) {
 
   const loadConfigFromBackend = async () => {
     try {
-      // Load trading levels from backend
-      const levels = await tradingLevelsAPI.getAll()
-      if (Array.isArray(levels)) {
-        const mappedLevels = levels.map((l, idx) => ({
-          level: l.level || idx + 1,
-          minCapital: l.minCapital,
-          maxCapital: l.maxCapital,
-          profit: l.profitPercent,
-          duration: l.countdown
-        }))
-        setTradingLevels(mappedLevels)
-        console.log('Admin: Loaded trading levels from backend')
+      // Load all settings from backend
+      const settings = await settingsAPI.get()
+      
+      if (settings && settings.success && settings.settings) {
+        const s = settings.settings
+        
+        // Update global settings
+        if (s.globalSettings) {
+          setGlobalSettings({
+            welcomeBonus: s.welcomeBonus || 100,
+            referralBonus: s.referralBonus || 50,
+            tradingFee: s.globalSettings.tradingFee || 0.1,
+            withdrawalFee: s.withdrawalFee || 1,
+            minDeposit: s.globalSettings.minDeposit || 10,
+            minWithdrawal: s.minWithdrawal || 20,
+            maxWithdrawal: s.maxWithdrawal || 10000,
+            kycRequired: s.globalSettings.kycRequired !== undefined ? s.globalSettings.kycRequired : true,
+            maintenanceMode: s.maintenanceMode || false,
+            announcement: s.globalSettings.announcement || ''
+          })
+        }
+        
+        // Update trade control (master only)
+        if (s.tradeControl) {
+          setTradeControl(s.tradeControl)
+        }
+        
+        // Update trading levels
+        if (s.tradingLevels && Array.isArray(s.tradingLevels) && s.tradingLevels.length > 0) {
+          setTradingLevels(s.tradingLevels)
+        }
+        
+        // Update AI arbitrage levels
+        if (s.aiArbitrageLevels && Array.isArray(s.aiArbitrageLevels) && s.aiArbitrageLevels.length > 0) {
+          setArbitrageLevels(s.aiArbitrageLevels)
+        }
+        
+        // Update bonus programs
+        if (s.bonusPrograms) {
+          setBonusPrograms(s.bonusPrograms)
+        }
+        
+        // Update deposit addresses
+        if (s.depositAddresses && Array.isArray(s.depositAddresses) && s.depositAddresses.length > 0) {
+          setDepositAddresses(s.depositAddresses)
+        }
+        
+        console.log('Admin: Loaded all settings from backend')
       }
     } catch (error) {
-      console.error('Failed to load trading levels:', error)
-    }
-
-    try {
-      // Load deposit wallets from backend
-      const wallets = await depositWalletsAPI.getAll()
-      if (Array.isArray(wallets)) {
-        const mappedAddresses = wallets.map(w => ({
-          network: w.network,
-          name: w.label || w.network,
-          address: w.address,
-          enabled: w.status === 'active'
-        }))
-        setDepositAddresses(mappedAddresses)
-        console.log('Admin: Loaded deposit addresses from backend')
-      }
-    } catch (error) {
-      console.error('Failed to load deposit wallets:', error)
+      console.error('Failed to load settings from backend:', error)
     }
   }
 
@@ -699,6 +661,92 @@ export default function AdminPanel({ isOpen = true, onClose }) {
   const updateGlobalSetting = (key, value) => {
     const newSettings = { ...globalSettings, [key]: value }
     setGlobalSettings(newSettings)
+  }
+
+  // Save settings to backend
+  const saveSettingsToBackend = async () => {
+    try {
+      // Prepare settings data
+      const settingsUpdate = {
+        welcomeBonus: globalSettings.welcomeBonus,
+        referralBonus: globalSettings.referralBonus,
+        withdrawalFee: globalSettings.withdrawalFee,
+        minWithdrawal: globalSettings.minWithdrawal,
+        maxWithdrawal: globalSettings.maxWithdrawal,
+        maintenanceMode: globalSettings.maintenanceMode,
+        globalSettings: {
+          tradingFee: globalSettings.tradingFee,
+          minDeposit: globalSettings.minDeposit,
+          kycRequired: globalSettings.kycRequired,
+          announcement: globalSettings.announcement
+        },
+        tradingLevels,
+        aiArbitrageLevels: arbitrageLevels,
+        bonusPrograms,
+        depositAddresses
+      }
+      
+      await settingsAPI.patch(settingsUpdate)
+      alert('Settings saved successfully to backend!')
+    } catch (error) {
+      console.error('Failed to save settings:', error)
+      alert(`Failed to save settings: ${error.message}`)
+    }
+  }
+
+  // Save trade control to backend (master only)
+  const saveTradeControl = async () => {
+    try {
+      await settingsAPI.updateTradeControl(tradeControl)
+      alert('Trade control saved successfully!')
+    } catch (error) {
+      console.error('Failed to save trade control:', error)
+      alert(`Failed to save trade control: ${error.message}`)
+    }
+  }
+
+  // Save trading levels to backend
+  const saveTradingLevels = async () => {
+    try {
+      await settingsAPI.updateTradingLevels(tradingLevels)
+      alert('Trading levels saved successfully!')
+    } catch (error) {
+      console.error('Failed to save trading levels:', error)
+      alert(`Failed to save trading levels: ${error.message}`)
+    }
+  }
+
+  // Save arbitrage levels to backend
+  const saveArbitrageLevels = async () => {
+    try {
+      await settingsAPI.updateArbitrageLevels(arbitrageLevels)
+      alert('Arbitrage levels saved successfully!')
+    } catch (error) {
+      console.error('Failed to save arbitrage levels:', error)
+      alert(`Failed to save arbitrage levels: ${error.message}`)
+    }
+  }
+
+  // Save bonus programs to backend
+  const saveBonusPrograms = async () => {
+    try {
+      await settingsAPI.updateBonusPrograms(bonusPrograms)
+      alert('Bonus programs saved successfully!')
+    } catch (error) {
+      console.error('Failed to save bonus programs:', error)
+      alert(`Failed to save bonus programs: ${error.message}`)
+    }
+  }
+
+  // Save deposit addresses to backend
+  const saveDepositAddresses = async () => {
+    try {
+      await settingsAPI.updateDepositAddresses(depositAddresses)
+      alert('Deposit addresses saved successfully!')
+    } catch (error) {
+      console.error('Failed to save deposit addresses:', error)
+      alert(`Failed to save deposit addresses: ${error.message}`)
+    }
   }
 
   // Send notification to user
@@ -1304,9 +1352,14 @@ export default function AdminPanel({ isOpen = true, onClose }) {
                         </div>
                       ))}
                     </div>
-                    <button className="reset-btn" onClick={resetTradingLevels}>
-                      🔄 Reset to Defaults
-                    </button>
+                    <div className="level-actions">
+                      <button className="save-settings-btn" onClick={saveTradingLevels}>
+                        💾 Save Trading Levels
+                      </button>
+                      <button className="reset-btn" onClick={resetTradingLevels}>
+                        🔄 Reset to Defaults
+                      </button>
+                    </div>
                   </div>
 
                   {/* AI Arbitrage Levels */}
@@ -1349,9 +1402,14 @@ export default function AdminPanel({ isOpen = true, onClose }) {
                         </div>
                       ))}
                     </div>
-                    <button className="reset-btn" onClick={resetArbitrageLevels}>
-                      🔄 Reset to Defaults
-                    </button>
+                    <div className="level-actions">
+                      <button className="save-settings-btn" onClick={saveArbitrageLevels}>
+                        💾 Save Arbitrage Levels
+                      </button>
+                      <button className="reset-btn" onClick={resetArbitrageLevels}>
+                        🔄 Reset to Defaults
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1521,6 +1579,10 @@ export default function AdminPanel({ isOpen = true, onClose }) {
                       onChange={e => setBonusPrograms(prev => ({ ...prev, promotionEnd: e.target.value }))}
                     />
                   </div>
+                  
+                  <button className="save-settings-btn" onClick={saveBonusPrograms}>
+                    💾 Save Bonus Programs
+                  </button>
                 </div>
               )}
 
@@ -1566,6 +1628,10 @@ export default function AdminPanel({ isOpen = true, onClose }) {
                       Make sure to enter valid wallet addresses that you control.
                     </p>
                   </div>
+                  
+                  <button className="save-settings-btn" onClick={saveDepositAddresses}>
+                    💾 Save Deposit Addresses
+                  </button>
                 </div>
               )}
 
@@ -1674,7 +1740,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
                     />
                   </div>
 
-                  <button className="save-settings-btn" onClick={() => alert('Settings saved!')}>
+                  <button className="save-settings-btn" onClick={saveSettingsToBackend}>
                     💾 Save Settings
                   </button>
                 </div>
