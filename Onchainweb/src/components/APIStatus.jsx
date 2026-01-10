@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { FEATURES } from '../config/constants.js';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api';
 
@@ -69,11 +70,15 @@ export function useAPIHealth(checkInterval = 0) {
 /**
  * API Status Banner Component
  * Shows connection status at the top of the page
+ * Only displays when legacy API is enabled (ENABLE_LEGACY_API=true)
  */
 export function APIStatusBanner({ onDismiss }) {
+    // Don't show banner if legacy API is disabled (Firebase-only mode)
+    if (!FEATURES.ENABLE_LEGACY_API) return null;
+
     const { status, error, mongoConnected, refresh } = useAPIHealth(30000); // Check every 30s
     const [dismissed, setDismissed] = useState(false);
-
+    
     if (dismissed || status === 'ok') return null;
 
     const handleDismiss = () => {

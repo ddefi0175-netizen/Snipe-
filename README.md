@@ -1,10 +1,13 @@
 # Snipe – Real-Time Trading Platform 🚀
 
+[![Production Status](https://img.shields.io/badge/status-production%20ready-success.svg)](FINAL_VERIFICATION_AND_RELEASE_REPORT.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Device Compatible](https://img.shields.io/badge/device-compatible-blue.svg)](DEVICE_COMPATIBILITY_TEST.md)
 [![Performance](https://img.shields.io/badge/performance-optimized-green.svg)](FINAL_PUBLIC_RELEASE_SUMMARY.md)
+[![Build](https://img.shields.io/badge/build-passing-success.svg)](FINAL_VERIFICATION_AND_RELEASE_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-96%2F99%20passing-success.svg)](FINAL_VERIFICATION_AND_RELEASE_REPORT.md)
 
 A modern, accessible trading platform with real-time price updates, user dashboards,
 and live chat functionality. Built with React and Firebase.
