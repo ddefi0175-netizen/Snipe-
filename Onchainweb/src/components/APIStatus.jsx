@@ -73,11 +73,11 @@ export function useAPIHealth(checkInterval = 0) {
  * Only displays when legacy API is enabled (ENABLE_LEGACY_API=true)
  */
 export function APIStatusBanner({ onDismiss }) {
-    const { status, error, mongoConnected, refresh } = useAPIHealth(30000); // Check every 30s
-    const [dismissed, setDismissed] = useState(false);
-
     // Don't show banner if legacy API is disabled (Firebase-only mode)
     if (!FEATURES.ENABLE_LEGACY_API) return null;
+
+    const { status, error, mongoConnected, refresh } = useAPIHealth(30000); // Check every 30s
+    const [dismissed, setDismissed] = useState(false);
     
     if (dismissed || status === 'ok') return null;
 

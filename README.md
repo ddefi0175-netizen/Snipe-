@@ -7,7 +7,7 @@
 [![Device Compatible](https://img.shields.io/badge/device-compatible-blue.svg)](DEVICE_COMPATIBILITY_TEST.md)
 [![Performance](https://img.shields.io/badge/performance-optimized-green.svg)](FINAL_PUBLIC_RELEASE_SUMMARY.md)
 [![Build](https://img.shields.io/badge/build-passing-success.svg)](FINAL_VERIFICATION_AND_RELEASE_REPORT.md)
-[![Tests](https://img.shields.io/badge/tests-100%25%20passing-success.svg)](FINAL_VERIFICATION_AND_RELEASE_REPORT.md)
+[![Tests](https://img.shields.io/badge/tests-96%2F99%20passing-success.svg)](FINAL_VERIFICATION_AND_RELEASE_REPORT.md)
 
 A modern, accessible trading platform with real-time price updates, user dashboards,
 and live chat functionality. Built with React and Firebase.
