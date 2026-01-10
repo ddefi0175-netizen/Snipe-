@@ -78,7 +78,7 @@ You're reading it! ✓
 
 ### Step 2: Quick Start (Choose One)
 
-```bashbash
+```bash
 # Option A: 15-minute quick start
 cat QUICK_START.md
 
