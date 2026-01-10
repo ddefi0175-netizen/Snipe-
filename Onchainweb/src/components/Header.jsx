@@ -167,9 +167,43 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
         </svg>
       </button>
 
-      {/* Brand - Crypto.com Style Logo */}
+      {/* Brand - Image Logo with Fallbacks */}
       <div className="brand" aria-label="OnchainWeb home">
-        <svg width="32" height="32" viewBox="0 0 100 100" aria-hidden="true">
+        {/* Primary: User-provided PNG logo */}
+        <img
+          src="/logo.png"
+          alt="OnchainWeb Logo"
+          className="brand-logo"
+          onError={(e) => {
+            // Fallback 1: Try images/ folder
+            if (!e.target.dataset.altpath) {
+              e.target.dataset.altpath = 'true';
+              e.target.src = '/images/logo.png';
+              return;
+            }
+            // Fallback 2: Try SVG placeholder
+            if (!e.target.dataset.svgpath) {
+              e.target.dataset.svgpath = 'true';
+              e.target.src = '/logo.svg';
+              return;
+            }
+            // Fallback 3: Hide image and show SVG fallback
+            e.target.style.display = 'none';
+            if (e.target.nextSibling?.style) {
+              e.target.nextSibling.style.display = 'inline';
+            }
+          }}
+        />
+        
+        {/* Fallback SVG - Shown if all image paths fail */}
+        <svg
+          width="32"
+          height="32"
+          viewBox="0 0 100 100"
+          className="brand-logo-fallback"
+          style={{ display: 'none' }}
+          aria-hidden="true"
+        >
           <defs>
             <linearGradient id="brand-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="#002D72" />
@@ -177,27 +211,37 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
               <stop offset="100%" stopColor="#00C2FF" />
             </linearGradient>
           </defs>
-          {/* Outer hexagon shape like crypto.com */}
-          <polygon 
-            points="50,2 93,25 93,75 50,98 7,75 7,25" 
+          <polygon
+            points="50,2 93,25 93,75 50,98 7,75 7,25"
             fill="url(#brand-gradient)"
-            stroke="none"
           />
-          {/* Inner geometric pattern */}
-          <polygon 
-            points="50,15 78,32 78,68 50,85 22,68 22,32" 
+          <polygon
+            points="50,15 78,32 78,68 50,85 22,68 22,32"
             fill="none"
             stroke="rgba(255,255,255,0.3)"
             strokeWidth="2"
           />
-          {/* Center O shape */}
           <circle cx="50" cy="50" r="18" fill="none" stroke="white" strokeWidth="4" />
-          {/* Top accent */}
-          <path d="M35 35 L50 20 L65 35" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-          {/* Bottom accent */}
-          <path d="M35 65 L50 80 L65 65" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M35 35 L50 20 L65 35"
+            stroke="white"
+            strokeWidth="3"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M35 65 L50 80 L65 65"
+            stroke="white"
+            strokeWidth="3"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </svg>
-        <span>OnchainWeb</span>
+
+        {/* Text Fallback */}
+        <span className="brand-text">OnchainWeb</span>
       </div>
 
       {/* Right Side - Wallet & Profile */}
