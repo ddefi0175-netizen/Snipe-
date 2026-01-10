@@ -1,3 +1,27 @@
+/*
+ * ========================================
+ * DEPRECATION NOTICE (Phase 3C)
+ * ========================================
+ * This file contains legacy MongoDB-based trade endpoints.
+ * These endpoints are now DEPRECATED in favor of Firestore.
+ *
+ * MIGRATION GUIDE:
+ * Old (MongoDB): GET /api/trades → New (Firestore): onSnapshot('trades')
+ * Old (MongoDB): POST /api/trades → New: setDoc(collection('trades'), ...)
+ * Old (MongoDB): PATCH /api/trades/:id → New: updateDoc(doc('trades', id), ...)
+ *
+ * All REST trade endpoints are PRESERVED for backward compatibility but
+ * will be REMOVED in Phase 4. New code should use Firestore exclusively.
+ *
+ * FRONTEND EQUIVALENT:
+ * - See src/components/TradeHistory.jsx for Firestore migration example
+ * - Use Firestore onSnapshot for real-time updates
+ * - Use setDoc/updateDoc for mutations
+ *
+ * Status: DEPRECATED | Backward compatible | Use Firestore for new features
+ * Last Updated: Phase 3C
+ */
+
 const express = require('express');
 const Trade = require('../models/Trade');
 const User = require('../models/User');
@@ -11,7 +35,7 @@ router.get('/', async (req, res) => {
     if (userId) filter.userId = userId;
     if (type) filter.type = type;
     if (status) filter.status = status;
-    
+
     const trades = await Trade.find(filter)
       .sort({ createdAt: -1 })
       .limit(parseInt(limit) || 100);
@@ -24,7 +48,7 @@ router.get('/', async (req, res) => {
 // Get trades by user wallet/ID
 router.get('/user/:userId', async (req, res) => {
   try {
-    const trades = await Trade.find({ 
+    const trades = await Trade.find({
       $or: [
         { userId: req.params.userId },
         { username: req.params.userId }
@@ -53,16 +77,16 @@ router.get('/stats', async (req, res) => {
     const activeTrades = await Trade.countDocuments({ status: 'active' });
     const wonTrades = await Trade.countDocuments({ result: 'win' });
     const lostTrades = await Trade.countDocuments({ result: 'lose' });
-    
+
     const totalVolume = await Trade.aggregate([
       { $group: { _id: null, total: { $sum: '$amount' } } }
     ]);
-    
+
     const totalProfit = await Trade.aggregate([
       { $match: { result: 'win' } },
       { $group: { _id: null, total: { $sum: '$profit' } } }
     ]);
-    
+
     res.json({
       totalTrades,
       activeTrades,
@@ -81,10 +105,10 @@ router.get('/stats', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { userId, username, type, pair, direction, entryPrice, duration, level, levelName, amount, expectedProfit, profitPercent } = req.body;
-    
+
     // Get user's trade mode
     const user = await User.findOne({ $or: [{ wallet: userId }, { userId: userId }] });
-    
+
     const trade = new Trade({
       userId,
       username: username || user?.username || '',
@@ -101,7 +125,7 @@ router.post('/', async (req, res) => {
       expiryTime: duration ? new Date(Date.now() + duration * 1000) : null,
       assignedAdmin: user?.assignedAdmin || ''
     });
-    
+
     await trade.save();
     res.status(201).json(trade);
   } catch (err) {
@@ -114,11 +138,11 @@ router.patch('/:id/complete', async (req, res) => {
   try {
     const { exitPrice, result, profit, payout } = req.body;
     const trade = await Trade.findById(req.params.id);
-    
+
     if (!trade) {
       return res.status(404).json({ error: 'Trade not found' });
     }
-    
+
     // Check if admin forced result
     let finalResult = result;
     if (trade.forcedResult) {
@@ -130,11 +154,11 @@ router.patch('/:id/complete', async (req, res) => {
         finalResult = user.tradeMode; // 'win' or 'lose'
       }
     }
-    
+
     // Calculate payout based on result
     let finalProfit = profit || 0;
     let finalPayout = payout || 0;
-    
+
     if (finalResult === 'win') {
       finalProfit = trade.expectedProfit || (trade.amount * (trade.profitPercent || 85) / 100);
       finalPayout = trade.amount + finalProfit;
@@ -142,7 +166,7 @@ router.patch('/:id/complete', async (req, res) => {
       finalProfit = -trade.amount;
       finalPayout = 0;
     }
-    
+
     trade.exitPrice = exitPrice;
     trade.result = finalResult;
     trade.profit = finalProfit;
@@ -150,9 +174,9 @@ router.patch('/:id/complete', async (req, res) => {
     trade.status = finalResult === 'win' ? 'won' : finalResult === 'lose' ? 'lost' : 'completed';
     trade.completedAt = new Date();
     trade.adminForced = !!trade.forcedResult;
-    
+
     await trade.save();
-    
+
     // Update user balance if won
     if (finalResult === 'win' && finalPayout > 0) {
       await User.findOneAndUpdate(
@@ -160,7 +184,7 @@ router.patch('/:id/complete', async (req, res) => {
         { $inc: { balance: finalPayout, points: Math.floor(finalProfit / 10) } }
       );
     }
-    
+
     res.json(trade);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -171,21 +195,21 @@ router.patch('/:id/complete', async (req, res) => {
 router.patch('/:id/force', async (req, res) => {
   try {
     const { forcedResult } = req.body;
-    
+
     if (!['win', 'lose'].includes(forcedResult)) {
       return res.status(400).json({ error: 'Invalid forced result. Must be win or lose.' });
     }
-    
+
     const trade = await Trade.findByIdAndUpdate(
       req.params.id,
       { forcedResult, adminForced: true },
       { new: true }
     );
-    
+
     if (!trade) {
       return res.status(404).json({ error: 'Trade not found' });
     }
-    
+
     res.json(trade);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -200,17 +224,17 @@ router.patch('/:id/cancel', async (req, res) => {
       { status: 'cancelled', completedAt: new Date() },
       { new: true }
     );
-    
+
     if (!trade) {
       return res.status(404).json({ error: 'Trade not found' });
     }
-    
+
     // Refund amount to user
     await User.findOneAndUpdate(
       { $or: [{ wallet: trade.userId }, { userId: trade.userId }] },
       { $inc: { balance: trade.amount } }
     );
-    
+
     res.json(trade);
   } catch (err) {
     res.status(500).json({ error: err.message });

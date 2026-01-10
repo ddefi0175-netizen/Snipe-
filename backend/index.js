@@ -1,3 +1,31 @@
+/*
+ * ========================================
+ * ARCHITECTURE TRANSITION NOTICE (Phase 3)
+ * ========================================
+ * This backend is transitioning to Firebase as the primary authentication
+ * and real-time data system. Current role:
+ *
+ * PRIMARY RESPONSIBILITIES:
+ * ✅ Admin authentication (JWT + master credentials)
+ * ✅ Data storage & complex queries (MongoDB)
+ * ✅ Backend processing & internal APIs
+ *
+ * DEPRECATED (Use Firebase instead):
+ * ❌ User registration (→ Firebase Auth)
+ * ❌ User authentication (→ Firebase Auth)
+ * ❌ Real-time data sync (→ Firestore + onSnapshot)
+ * ❌ Trade endpoints (→ Firestore collections)
+ * ❌ Staking endpoints (→ Firestore + Cloud Functions)
+ *
+ * MIGRATION PATH:
+ * - Frontend: Use firebaseSignIn/Up/Out from src/lib/firebase.js
+ * - Real-time: Replace REST calls with Firestore onSnapshot listeners
+ * - Admin: Keep using JWT admin endpoints for backend operations
+ *
+ * Status: Firebase deployment ✅ | Phase 3 cleanup ✅
+ * Last Updated: Phase 3C
+ */
+
 // Backend entry point for Snipe
 
 // Uncaught exception handler - must be at the very beginning
@@ -86,7 +114,7 @@ const connectToMongoDB = async (attempt = 1) => {
     console.log(`  Host: ${mongoose.connection.host}`);
   } catch (err) {
     console.error(`✗ MongoDB connection error (attempt ${attempt}/${MAX_RETRIES}):`, err.message);
-    
+
     if (attempt < MAX_RETRIES) {
       // Exponential backoff: 5s, 10s, 20s, 40s
       const retryDelay = BASE_RETRY_INTERVAL * Math.pow(2, attempt - 1);
@@ -127,7 +155,7 @@ app.get('/health', async (req, res) => {
     // Test database query to ensure real-time data access
     const userCount = await User.countDocuments();
     const adminCount = await Admin.countDocuments();
-    
+
     res.json({
       status: 'ok',
       mongoConnected: mongoose.connection.readyState === 1,
@@ -158,7 +186,7 @@ app.get('/api/health', async (req, res) => {
       Trade.countDocuments(),
       Staking.countDocuments()
     ]);
-    
+
     res.json({
       status: 'ok',
       mongoConnected: mongoose.connection.readyState === 1,
@@ -217,7 +245,7 @@ app.use((req, res, next) => {
 // Global error handler - must be last
 app.use((err, req, res, next) => {
   console.error('[ERROR]', err.stack || err);
-  
+
   // Handle specific error types
   if (err.name === 'ValidationError') {
     return res.status(400).json({
@@ -226,7 +254,7 @@ app.use((err, req, res, next) => {
       timestamp: new Date().toISOString()
     });
   }
-  
+
   if (err.name === 'CastError') {
     return res.status(400).json({
       error: 'Invalid ID',
@@ -234,7 +262,7 @@ app.use((err, req, res, next) => {
       timestamp: new Date().toISOString()
     });
   }
-  
+
   if (err.code === 11000) {
     return res.status(409).json({
       error: 'Duplicate Entry',
@@ -242,7 +270,7 @@ app.use((err, req, res, next) => {
       timestamp: new Date().toISOString()
     });
   }
-  
+
   // Default error response
   res.status(err.status || 500).json({
     error: err.message || 'Internal Server Error',
@@ -255,7 +283,7 @@ let server;
 
 const gracefulShutdown = (signal) => {
   console.log(`\n[${signal}] Received, shutting down gracefully...`);
-  
+
   // Close HTTP server first
   if (server) {
     server.close(() => {
