@@ -106,8 +106,18 @@ Admin and Master accounts use **Firebase Authentication** with email + password.
   - Works on any browser without wallet extensions
 
 - **📖 Documentation**:
+  - [Admin Setup Guide](ADMIN_SETUP_GUIDE.md) - **START HERE** - Complete setup instructions
   - [Admin User Guide](ADMIN_USER_GUIDE.md) - How to use admin features
   - [Real-Time Data Architecture](REALTIME_DATA_ARCHITECTURE.md) - Data flow and updates
+  - [Implementation Summary](ADMIN_LOGIN_IMPLEMENTATION_SUMMARY.md) - Technical details
+
+- **🔧 Quick Setup**:
+  1. Enable admin features: Set `VITE_ENABLE_ADMIN=true` in `Onchainweb/.env`
+  2. Create admin accounts in [Firebase Console](https://console.firebase.google.com) (Authentication > Users)
+  3. Add admin emails to `VITE_ADMIN_ALLOWLIST` in `.env`
+  4. Run verification: `./verify-admin-login.sh`
+  5. Start server: `cd Onchainweb && npm run dev`
+  6. Access: `/admin` or `/master-admin` routes
 
 - **IMPORTANT**: Configure admin users in Firebase Console. Never commit credentials to the repository.
 
