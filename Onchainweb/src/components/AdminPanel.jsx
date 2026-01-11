@@ -164,17 +164,14 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       }
     }
 
-    let intervalId
-    const initialTimeout = setTimeout(() => {
-      refreshBackendData()
+    // Start immediately without delay
+    refreshBackendData()
 
-      // Set up periodic refresh every 30 seconds
-      intervalId = setInterval(refreshBackendData, 30000)
-    }, 2000)
+    // Set up periodic refresh every 30 seconds
+    const intervalId = setInterval(refreshBackendData, 30000)
 
-    // Cleanup: clear timeout and interval (if set) on unmount or when isAuthenticated changes
+    // Cleanup: clear interval on unmount or when isAuthenticated changes
     return () => {
-      clearTimeout(initialTimeout)
       if (intervalId) {
         clearInterval(intervalId)
       }
@@ -320,6 +317,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         setCurrentAdmin(null)
         setLoginUsername('')
         setLoginPassword('')
+        setIsLoggingIn(false) // Ensure loading state is reset
         return
       }
 
@@ -341,7 +339,12 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       setCurrentAdmin(adminUser)
       setLoginUsername('')
       setLoginPassword('')
+      setIsLoggingIn(false) // Set loading to false immediately after successful auth
       console.log('[AdminPanel] Login successful! Role:', role)
+      
+      // Load data asynchronously in the background (non-blocking)
+      loadConfigFromBackend()
+      loadAllUsers()
     } catch (error) {
       console.error('[AdminPanel] Login error:', error)
 
@@ -359,8 +362,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       } else {
         setLoginError(`❌ Login failed: ${error.message}`)
       }
-    } finally {
-      setIsLoggingIn(false)
+      setIsLoggingIn(false) // Ensure loading state is reset on error
     }
   }
 
