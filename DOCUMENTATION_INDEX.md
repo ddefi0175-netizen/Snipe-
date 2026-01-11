@@ -1,23 +1,41 @@
 # 📚 Snipe Platform - Documentation Index
 
-**Last Updated**: January 9, 2026
-**Project Status**: 🟢 Phase 1 Complete (22% overall)
+**Last Updated**: January 2026 (Cloud Functions Revert Complete)
+**Project Status**: ✅ Production Ready (v2.0.0 - Firebase Edition)
 
 ---
 
-## 🚀 Quick Links
+## 🎯 IMPORTANT - Cloud Functions Revert Complete
 
-### ⚡ I'm in a hurry
+⚠️ **Major Changes Made**:
+- ✅ Cloud Functions code removed
+- ✅ Admin workflow reverted to Firebase Console
+- ✅ Now works on free Spark plan ($0/month)
+- ✅ Build passing (7.56s, zero errors)
 
-→ Read: [QUICK_START.md](QUICK_START.md) (15 minutes to running)
+**Read these first**:
+1. [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - 1-page summary
+2. [ADMIN_ACCOUNT_MANAGEMENT.md](ADMIN_ACCOUNT_MANAGEMENT.md) - New admin workflow
+3. [CLOUD_FUNCTIONS_REVERT_COMPLETE.md](CLOUD_FUNCTIONS_REVERT_COMPLETE.md) - What changed
+
+---
+
+## 🚀 Quick Links by Use Case
+
+### ⚡ I'm deploying to production
+→ Read: [DEPLOYMENT_READY_CHECKLIST.md](DEPLOYMENT_READY_CHECKLIST.md) ⭐ NEW
+
+### 🔑 I need to create an admin
+→ Read: [ADMIN_ACCOUNT_MANAGEMENT.md](ADMIN_ACCOUNT_MANAGEMENT.md) ⭐ NEW
+
+### 🚀 Quick 5-minute summary
+→ Read: [QUICK_REFERENCE.md](QUICK_REFERENCE.md) ⭐ NEW
 
 ### 🔥 Setting up Firebase
+→ Read: [FIREBASE_SETUP.md](FIREBASE_SETUP.md)
 
-→ Read: [FIREBASE_SETUP_QUICK_START.md](FIREBASE_SETUP_QUICK_START.md) (step-by-step)
-
-### 📊 Understanding all issues
-
-→ Read: [ERROR_AUDIT_REPORT.md](ERROR_AUDIT_REPORT.md) (comprehensive audit)
+### 📊 Understanding the changes
+→ Read: [SESSION_COMPLETION_SUMMARY.md](SESSION_COMPLETION_SUMMARY.md) ⭐ NEW
 
 ### 📈 Progress tracking
 
