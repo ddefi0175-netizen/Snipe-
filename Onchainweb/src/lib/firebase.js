@@ -2,6 +2,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, updateDoc, deleteDoc, addDoc, onSnapshot, orderBy, limit, serverTimestamp } from 'firebase/firestore';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { getFunctions, httpsCallable } from 'firebase/functions';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -18,6 +19,7 @@ const firebaseConfig = {
 let app;
 let db;
 let auth;
+let functionsClient;
 let isFirebaseAvailable = false;
 
 try {
@@ -26,6 +28,7 @@ try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     auth = getAuth(app);
+    functionsClient = getFunctions(app, 'us-central1');
     isFirebaseAvailable = true;
     console.log('Firebase initialized successfully');
   } else {
@@ -55,6 +58,30 @@ export const firebaseSignOut = async () => {
   return signOut(auth);
 };
 
+// ==========================================
+// ADMIN MANAGEMENT VIA CLOUD FUNCTIONS
+// ==========================================
+
+const ensureFunctions = () => {
+  if (!functionsClient) {
+    throw new Error('Firebase Functions not available');
+  }
+};
+
+export const createAdminViaFunction = async ({ email, password, role = 'admin', permissions = [] }) => {
+  ensureFunctions();
+  const callable = httpsCallable(functionsClient, 'createAdminAccount');
+  const result = await callable({ email, password, role, permissions });
+  return result.data;
+};
+
+export const resetAdminPasswordViaFunction = async ({ email, continueUrl }) => {
+  ensureFunctions();
+  const callable = httpsCallable(functionsClient, 'resetAdminPassword');
+  const result = await callable({ email, continueUrl });
+  return result.data;
+};
+
 export const onAuthChange = (callback) => {
   if (!isFirebaseAvailable) return () => {};
   return onAuthStateChanged(auth, callback);
@@ -68,10 +95,10 @@ export const saveChatMessage = async (message) => {
   if (!isFirebaseAvailable) {
     // Fallback to localStorage
     const logs = JSON.parse(localStorage.getItem('customerChatLogs') || '[]');
-    const newMsg = { 
-      ...message, 
-      id: Date.now().toString(), 
-      createdAt: new Date().toISOString() 
+    const newMsg = {
+      ...message,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString()
     };
     logs.push(newMsg);
     localStorage.setItem('customerChatLogs', JSON.stringify(logs));
@@ -213,10 +240,10 @@ export const saveAdminReply = async (reply) => {
   if (!isFirebaseAvailable) {
     // Fallback to localStorage
     const replies = JSON.parse(localStorage.getItem('adminChatReplies') || '[]');
-    const newReply = { 
-      ...reply, 
-      id: Date.now().toString(), 
-      createdAt: new Date().toISOString() 
+    const newReply = {
+      ...reply,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString()
     };
     replies.push(newReply);
     localStorage.setItem('adminChatReplies', JSON.stringify(replies));
@@ -323,7 +350,7 @@ export const subscribeToAllAdminReplies = (callback) => {
 
 export const saveUser = async (userData) => {
   if (!isFirebaseAvailable) throw new Error('Firebase not available');
-  
+
   try {
     const userRef = doc(db, 'users', userData.wallet || userData.id);
     await setDoc(userRef, {
@@ -339,7 +366,7 @@ export const saveUser = async (userData) => {
 
 export const getUser = async (walletOrId) => {
   if (!isFirebaseAvailable) throw new Error('Firebase not available');
-  
+
   try {
     const userRef = doc(db, 'users', walletOrId);
     const userSnap = await getDoc(userRef);

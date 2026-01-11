@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { userAPI } from '../lib/api'
+import { createUser } from '../services/database.service'
 
 // Web3 Wallet Gate - User MUST connect wallet to see any content
 export default function WalletGate({ onConnect, children }) {
@@ -11,51 +11,54 @@ export default function WalletGate({ onConnect, children }) {
   const isConnected = localStorage.getItem('walletConnected') === 'true'
   const connectedAddress = localStorage.getItem('walletAddress') || ''
 
-  // Register user in backend immediately when wallet connects
-  const registerUserInBackend = async (address, walletType) => {
+  // Register user in Firebase when wallet connects
+  const registerUserInFirebase = async (address, walletType) => {
     try {
-      console.log('Registering user in backend:', address, walletType)
-      
+      console.log('[Firebase] Registering user:', address, walletType)
+
       // Get existing profile data if any
       const existingProfile = localStorage.getItem('userProfile')
       const profileData = existingProfile ? JSON.parse(existingProfile) : {}
-      
-      // Create/update user in backend with wallet type
-      const user = await userAPI.loginByWallet(
-        address, 
-        profileData.username || `User_${address.substring(2, 8)}`,
-        profileData.email || '',
-        walletType
-      )
-      
-      // Store user data from backend
-      if (user) {
-        console.log('User registered successfully:', user)
-        localStorage.setItem('backendUserId', user._id)
-        localStorage.setItem('backendUser', JSON.stringify(user))
-        
-        // Sync userId
-        if (user.userId) {
-          localStorage.setItem('realAccountId', user.userId)
-          // Update local profile with backend userId
-          const updatedProfile = { ...profileData, userId: user.userId, wallet: address, walletType }
-          localStorage.setItem('userProfile', JSON.stringify(updatedProfile))
-        }
+
+      // Create user data for Firebase
+      const userData = {
+        wallet: address,
+        walletType: walletType,
+        username: profileData.username || `User_${address.substring(2, 8)}`,
+        email: profileData.email || '',
+        balance: profileData.balance || 0,
+        points: profileData.points || 0,
+        vipLevel: profileData.vipLevel || 0,
+        userId: profileData.userId || `USR${Date.now()}`,
+        createdAt: new Date(),
+        lastLogin: new Date(),
+        status: 'active'
       }
-      return user
+
+      // Save to Firebase Firestore
+      await createUser(userData)
+      console.log('[Firebase] User saved successfully!')
+
+      // Store user data locally
+      localStorage.setItem('backendUserId', address)
+      localStorage.setItem('backendUser', JSON.stringify(userData))
+      localStorage.setItem('realAccountId', userData.userId)
+      localStorage.setItem('userProfile', JSON.stringify(userData))
+
+      return userData
     } catch (error) {
-      console.error('Failed to register user in backend:', error)
-      // Don't block user - still allow local usage
+      console.error('[Firebase] Failed to register user:', error)
+      // Still allow local usage
       return null
     }
   }
 
-  // On app load, ensure connected wallet is registered in backend
+  // On app load, ensure connected wallet is registered in Firebase
   useEffect(() => {
     if (isConnected && connectedAddress) {
-      // Re-register to ensure backend has latest data
+      // Re-register to ensure Firebase has latest data
       const walletType = localStorage.getItem('walletType') || 'unknown'
-      registerUserInBackend(connectedAddress, walletType)
+      registerUserInFirebase(connectedAddress, walletType)
     }
   }, [isConnected, connectedAddress])
 
@@ -81,7 +84,7 @@ export default function WalletGate({ onConnect, children }) {
 
     try {
       let address = ''
-      
+
       // Check if MetaMask or other Web3 provider exists
       if (walletId === 'metamask' && typeof window.ethereum !== 'undefined') {
         // Real MetaMask connection
@@ -92,26 +95,21 @@ export default function WalletGate({ onConnect, children }) {
       } else {
         // For other wallets or if no Web3 provider, simulate connection
         await new Promise(resolve => setTimeout(resolve, 2000))
-        
+
         // Generate a simulated address
-        address = '0x' + Array.from({length: 40}, () => 
+        address = '0x' + Array.from({length: 40}, () =>
           Math.floor(Math.random() * 16).toString(16)
         ).join('')
       }
-      
+
       if (address) {
         localStorage.setItem('walletConnected', 'true')
         localStorage.setItem('walletAddress', address)
         localStorage.setItem('walletType', walletId)
-        
-        // Register user in backend database immediately
-        const user = await registerUserInBackend(address, walletId)
-        console.log('Wallet connected and user registered:', user ? user.userId : 'failed')
-        
-        if (onConnect) onConnect(address)
-        window.location.reload()
-      }
 
+        // Register user in Firebase immediately
+        const user = await registerUserInFirebase(address, walletId)
+        console.log('[Firebase] Wallet connected and user registered:', user ? user.userId : 'failed')
     } catch (err) {
       setError('Connection failed. Please try again or use a different wallet.')
       setIsConnecting(false)
@@ -224,7 +222,7 @@ export default function WalletGate({ onConnect, children }) {
         .wallet-gate-overlay {
           position: absolute;
           inset: 0;
-          background: 
+          background:
             radial-gradient(ellipse at 20% 20%, rgba(0, 255, 136, 0.08) 0%, transparent 50%),
             radial-gradient(ellipse at 80% 80%, rgba(136, 0, 255, 0.08) 0%, transparent 50%),
             radial-gradient(ellipse at 50% 50%, rgba(0, 136, 255, 0.05) 0%, transparent 70%);
@@ -298,7 +296,7 @@ export default function WalletGate({ onConnect, children }) {
           border-radius: 24px;
           padding: 30px;
           backdrop-filter: blur(20px);
-          box-shadow: 
+          box-shadow:
             0 25px 50px rgba(0, 0, 0, 0.5),
             inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }

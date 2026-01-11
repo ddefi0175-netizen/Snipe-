@@ -11,7 +11,9 @@ import {
   subscribeToUsers,
   subscribeToDeposits,
   subscribeToWithdrawals,
-  subscribeToTrades
+  subscribeToTrades,
+  createAdminViaFunction,
+  resetAdminPasswordViaFunction
 } from '../lib/firebase.js'
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
 import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js'
@@ -620,7 +622,7 @@ export default function MasterAdminDashboard() {
     if (!isAuthenticated || !isDataLoaded) return
 
     console.log('[Firebase] Setting up real-time listeners...')
-    
+
     // Subscribe to users in real-time
     const unsubscribeUsers = subscribeToUsers((users) => {
       console.log('[Firebase] Users updated:', users.length)
@@ -718,7 +720,7 @@ export default function MasterAdminDashboard() {
   // Save to localStorage - only when data is loaded and changed
   // NOTE: Removed localStorage saves for bonusPrograms, siteSettings, depositWallets, and tradingLevels
   // These are now only stored in backend for security
-  
+
   useEffect(() => {
     if (isDataLoaded && userAgents.length > 0) {
       localStorage.setItem('userAgents', JSON.stringify(userAgents))
@@ -810,20 +812,20 @@ export default function MasterAdminDashboard() {
     try {
       // Use Firebase Authentication for admin login (email-based)
       const email = convertToAdminEmail(loginData.username)
-      
+
       console.log('[LOGIN] Using Firebase Authentication...')
       const userCredential = await firebaseSignIn(email, loginData.password)
       const user = userCredential.user
-      
+
       console.log('[LOGIN] Firebase auth successful for:', user.email)
 
       // Get Firebase ID token for API authorization
       const token = await user.getIdToken()
-      
+
       // Determine role based on email
       const role = determineAdminRole(user.email)
       const permissions = getDefaultPermissions(role)
-      
+
       // Store auth data
       localStorage.setItem('adminToken', token)
       localStorage.setItem('firebaseAdminUid', user.uid)
@@ -844,7 +846,7 @@ export default function MasterAdminDashboard() {
       return
     } catch (error) {
       console.error('[LOGIN] Firebase auth error:', error.message)
-      
+
       // Handle Firebase-specific errors
       if (error.code === 'auth/user-not-found') {
         setLoginError('❌ Admin account not found. Please check your credentials.')
@@ -872,7 +874,7 @@ export default function MasterAdminDashboard() {
     } catch (error) {
       console.error('Firebase signout error:', error)
     }
-    
+
     // Clear local session
     setIsAuthenticated(false)
     setIsDataLoaded(false)
@@ -1123,7 +1125,7 @@ export default function MasterAdminDashboard() {
                 </>
               ) : 'Login'}
             </button>
-            
+
             {isLoggingIn && (
               <div className="login-status-message" style={{ marginTop: '12px', padding: '10px', background: 'rgba(124, 58, 237, 0.1)', borderRadius: '8px', fontSize: '12px', color: '#a78bfa' }}>
                 🔄 Connecting to server... This may take up to 60 seconds if the server is waking up.
@@ -4943,68 +4945,35 @@ export default function MasterAdminDashboard() {
                   <button
                     className="add-admin-btn"
                     onClick={async () => {
-                      if (newAdmin.username && newAdmin.email && newAdmin.password) {
-                        if (newAdmin.permissions.length === 0) {
-                          alert('Please select at least one permission for the admin')
-                          return
-                        }
+                      if (!newAdmin.email || !newAdmin.password) {
+                        alert('Please enter email and password for the new admin');
+                        return;
+                      }
 
-                        try {
-                          // Create admin in backend database
-                          const response = await authAPI.createAdmin({
-                            username: newAdmin.username.trim(),
-                            password: newAdmin.password.trim(),
-                            email: newAdmin.email.trim().toLowerCase(),
-                            userAccessMode: newAdmin.userAccessMode || 'all',
-                            permissions: {
-                              manageUsers: newAdmin.permissions.includes('users'),
-                              manageBalances: newAdmin.permissions.includes('balances'),
-                              manageKYC: newAdmin.permissions.includes('kyc'),
-                              manageTrades: newAdmin.permissions.includes('live_trades'),
-                              manageStaking: newAdmin.permissions.includes('staking'),
-                              manageAIArbitrage: newAdmin.permissions.includes('ai_arbitrage'),
-                              manageDeposits: newAdmin.permissions.includes('deposits'),
-                              manageWithdrawals: newAdmin.permissions.includes('withdrawals'),
-                              customerService: newAdmin.permissions.includes('customer_service'),
-                              viewReports: newAdmin.permissions.includes('dashboard'),
-                              viewLogs: newAdmin.permissions.includes('logs'),
-                              siteSettings: newAdmin.permissions.includes('settings'),
-                              createAdmins: false
-                            }
-                          })
+                      try {
+                        setIsLoading(true);
+                        const response = await createAdminViaFunction({
+                          email: newAdmin.email.trim().toLowerCase(),
+                          password: newAdmin.password.trim(),
+                          role: newAdmin.role || 'admin',
+                          permissions: newAdmin.permissions || []
+                        });
 
-                          if (response.success) {
-                            const newAdminEntry = {
-                              _id: response.admin._id,
-                              username: response.admin.username,
-                              email: newAdmin.email.trim().toLowerCase(),
-                              role: 'admin',
-                              permissions: newAdmin.permissions,
-                              userAccessMode: newAdmin.userAccessMode || 'all',
-                              assignedUsers: [],
-                              status: 'active',
-                              createdAt: response.admin.createdAt
-                            }
-                            setAdminRoles(prev => [...prev, newAdminEntry])
+                        setNewAdmin({
+                          username: '',
+                          email: '',
+                          password: '',
+                          role: 'admin',
+                          permissions: [],
+                          userAccessMode: 'all'
+                        });
 
-                            const savedPassword = newAdmin.password
-                            setNewAdmin({
-                              username: '',
-                              email: '',
-                              password: '',
-                              role: 'admin',
-                              permissions: [],
-                              userAccessMode: 'all'
-                            })
-
-                            alert(`✅ Admin account created successfully!\n\n📝 Login Credentials:\n━━━━━━━━━━━━━━━━━━━━\nUsername: ${newAdminEntry.username}\nEmail: ${newAdminEntry.email}\nPassword: ${savedPassword}\nAccess Mode: ${newAdminEntry.userAccessMode === 'all' ? 'All Users' : 'Assigned Users Only'}\n━━━━━━━━━━━━━━━━━━━━\n\n✅ Account saved to database - can login from any browser!`)
-                          }
-                        } catch (error) {
-                          console.error('Failed to create admin:', error)
-                          alert(`❌ Failed to create admin: ${error.message}`)
-                        }
-                      } else {
-                        alert('Please fill in username, email, and password')
+                        alert(`✅ Admin created in Firebase!\nEmail: ${response.email}\nRole: ${response.role}\nUID: ${response.uid}\n\nPassword reset email can be sent from Reset Password action.`);
+                      } catch (error) {
+                        console.error('Create admin failed:', error);
+                        alert(`❌ Failed to create admin: ${error.message || error}`);
+                      } finally {
+                        setIsLoading(false);
                       }
                     }}
                   >
@@ -5276,14 +5245,23 @@ export default function MasterAdminDashboard() {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '15px' }}>
                       <button
                         onClick={async () => {
-                          const newPassword = prompt(`Enter new password for ${viewingAdmin.username} (min 6 characters):`)
-                          if (newPassword && newPassword.trim().length >= 6) {
-                            try {
-                              await authAPI.resetAdminPassword(viewingAdmin.username, newPassword.trim())
-                              alert(`✅ Password reset for ${viewingAdmin.username}!`)
-                            } catch (err) { alert('Error: ' + err.message) }
-                          } else if (newPassword) {
-                            alert('Password must be at least 6 characters')
+                          try {
+                            setIsLoading(true);
+                            const result = await resetAdminPasswordViaFunction({
+                              email: viewingAdmin.email,
+                              continueUrl: window.location.origin + '/admin'
+                            });
+
+                            if (result?.resetLink) {
+                              alert(`✅ Password reset link generated!\n\nAdmin: ${viewingAdmin.email}\n\nLink:\n${result.resetLink}\n\nSend this link to the admin to set a new password.`);
+                            } else {
+                              alert('Password reset request completed.');
+                            }
+                          } catch (err) {
+                            console.error('Reset password failed:', err);
+                            alert(`❌ Failed to reset password: ${err.message || err}`);
+                          } finally {
+                            setIsLoading(false);
                           }
                         }}
                         style={{ padding: '12px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
