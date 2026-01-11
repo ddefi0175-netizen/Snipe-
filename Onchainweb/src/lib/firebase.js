@@ -2,7 +2,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, updateDoc, deleteDoc, addDoc, onSnapshot, orderBy, limit, serverTimestamp } from 'firebase/firestore';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
-import { getFunctions, httpsCallable } from 'firebase/functions';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -19,7 +18,6 @@ const firebaseConfig = {
 let app;
 let db;
 let auth;
-let functionsClient;
 let isFirebaseAvailable = false;
 
 try {
@@ -28,7 +26,6 @@ try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
     auth = getAuth(app);
-    functionsClient = getFunctions(app, 'us-central1');
     isFirebaseAvailable = true;
     console.log('Firebase initialized successfully');
   } else {
@@ -56,30 +53,6 @@ export const firebaseSignUp = async (email, password) => {
 export const firebaseSignOut = async () => {
   if (!isFirebaseAvailable) throw new Error('Firebase not available');
   return signOut(auth);
-};
-
-// ==========================================
-// ADMIN MANAGEMENT VIA CLOUD FUNCTIONS
-// ==========================================
-
-const ensureFunctions = () => {
-  if (!functionsClient) {
-    throw new Error('Firebase Functions not available');
-  }
-};
-
-export const createAdminViaFunction = async ({ email, password, role = 'admin', permissions = [] }) => {
-  ensureFunctions();
-  const callable = httpsCallable(functionsClient, 'createAdminAccount');
-  const result = await callable({ email, password, role, permissions });
-  return result.data;
-};
-
-export const resetAdminPasswordViaFunction = async ({ email, continueUrl }) => {
-  ensureFunctions();
-  const callable = httpsCallable(functionsClient, 'resetAdminPassword');
-  const result = await callable({ email, continueUrl });
-  return result.data;
 };
 
 export const onAuthChange = (callback) => {

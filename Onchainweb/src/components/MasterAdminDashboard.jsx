@@ -11,9 +11,7 @@ import {
   subscribeToUsers,
   subscribeToDeposits,
   subscribeToWithdrawals,
-  subscribeToTrades,
-  createAdminViaFunction,
-  resetAdminPasswordViaFunction
+  subscribeToTrades
 } from '../lib/firebase.js'
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
 import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js'
@@ -4944,40 +4942,25 @@ export default function MasterAdminDashboard() {
                   </div>
                   <button
                     className="add-admin-btn"
-                    onClick={async () => {
-                      if (!newAdmin.email || !newAdmin.password) {
-                        alert('Please enter email and password for the new admin');
-                        return;
-                      }
-
-                      try {
-                        setIsLoading(true);
-                        const response = await createAdminViaFunction({
-                          email: newAdmin.email.trim().toLowerCase(),
-                          password: newAdmin.password.trim(),
-                          role: newAdmin.role || 'admin',
-                          permissions: newAdmin.permissions || []
-                        });
-
-                        setNewAdmin({
-                          username: '',
-                          email: '',
-                          password: '',
-                          role: 'admin',
-                          permissions: [],
-                          userAccessMode: 'all'
-                        });
-
-                        alert(`✅ Admin created in Firebase!\nEmail: ${response.email}\nRole: ${response.role}\nUID: ${response.uid}\n\nPassword reset email can be sent from Reset Password action.`);
-                      } catch (error) {
-                        console.error('Create admin failed:', error);
-                        alert(`❌ Failed to create admin: ${error.message || error}`);
-                      } finally {
-                        setIsLoading(false);
-                      }
+                    onClick={() => {
+                      alert(
+                        `📋 To create an admin account, follow these steps:\n\n` +
+                        `1️⃣ Go to Firebase Console:\n` +
+                        `   https://console.firebase.google.com\n\n` +
+                        `2️⃣ Select project: onchainweb-37d30\n\n` +
+                        `3️⃣ Navigate to: Authentication → Users\n\n` +
+                        `4️⃣ Click "Add user" and enter:\n` +
+                        `   Email: ${newAdmin.email || 'admin@example.com'}\n` +
+                        `   Password: ${newAdmin.password || '••••••••'}\n\n` +
+                        `5️⃣ Once created, add the email to Onchainweb/.env:\n` +
+                        `   VITE_ADMIN_ALLOWLIST=email1@example.com,${newAdmin.email || 'newemail@example.com'}\n\n` +
+                        `6️⃣ Restart the dev server (npm run dev)\n\n` +
+                        `7️⃣ Admin can now login at: /admin\n\n` +
+                        `📝 Note: Set admin permissions in Master Dashboard after login.`
+                      );
                     }}
                   >
-                    ➕ Create Admin Account
+                    ➕ Create Admin Account (via Firebase Console)
                   </button>
                 </div>
               </div>
@@ -5244,29 +5227,23 @@ export default function MasterAdminDashboard() {
                     <h3 style={{ color: '#fff', marginBottom: '15px' }}>Admin Actions</h3>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '15px' }}>
                       <button
-                        onClick={async () => {
-                          try {
-                            setIsLoading(true);
-                            const result = await resetAdminPasswordViaFunction({
-                              email: viewingAdmin.email,
-                              continueUrl: window.location.origin + '/admin'
-                            });
-
-                            if (result?.resetLink) {
-                              alert(`✅ Password reset link generated!\n\nAdmin: ${viewingAdmin.email}\n\nLink:\n${result.resetLink}\n\nSend this link to the admin to set a new password.`);
-                            } else {
-                              alert('Password reset request completed.');
-                            }
-                          } catch (err) {
-                            console.error('Reset password failed:', err);
-                            alert(`❌ Failed to reset password: ${err.message || err}`);
-                          } finally {
-                            setIsLoading(false);
-                          }
+                        onClick={() => {
+                          alert(
+                            `📋 To reset admin password, follow these steps:\n\n` +
+                            `1️⃣ Go to Firebase Console:\n` +
+                            `   https://console.firebase.google.com\n\n` +
+                            `2️⃣ Select project: onchainweb-37d30\n\n` +
+                            `3️⃣ Navigate to: Authentication → Users\n\n` +
+                            `4️⃣ Find admin by email: ${viewingAdmin?.email || 'admin@example.com'}\n\n` +
+                            `5️⃣ Click the three-dot menu → Reset password\n\n` +
+                            `6️⃣ Firebase will send a password reset email to the admin\n\n` +
+                            `7️⃣ Admin can click the link in email to set new password\n\n` +
+                            `💡 Tip: You can also temporarily set a password in Firebase Console.`
+                          );
                         }}
                         style={{ padding: '12px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                       >
-                        🔑 Reset Password
+                        🔑 Reset Password (via Firebase Console)
                       </button>
                       <button
                         onClick={async () => {
