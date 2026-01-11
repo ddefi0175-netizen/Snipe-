@@ -38,7 +38,9 @@ export const ensureMasterAccountExists = async () => {
   
   // If no master password configured, skip setup
   if (!config) {
-    console.log('[Master Setup] No VITE_MASTER_PASSWORD found, skipping auto-setup');
+    if (import.meta.env.DEV) {
+      console.log('[Master Setup] No VITE_MASTER_PASSWORD found, skipping auto-setup');
+    }
     return {
       success: true,
       message: 'Master password not configured in environment',
@@ -64,7 +66,9 @@ export const ensureMasterAccountExists = async () => {
     // Sign out immediately after verification
     await auth.signOut();
     
-    console.log('[Master Setup] Master account verified:', config.email);
+    if (import.meta.env.DEV) {
+      console.log('[Master Setup] Master account verified:', config.email);
+    }
     return {
       success: true,
       message: 'Master account already exists and credentials are correct',
@@ -74,7 +78,9 @@ export const ensureMasterAccountExists = async () => {
     // If sign in fails with user-not-found, try to create the account
     if (signInError.code === 'auth/user-not-found') {
       try {
-        console.log('[Master Setup] Creating master account:', config.email);
+        if (import.meta.env.DEV) {
+          console.log('[Master Setup] Creating master account:', config.email);
+        }
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           config.email,
@@ -84,7 +90,9 @@ export const ensureMasterAccountExists = async () => {
         // Sign out immediately after creation
         await auth.signOut();
         
-        console.log('[Master Setup] ✅ Master account created successfully:', config.email);
+        if (import.meta.env.DEV) {
+          console.log('[Master Setup] ✅ Master account created successfully:', config.email);
+        }
         return {
           success: true,
           message: 'Master account created successfully from environment variables',
@@ -102,7 +110,9 @@ export const ensureMasterAccountExists = async () => {
     } 
     // If sign in fails with wrong-password, account exists but password is different
     else if (signInError.code === 'auth/wrong-password') {
-      console.warn('[Master Setup] ⚠️ Master account exists but password in environment does not match');
+      if (import.meta.env.DEV) {
+        console.warn('[Master Setup] ⚠️ Master account exists but password in environment does not match');
+      }
       return {
         success: false,
         error: 'Master account exists but VITE_MASTER_PASSWORD does not match Firebase password',
