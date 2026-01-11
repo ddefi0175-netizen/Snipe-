@@ -317,7 +317,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         setCurrentAdmin(null)
         setLoginUsername('')
         setLoginPassword('')
-        setIsLoggingIn(false)
+        setIsLoggingIn(false) // Ensure loading state is reset
         return
       }
 
@@ -362,7 +362,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       } else {
         setLoginError(`❌ Login failed: ${error.message}`)
       }
-      setIsLoggingIn(false)
+      setIsLoggingIn(false) // Ensure loading state is reset on error
     }
   }
 
