@@ -118,7 +118,15 @@ export default function WalletGate({ onConnect, children, allowOpenAccess = fals
                 {/* Logo & Branding */}
                 <div className="wg-logo">
                     <div className="wg-logo-glow" />
-                    <span className="wg-logo-icon">🔗</span>
+                    <img 
+                        src="/logo.png" 
+                        alt="OnchainWeb Logo" 
+                        className="wg-logo-icon"
+                        onError={(e) => {
+                            // Fallback to SVG if PNG fails
+                            e.target.src = '/logo.svg';
+                        }}
+                    />
                     <h1>OnchainWeb</h1>
                     <p className="wg-tagline">Decentralized Trading Platform</p>
                 </div>
@@ -294,12 +302,15 @@ export default function WalletGate({ onConnect, children, allowOpenAccess = fals
         }
 
         .wg-logo-icon {
-          font-size: 64px;
+          width: 80px;
+          height: 80px;
           display: block;
           margin-bottom: 15px;
-          filter: drop-shadow(0 0 20px rgba(0, 255, 136, 0.5));
+          filter: drop-shadow(0 0 20px rgba(0, 194, 255, 0.6));
           position: relative;
           z-index: 1;
+          border-radius: 8px;
+          object-fit: contain;
         }
 
         .wg-logo h1 {
