@@ -123,8 +123,11 @@ export default function WalletGate({ onConnect, children, allowOpenAccess = fals
                         alt="OnchainWeb Logo" 
                         className="wg-logo-icon"
                         onError={(e) => {
-                            // Fallback to SVG if PNG fails
-                            e.target.src = '/logo.svg';
+                            // Fallback to SVG if PNG fails (only once)
+                            if (!e.target.dataset.fallbackAttempted) {
+                                e.target.dataset.fallbackAttempted = 'true';
+                                e.target.src = '/logo.svg';
+                            }
                         }}
                     />
                     <h1>OnchainWeb</h1>
