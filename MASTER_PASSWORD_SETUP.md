@@ -4,7 +4,57 @@
 
 The master account is the highest-level administrator account with full platform control. This guide explains how to set up and manage the master account password.
 
-## Quick Setup (3 Steps)
+## 🆕 NEW: Quick Setup (Old Version Style)
+
+**The easiest way to set up the master account is now the same as the old backend version!**
+
+### Option 1: Automatic Setup with Environment Variables (RECOMMENDED)
+
+Just add one line to your `.env` file and the system does the rest:
+
+```bash
+# In Onchainweb/.env file:
+VITE_MASTER_PASSWORD=YourSecurePassword123!
+VITE_ENABLE_ADMIN=true
+VITE_ADMIN_ALLOWLIST=master@admin.onchainweb.app
+```
+
+**That's it!** When you restart the dev server:
+1. ✅ The system automatically creates the master account in Firebase
+2. ✅ You can login immediately at `/master-admin`
+3. ✅ Username: `master`, Password: Your `VITE_MASTER_PASSWORD`
+
+**Optional Customization:**
+```bash
+# Customize the master email (default: master@admin.onchainweb.app)
+VITE_MASTER_EMAIL=master@yourdomain.com
+
+# Customize the master username (default: master)
+VITE_MASTER_USERNAME=superadmin
+```
+
+### How It Works
+
+This new system replicates the old backend behavior where you set:
+- Old backend: `MASTER_USERNAME` and `MASTER_PASSWORD` in environment
+- New system: `VITE_MASTER_PASSWORD` (and optionally `VITE_MASTER_EMAIL` and `VITE_MASTER_USERNAME`)
+
+The system automatically:
+1. Checks if master account exists in Firebase
+2. Creates it if it doesn't exist
+3. Validates the password matches if it does exist
+4. Shows setup status on the login page
+
+**Benefits:**
+- ✅ No manual Firebase Console steps required
+- ✅ Works exactly like the old backend version
+- ✅ Perfect for quick deployments and testing
+- ✅ Environment-based configuration
+- ✅ Auto-creates on first run
+
+## Option 2: Manual Setup via Firebase Console
+
+If you prefer manual control or are setting up production:
 
 ### Step 1: Enable Admin Features
 
