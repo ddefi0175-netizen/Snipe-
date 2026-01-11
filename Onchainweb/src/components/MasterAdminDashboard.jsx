@@ -16,6 +16,7 @@ import {
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
 import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js'
 import { convertToAdminEmail, determineAdminRole, getDefaultPermissions } from '../lib/adminAuth.js'
+import { ensureMasterAccountExists, isMasterAccountConfigured, getMasterSetupInstructions } from '../lib/masterAccountSetup.js'
 
 // Lazy localStorage helper to avoid blocking initial render
 const getFromStorage = (key, defaultValue) => {
@@ -53,6 +54,7 @@ export default function MasterAdminDashboard() {
   const [activeSection, setActiveSection] = useState('user-agents')
   const [searchQuery, setSearchQuery] = useState('')
   const [isMasterAccount, setIsMasterAccount] = useState(false)
+  const [masterSetupStatus, setMasterSetupStatus] = useState(null) // Track master account setup status
 
   // User Management States - lazy loaded after auth
   const [users, setUsers] = useState([])
@@ -577,8 +579,17 @@ export default function MasterAdminDashboard() {
 
   // Check authentication on load - fast initial check
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       try {
+        // First, try to auto-setup master account from environment variables
+        // This replicates the old backend behavior where MASTER_PASSWORD was in env
+        const setupResult = await ensureMasterAccountExists()
+        setMasterSetupStatus(setupResult)
+        
+        if (setupResult.created) {
+          console.log('✅ Master account auto-created from environment variables')
+        }
+        
         const adminSession = localStorage.getItem('masterAdminSession')
         const adminToken = localStorage.getItem('adminToken')
 
@@ -1148,16 +1159,73 @@ export default function MasterAdminDashboard() {
             </div>
           )}
 
+          {/* Master Setup Status */}
+          {!isLoggingIn && masterSetupStatus && (masterSetupStatus.created || masterSetupStatus.error) && (
+            <div style={{ 
+              marginTop: '15px', 
+              padding: '15px', 
+              background: masterSetupStatus.success ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
+              borderRadius: '8px', 
+              fontSize: '12px', 
+              border: `1px solid ${masterSetupStatus.success ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}` 
+            }}>
+              <p style={{ color: masterSetupStatus.success ? '#34d399' : '#f87171', marginBottom: '8px', fontWeight: 'bold' }}>
+                {masterSetupStatus.success ? '✅ Master Account Auto-Setup' : '⚠️ Master Account Setup Issue'}
+              </p>
+              <div style={{ color: '#94a3b8', lineHeight: '1.6' }}>
+                <p>{masterSetupStatus.message}</p>
+                {masterSetupStatus.created && (
+                  <>
+                    <p style={{ marginTop: '8px' }}>✨ <strong>Master account created automatically from environment variables!</strong></p>
+                    <p>Email: {masterSetupStatus.email}</p>
+                    <p>You can now login below with username "master" and your password.</p>
+                  </>
+                )}
+                {masterSetupStatus.error && (
+                  <p style={{ color: '#f87171', marginTop: '8px' }}>{masterSetupStatus.error}</p>
+                )}
+                {masterSetupStatus.suggestion && (
+                  <p style={{ color: '#fbbf24', marginTop: '8px' }}>💡 {masterSetupStatus.suggestion}</p>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Admin Account Info */}
           <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '8px', fontSize: '12px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-            <p style={{ color: '#60a5fa', marginBottom: '8px', fontWeight: 'bold' }}>📋 Available Accounts:</p>
+            <p style={{ color: '#60a5fa', marginBottom: '8px', fontWeight: 'bold' }}>
+              {isMasterAccountConfigured() ? '✅ Master Account Configured' : '📋 Setup Instructions'}
+            </p>
             <div style={{ color: '#94a3b8', lineHeight: '1.6' }}>
-              <p>👑 <strong>Master:</strong> master</p>
-              <p>👤 <strong>Admin:</strong> newadmin / NewAdmin2026!</p>
-              <p>👤 <strong>Admin:</strong> admin2 / Admin123!</p>
+              {isMasterAccountConfigured() ? (
+                <>
+                  <p>👑 <strong>Master:</strong> master (configured via environment)</p>
+                  <p style={{ marginTop: '8px', color: '#34d399' }}>✨ Master account is automatically managed</p>
+                  <p>Just use username "master" and your VITE_MASTER_PASSWORD</p>
+                </>
+              ) : (
+                <>
+                  <p style={{ marginBottom: '10px' }}>🔐 <strong>Quick Setup (Old Version Style):</strong></p>
+                  <p>Add to your <code>.env</code> file:</p>
+                  <pre style={{ 
+                    background: '#0f172a', 
+                    padding: '10px', 
+                    borderRadius: '6px', 
+                    marginTop: '8px',
+                    overflow: 'auto',
+                    fontSize: '11px'
+                  }}>
+VITE_MASTER_PASSWORD=YourSecurePassword123!{'\n'}
+VITE_ENABLE_ADMIN=true{'\n'}
+VITE_ADMIN_ALLOWLIST=master@admin.onchainweb.app
+                  </pre>
+                  <p style={{ marginTop: '10px', color: '#34d399' }}>✨ Account will be auto-created on restart!</p>
+                  <p style={{ marginTop: '10px' }}>Or manually create in Firebase Console.</p>
+                </>
+              )}
             </div>
             <p style={{ color: '#64748b', marginTop: '10px', fontSize: '11px' }}>
-              ℹ️ Admin accounts are stored in the cloud database.
+              ℹ️ See MASTER_PASSWORD_SETUP.md for detailed instructions.
             </p>
           </div>
         </div>
