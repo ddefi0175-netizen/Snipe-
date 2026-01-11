@@ -264,8 +264,8 @@ export default function MasterAdminDashboard() {
   const loadAllData = useCallback(async () => {
     console.log('Loading all data...')
 
-    // Helper for timeout-protected API calls
-    const withTimeout = (promise, ms = 10000) => {
+    // Helper for timeout-protected API calls - reduced timeout for faster response
+    const withTimeout = (promise, ms = 5000) => {
       return Promise.race([
         promise,
         new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
@@ -840,7 +840,11 @@ export default function MasterAdminDashboard() {
       setIsAuthenticated(true)
       setIsDataLoaded(false) // Reset to trigger data load
       setIsMasterAccount(role === 'master')
+      setIsLoggingIn(false) // Set loading to false immediately after successful auth
       console.log('[LOGIN] Success! Role:', role, 'Firebase UID:', user.uid)
+      
+      // Load data asynchronously in the background (non-blocking)
+      loadAllData()
       return
     } catch (error) {
       console.error('[LOGIN] Firebase auth error:', error.message)

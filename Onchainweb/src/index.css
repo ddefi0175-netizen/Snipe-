@@ -64,11 +64,11 @@ header.site-header {
   opacity: 0.85;
 }
 
-/* Logo image styling */
+/* Logo image styling - Updated to larger size for better visibility */
 .brand-logo,
 .brand-logo-fallback {
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   border-radius: 4px;
   object-fit: contain;
   filter: drop-shadow(0 0 8px rgba(0, 194, 255, 0.6)) brightness(1.05);

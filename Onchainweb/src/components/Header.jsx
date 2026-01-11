@@ -167,7 +167,11 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
         </svg>
       </button>
 
-      {/* Brand - Image Logo with Fallbacks */}
+      {/* Brand - Image Logo with Fallbacks 
+          To replace logo: Place your logo file in /Onchainweb/public/logo.png
+          Recommended size: 192x192px or larger (will be displayed at 48x48px)
+          Supported formats: PNG (with transparency recommended) or SVG
+      */}
       <div className="brand" aria-label="OnchainWeb home">
         {/* Use custom logo */}
         <img
