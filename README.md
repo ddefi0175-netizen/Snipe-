@@ -1,13 +1,13 @@
 # Snipe – Real-Time Trading Platform 🚀
 
-[![Production Status](https://img.shields.io/badge/status-production%20ready-success.svg)](FINAL_VERIFICATION_AND_RELEASE_REPORT.md)
+[![Production Status](https://img.shields.io/badge/status-production%20ready-success.svg)](PUBLIC_RELEASE_GUIDE.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Device Compatible](https://img.shields.io/badge/device-compatible-blue.svg)](DEVICE_COMPATIBILITY_TEST.md)
-[![Performance](https://img.shields.io/badge/performance-optimized-green.svg)](FINAL_PUBLIC_RELEASE_SUMMARY.md)
-[![Build](https://img.shields.io/badge/build-passing-success.svg)](FINAL_VERIFICATION_AND_RELEASE_REPORT.md)
-[![Tests](https://img.shields.io/badge/tests-96%2F99%20passing-success.svg)](FINAL_VERIFICATION_AND_RELEASE_REPORT.md)
+[![Device Compatible](https://img.shields.io/badge/device-compatible-blue.svg)](README.md)
+[![Performance](https://img.shields.io/badge/performance-optimized-green.svg)](PERFORMANCE_OPTIMIZATION_GUIDE.md)
+[![Build](https://img.shields.io/badge/build-passing-success.svg)](BUILD_GUIDE.md)
+[![Tests](https://img.shields.io/badge/tests-passing-success.svg)](RELEASE_CHECKLIST.md)
 
 A modern, accessible trading platform with real-time price updates, user dashboards,
 and live chat functionality. Built with React and Firebase.
@@ -71,10 +71,8 @@ npm run dev
 | Guide | Purpose | Time |
 |-------|---------|------|
 | **[QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)** | Setup overview with both options | 5 min |
-| **[CONFIGURATION_STATUS.md](CONFIGURATION_STATUS.md)** | Current config status + how to get credentials | 10 min |
-| **[FIREBASE_CREDENTIALS_REPORT.md](FIREBASE_CREDENTIALS_REPORT.md)** | Detailed credentials breakdown | Reference |
-| **[backend/SETUP_GUIDE.md](backend/SETUP_GUIDE.md)** | Backend setup (optional, legacy) | 10 min |
-| **[DEPLOYMENT.md](DEPLOYMENT.md)** | Production deployment | 30 min |
+| **[FIREBASE_DATABASE_SETUP.md](FIREBASE_DATABASE_SETUP.md)** | Firebase configuration guide | 10 min |
+| **[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md)** | Production deployment | 30 min |
 | **[VERCEL_DEPLOYMENT_GUIDE.md](VERCEL_DEPLOYMENT_GUIDE.md)** | Deploy to Vercel | 15 min |
 
 ---
@@ -112,13 +110,13 @@ Admin and Master accounts use **Firebase Authentication** with email + password.
   - [Admin Setup Guide](ADMIN_SETUP_GUIDE.md) - **START HERE** - Complete setup instructions
   - [Admin User Guide](ADMIN_USER_GUIDE.md) - How to use admin features
   - [Real-Time Data Architecture](REALTIME_DATA_ARCHITECTURE.md) - Data flow and updates
-  - [Implementation Summary](ADMIN_LOGIN_IMPLEMENTATION_SUMMARY.md) - Technical details
+  - [Firebase Admin Implementation](FIREBASE_ADMIN_IMPLEMENTATION.md) - Technical details
 
 - **🔧 Quick Setup**:
   1. Enable admin features: Set `VITE_ENABLE_ADMIN=true` in `Onchainweb/.env`
   2. Create admin accounts in [Firebase Console](https://console.firebase.google.com) (Authentication > Users)
   3. Add admin emails to `VITE_ADMIN_ALLOWLIST` in `.env`
-  4. Run verification: `./verify-admin-login.sh`
+  4. Run verification: `./verify-installation.sh`
   5. Start server: `cd Onchainweb && npm run dev`
   6. Access: `/admin` or `/master-admin` routes
 
@@ -211,7 +209,7 @@ npm install
 npm run dev
 ```
 
-**📖 Detailed Setup**: See [DEPLOYMENT.md](DEPLOYMENT.md) for complete deployment instructions.
+**📖 Detailed Setup**: See [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md) for complete deployment instructions.
 
 ## Tech Stack
 
@@ -266,7 +264,7 @@ The MongoDB + Express.js backend has been replaced with Firebase. If you're usin
 - Firebase Storage for file uploads
 - Firebase Authentication for user management
 
-See [Firebase Setup Guide](FIREBASE_SETUP.md) for migration instructions.
+See [Firebase Database Setup](FIREBASE_DATABASE_SETUP.md) for migration instructions.
 
 </details>
 
@@ -436,4 +434,4 @@ See [LICENSE](LICENSE) for details.
 ⭐ Star us on GitHub if you find this project useful!
 
 **Note**: For advanced deployment and configuration, see the
-[DEPLOYMENT.md](DEPLOYMENT.md) guide.
+[PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md) guide.
