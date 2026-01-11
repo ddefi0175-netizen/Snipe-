@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { createUser } from '../services/database.service'
+import { createUser, getUserById } from '../services/database.service'
 
 // Web3 Wallet Gate - User MUST connect wallet to see any content
 export default function WalletGate({ onConnect, children }) {
@@ -14,40 +14,71 @@ export default function WalletGate({ onConnect, children }) {
   // Register user in Firebase when wallet connects
   const registerUserInFirebase = async (address, walletType) => {
     try {
-      console.log('[Firebase] Registering user:', address, walletType)
+      console.log('[Firebase] Starting user registration:', address, walletType)
+
+      // Check if user already exists
+      try {
+        const existingUser = await getUserById(address)
+        if (existingUser) {
+          console.log('[Firebase] User already exists, updating login time')
+          // Update last login
+          await createUser({
+            ...existingUser,
+            lastLogin: new Date(),
+            walletType: walletType
+          })
+          return existingUser
+        }
+      } catch (checkError) {
+        console.log('[Firebase] User does not exist, creating new user')
+      }
 
       // Get existing profile data if any
       const existingProfile = localStorage.getItem('userProfile')
       const profileData = existingProfile ? JSON.parse(existingProfile) : {}
 
+      // Generate unique user ID
+      const userId = profileData.userId || `USR${Date.now()}`
+      const username = profileData.username || `User_${address.substring(2, 8)}`
+
       // Create user data for Firebase
       const userData = {
         wallet: address,
         walletType: walletType,
-        username: profileData.username || `User_${address.substring(2, 8)}`,
+        username: username,
         email: profileData.email || '',
         balance: profileData.balance || 0,
         points: profileData.points || 0,
         vipLevel: profileData.vipLevel || 0,
-        userId: profileData.userId || `USR${Date.now()}`,
+        userId: userId,
         createdAt: new Date(),
         lastLogin: new Date(),
-        status: 'active'
+        status: 'active',
+        tradeMode: 'auto', // Default trade mode
+        isFrozen: false
       }
 
       // Save to Firebase Firestore
+      console.log('[Firebase] Saving user data to Firestore...')
       await createUser(userData)
-      console.log('[Firebase] User saved successfully!')
+      console.log('[Firebase] ✅ User saved successfully to Firestore!')
 
       // Store user data locally
       localStorage.setItem('backendUserId', address)
       localStorage.setItem('backendUser', JSON.stringify(userData))
-      localStorage.setItem('realAccountId', userData.userId)
+      localStorage.setItem('realAccountId', userId)
       localStorage.setItem('userProfile', JSON.stringify(userData))
+
+      console.log('[Firebase] ✅ User registered and saved:', {
+        wallet: address,
+        userId: userId,
+        username: username
+      })
 
       return userData
     } catch (error) {
-      console.error('[Firebase] Failed to register user:', error)
+      console.error('[Firebase] ❌ Failed to register user:', error)
+      console.error('[Firebase] Error details:', error.message)
       // Still allow local usage
       return null
     }
@@ -110,7 +141,17 @@ export default function WalletGate({ onConnect, children }) {
         // Register user in Firebase immediately
         const user = await registerUserInFirebase(address, walletId)
         console.log('[Firebase] Wallet connected and user registered:', user ? user.userId : 'failed')
+
+        // Notify parent component
+        if (onConnect) {
+          onConnect(address)
+        }
+
+        // Success - component will re-render and show children
+        setIsConnecting(false)
+      }
     } catch (err) {
+      console.error('[Wallet] Connection error:', err)
       setError('Connection failed. Please try again or use a different wallet.')
       setIsConnecting(false)
       setSelectedWallet(null)
