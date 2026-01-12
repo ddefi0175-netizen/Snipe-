@@ -1,3 +1,9 @@
+// Validate environment variables FIRST before any other imports
+// This ensures the app fails fast with clear error messages if config is invalid
+import { validateEnvironment } from './config/env-validation.js'
+validateEnvironment()
+
+// Now import the rest of the application
 import React, { lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'

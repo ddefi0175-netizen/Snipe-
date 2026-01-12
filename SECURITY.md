@@ -48,6 +48,60 @@ MASTER_PASSWORD=YourSecurePasswordHere-ChangeThis!
 
 ## 🛡️ Security Features
 
+### LocalStorage Security Considerations
+
+⚠️ **CRITICAL SECURITY WARNING: LocalStorage Usage**
+
+The application currently uses `localStorage` for storing sensitive data including:
+- Admin authentication tokens (`adminToken`)
+- User session data
+- Trading preferences
+- Notification state
+
+**SECURITY RISKS:**
+1. **XSS Vulnerability**: Any Cross-Site Scripting (XSS) attack can access `localStorage` data
+2. **No Expiration**: Data persists indefinitely unless explicitly cleared
+3. **Plain Text Storage**: Data is stored unencrypted and readable by any JavaScript
+4. **Same-Origin Only**: While limited to the same origin, any malicious script on the domain can access it
+
+**ATTACK VECTORS:**
+- Injected malicious scripts via form inputs
+- Compromised third-party JavaScript libraries
+- Browser extensions with malicious intent
+- Man-in-the-browser attacks
+
+**RECOMMENDED ALTERNATIVES:**
+1. **HttpOnly Cookies**: Set by server, inaccessible to JavaScript
+   - Requires backend support
+   - Automatically sent with requests
+   - Can set expiration times
+   
+2. **Server-Side Sessions**: Store sensitive data on the server
+   - Only session ID stored in cookie
+   - Full control over session lifecycle
+   
+3. **Firebase Session Management**: Use Firebase Auth's built-in session handling
+   - Tokens managed by Firebase SDK
+   - Automatic refresh and expiration
+   - Better security defaults
+
+**CURRENT MITIGATION:**
+- Admin access restricted by email whitelist (VITE_ADMIN_ALLOWLIST)
+- Tokens have expiration times (check Firebase Auth settings)
+- Input sanitization to prevent XSS
+- Content Security Policy headers (when deployed)
+
+**TODO:**
+- [ ] Migrate admin tokens to httpOnly cookies
+- [ ] Implement server-side session validation
+- [ ] Add token refresh mechanism
+- [ ] Implement automatic logout on suspicious activity
+- [ ] Add CSRF protection for state-changing operations
+
+For implementation examples and migration guide, see:
+- `/Onchainweb/src/lib/adminAuth.js` (contains security warnings)
+- Firebase Authentication documentation
+
 ### Password Hashing
 - **Algorithm**: bcrypt with 10 salt rounds
 - **Storage**: Hashed passwords in MongoDB for admin accounts

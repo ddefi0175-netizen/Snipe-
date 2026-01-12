@@ -1,9 +1,66 @@
-// DEPRECATED: Legacy API - use Firebase services instead
-// This file is kept for backward compatibility only
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ⚠️  DEPRECATED: Legacy API - Use Firebase Services Instead
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//
+// This file contains legacy API functions for the old MongoDB backend.
+// The platform has migrated to Firebase (serverless) for better reliability.
+//
+// ⛔ DO NOT USE THESE FUNCTIONS IN NEW CODE
+//
+// MIGRATION PATH:
+// - User operations → Use src/services/firebase.service.js or src/lib/firebase.js
+// - Auth operations → Use Firebase Authentication (src/lib/firebase.js)
+// - Notifications → Use Firebase Realtime Database or Firestore listeners
+// - Chat → Use Firebase Firestore with real-time subscriptions
+//
+// DEPRECATION TIMELINE:
+// - Current: Functions still work but log warnings in development mode
+// - Future: These functions will be removed in a future major version
+//
+// For migration guidance, see: BACKEND_REPLACEMENT.md
+//
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 const API_BASE = import.meta.env.VITE_API_BASE || '';
+
+// Flag to track if deprecation warning has been shown
+let deprecationWarningShown = false;
+
+/**
+ * Shows a deprecation warning in development mode
+ * @param {string} functionName - Name of the deprecated function being called
+ */
+function showDeprecationWarning(functionName) {
+  // Only show warnings in development mode
+  if (!import.meta.env.DEV) return;
+  
+  // Show the general warning only once per session
+  if (!deprecationWarningShown) {
+    console.warn(
+      '%c⚠️  DEPRECATED API USAGE DETECTED',
+      'background: #ff6b6b; color: white; font-weight: bold; padding: 4px 8px; border-radius: 3px;'
+    );
+    console.warn(
+      '%cYou are using deprecated API functions from lib/api.js\n' +
+      'These functions use the legacy MongoDB backend.\n\n' +
+      'Please migrate to Firebase services:\n' +
+      '  • src/services/firebase.service.js\n' +
+      '  • src/lib/firebase.js\n\n' +
+      'See BACKEND_REPLACEMENT.md for migration guide.',
+      'color: #ff6b6b; font-size: 11px;'
+    );
+    deprecationWarningShown = true;
+  }
+
+  // Show specific function warning
+  console.warn(`[DEPRECATED] ${functionName}() - Use Firebase equivalent instead`);
+}
 
 // Helper function for API calls (legacy - not used with Firebase)
 async function apiCall(endpoint, options = {}, retries = 2) {
+  // Show deprecation warning in development
+  showDeprecationWarning(`apiCall('${endpoint}')`);
+  
   const url = `${API_BASE}${endpoint}`;
   const token = localStorage.getItem('adminToken');
 

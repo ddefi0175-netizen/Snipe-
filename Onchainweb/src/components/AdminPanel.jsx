@@ -3,34 +3,7 @@ import { userAPI, uploadAPI, authAPI, tradingLevelsAPI, currenciesAPI, networksA
 import { formatApiError, validatePassword } from '../lib/errorHandling'
 import { firebaseSignIn, firebaseSignOut } from '../lib/firebase'
 import { convertToAdminEmail, determineAdminRole, getDefaultPermissions, isEmailAllowed } from '../lib/adminAuth'
-
-// Default Trading Levels
-const DEFAULT_TRADING_LEVELS = [
-  { level: 1, minCapital: 100, maxCapital: 19999, profit: 18, duration: 180 },
-  { level: 2, minCapital: 20000, maxCapital: 30000, profit: 23, duration: 360 },
-  { level: 3, minCapital: 30001, maxCapital: 50000, profit: 33.5, duration: 720 },
-  { level: 4, minCapital: 50001, maxCapital: 100000, profit: 50, duration: 1080 },
-  { level: 5, minCapital: 100001, maxCapital: 300000, profit: 100, duration: 3600 },
-]
-
-// Default AI Arbitrage Levels
-const DEFAULT_ARBITRAGE_LEVELS = [
-  { level: 1, minCapital: 1000, maxCapital: 30000, profit: 0.9, cycleDays: 2 },
-  { level: 2, minCapital: 30001, maxCapital: 50000, profit: 2, cycleDays: 5 },
-  { level: 3, minCapital: 50001, maxCapital: 300000, profit: 3.5, cycleDays: 7 },
-  { level: 4, minCapital: 300001, maxCapital: 500000, profit: 15, cycleDays: 15 },
-  { level: 5, minCapital: 500001, maxCapital: 999999999, profit: 20, cycleDays: 30 },
-]
-
-// Default Deposit Addresses
-const DEFAULT_DEPOSIT_ADDRESSES = [
-  { network: 'BTC', name: 'Bitcoin', address: '', enabled: true },
-  { network: 'ETH', name: 'Ethereum (ERC-20)', address: '', enabled: true },
-  { network: 'BSC', name: 'BNB Smart Chain (BEP-20)', address: '', enabled: true },
-  { network: 'TRC20', name: 'Tron (TRC-20)', address: '', enabled: true },
-  { network: 'SOL', name: 'Solana', address: '', enabled: true },
-  { network: 'MATIC', name: 'Polygon', address: '', enabled: true },
-]
+import { DEFAULT_TRADING_LEVELS, DEFAULT_ARBITRAGE_LEVELS, DEFAULT_DEPOSIT_ADDRESSES } from '../config/trading-config.js'
 
 export default function AdminPanel({ isOpen = true, onClose }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
