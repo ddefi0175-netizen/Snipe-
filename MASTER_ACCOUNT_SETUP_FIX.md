@@ -23,7 +23,8 @@ Create the master account manually in Firebase Console:
 1. Click **"Add user"** button
 2. Fill in the details:
    - **Email**: `master@admin.onchainweb.app`
-   - **Password**: Use the password from your `VITE_MASTER_PASSWORD` env variable (or create a strong password)
+   - **Password**: Use the password from your `VITE_MASTER_PASSWORD` in .env file
+     - Or create a strong password (12+ characters, mix of uppercase, lowercase, numbers, symbols)
 3. Click **"Add user"** to save
 
 ### Step 3: Test Login
@@ -31,7 +32,7 @@ Create the master account manually in Firebase Console:
 1. Go back to your app: `/master-admin`
 2. Login with:
    - Username: `master`
-   - Password: The password you just set in Firebase
+   - Password: The same password you used in Step 2
 3. Should work now! ✅
 
 ## Why Did This Happen?
@@ -62,7 +63,7 @@ After creating the account, you should see it in Firebase Console:
 Once login works:
 1. ✅ Test all admin features
 2. ✅ Deploy Firestore rules: `firebase deploy --only firestore:rules`
-3. ✅ For production: Remove `VITE_MASTER_PASSWORD` from .env
+3. ✅ For production security: Consider removing `VITE_MASTER_PASSWORD` from .env after verifying the account exists in Firebase. You can then login with the password set in Firebase Console.
 
 ---
 
