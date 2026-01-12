@@ -121,6 +121,9 @@ export const handleAdminLogin = async (username, password, options = {}) => {
     } else if (error.code === 'auth/wrong-password') {
       errorMessage = 'Incorrect password. Please try again.';
       errorCode = 'WRONG_PASSWORD';
+    } else if (error.code === 'auth/invalid-credential') {
+      errorMessage = 'Invalid credentials. The account may not exist in Firebase. Please create the master account in Firebase Console first (see MASTER_ACCOUNT_SETUP_FIX.md).';
+      errorCode = 'INVALID_CREDENTIAL';
     } else if (error.code === 'auth/invalid-email') {
       errorMessage = 'Invalid email format.';
       errorCode = 'INVALID_EMAIL';

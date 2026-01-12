@@ -582,11 +582,16 @@ export default function MasterAdminDashboard() {
       try {
         // First, try to auto-setup master account from environment variables
         // This replicates the old backend behavior where MASTER_PASSWORD was in env
+        console.log('[Master Dashboard] Starting auto-setup check...')
         const setupResult = await ensureMasterAccountExists()
         setMasterSetupStatus(setupResult)
         
         if (setupResult.created) {
           console.log('✅ Master account auto-created from environment variables')
+        } else if (setupResult.skipped) {
+          console.log('ℹ️ Master auto-setup skipped (no VITE_MASTER_PASSWORD configured)')
+        } else if (!setupResult.success) {
+          console.warn('⚠️ Master auto-setup failed:', setupResult.error)
         }
         
         const adminSession = localStorage.getItem('masterAdminSession')
