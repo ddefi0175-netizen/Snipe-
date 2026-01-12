@@ -7,9 +7,19 @@ service cloud.firestore {
       return request.auth != null;
     }
     
+    // Check if user is admin based on email domain
+    // Admins use @admin.onchainweb.app email domain
+    // Regex ensures valid email format with proper username
     function isAdmin() {
       return isAuthenticated() && 
-             exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+             (request.auth.token.email.matches('^[a-zA-Z0-9._-]+@admin[.]onchainweb[.]app$') ||
+              exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
+    }
+    
+    // Check if user is master admin
+    function isMasterAdmin() {
+      return isAuthenticated() && 
+             request.auth.token.email.matches('^master@admin[.]onchainweb[.]app$');
     }
     
     function isOwner(userId) {
@@ -28,16 +38,20 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     
-    // Admins collection
+    // Admins collection - PRIVATE, not accessible by regular users
     match /admins/{adminId} {
-      // Only admins can read admin data
+      // Only admins can read admin data (their own or all if master)
       allow read: if isAdmin();
-      // Only master admin can create new admins
-      allow create: if isAdmin();
-      // Admins can update their own data
-      allow update: if isAdmin();
+      // Admins can create their own profile on first login using email validation
+      // This breaks the circular dependency by not calling isAdmin() during creation
+      allow create: if (isAuthenticated() && 
+                        adminId == request.auth.uid && 
+                        request.auth.token.email.matches('^[a-zA-Z0-9._-]+@admin[.]onchainweb[.]app$')) || 
+                       isMasterAdmin();
+      // Admins can update their own data, master can update any
+      allow update: if (isAuthenticated() && adminId == request.auth.uid && isAdmin()) || isMasterAdmin();
       // Only master admin can delete admins
-      allow delete: if isAdmin();
+      allow delete: if isMasterAdmin();
     }
     
     // Trades collection
@@ -80,10 +94,10 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     
-    // Chat messages collection
+    // Chat messages collection - RESTRICTED
     match /chatMessages/{messageId} {
-      // Anyone can read messages (for public chat)
-      allow read: if true;
+      // Only authenticated users can read messages (no public access)
+      allow read: if isAuthenticated();
       // Authenticated users can create messages
       allow create: if isAuthenticated();
       // Only admins can update messages (mark as read, etc.)
@@ -92,12 +106,12 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
     
-    // Active chats collection
+    // Active chats collection - RESTRICTED
     match /activeChats/{sessionId} {
       // Admins can read all chats, users can read their own
       allow read: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
-      // Anyone can create a chat session
-      allow create: if true;
+      // Authenticated users can create a chat session
+      allow create: if isAuthenticated();
       // Admins can update chats, users can update their own
       allow update: if isAdmin() || (isAuthenticated() && resource.data.userId == request.auth.uid);
       // Only admins can delete chats
@@ -116,20 +130,20 @@ service cloud.firestore {
       allow delete: if isOwner(resource.data.userId) || isAdmin();
     }
     
-    // Settings collection
+    // Settings collection - ADMIN ONLY (sensitive configuration)
     match /settings/{document=**} {
-      // Everyone can read settings
-      allow read: if true;
+      // Only admins can read settings (contains sensitive config)
+      allow read: if isAdmin();
       // Only admins can write settings
       allow write: if isAdmin();
     }
     
-    // Activity logs collection
+    // Activity logs collection - ADMIN ONLY
     match /activityLogs/{logId} {
       // Only admins can read logs
       allow read: if isAdmin();
-      // System can create logs
-      allow create: if true;
+      // System and admins can create logs
+      allow create: if isAdmin();
       // No updates or deletes allowed on logs
       allow update, delete: if false;
     }

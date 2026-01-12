@@ -61,6 +61,110 @@ export const onAuthChange = (callback) => {
 };
 
 // ==========================================
+// ADMIN MANAGEMENT FUNCTIONS
+// ==========================================
+
+/**
+ * Create or update admin profile in Firestore
+ * This is called after successful Firebase Authentication login
+ * to ensure the admin document exists for Firestore security rules
+ * 
+ * @param {string} uid - Firebase Auth user ID (required)
+ * @param {string} email - Admin email address (required)
+ * @param {string} role - Admin role: 'master' or 'admin' (required)
+ * @param {Array<string>} permissions - Array of permission strings (required)
+ * @returns {Promise<Object>} Result object with success/error info
+ */
+export const ensureAdminProfile = async (uid, email, role, permissions) => {
+  if (!isFirebaseAvailable) {
+    console.warn('Firebase not available, skipping admin profile creation');
+    return { success: false, error: 'Firebase not available' };
+  }
+
+  // Validate required parameters
+  if (!uid || typeof uid !== 'string') {
+    return { success: false, error: 'Invalid uid parameter' };
+  }
+
+  if (!email || typeof email !== 'string') {
+    return { success: false, error: 'Invalid email parameter' };
+  }
+
+  // Validate email format
+  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(email)) {
+    return { success: false, error: 'Invalid email format' };
+  }
+
+  // Validate email domain for admin
+  if (!email.endsWith('@admin.onchainweb.app')) {
+    return { success: false, error: 'Email must end with @admin.onchainweb.app' };
+  }
+
+  if (!role || (role !== 'master' && role !== 'admin')) {
+    return { success: false, error: 'Invalid role (must be "master" or "admin")' };
+  }
+
+  if (!Array.isArray(permissions)) {
+    return { success: false, error: 'Permissions must be an array' };
+  }
+
+  try {
+    const adminRef = doc(db, 'admins', uid);
+    
+    // Check if admin document exists
+    const adminDoc = await getDoc(adminRef);
+    
+    const adminData = {
+      email: email,
+      role: role,
+      permissions: permissions,
+      lastLogin: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    if (!adminDoc.exists()) {
+      // Create new admin document
+      adminData.createdAt = serverTimestamp();
+      adminData.status = 'active';
+      await setDoc(adminRef, adminData);
+      console.log('[Firebase] Admin profile created:', uid);
+      return { success: true, created: true };
+    } else {
+      // Update existing admin document
+      await updateDoc(adminRef, adminData);
+      console.log('[Firebase] Admin profile updated:', uid);
+      return { success: true, updated: true };
+    }
+  } catch (error) {
+    console.error('[Firebase] Error ensuring admin profile:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get admin profile from Firestore
+ */
+export const getAdminProfile = async (uid) => {
+  if (!isFirebaseAvailable) {
+    return null;
+  }
+
+  try {
+    const adminRef = doc(db, 'admins', uid);
+    const adminDoc = await getDoc(adminRef);
+    
+    if (adminDoc.exists()) {
+      return { id: adminDoc.id, ...adminDoc.data() };
+    }
+    return null;
+  } catch (error) {
+    console.error('[Firebase] Error getting admin profile:', error);
+    return null;
+  }
+};
+
+// ==========================================
 // CHAT MESSAGES FUNCTIONS
 // ==========================================
 
