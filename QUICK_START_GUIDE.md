@@ -90,11 +90,82 @@ npm run dev
 
 **Expected Output:**
 ```
+✓ Environment validation passed
 ✓ Frontend built successfully
 ✓ Ready at http://localhost:5173
 ```
 
+**If you see an error about environment variables:**
+```
+❌ ENVIRONMENT CONFIGURATION ERROR
+
+The application cannot start due to invalid or missing environment variables.
+
+  1. VITE_FIREBASE_API_KEY contains a placeholder value: "YOUR_FIREBASE_API_KEY_HERE"
+  2. VITE_FIREBASE_PROJECT_ID is not set
+```
+
+This means your `.env` file has placeholder or missing values. Go back to Step 2 and ensure all values are properly set.
+
 **Open in browser**: http://localhost:5173
+
+---
+
+## 🔧 Troubleshooting
+
+### Issue: "Environment validation failed"
+
+**Symptoms:**
+- Application won't start
+- Error message about Firebase configuration
+- Mentions placeholder values like "YOUR_" or "your-project"
+
+**Solution:**
+1. Check `Onchainweb/.env` file exists (not just `.env.example`)
+2. Verify all `VITE_FIREBASE_*` variables are set
+3. Ensure values don't contain placeholder text:
+   - ❌ `YOUR_FIREBASE_API_KEY_HERE`
+   - ❌ `your-project.firebaseapp.com`
+   - ❌ `123456789012`
+   - ✅ `AIzaSyDx1234567890abcdef` (real value)
+4. Remove any spaces around `=` signs
+5. Restart the dev server
+
+### Issue: "Firebase initialization error"
+
+**Symptoms:**
+- App starts but Firebase features don't work
+- Console shows "Firebase not available" warnings
+
+**Solution:**
+1. Double-check Firebase configuration in Firebase Console
+2. Ensure your Firebase project is active
+3. Verify you've enabled Authentication and Firestore in Firebase Console
+4. Check that API key restrictions (if any) allow your domain
+
+### Issue: "WalletConnect not working"
+
+**Symptoms:**
+- QR code doesn't appear
+- Mobile wallet connection fails
+
+**Solution:**
+1. Set `VITE_WALLETCONNECT_PROJECT_ID` in `.env`
+2. Get a free Project ID from https://cloud.walletconnect.com
+3. Restart the dev server
+
+### Issue: npm vulnerabilities
+
+**Check for security issues:**
+```bash
+cd Onchainweb
+npm run security-check
+```
+
+**Fix vulnerabilities:**
+```bash
+npm audit fix
+```
 
 ---
 

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useWallet } from '../lib/walletConnect.jsx'
-import { notificationAPI } from '../lib/api.js'
+// Note: Notifications now use Firebase Firestore real-time listeners
+// For implementation, see src/services/firebase.service.js or src/lib/firebase.js
+// TODO: Replace with Firebase notification subscription
 
 // Generate a unique 5-digit numeric ID for Real account
 function generateRealAccountId() {
@@ -67,15 +69,28 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
     return () => document.removeEventListener('click', handleClickOutside)
   }, [])
 
-  // Fetch notifications from backend
+  // Fetch notifications from Firebase
+  // TODO: Replace with Firebase Firestore real-time listener
+  // For now, using fallback to prevent errors from deprecated API
   useEffect(() => {
     if (!address) {
       setNotifications([])
       return
     }
-    notificationAPI.getByUserId(address)
-      .then(data => setNotifications(Array.isArray(data) ? data : []))
-      .catch(() => setNotifications([]))
+    
+    // Fallback: Use localStorage for notifications until Firebase listener is implemented
+    // In production, this should use: onSnapshot(query(collection(db, 'notifications'), where('userId', '==', address)))
+    try {
+      const storedNotifications = localStorage.getItem(`notifications_${address}`)
+      if (storedNotifications) {
+        setNotifications(JSON.parse(storedNotifications))
+      } else {
+        setNotifications([])
+      }
+    } catch (error) {
+      console.error('Error loading notifications:', error)
+      setNotifications([])
+    }
   }, [address, showNotifications])
 
   const handleViewProfile = () => {
@@ -140,17 +155,21 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
   }
 
   // Mark all notifications as read
-  const clearNotifications = async () => {
+  // TODO: Implement Firebase Firestore update for marking notifications as read
+  const clearNotifications = () => {
     try {
-      await Promise.all(
-        notifications.filter(n => !n.read).map(n =>
-          fetch(`${API_BASE}/notifications/${n._id}/read`, { method: 'PATCH' })
-        )
-      )
-      setNotifications(notifications.map(n => ({ ...n, read: true })))
+      // Update notifications to mark all as read
+      const updatedNotifications = notifications.map(n => ({ ...n, read: true }))
+      setNotifications(updatedNotifications)
+      
+      // Store in localStorage
+      if (address) {
+        localStorage.setItem(`notifications_${address}`, JSON.stringify(updatedNotifications))
+      }
+      
       setShowNotifications(false)
-    } catch {
-      // ignore
+    } catch (error) {
+      console.error('Error clearing notifications:', error)
     }
   }
 

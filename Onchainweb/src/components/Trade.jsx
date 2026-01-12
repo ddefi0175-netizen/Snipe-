@@ -1,17 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import CandlestickChart from './CandlestickChart'
+import { DEFAULT_TRADING_LEVELS } from '../config/trading-config.js'
 
 // CoinGecko API for real prices - same as Dashboard
 const CRYPTO_API = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h'
-
-// Trading levels configuration (can be modified by admin)
-const DEFAULT_TRADING_LEVELS = [
-  { level: 1, minCapital: 100, maxCapital: 19999, profit: 18, duration: 180 },
-  { level: 2, minCapital: 20000, maxCapital: 30000, profit: 23, duration: 360 },
-  { level: 3, minCapital: 30001, maxCapital: 50000, profit: 33.5, duration: 720 },
-  { level: 4, minCapital: 50001, maxCapital: 100000, profit: 50, duration: 1080 },
-  { level: 5, minCapital: 100001, maxCapital: 300000, profit: 100, duration: 3600 },
-]
 
 // Available trading pairs
 const TRADING_PAIRS = [
