@@ -96,6 +96,16 @@ export const determineAdminRole = (email) => {
 /**
  * Gets default permissions based on role
  *
+ * ⚠️ SECURITY CONSIDERATION: Master role has broad permissions including admin management.
+ * In production systems, consider implementing role separation where:
+ * - User management role: Can manage regular users but not admins
+ * - Admin management role: Can manage admins but with limited user access
+ * - Settings role: Can configure platform settings
+ * This reduces the blast radius if a master account is compromised.
+ * 
+ * CURRENT IMPLEMENTATION: Master has all permissions for simplicity in small deployments.
+ * For enterprise deployments, implement the principle of least privilege.
+ *
  * @param {string} role - 'master' or 'admin'
  * @returns {Array<string>} Array of permission strings
  */
@@ -108,14 +118,14 @@ export const getDefaultPermissions = (role) => {
       'manageBalances',
       'manageKYC',
       'manageTrades',
-      'manageAdmins',      // Ability to create/edit admin accounts
+      'manageAdmins',      // Ability to create/edit admin accounts - HIGH PRIVILEGE
       'viewReports',
-      'manageSettings',     // Platform-wide settings
+      'manageSettings',     // Platform-wide settings - HIGH PRIVILEGE
       'manageDeposits',
       'manageWithdrawals',
       'customerService',    // Access to customer support features
-      'viewLogs',           // Access to audit logs
-      'siteSettings'        // Site configuration
+      'viewLogs',           // Access to audit logs - HIGH PRIVILEGE
+      'siteSettings'        // Site configuration - HIGH PRIVILEGE
     ];
   }
 

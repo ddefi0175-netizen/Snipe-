@@ -78,6 +78,21 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
       return
     }
     
+    /**
+     * Sanitizes notification message to prevent XSS attacks
+     * Removes HTML tags and script content
+     * @param {string} message - The notification message
+     * @returns {string} Sanitized message
+     */
+    const sanitizeMessage = (message) => {
+      if (typeof message !== 'string') return ''
+      // Remove HTML tags and script content
+      return message
+        .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+        .replace(/<[^>]+>/g, '')
+        .trim()
+    }
+    
     // Fallback: Use localStorage for notifications until Firebase listener is implemented
     // In production, this should use: onSnapshot(query(collection(db, 'notifications'), where('userId', '==', address)))
     try {
@@ -86,12 +101,18 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
         const parsed = JSON.parse(storedNotifications)
         // Validate that parsed data is an array
         if (Array.isArray(parsed)) {
-          // Validate each notification has required fields
-          const validated = parsed.filter(n => 
-            n && typeof n === 'object' && 
-            (n._id || n.id) && 
-            n.message
-          )
+          // Validate each notification has required fields and sanitize content
+          const validated = parsed
+            .filter(n => 
+              n && typeof n === 'object' && 
+              (n._id || n.id) && 
+              n.message
+            )
+            .map(n => ({
+              ...n,
+              message: sanitizeMessage(n.message), // Sanitize message content
+              read: Boolean(n.read) // Ensure boolean type
+            }))
           setNotifications(validated)
         } else {
           setNotifications([])

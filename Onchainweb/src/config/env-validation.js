@@ -21,15 +21,16 @@ const requiredEnvVars = [
 
 /**
  * Placeholder patterns that indicate an invalid/unconfigured value
+ * These patterns match common placeholder text used in example configurations
  */
 const placeholderPatterns = [
-  /YOUR_.*_HERE/i,
-  /your-project/i,
-  /your-firebase/i,
-  /XXXXXXXXXX/i,
-  /xxxxxxxxxxx/i,
-  /123456789012/,
-  /a1b2c3d4e5f6g7h8/i
+  /YOUR_.*_HERE/i,                    // Matches: YOUR_FIREBASE_API_KEY_HERE, YOUR_APP_ID_HERE
+  /your-project/i,                    // Matches: your-project.firebaseapp.com, your-project-id
+  /your-firebase/i,                   // Matches: your-firebase-project-id
+  /XXXXXXXXXX/i,                      // Matches: G-XXXXXXXXXX (measurement ID placeholder)
+  /xxxxxxxxxxx/i,                     // Matches: lowercase x patterns
+  /123456789012/,                     // Matches: Example Firebase messaging sender ID
+  /a1b2c3d4e5f6g7h8/i                 // Matches: Example Firebase app ID suffix
 ];
 
 /**
