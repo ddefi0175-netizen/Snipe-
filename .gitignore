@@ -55,3 +55,4 @@ DEPLOYMENT_STATUS.md
 latest-update-manifest.*
 .vercel
 .env*.local
+Onchainweb/node_modules/

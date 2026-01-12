@@ -3,6 +3,11 @@
 import { validateEnvironment } from './config/env-validation.js'
 validateEnvironment()
 
+// Install console filters to suppress known third-party warnings
+// This filters out deprecation warnings from browser wallet extensions (injected.js)
+import { installConsoleFilters } from './lib/consoleFilter.js'
+installConsoleFilters()
+
 // Now import the rest of the application
 import React, { lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
