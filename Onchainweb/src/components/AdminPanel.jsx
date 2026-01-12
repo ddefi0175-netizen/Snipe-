@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { userAPI, uploadAPI, authAPI, tradingLevelsAPI, currenciesAPI, networksAPI, depositWalletsAPI, ratesAPI, settingsAPI } from '../lib/api'
-import { formatApiError, validatePassword } from '../lib/errorHandling'
-import { firebaseSignIn, firebaseSignOut, ensureAdminProfile } from '../lib/firebase'
-import { convertToAdminEmail, determineAdminRole, getDefaultPermissions, isEmailAllowed } from '../lib/adminAuth'
+import { formatApiError } from '../lib/errorHandling'
+import { isEmailAllowed } from '../lib/adminAuth'
+import { handleAdminLogin, handleAdminLogout } from '../lib/adminLoginHelper'
 import { DEFAULT_TRADING_LEVELS, DEFAULT_ARBITRAGE_LEVELS, DEFAULT_DEPOSIT_ADDRESSES } from '../config/trading-config.js'
 
 export default function AdminPanel({ isOpen = true, onClose }) {
@@ -247,76 +247,36 @@ export default function AdminPanel({ isOpen = true, onClose }) {
   const handleLogin = async () => {
     setLoginError('')
 
-    if (!loginUsername || !loginPassword) {
-      setLoginError('Please enter username and password')
-      return
-    }
-
-    // Validate password
-    const passwordValidation = validatePassword(loginPassword, 6)
-    if (!passwordValidation.valid) {
-      setLoginError(passwordValidation.error)
-      return
-    }
-
     setIsLoggingIn(true)
 
     try {
       console.log('[AdminPanel] Attempting login for:', loginUsername)
 
-      // Use Firebase Authentication for admin login (email-based)
-      const email = convertToAdminEmail(loginUsername)
-
-      console.log('[AdminPanel] Using Firebase Authentication...')
-      const userCredential = await firebaseSignIn(email, loginPassword)
-      const user = userCredential.user
-
-      console.log('[AdminPanel] Firebase auth successful for:', user.email)
-
-      // Get Firebase ID token for API authorization
-      const token = await user.getIdToken()
-
-      // Determine role and permissions based on email
-      const role = determineAdminRole(user.email)
-      const permissions = getDefaultPermissions(role)
-
-      if (!isEmailAllowed(user.email)) {
-        await firebaseSignOut()
-        localStorage.removeItem('adminToken')
-        localStorage.removeItem('firebaseAdminUid')
-        localStorage.removeItem('adminUser')
-        setLoginError('❌ This account is not authorized for admin access.')
-        setIsAuthenticated(false)
-        setCurrentAdmin(null)
+      // Use shared admin login helper with allowlist checking
+      const result = await handleAdminLogin(loginUsername, loginPassword, {
+        checkAllowlist: true,
+        isEmailAllowed
+      })
+      
+      if (!result.success) {
+        setLoginError(`❌ ${result.error}`)
         setLoginUsername('')
         setLoginPassword('')
-        setIsLoggingIn(false) // Ensure loading state is reset
         return
       }
 
-      // CRITICAL: Create/update admin profile in Firestore
-      // This is required for Firestore security rules to work properly
-      console.log('[AdminPanel] Creating/updating admin profile in Firestore...')
-      const profileResult = await ensureAdminProfile(user.uid, user.email, role, permissions)
-      
-      if (!profileResult.success) {
-        console.warn('[AdminPanel] Failed to create admin profile, but continuing:', profileResult.error)
-        // Continue anyway - the email-based rule will still work
-      } else {
-        console.log('[AdminPanel] Admin profile ensured:', profileResult.created ? 'created' : 'updated')
-      }
-
       // Store auth data
+      const { data } = result
       const adminUser = {
-        username: loginUsername,
-        email: user.email,
-        uid: user.uid,
-        role: role,
-        permissions: permissions
+        username: data.username,
+        email: data.email,
+        uid: data.uid,
+        role: data.role,
+        permissions: data.permissions
       }
 
-      localStorage.setItem('adminToken', token)
-      localStorage.setItem('firebaseAdminUid', user.uid)
+      localStorage.setItem('adminToken', data.token)
+      localStorage.setItem('firebaseAdminUid', data.uid)
       localStorage.setItem('adminUser', JSON.stringify(adminUser))
 
       setLoginError('')
@@ -324,46 +284,22 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       setCurrentAdmin(adminUser)
       setLoginUsername('')
       setLoginPassword('')
-      setIsLoggingIn(false) // Set loading to false immediately after successful auth
-      console.log('[AdminPanel] Login successful! Role:', role)
+      console.log('[AdminPanel] Login successful! Role:', data.role)
       
       // Load data asynchronously in the background (non-blocking)
       loadConfigFromBackend()
       loadAllUsers()
     } catch (error) {
-      console.error('[AdminPanel] Login error:', error)
-
-      // Handle Firebase-specific errors
-      if (error.code === 'auth/user-not-found') {
-        setLoginError('❌ Admin account not found. Please check your credentials.')
-      } else if (error.code === 'auth/wrong-password') {
-        setLoginError('❌ Incorrect password. Please try again.')
-      } else if (error.code === 'auth/invalid-email') {
-        setLoginError('❌ Invalid email format.')
-      } else if (error.code === 'auth/too-many-requests') {
-        setLoginError('❌ Too many failed login attempts. Please try again later.')
-      } else if (error.message === 'Firebase not available') {
-        setLoginError('❌ Firebase authentication is not configured. Please contact support.')
-      } else {
-        setLoginError(`❌ Login failed: ${error.message}`)
-      }
-      setIsLoggingIn(false) // Ensure loading state is reset on error
+      console.error('[AdminPanel] Unexpected error:', error)
+      setLoginError(`❌ Login failed: ${error.message}`)
+    } finally {
+      setIsLoggingIn(false)
     }
   }
 
   // Handle logout
   const handleLogout = async () => {
-    try {
-      // Sign out from Firebase
-      await firebaseSignOut()
-    } catch (error) {
-      console.error('Firebase signout error:', error)
-    }
-
-    // Clear local session
-    localStorage.removeItem('adminToken')
-    localStorage.removeItem('adminUser')
-    localStorage.removeItem('firebaseAdminUid')
+    await handleAdminLogout()
     setIsAuthenticated(false)
     setCurrentAdmin(null)
     setLoginUsername('')

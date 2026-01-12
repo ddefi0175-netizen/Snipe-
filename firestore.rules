@@ -9,9 +9,10 @@ service cloud.firestore {
     
     // Check if user is admin based on email domain
     // Admins use @admin.onchainweb.app email domain
+    // Regex ensures valid email format with proper username
     function isAdmin() {
       return isAuthenticated() && 
-             (request.auth.token.email.matches('.*@admin[.]onchainweb[.]app$') ||
+             (request.auth.token.email.matches('^[a-zA-Z0-9._-]+@admin[.]onchainweb[.]app$') ||
               exists(/databases/$(database)/documents/admins/$(request.auth.uid)));
     }
     
@@ -41,8 +42,12 @@ service cloud.firestore {
     match /admins/{adminId} {
       // Only admins can read admin data (their own or all if master)
       allow read: if isAdmin();
-      // Admins can create their own profile on first login, or master can create others
-      allow create: if (isAuthenticated() && adminId == request.auth.uid && isAdmin()) || isMasterAdmin();
+      // Admins can create their own profile on first login using email validation
+      // This breaks the circular dependency by not calling isAdmin() during creation
+      allow create: if (isAuthenticated() && 
+                        adminId == request.auth.uid && 
+                        request.auth.token.email.matches('^[a-zA-Z0-9._-]+@admin[.]onchainweb[.]app$')) || 
+                       isMasterAdmin();
       // Admins can update their own data, master can update any
       allow update: if (isAuthenticated() && adminId == request.auth.uid && isAdmin()) || isMasterAdmin();
       // Only master admin can delete admins

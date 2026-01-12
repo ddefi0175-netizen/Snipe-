@@ -68,11 +68,45 @@ export const onAuthChange = (callback) => {
  * Create or update admin profile in Firestore
  * This is called after successful Firebase Authentication login
  * to ensure the admin document exists for Firestore security rules
+ * 
+ * @param {string} uid - Firebase Auth user ID (required)
+ * @param {string} email - Admin email address (required)
+ * @param {string} role - Admin role: 'master' or 'admin' (required)
+ * @param {Array<string>} permissions - Array of permission strings (required)
+ * @returns {Promise<Object>} Result object with success/error info
  */
 export const ensureAdminProfile = async (uid, email, role, permissions) => {
   if (!isFirebaseAvailable) {
     console.warn('Firebase not available, skipping admin profile creation');
     return { success: false, error: 'Firebase not available' };
+  }
+
+  // Validate required parameters
+  if (!uid || typeof uid !== 'string') {
+    return { success: false, error: 'Invalid uid parameter' };
+  }
+
+  if (!email || typeof email !== 'string') {
+    return { success: false, error: 'Invalid email parameter' };
+  }
+
+  // Validate email format
+  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailRegex.test(email)) {
+    return { success: false, error: 'Invalid email format' };
+  }
+
+  // Validate email domain for admin
+  if (!email.endsWith('@admin.onchainweb.app')) {
+    return { success: false, error: 'Email must end with @admin.onchainweb.app' };
+  }
+
+  if (!role || (role !== 'master' && role !== 'admin')) {
+    return { success: false, error: 'Invalid role (must be "master" or "admin")' };
+  }
+
+  if (!Array.isArray(permissions)) {
+    return { success: false, error: 'Permissions must be an array' };
   }
 
   try {
@@ -83,8 +117,8 @@ export const ensureAdminProfile = async (uid, email, role, permissions) => {
     
     const adminData = {
       email: email,
-      role: role || 'admin',
-      permissions: permissions || [],
+      role: role,
+      permissions: permissions,
       lastLogin: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
