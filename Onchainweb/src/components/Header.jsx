@@ -83,12 +83,26 @@ export default function Header({ onMenuToggle, onAboutClick, onWhitepaperClick, 
     try {
       const storedNotifications = localStorage.getItem(`notifications_${address}`)
       if (storedNotifications) {
-        setNotifications(JSON.parse(storedNotifications))
+        const parsed = JSON.parse(storedNotifications)
+        // Validate that parsed data is an array
+        if (Array.isArray(parsed)) {
+          // Validate each notification has required fields
+          const validated = parsed.filter(n => 
+            n && typeof n === 'object' && 
+            (n._id || n.id) && 
+            n.message
+          )
+          setNotifications(validated)
+        } else {
+          setNotifications([])
+        }
       } else {
         setNotifications([])
       }
     } catch (error) {
       console.error('Error loading notifications:', error)
+      // Clear corrupted data
+      localStorage.removeItem(`notifications_${address}`)
       setNotifications([])
     }
   }, [address, showNotifications])

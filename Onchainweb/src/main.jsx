@@ -1,3 +1,9 @@
+// Validate environment variables FIRST before any other imports
+// This ensures the app fails fast with clear error messages if config is invalid
+import { validateEnvironment } from './config/env-validation.js'
+validateEnvironment()
+
+// Now import the rest of the application
 import React, { lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
@@ -5,13 +11,8 @@ import { UniversalWalletProvider } from './lib/walletConnect.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { APIStatusBanner } from './components/APIStatus.jsx'
 import { ROUTES, ADMIN_GUARD } from './config/constants.js'
-import { validateEnvironment } from './config/env-validation.js'
 import './index.css'
 import './styles/master-admin.css'
-
-// Validate environment variables before starting the app
-// This ensures the app fails fast with clear error messages if config is invalid
-validateEnvironment()
 
 // Import main app directly for fast initial load
 import MainApp from './App.jsx'
