@@ -412,6 +412,34 @@ For detailed instructions, see [Admin User Guide](ADMIN_USER_GUIDE.md).
 
 For issues, questions, or feature requests, please [open an issue](https://github.com/ddefi0175-netizen/Snipe/issues) on GitHub.
 
+### Common Issues & Solutions
+
+#### Master Account Login Issues
+
+If you're having trouble logging in to the master admin account:
+
+1. **Set up auto-creation**: Add `VITE_MASTER_PASSWORD` to your `.env` file
+   ```bash
+   VITE_MASTER_PASSWORD=YourSecurePassword123!
+   ```
+   The account will be automatically created on first run.
+
+2. **Manual creation**: Create the account in Firebase Console:
+   - Go to Authentication → Users → Add user
+   - Email: `master@admin.onchainweb.app`
+   - Password: Your chosen password
+   - Then login with username "master"
+
+See [MASTER_PASSWORD_SETUP.md](MASTER_PASSWORD_SETUP.md) for detailed instructions.
+
+#### Browser Console Warnings
+
+You may see deprecation warnings like `"Deprecation warning: tabReply will be removed"`. These come from third-party wallet browser extensions (OKX, Trust Wallet, etc.), not our code. 
+
+- ✅ **Safe to ignore** - doesn't affect functionality
+- ✅ **Automatically filtered** - we suppress these warnings in production
+- 📖 See [THIRD_PARTY_EXTENSION_WARNINGS.md](THIRD_PARTY_EXTENSION_WARNINGS.md) for details
+
 ## Contributing
 
 We welcome contributions! Here's how you can help:

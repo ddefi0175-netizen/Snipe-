@@ -116,22 +116,25 @@ export const handleAdminLogin = async (username, password, options = {}) => {
     let errorCode = 'UNKNOWN_ERROR';
 
     if (error.code === 'auth/user-not-found') {
-      errorMessage = 'Admin account not found. Please check your credentials.';
+      errorMessage = 'Admin account not found. Please check your credentials or set VITE_MASTER_PASSWORD in .env to auto-create the account.';
       errorCode = 'USER_NOT_FOUND';
     } else if (error.code === 'auth/wrong-password') {
-      errorMessage = 'Incorrect password. Please try again.';
+      errorMessage = 'Incorrect password. If you set VITE_MASTER_PASSWORD in .env, make sure it matches the password used in Firebase Console.';
       errorCode = 'WRONG_PASSWORD';
     } else if (error.code === 'auth/invalid-credential') {
-      errorMessage = 'Invalid credentials. Please create the master account in Firebase Console first (Authentication → Users → Add user).';
+      errorMessage = 'Invalid credentials. Set VITE_MASTER_PASSWORD in .env to auto-create the account, or manually create it in Firebase Console (Authentication → Users → Add user with email: master@admin.onchainweb.app).';
       errorCode = 'INVALID_CREDENTIAL';
     } else if (error.code === 'auth/invalid-email') {
       errorMessage = 'Invalid email format.';
       errorCode = 'INVALID_EMAIL';
     } else if (error.code === 'auth/too-many-requests') {
-      errorMessage = 'Too many failed login attempts. Please try again later.';
+      errorMessage = 'Too many failed login attempts. Please try again later (usually 5-15 minutes).';
       errorCode = 'TOO_MANY_REQUESTS';
+    } else if (error.code === 'auth/network-request-failed') {
+      errorMessage = 'Network error. Please check your internet connection and try again.';
+      errorCode = 'NETWORK_ERROR';
     } else if (error.message === 'Firebase not available') {
-      errorMessage = 'Firebase authentication is not configured. Please contact support.';
+      errorMessage = 'Firebase authentication is not configured. Check your .env file and ensure all VITE_FIREBASE_* variables are set correctly.';
       errorCode = 'FIREBASE_UNAVAILABLE';
     } else {
       errorMessage = error.message;

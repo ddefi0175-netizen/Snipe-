@@ -31,9 +31,10 @@ export const getMasterAccountConfig = () => {
  * Auto-create master account in Firebase if it doesn't exist
  * This replicates the old backend behavior where master credentials were in env vars
  * 
+ * @param {number} retryCount - Number of times to retry (default: 0, max: 3)
  * @returns {Promise<Object>} Result object with success/error info
  */
-export const ensureMasterAccountExists = async () => {
+export const ensureMasterAccountExists = async (retryCount = 0) => {
   const config = getMasterAccountConfig();
   
   // If no master password configured, skip setup
@@ -54,8 +55,14 @@ export const ensureMasterAccountExists = async () => {
   if (!auth) {
     return {
       success: false,
-      error: 'Firebase Authentication not initialized'
+      error: 'Firebase Authentication not initialized',
+      suggestion: 'Check your Firebase configuration in .env file'
     };
+  }
+
+  // Wait a bit for Firebase to fully initialize on first try
+  if (retryCount === 0) {
+    await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   try {
@@ -76,7 +83,7 @@ export const ensureMasterAccountExists = async () => {
     };
   } catch (signInError) {
     // If sign in fails with user-not-found, try to create the account
-    if (signInError.code === 'auth/user-not-found') {
+    if (signInError.code === 'auth/user-not-found' || signInError.code === 'auth/invalid-credential') {
       try {
         if (import.meta.env.DEV) {
           console.log('[Master Setup] Creating master account:', config.email);
@@ -101,10 +108,24 @@ export const ensureMasterAccountExists = async () => {
         };
       } catch (createError) {
         console.error('[Master Setup] Failed to create master account:', createError);
+        
+        // Retry on network errors or temporary failures
+        if (retryCount < 3 && (
+          createError.code === 'auth/network-request-failed' ||
+          createError.code === 'auth/too-many-requests' ||
+          createError.message.includes('network') ||
+          createError.message.includes('timeout')
+        )) {
+          console.log(`[Master Setup] Retrying account creation (attempt ${retryCount + 1}/3)...`);
+          await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+          return ensureMasterAccountExists(retryCount + 1);
+        }
+        
         return {
           success: false,
           error: `Failed to create master account: ${createError.message}`,
-          code: createError.code
+          code: createError.code,
+          suggestion: 'Try creating the account manually in Firebase Console (Authentication → Users → Add user)'
         };
       }
     } 
@@ -119,13 +140,28 @@ export const ensureMasterAccountExists = async () => {
         suggestion: 'Either update VITE_MASTER_PASSWORD to match Firebase, or reset password in Firebase Console'
       };
     }
-    // Other errors (network, etc.)
+    // Handle invalid email format
+    else if (signInError.code === 'auth/invalid-email') {
+      return {
+        success: false,
+        error: 'Invalid email format in VITE_MASTER_EMAIL',
+        suggestion: 'Check that VITE_MASTER_EMAIL is set correctly (default: master@admin.onchainweb.app)'
+      };
+    }
+    // Network errors - retry
+    else if (signInError.code === 'auth/network-request-failed' && retryCount < 3) {
+      console.log(`[Master Setup] Network error, retrying (attempt ${retryCount + 1}/3)...`);
+      await new Promise(resolve => setTimeout(resolve, 2000 * (retryCount + 1)));
+      return ensureMasterAccountExists(retryCount + 1);
+    }
+    // Other errors
     else {
       console.error('[Master Setup] Error verifying master account:', signInError);
       return {
         success: false,
         error: `Error checking master account: ${signInError.message}`,
-        code: signInError.code
+        code: signInError.code,
+        suggestion: 'Check Firebase Console for any authentication issues or create the account manually'
       };
     }
   }
