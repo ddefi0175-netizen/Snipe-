@@ -6,13 +6,14 @@ You may see deprecation warnings in the browser console that look like this:
 
 ```
 injected.js:1 Deprecation warning: tabReply will be removed
+content.js:1 Deprecation warning: tabReply will be removed
 ```
 
 These warnings come from browser wallet extensions (like OKX Wallet, Trust Wallet, etc.) that inject code into web pages, **not from our application code**.
 
-## What is `injected.js`?
+## What are `injected.js` and `content.js`?
 
-`injected.js` is a script file injected by browser wallet extensions to provide Web3 functionality. The file is not part of our codebase and we have no control over its contents.
+These are script files injected by browser wallet extensions to provide Web3 functionality. The files are not part of our codebase and we have no control over their contents. Different wallet extensions may use different file names (`injected.js`, `content.js`, etc.) but they all serve the same purpose.
 
 ## What is `tabReply`?
 

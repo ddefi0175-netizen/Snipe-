@@ -5,9 +5,9 @@
  * that we cannot control. These warnings are from wallet extensions (OKX, Trust, etc.)
  * that inject code into the page and use deprecated browser APIs.
  * 
- * WARNING FILTERED:
- * - "Deprecation warning: tabReply will be removed" (from injected.js)
- * - This comes from wallet browser extensions, not our code
+ * WARNINGS FILTERED:
+ * - "Deprecation warning: tabReply will be removed" (from injected.js, content.js)
+ * - These come from wallet browser extensions, not our code
  * 
  * We filter these to reduce console noise and avoid confusing developers
  * with warnings about code we don't control.
@@ -22,6 +22,8 @@ const FILTERED_WARNINGS = [
   /deprecation warning.*tabreply/i,
   /tabreply will be removed/i,
   /injected\.js.*deprecation/i,
+  /content\.js.*deprecation/i,
+  /content\.js.*tabreply/i,
 ];
 
 // Known third-party errors to filter (optional - be careful with this)
