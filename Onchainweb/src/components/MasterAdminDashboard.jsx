@@ -587,11 +587,11 @@ export default function MasterAdminDashboard() {
         setMasterSetupStatus(setupResult)
         
         if (setupResult.created) {
-          console.log('✅ Master account auto-created from environment variables')
+          console.log('[Master Dashboard] Master account auto-created from environment variables')
         } else if (setupResult.skipped) {
-          console.log('ℹ️ Master auto-setup skipped (no VITE_MASTER_PASSWORD configured)')
+          console.log('[Master Dashboard] Master auto-setup skipped (no VITE_MASTER_PASSWORD configured)')
         } else if (!setupResult.success) {
-          console.warn('⚠️ Master auto-setup failed:', setupResult.error)
+          console.warn('[Master Dashboard] Master auto-setup failed:', setupResult.error)
         }
         
         const adminSession = localStorage.getItem('masterAdminSession')
