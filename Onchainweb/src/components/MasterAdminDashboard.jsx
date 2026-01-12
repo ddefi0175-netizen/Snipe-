@@ -1120,7 +1120,7 @@ export default function MasterAdminDashboard() {
           )}
 
           {/* Master Setup Status */}
-          {!isLoggingIn && masterSetupStatus && (masterSetupStatus.created || masterSetupStatus.error) && (
+          {!isLoggingIn && masterSetupStatus && !masterSetupStatus.skipped && (
             <div style={{ 
               marginTop: '15px', 
               padding: '15px', 
@@ -1141,11 +1141,26 @@ export default function MasterAdminDashboard() {
                     <p>You can now login below with username "master" and your password.</p>
                   </>
                 )}
-                {masterSetupStatus.error && (
-                  <p style={{ color: '#f87171', marginTop: '8px' }}>{masterSetupStatus.error}</p>
-                )}
-                {masterSetupStatus.suggestion && (
-                  <p style={{ color: '#fbbf24', marginTop: '8px' }}>💡 {masterSetupStatus.suggestion}</p>
+                {!masterSetupStatus.success && (
+                  <>
+                    <p style={{ color: '#f87171', marginTop: '8px' }}>{masterSetupStatus.error || 'Unknown error occurred'}</p>
+                    {masterSetupStatus.suggestion && (
+                      <p style={{ color: '#fbbf24', marginTop: '8px' }}>💡 {masterSetupStatus.suggestion}</p>
+                    )}
+                    <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '6px', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                      <p style={{ color: '#60a5fa', fontWeight: 'bold', marginBottom: '6px' }}>🛠️ Quick Fix:</p>
+                      <p style={{ fontSize: '11px', color: '#94a3b8' }}>
+                        Create the master account manually in <strong>Firebase Console</strong>:
+                      </p>
+                      <ol style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px', marginLeft: '16px' }}>
+                        <li>Go to Firebase Console → Authentication → Users</li>
+                        <li>Click "Add user"</li>
+                        <li>Email: <code style={{ background: '#0f172a', padding: '2px 4px', borderRadius: '3px' }}>master@admin.onchainweb.app</code></li>
+                        <li>Password: Use your <code style={{ background: '#0f172a', padding: '2px 4px', borderRadius: '3px' }}>VITE_MASTER_PASSWORD</code></li>
+                        <li>Refresh this page and login</li>
+                      </ol>
+                    </div>
+                  </>
                 )}
               </div>
             </div>

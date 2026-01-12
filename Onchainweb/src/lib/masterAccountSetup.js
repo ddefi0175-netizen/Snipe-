@@ -61,8 +61,9 @@ export const ensureMasterAccountExists = async (retryCount = 0) => {
   }
 
   // Wait a bit for Firebase to fully initialize on first try
+  // Increase wait time to ensure Firebase is ready
   if (retryCount === 0) {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 2000));
   }
 
   try {
@@ -121,11 +122,26 @@ export const ensureMasterAccountExists = async (retryCount = 0) => {
           return ensureMasterAccountExists(retryCount + 1);
         }
         
+        // Provide detailed error message with actionable steps
+        let detailedError = `Failed to create master account: ${createError.message}`;
+        let suggestion = 'Try creating the account manually in Firebase Console';
+        
+        if (createError.code === 'auth/email-already-in-use') {
+          detailedError = 'Master account already exists with a different password';
+          suggestion = 'Update VITE_MASTER_PASSWORD in .env to match the existing Firebase password, or reset the password in Firebase Console';
+        } else if (createError.code === 'auth/weak-password') {
+          detailedError = 'Password is too weak (must be at least 6 characters)';
+          suggestion = 'Set a stronger VITE_MASTER_PASSWORD in .env (12+ characters recommended)';
+        } else if (createError.code === 'auth/operation-not-allowed') {
+          detailedError = 'Email/password authentication is not enabled in Firebase';
+          suggestion = 'Enable Email/Password authentication in Firebase Console (Authentication → Sign-in method → Email/Password)';
+        }
+        
         return {
           success: false,
-          error: `Failed to create master account: ${createError.message}`,
+          error: detailedError,
           code: createError.code,
-          suggestion: 'Try creating the account manually in Firebase Console (Authentication → Users → Add user)'
+          suggestion: suggestion
         };
       }
     } 

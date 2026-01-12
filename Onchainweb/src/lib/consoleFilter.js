@@ -24,6 +24,8 @@ const FILTERED_WARNINGS = [
   /injected\.js.*deprecation/i,
   /content\.js.*deprecation/i,
   /content\.js.*tabreply/i,
+  /injected\.js.*tabreply/i,
+  /tronlink.*deprecation/i,
 ];
 
 // Known third-party errors to filter (optional - be careful with this)
