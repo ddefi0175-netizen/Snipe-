@@ -11,7 +11,8 @@ import {
   subscribeToUsers,
   subscribeToDeposits,
   subscribeToWithdrawals,
-  subscribeToTrades
+  subscribeToTrades,
+  ensureAdminProfile
 } from '../lib/firebase.js'
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
 import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js'
@@ -834,6 +835,18 @@ export default function MasterAdminDashboard() {
       // Determine role based on email
       const role = determineAdminRole(user.email)
       const permissions = getDefaultPermissions(role)
+      
+      // CRITICAL: Create/update admin profile in Firestore
+      // This is required for Firestore security rules to work properly
+      console.log('[LOGIN] Creating/updating admin profile in Firestore...')
+      const profileResult = await ensureAdminProfile(user.uid, user.email, role, permissions)
+      
+      if (!profileResult.success) {
+        console.warn('[LOGIN] Failed to create admin profile, but continuing:', profileResult.error)
+        // Continue anyway - the email-based rule will still work
+      } else {
+        console.log('[LOGIN] Admin profile ensured:', profileResult.created ? 'created' : 'updated')
+      }
       
       // Store auth data
       localStorage.setItem('adminToken', token)

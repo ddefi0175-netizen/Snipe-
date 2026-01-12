@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { userAPI, uploadAPI, authAPI, tradingLevelsAPI, currenciesAPI, networksAPI, depositWalletsAPI, ratesAPI, settingsAPI } from '../lib/api'
 import { formatApiError, validatePassword } from '../lib/errorHandling'
-import { firebaseSignIn, firebaseSignOut } from '../lib/firebase'
+import { firebaseSignIn, firebaseSignOut, ensureAdminProfile } from '../lib/firebase'
 import { convertToAdminEmail, determineAdminRole, getDefaultPermissions, isEmailAllowed } from '../lib/adminAuth'
 import { DEFAULT_TRADING_LEVELS, DEFAULT_ARBITRAGE_LEVELS, DEFAULT_DEPOSIT_ADDRESSES } from '../config/trading-config.js'
 
@@ -292,6 +292,18 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         setLoginPassword('')
         setIsLoggingIn(false) // Ensure loading state is reset
         return
+      }
+
+      // CRITICAL: Create/update admin profile in Firestore
+      // This is required for Firestore security rules to work properly
+      console.log('[AdminPanel] Creating/updating admin profile in Firestore...')
+      const profileResult = await ensureAdminProfile(user.uid, user.email, role, permissions)
+      
+      if (!profileResult.success) {
+        console.warn('[AdminPanel] Failed to create admin profile, but continuing:', profileResult.error)
+        // Continue anyway - the email-based rule will still work
+      } else {
+        console.log('[AdminPanel] Admin profile ensured:', profileResult.created ? 'created' : 'updated')
       }
 
       // Store auth data

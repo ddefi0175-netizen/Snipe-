@@ -61,6 +61,76 @@ export const onAuthChange = (callback) => {
 };
 
 // ==========================================
+// ADMIN MANAGEMENT FUNCTIONS
+// ==========================================
+
+/**
+ * Create or update admin profile in Firestore
+ * This is called after successful Firebase Authentication login
+ * to ensure the admin document exists for Firestore security rules
+ */
+export const ensureAdminProfile = async (uid, email, role, permissions) => {
+  if (!isFirebaseAvailable) {
+    console.warn('Firebase not available, skipping admin profile creation');
+    return { success: false, error: 'Firebase not available' };
+  }
+
+  try {
+    const adminRef = doc(db, 'admins', uid);
+    
+    // Check if admin document exists
+    const adminDoc = await getDoc(adminRef);
+    
+    const adminData = {
+      email: email,
+      role: role || 'admin',
+      permissions: permissions || [],
+      lastLogin: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    };
+
+    if (!adminDoc.exists()) {
+      // Create new admin document
+      adminData.createdAt = serverTimestamp();
+      adminData.status = 'active';
+      await setDoc(adminRef, adminData);
+      console.log('[Firebase] Admin profile created:', uid);
+      return { success: true, created: true };
+    } else {
+      // Update existing admin document
+      await updateDoc(adminRef, adminData);
+      console.log('[Firebase] Admin profile updated:', uid);
+      return { success: true, updated: true };
+    }
+  } catch (error) {
+    console.error('[Firebase] Error ensuring admin profile:', error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Get admin profile from Firestore
+ */
+export const getAdminProfile = async (uid) => {
+  if (!isFirebaseAvailable) {
+    return null;
+  }
+
+  try {
+    const adminRef = doc(db, 'admins', uid);
+    const adminDoc = await getDoc(adminRef);
+    
+    if (adminDoc.exists()) {
+      return { id: adminDoc.id, ...adminDoc.data() };
+    }
+    return null;
+  } catch (error) {
+    console.error('[Firebase] Error getting admin profile:', error);
+    return null;
+  }
+};
+
+// ==========================================
 // CHAT MESSAGES FUNCTIONS
 // ==========================================
 
