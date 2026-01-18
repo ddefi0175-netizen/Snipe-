@@ -38,10 +38,10 @@ else
   echo -e "  ${RED}❌${NC} Master Username: Not configured"
 fi
 
-if grep -q "MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=" backend/.env; then
-  echo -e "  ${GREEN}✅${NC} Master Password: SECURE (configured - Updated Jan 18, 2026)"
+if grep -q "MASTER_PASSWORD=OnchainWeb2025!" backend/.env; then
+  echo -e "  ${GREEN}✅${NC} Master Password: SECURE (configured - Synced with Render)"
 else
-  echo -e "  ${RED}❌${NC} Master Password: Not configured or not updated"
+  echo -e "  ${RED}❌${NC} Master Password: Not configured or doesn't match Render"
 fi
 
 echo ""

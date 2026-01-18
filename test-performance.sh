@@ -10,8 +10,8 @@ set -e
 # Configuration
 API_BASE="${1:-https://snipe-api.onrender.com/api}"
 FRONTEND_URL="${2:-https://www.onchainweb.app}"
-MASTER_USER="${MASTER_USERNAME:-snipe_admin_secure_7ecb869e}"
-MASTER_PASS="${MASTER_PASSWORD:-WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=}"
+MASTER_USER="${MASTER_USERNAME:-master}"
+MASTER_PASS="${MASTER_PASSWORD:-OnchainWeb2025!}"
 
 # Colors for output
 RED='\033[0;31m'
