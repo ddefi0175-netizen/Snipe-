@@ -10,8 +10,8 @@ set -e
 # Configuration
 API_BASE="${1:-https://snipe-api.onrender.com/api}"
 FRONTEND_URL="${2:-https://www.onchainweb.app}"
-MASTER_USER="${MASTER_USERNAME:-master}"
-MASTER_PASS="${MASTER_PASSWORD}"
+MASTER_USER="${MASTER_USERNAME:-snipe_admin_secure_7ecb869e}"
+MASTER_PASS="${MASTER_PASSWORD:-WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -54,10 +54,10 @@ measure_time() {
     local method="${3:-GET}"
     local data="$4"
     local auth="$5"
-    
+
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     printf "%-50s" "  Testing: $name..."
-    
+
     # Make the request (timing handled by curl's %{time_total})
     if [ -n "$auth" ] && [ -n "$data" ]; then
         HTTP_RESPONSE=$(curl -s -w '\n%{http_code}\n%{time_total}' -X "$method" "$url" \
@@ -76,15 +76,15 @@ measure_time() {
         HTTP_RESPONSE=$(curl -s -w '\n%{http_code}\n%{time_total}' -X "$method" "$url" \
             -H 'Content-Type: application/json' 2>/dev/null || echo -e '{"error":"connection failed"}\n000\n999')
     fi
-    
+
     # Parse response
     local RESPONSE=$(echo "$HTTP_RESPONSE" | head -n -2)
     local HTTP_CODE=$(echo "$HTTP_RESPONSE" | tail -n 2 | head -n 1)
     local CURL_TIME=$(echo "$HTTP_RESPONSE" | tail -n 1)
-    
+
     # Calculate time in milliseconds using awk (more portable than bc)
     local TIME_MS=$(echo "$CURL_TIME" | awk '{printf "%.0f", $1 * 1000}')
-    
+
     # Determine status based on time and HTTP code
     if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
         if [ "$TIME_MS" -lt "$THRESHOLD_EXCELLENT" ]; then
@@ -107,7 +107,7 @@ measure_time() {
         echo -e " ${RED}❌ FAILED${NC} (${TIME_MS}ms | HTTP $HTTP_CODE)" >&2
         FAILED_TESTS=$((FAILED_TESTS + 1))
     fi
-    
+
     # Return the time for further use (only numeric value to stdout)
     echo "$TIME_MS"
 }
@@ -116,20 +116,20 @@ measure_time() {
 measure_frontend() {
     local name="$1"
     local url="$2"
-    
+
     TOTAL_TESTS=$((TOTAL_TESTS + 1))
     printf "%-50s" "  Testing: $name..."
-    
+
     # Measure time to get first byte and total time
     local CURL_OUTPUT=$(curl -s -o /dev/null -w '%{time_total},%{http_code},%{size_download}' "$url" 2>/dev/null || echo '999,000,0')
-    
+
     local TIME_TOTAL=$(echo "$CURL_OUTPUT" | cut -d, -f1)
     local HTTP_CODE=$(echo "$CURL_OUTPUT" | cut -d, -f2)
     local SIZE=$(echo "$CURL_OUTPUT" | cut -d, -f3)
-    
+
     # Convert to milliseconds using awk (more portable than bc)
     local TIME_MS=$(echo "$TIME_TOTAL" | awk '{printf "%.0f", $1 * 1000}')
-    
+
     # Determine status
     if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
         if [ "$TIME_MS" -lt "$THRESHOLD_GOOD" ]; then

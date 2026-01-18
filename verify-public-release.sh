@@ -10,8 +10,8 @@ set -e
 
 # Configuration
 API_BASE="${1:-https://snipe-api.onrender.com/api}"
-MASTER_USER="${MASTER_USERNAME:-master}"
-MASTER_PASS="${MASTER_PASSWORD}"
+MASTER_USER="${MASTER_USERNAME:-snipe_admin_secure_7ecb869e}"
+MASTER_PASS="${MASTER_PASSWORD:-WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=}"
 FRONTEND_URL="${FRONTEND_URL:-https://www.onchainweb.app}"
 
 # Colors for output
@@ -50,9 +50,9 @@ test_endpoint() {
     local data="$4"
     local auth="$5"
     local expect_key="$6"
-    
+
     printf "%-50s" "  Testing: $name..."
-    
+
     # Build and execute curl command safely
     local HTTP_RESPONSE
     if [ -n "$auth" ] && [ -n "$data" ]; then
@@ -72,12 +72,12 @@ test_endpoint() {
         HTTP_RESPONSE=$(curl -s -w '\n%{http_code}' -X "$method" "${API_BASE}${endpoint}" \
             -H 'Content-Type: application/json' 2>/dev/null || echo '{"error":"connection failed"}\n000')
     fi
-    
+
     # Parse response
     local FULL_RESPONSE="$HTTP_RESPONSE"
     local RESPONSE=$(echo "$FULL_RESPONSE" | head -n -1)
     local HTTP_CODE=$(echo "$FULL_RESPONSE" | tail -n 1)
-    
+
     # Check for expected key in response and HTTP code
     if echo "$RESPONSE" | grep -q "$expect_key" && [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
         echo -e " ${GREEN}✅ PASS${NC} (HTTP $HTTP_CODE)"
@@ -95,9 +95,9 @@ test_endpoint() {
 test_frontend() {
     local url="$1"
     printf "%-50s" "  Testing: Frontend at $url..."
-    
+
     local HTTP_CODE=$(curl -s -o /dev/null -w '%{http_code}' "$url" 2>/dev/null || echo "000")
-    
+
     if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 400 ]; then
         echo -e " ${GREEN}✅ PASS${NC} (HTTP $HTTP_CODE)"
         PASSED=$((PASSED + 1))
@@ -138,7 +138,7 @@ printf "%-50s" "  Testing: Master account login..."
 if [ -n "$MASTER_TOKEN" ] && [ "$MASTER_TOKEN" != "null" ]; then
     echo -e " ${GREEN}✅ PASS${NC}"
     PASSED=$((PASSED + 1))
-    
+
     # Extract role and verify it's master
     ROLE=$(echo "$MASTER_RESPONSE" | grep -o '"role":"[^"]*"' | cut -d'"' -f4)
     printf "%-50s" "  Testing: Master role verification..."
@@ -173,27 +173,27 @@ echo -e "${MAGENTA}━━━━━━━━━━━━━━━━━━━━�
 if [ -n "$MASTER_TOKEN" ]; then
     test_endpoint "List admin accounts" "GET" "/auth/admins" "" "$MASTER_TOKEN" "username"
     test_endpoint "Admin activity logs" "GET" "/admin-activity?limit=10" "" "$MASTER_TOKEN" "timestamp"
-    
+
     # Test creating a temporary admin (will be deleted)
     TIMESTAMP=$(date +%s)
     TEST_ADMIN="release_test_$TIMESTAMP"
-    
+
     printf "%-50s" "  Testing: Create admin account..."
     CREATE_RESPONSE=$(curl -s -X POST "${API_BASE}/auth/admin" \
         -H "Authorization: Bearer $MASTER_TOKEN" \
         -H "Content-Type: application/json" \
         -d "{\"username\":\"$TEST_ADMIN\",\"password\":\"TestPass123!\",\"email\":\"test@example.com\",\"permissions\":{\"manageUsers\":true}}")
-    
+
     if echo "$CREATE_RESPONSE" | grep -q "success\|admin"; then
         echo -e " ${GREEN}✅ PASS${NC}"
         PASSED=$((PASSED + 1))
-        
+
         # Test the new admin can login
         printf "%-50s" "  Testing: New admin login..."
         ADMIN_LOGIN=$(curl -s -X POST "${API_BASE}/auth/login" \
             -H "Content-Type: application/json" \
             -d "{\"username\":\"$TEST_ADMIN\",\"password\":\"TestPass123!\"}")
-        
+
         if echo "$ADMIN_LOGIN" | grep -q "token"; then
             echo -e " ${GREEN}✅ PASS${NC}"
             PASSED=$((PASSED + 1))
@@ -201,12 +201,12 @@ if [ -n "$MASTER_TOKEN" ]; then
             echo -e " ${RED}❌ FAIL${NC}"
             FAILED=$((FAILED + 1))
         fi
-        
+
         # Cleanup: Delete test admin
         printf "%-50s" "  Cleanup: Delete test admin..."
         DELETE_RESPONSE=$(curl -s -X DELETE "${API_BASE}/auth/admin/$TEST_ADMIN" \
             -H "Authorization: Bearer $MASTER_TOKEN")
-        
+
         if echo "$DELETE_RESPONSE" | grep -q "success\|deleted"; then
             echo -e " ${GREEN}✅ PASS${NC}"
             PASSED=$((PASSED + 1))
@@ -265,7 +265,7 @@ fi
 # Test admin can see chats
 if [ -n "$MASTER_TOKEN" ]; then
     test_endpoint "Admin get chat sessions" "GET" "/chat/admin/chats" "" "$MASTER_TOKEN" "sessionId"
-    
+
     # Cleanup: Delete test chat session
     printf "%-50s" "  Cleanup: Delete test chat session..."
     CLEANUP_RESPONSE=$(curl -s -X DELETE "${API_BASE}/chat/sessions/release-test-$TIMESTAMP" \
@@ -289,7 +289,7 @@ printf "%-50s" "  Checking: WalletConnect implementation..."
 if [ -f "Onchainweb/src/lib/walletConnect.jsx" ]; then
     echo -e " ${GREEN}✅ PASS${NC}"
     PASSED=$((PASSED + 1))
-    
+
     # Check for WalletConnect dependency
     printf "%-50s" "  Checking: WalletConnect dependency..."
     if grep -q "@walletconnect/universal-provider" "Onchainweb/package.json"; then
@@ -299,7 +299,7 @@ if [ -f "Onchainweb/src/lib/walletConnect.jsx" ]; then
         echo -e " ${RED}❌ FAIL${NC}"
         FAILED=$((FAILED + 1))
     fi
-    
+
     # Check for supported wallets in code
     printf "%-50s" "  Checking: Wallet providers configuration..."
     WALLET_COUNT=$(grep -o "id: '[^']*'" Onchainweb/src/lib/walletConnect.jsx | wc -l)
@@ -310,7 +310,7 @@ if [ -f "Onchainweb/src/lib/walletConnect.jsx" ]; then
         echo -e " ${YELLOW}⚠️  WARN${NC} (Only $WALLET_COUNT wallets found, expected 10+)"
         WARNINGS=$((WARNINGS + 1))
     fi
-    
+
     # Check environment variable documentation
     printf "%-50s" "  Checking: WalletConnect env var documented..."
     if grep -q "VITE_WALLETCONNECT_PROJECT_ID" "Onchainweb/.env.example"; then

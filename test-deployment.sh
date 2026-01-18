@@ -8,8 +8,8 @@
 
 # Configuration
 API_BASE="${1:-https://snipe-api.onrender.com/api}"
-MASTER_USER="${MASTER_USERNAME:-master}"
-MASTER_PASS="${MASTER_PASSWORD}"
+MASTER_USER="${MASTER_USERNAME:-snipe_admin_secure_7ecb869e}"
+MASTER_PASS="${MASTER_PASSWORD:-WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=}"
 ADMIN_USER="${ADMIN_USERNAME:-aqiang}"
 ADMIN_PASS="${ADMIN_PASSWORD}"
 
@@ -48,24 +48,24 @@ test_endpoint() {
     local data="$4"
     local auth="$5"
     local expect_key="$6"
-    
+
     printf "%-40s" "Testing: $name..."
-    
+
     # Build curl command
     CMD="curl -s -X $method ${API_BASE}${endpoint}"
     CMD="$CMD -H 'Content-Type: application/json'"
-    
+
     if [ -n "$auth" ]; then
         CMD="$CMD -H 'Authorization: Bearer $auth'"
     fi
-    
+
     if [ -n "$data" ]; then
         CMD="$CMD -d '$data'"
     fi
-    
+
     # Execute and capture response
     RESPONSE=$(eval $CMD 2>/dev/null || echo '{"error":"connection failed"}')
-    
+
     # Check for expected key in response
     if echo "$RESPONSE" | grep -q "$expect_key"; then
         echo -e " ${GREEN}✅ PASSED${NC}"
@@ -108,7 +108,7 @@ else
     FAILED=$((FAILED + 1))
 fi
 
-# Admin login  
+# Admin login
 ADMIN_RESPONSE=$(curl -s -X POST "${API_BASE}/auth/login" \
     -H "Content-Type: application/json" \
     -d "{\"username\":\"$ADMIN_USER\",\"password\":\"$ADMIN_PASS\"}" 2>/dev/null)
@@ -166,7 +166,7 @@ fi
 # Admin sees chats
 if [ -n "$MASTER_TOKEN" ]; then
     test_endpoint "Admin get chats" "GET" "/chat/admin/chats" "" "$MASTER_TOKEN" "sessionId"
-    
+
     # Clean up test chat
     curl -s -X DELETE "${API_BASE}/chat/sessions/test-deployment-check" \
         -H "Authorization: Bearer $MASTER_TOKEN" > /dev/null 2>&1

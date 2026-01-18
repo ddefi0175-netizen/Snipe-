@@ -51,8 +51,8 @@ FIREBASE_PROJECT_ID=onchainweb-37d30
 
 # Authentication
 JWT_SECRET=your-32-char-random-key
-MASTER_USERNAME=snipe_admin_secure
-MASTER_PASSWORD=YourSecurePassword!123
+MASTER_USERNAME=snipe_admin_secure_7ecb869e
+MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
 
 # Server
 PORT=4000

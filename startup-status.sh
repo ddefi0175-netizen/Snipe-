@@ -38,10 +38,10 @@ else
   echo -e "  ${RED}❌${NC} Master Username: Not configured"
 fi
 
-if grep -q "MASTER_PASSWORD=Snipe" backend/.env; then
-  echo -e "  ${GREEN}✅${NC} Master Password: SECURE (configured)"
+if grep -q "MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=" backend/.env; then
+  echo -e "  ${GREEN}✅${NC} Master Password: SECURE (configured - Updated Jan 18, 2026)"
 else
-  echo -e "  ${RED}❌${NC} Master Password: Not configured"
+  echo -e "  ${RED}❌${NC} Master Password: Not configured or not updated"
 fi
 
 echo ""

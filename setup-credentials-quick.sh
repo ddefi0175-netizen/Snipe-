@@ -89,6 +89,11 @@ fi
 
 if grep -q "MASTER_USERNAME=snipe_admin" backend/.env; then
   echo "✅ Master Username: snipe_admin_secure_7ecb869e"
+  if grep -q "MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=" backend/.env; then
+    echo "✅ Master Password: SECURE (Updated Jan 18, 2026)"
+  else
+    echo "⚠️  Master Password: Not yet updated to new secure password"
+  fi
 else
   echo "⚠️  Master Username: Not yet configured"
 fi
