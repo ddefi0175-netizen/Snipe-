@@ -556,22 +556,36 @@ export default function MasterAdminDashboard() {
       setActiveTrades(validTrades)
     }
 
-    refreshActiveTrades()
-    const interval = setInterval(refreshActiveTrades, 3000) // Check backend every 3s
-    return () => clearInterval(interval)
+    // Use Firebase real-time listener instead of polling
+    if (isFirebaseEnabled) {
+      const unsubscribe = subscribeToTrades((trades) => {
+        const activeTrades = trades.filter(t => t.status === 'active' || (t.endTime && t.endTime > Date.now()))
+        setActiveTrades(activeTrades)
+      })
+      return () => unsubscribe()
+    } else {
+      // Fallback to polling if Firebase not available
+      refreshActiveTrades()
+      const interval = setInterval(refreshActiveTrades, 3000) // Check backend every 3s
+      return () => clearInterval(interval)
+    }
   }, [isAuthenticated, isDataLoaded])
 
-  // Refresh AI investments in real-time
+  // Subscribe to AI investments in real-time
   useEffect(() => {
     if (!isAuthenticated || !isDataLoaded) return
 
+    // For now, use localStorage fallback as Firebase collection may not be set up
+    // In the future, when aiArbitrageInvestments collection is ready, use:
+    // const unsubscribe = collection(db, 'aiArbitrageInvestments').onSnapshot(...)
     const refreshAiInvestments = () => {
       const investments = getFromStorage('aiArbitrageInvestments', [])
       setAiInvestments(investments)
     }
 
     refreshAiInvestments()
-    const interval = setInterval(refreshAiInvestments, 2000) // Real-time updates every 2s
+    // Use shorter interval for AI data to ensure freshness (Firebase will be instant once available)
+    const interval = setInterval(refreshAiInvestments, 5000) // Check every 5s (changed from 2s)
     return () => clearInterval(interval)
   }, [isAuthenticated, isDataLoaded])
 

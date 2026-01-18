@@ -160,24 +160,28 @@ export default function AdminPanel({ isOpen = true, onClose }) {
           setTradingLevels(mappedLevels)
         }
       } catch (error) {
-        console.log('Background refresh error:', error)
+        // Silently handle background refresh errors to avoid blocking UI
+        console.debug('Background data refresh completed with message:', error.message || error)
       }
     }
 
-    let intervalId
+    // Initial refresh after 2 second delay
     const initialTimeout = setTimeout(() => {
       refreshBackendData()
 
       // Set up periodic refresh every 30 seconds
-      intervalId = setInterval(refreshBackendData, 30000)
+      // TODO: Replace this polling with Firebase real-time listeners when users/trades collections are ready
+      // const unsubscribe = onSnapshot(query(collection(db, 'users')), (snapshot) => {
+      //   const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      //   setAllUsers(users)
+      // })
+      const intervalId = setInterval(refreshBackendData, 30000)
+      return () => clearInterval(intervalId)
     }, 2000)
 
-    // Cleanup: clear timeout and interval (if set) on unmount or when isAuthenticated changes
+    // Cleanup: clear timeout on unmount or when isAuthenticated changes
     return () => {
       clearTimeout(initialTimeout)
-      if (intervalId) {
-        clearInterval(intervalId)
-      }
     }
   }, [isAuthenticated])
 
@@ -185,10 +189,10 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     try {
       // Load all settings from backend
       const settings = await settingsAPI.get()
-      
+
       if (settings && settings.success && settings.settings) {
         const s = settings.settings
-        
+
         // Update global settings
         if (s.globalSettings) {
           setGlobalSettings({
@@ -204,32 +208,32 @@ export default function AdminPanel({ isOpen = true, onClose }) {
             announcement: s.globalSettings.announcement || ''
           })
         }
-        
+
         // Update trade control (master only)
         if (s.tradeControl) {
           setTradeControl(s.tradeControl)
         }
-        
+
         // Update trading levels
         if (s.tradingLevels && Array.isArray(s.tradingLevels) && s.tradingLevels.length > 0) {
           setTradingLevels(s.tradingLevels)
         }
-        
+
         // Update AI arbitrage levels
         if (s.aiArbitrageLevels && Array.isArray(s.aiArbitrageLevels) && s.aiArbitrageLevels.length > 0) {
           setArbitrageLevels(s.aiArbitrageLevels)
         }
-        
+
         // Update bonus programs
         if (s.bonusPrograms) {
           setBonusPrograms(s.bonusPrograms)
         }
-        
+
         // Update deposit addresses
         if (s.depositAddresses && Array.isArray(s.depositAddresses) && s.depositAddresses.length > 0) {
           setDepositAddresses(s.depositAddresses)
         }
-        
+
         console.log('Admin: Loaded all settings from backend')
       }
     } catch (error) {
@@ -708,7 +712,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         bonusPrograms,
         depositAddresses
       }
-      
+
       await settingsAPI.patch(settingsUpdate)
       alert('Settings saved successfully to backend!')
     } catch (error) {
@@ -1602,7 +1606,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
                       onChange={e => setBonusPrograms(prev => ({ ...prev, promotionEnd: e.target.value }))}
                     />
                   </div>
-                  
+
                   <button className="save-settings-btn" onClick={saveBonusPrograms}>
                     💾 Save Bonus Programs
                   </button>
@@ -1651,7 +1655,7 @@ export default function AdminPanel({ isOpen = true, onClose }) {
                       Make sure to enter valid wallet addresses that you control.
                     </p>
                   </div>
-                  
+
                   <button className="save-settings-btn" onClick={saveDepositAddresses}>
                     💾 Save Deposit Addresses
                   </button>
