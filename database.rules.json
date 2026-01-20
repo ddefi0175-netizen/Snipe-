@@ -1,0 +1,48 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "root.child('admins').child(auth.uid).child('role').val() === 'master' || root.child('admins').child(auth.uid).child('permissions').child('manageUsers').val() === true || auth.uid === $uid",
+        ".write": "root.child('admins').child(auth.uid).child('role').val() === 'master' || (auth.uid === $uid && (!newData.exists() || newData.child('status').exists() || newData.child('balance').exists()))",
+
+        "status": {
+          ".validate": "newData.isString() && newData.val() !== null"
+        },
+        "frozen": {
+          ".validate": "newData.isBoolean()"
+        },
+        "wallet": {
+          ".validate": "newData.isString()"
+        },
+        "lastModified": {
+          ".validate": "newData.isNumber()"
+        }
+      }
+    },
+
+    "adminSessions": {
+      "$adminId": {
+        ".read": "auth.uid === $adminId || root.child('admins').child(auth.uid).child('role').val() === 'master'",
+        ".write": "auth.uid === $adminId || root.child('admins').child(auth.uid).child('role').val() === 'master'"
+      }
+    },
+
+    "activityLog": {
+      ".read": "root.child('admins').child(auth.uid).exists()",
+
+      "$logId": {
+        ".write": "root.child('admins').child(auth.uid).child('role').val() === 'master'"
+      }
+    },
+
+    "userStats": {
+      ".read": true,
+      ".write": "root.child('admins').child(auth.uid).child('role').val() === 'master'"
+    },
+
+    "$other": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}
