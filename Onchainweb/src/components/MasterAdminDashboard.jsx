@@ -15,7 +15,8 @@ import {
 } from '../lib/firebase.js'
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
 import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js'
-import { convertToAdminEmail, determineAdminRole, getDefaultPermissions } from '../lib/adminAuth.js'
+import { convertToAdminEmail, determineAdminRole, getDefaultPermissions, isEmailAllowed } from '../lib/adminAuth.js'
+import { registerAdminWallet, getAdminWallets, revokeAdminWallet } from '../lib/adminProvisioning.js'
 
 // Lazy localStorage helper to avoid blocking initial render
 const getFromStorage = (key, defaultValue) => {
@@ -822,51 +823,6 @@ export default function MasterAdminDashboard() {
     setIsLoggingIn(true)
 
     try {
-      // Check if this is the master account (use backend authentication)
-      if (loginData.username === 'master') {
-        console.log('[LOGIN] Master account detected - using backend authentication...')
-
-        try {
-          const response = await fetch('https://snipe-api.onrender.com/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              username: loginData.username,
-              password: loginData.password
-            })
-          })
-
-          const data = await response.json()
-
-          if (!data.success || !data.token) {
-            throw new Error(data.error || 'Backend login failed')
-          }
-
-          console.log('[LOGIN] Backend auth successful for master')
-
-          // Store auth data
-          localStorage.setItem('adminToken', data.token)
-          localStorage.setItem('masterAdminSession', JSON.stringify({
-            username: 'master',
-            role: 'master',
-            permissions: data.user.permissions,
-            timestamp: Date.now()
-          }))
-
-          setLoginError('')
-          setIsAuthenticated(true)
-          setIsDataLoaded(false) // Reset to trigger data load
-          setIsMasterAccount(true)
-          console.log('[LOGIN] Master login successful!')
-          return
-        } catch (backendError) {
-          console.error('[LOGIN] Backend auth error:', backendError.message)
-          setLoginError(`❌ Login failed: ${backendError.message}`)
-          setIsLoggingIn(false)
-          return
-        }
-      }
-
       // Use Firebase Authentication for admin login (email-based)
       const email = convertToAdminEmail(loginData.username)
 
@@ -876,12 +832,29 @@ export default function MasterAdminDashboard() {
 
       console.log('[LOGIN] Firebase auth successful for:', user.email)
 
+      // Enforce allowlist so admin surfaces stay private
+      const normalizedEmail = (user.email || '').toLowerCase()
+      if (!isEmailAllowed(normalizedEmail)) {
+        await firebaseSignOut().catch(() => {})
+        setLoginError('❌ This admin account is not allowlisted. Please contact support.')
+        return
+      }
+
       // Get Firebase ID token for API authorization
       const token = await user.getIdToken()
 
       // Determine role based on email
       const role = determineAdminRole(user.email)
       const permissions = getDefaultPermissions(role)
+
+      // SECURITY: Validate email is in allowlist BEFORE granting access
+      if (!isEmailAllowed(user.email)) {
+        console.warn('[LOGIN] Email not in admin allowlist:', user.email)
+        await firebaseSignOut()
+        setLoginError('❌ This admin account is not allowlisted. Please contact support.')
+        setIsAuthenticated(false)
+        return
+      }
 
       // Store auth data
       localStorage.setItem('adminToken', token)

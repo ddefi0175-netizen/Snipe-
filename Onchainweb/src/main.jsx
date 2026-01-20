@@ -15,6 +15,9 @@ import MainApp from './App.jsx'
 const MasterAdminDashboard = lazy(() => import('./components/MasterAdminDashboard.jsx'))
 const AdminPanel = lazy(() => import('./components/AdminPanel.jsx'))
 
+// Admin auto-detection for wallet-based admin access
+import AdminAutoDetector from './components/AdminAutoDetector.jsx'
+
 // Loading spinner for lazy loaded routes
 const LoadingSpinner = () => (
   <div style={{
@@ -46,18 +49,20 @@ createRoot(document.getElementById('root')).render(
     <ErrorBoundary>
       <BrowserRouter>
         <UniversalWalletProvider>
-          <APIStatusBanner />
-          <Suspense fallback={<LoadingSpinner />}>
-            <Routes>
-              <Route path={ROUTES.HOME} element={<MainApp />} />
-              {ADMIN_GUARD.ENABLED && (
-                <Route path={ROUTES.ADMIN} element={<AdminPanel isOpen={true} onClose={() => window.location.href = '/'} />} />
-              )}
-              {ADMIN_GUARD.ENABLED && (
-                <Route path={ROUTES.MASTER_ADMIN} element={<MasterAdminDashboard />} />
-              )}
-            </Routes>
-          </Suspense>
+          <AdminAutoDetector>
+            <APIStatusBanner />
+            <Suspense fallback={<LoadingSpinner />}>
+              <Routes>
+                <Route path={ROUTES.HOME} element={<MainApp />} />
+                {ADMIN_GUARD.ENABLED && (
+                  <Route path={ROUTES.ADMIN} element={<AdminPanel isOpen={true} onClose={() => window.location.href = '/'} />} />
+                )}
+                {ADMIN_GUARD.ENABLED && (
+                  <Route path={ROUTES.MASTER_ADMIN} element={<MasterAdminDashboard />} />
+                )}
+              </Routes>
+            </Suspense>
+          </AdminAutoDetector>
         </UniversalWalletProvider>
       </BrowserRouter>
     </ErrorBoundary>

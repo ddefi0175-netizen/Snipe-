@@ -19,14 +19,19 @@ const adminFeatureEnabled = import.meta.env?.VITE_ENABLE_ADMIN === 'true';
  */
 export const convertToAdminEmail = (usernameOrEmail) => {
   if (!usernameOrEmail) return '';
+  const trimmed = usernameOrEmail.trim();
 
   // If already an email (contains @), return as-is
-  if (usernameOrEmail.includes('@')) {
-    return usernameOrEmail;
+  if (trimmed.includes('@')) {
+    return trimmed;
   }
 
-  // Convert username to email format
-  return `${usernameOrEmail}@admin.onchainweb.app`;
+  // If the username matches an allowlisted local-part, return that allowlisted email
+  const matchFromAllowlist = rawAllowlist.find(email => email.split('@')[0] === trimmed.toLowerCase());
+  if (matchFromAllowlist) return matchFromAllowlist;
+
+  // Fallback to default admin domain
+  return `${trimmed}@admin.onchainweb.app`;
 };
 
 /**

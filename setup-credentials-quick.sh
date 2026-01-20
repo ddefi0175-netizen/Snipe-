@@ -87,12 +87,12 @@ else
   echo "⚠️  JWT Secret: Not yet configured"
 fi
 
-if grep -q "MASTER_USERNAME=master" backend/.env; then
-  echo "✅ Master Username: master"
-  if grep -q "MASTER_PASSWORD=OnchainWeb2025!" backend/.env; then
-    echo "✅ Master Password: SECURE (Synced with Render)"
+if grep -q "MASTER_USERNAME=snipe_admin" backend/.env; then
+  echo "✅ Master Username: snipe_admin_secure_7ecb869e"
+  if grep -q "MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=" backend/.env; then
+    echo "✅ Master Password: SECURE (Updated Jan 18, 2026)"
   else
-    echo "⚠️  Master Password: Does not match Render environment"
+    echo "⚠️  Master Password: Not yet updated to new secure password"
   fi
 else
   echo "⚠️  Master Username: Not yet configured"
