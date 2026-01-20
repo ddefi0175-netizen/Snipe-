@@ -1,7 +1,7 @@
 // Admin Account Auto-Provisioning System
 // Handles automatic creation and management of master/admin accounts in Firebase
 
-import { isFirebaseAvailable } from './firebase.js'
+import { isFirebaseEnabled } from './firebase.js'
 import { getAllowedAdminEmails } from './adminAuth.js'
 
 /**
@@ -10,7 +10,7 @@ import { getAllowedAdminEmails } from './adminAuth.js'
  * Master credentials stored in Firebase Auth + Firestore
  */
 export const initializeMasterAccount = async () => {
-  if (!isFirebaseAvailable) {
+  if (!isFirebaseEnabled()) {
     console.warn('[PROVISIONING] Firebase not available, skipping master account init')
     return false
   }
