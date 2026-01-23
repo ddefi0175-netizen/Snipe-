@@ -25,7 +25,8 @@ export const APP_CONFIG = {
 // API Configuration (Disabled - using Firebase only)
 export const API_CONFIG = {
   BASE_URL: '', // No legacy API - Firebase only
-  TIMEOUT: 30000
+  TIMEOUT: 30000,
+  BACKEND_AUTH_URL: import.meta.env.VITE_BACKEND_AUTH_URL || 'https://snipe-api.onrender.com/api/auth'
 };
 
 // WalletConnect Configuration
