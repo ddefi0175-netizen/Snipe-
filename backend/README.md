@@ -1,4 +1,33 @@
-# Snipe Backend API
+# ⚠️ DEPRECATED - Snipe Backend API
+
+> **IMPORTANT**: This backend is **DEPRECATED** and kept only for legacy support.
+> **Primary Database**: Firebase Firestore  
+> **DO NOT USE** for new deployments or features.
+
+## Migration Status
+
+This backend is being phased out in favor of Firebase as the primary database:
+
+- ✅ **Firebase is now primary**: Firestore + Firebase Auth
+- ✅ **Real-time data**: Frontend uses Firestore `onSnapshot` listeners (no polling)
+- ✅ **Authentication**: Firebase Auth for users
+- ⚠️ **This backend**: Kept for admin operations and legacy compatibility only
+
+### What to Use Instead
+
+| Old (Deprecated) | New (Current) |
+|-----------------|---------------|
+| `POST /api/auth/register` | Firebase Auth `createUserWithEmailAndPassword()` |
+| `POST /api/auth/login` | Firebase Auth `signInWithEmailAndPassword()` |
+| `GET /api/users` | Firestore `collection('users')` with `onSnapshot` |
+| `GET /api/trades` | Firestore `collection('trades')` with `onSnapshot` |
+| `GET /api/deposits` | Firestore `collection('deposits')` with `onSnapshot` |
+
+See `Onchainweb/src/lib/firebase.js` for Firebase implementation.
+
+---
+
+# Snipe Backend API (Legacy)
 
 The Snipe backend provides a REST API for user management, real-time notifications,
 chat functionality, and media uploads.

@@ -1,3 +1,14 @@
+/*
+ * ⚠️ DEPRECATED ROUTE - Authentication
+ * 
+ * This route is DEPRECATED. Use Firebase Auth instead:
+ * - Firebase Auth: signInWithEmailAndPassword()
+ * - Frontend: Onchainweb/src/lib/firebase.js
+ * 
+ * This file is kept for admin authentication only.
+ * DO NOT use for user authentication.
+ */
+
 // Authentication routes for Admin/Master login
 const express = require('express');
 const router = express.Router();

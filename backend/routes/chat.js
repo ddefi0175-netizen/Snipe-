@@ -1,3 +1,14 @@
+/*
+ * ⚠️ DEPRECATED ROUTE - Chat
+ * 
+ * This route is DEPRECATED. Use Firebase Firestore instead:
+ * - Firestore: collection('chatMessages') with onSnapshot
+ * - Frontend: Onchainweb/src/lib/firebase.js
+ * 
+ * This file is kept for legacy support only.
+ * DO NOT use for new features.
+ */
+
 const express = require('express');
 const router = express.Router();
 const ChatMessage = require('../models/ChatMessage');
