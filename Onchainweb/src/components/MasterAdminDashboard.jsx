@@ -815,6 +815,10 @@ export default function MasterAdminDashboard() {
 
     setIsLoggingIn(true)
 
+    // Create abort controller for timeout
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT)
+
     try {
       console.log('[LOGIN] Attempting backend JWT authentication for:', loginData.username)
 
@@ -828,8 +832,11 @@ export default function MasterAdminDashboard() {
         body: JSON.stringify({
           username: loginData.username,
           password: loginData.password
-        })
+        }),
+        signal: controller.signal
       })
+
+      clearTimeout(timeoutId)
 
       const data = await response.json()
 
@@ -857,13 +864,14 @@ export default function MasterAdminDashboard() {
       console.log('[LOGIN] Success! Role:', data.user.role)
       return
     } catch (error) {
+      clearTimeout(timeoutId)
       console.error('[LOGIN] Authentication error:', error)
       
       // Provide more specific error messages based on error type
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        setLoginError(`❌ Unable to connect to authentication server. Please check your internet connection.`)
-      } else if (error.name === 'AbortError') {
+      if (error.name === 'AbortError') {
         setLoginError(`❌ Request timeout. The server took too long to respond. Please try again.`)
+      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        setLoginError(`❌ Unable to connect to authentication server. Please check your internet connection.`)
       } else if (error instanceof SyntaxError) {
         setLoginError(`❌ Server returned invalid response. Please contact support.`)
       } else {
