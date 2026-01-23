@@ -102,9 +102,12 @@ dist/assets/index-CrDHWpdK.js                 840.76 kB │ gzip: 199.38 kB
 
 ### Option 1: Automatic Deployment (Recommended)
 ```bash
-# Push to main branch - Vercel will auto-deploy
+# Merge PR to main branch - Vercel will auto-deploy
+# (Use GitHub PR interface or command line)
+
+# If using command line:
 git checkout main
-git merge copilot/fix-detail-file-error
+git merge <your-branch-name>
 git push origin main
 
 # Vercel will automatically:
