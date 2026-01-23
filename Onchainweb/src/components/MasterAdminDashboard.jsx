@@ -10,11 +10,14 @@ import {
   subscribeToDeposits,
   subscribeToWithdrawals,
   subscribeToTrades,
-  subscribeToAiArbitrageInvestments
+  subscribeToAiArbitrageInvestments,
+  firebaseSignIn,
+  firebaseSignOut
 } from '../lib/firebase.js'
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
 import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js'
 import { registerAdminWallet, getAdminWallets, revokeAdminWallet } from '../lib/adminProvisioning.js'
+import { handleAdminLogin, formatFirebaseAuthError } from '../lib/adminAuth.js'
 import { API_CONFIG } from '../config/constants.js'
 
 // Lazy localStorage helper to avoid blocking initial render
@@ -48,6 +51,7 @@ export default function MasterAdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isDataLoaded, setIsDataLoaded] = useState(false)
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [loginData, setLoginData] = useState({ username: '', password: '' })
   const [loginError, setLoginError] = useState('')
   const [activeSection, setActiveSection] = useState('user-agents')
@@ -785,14 +789,11 @@ export default function MasterAdminDashboard() {
     }
   }, [exchangeRates, isDataLoaded])
 
-  // Loading state for login
-  const [isLoggingIn, setIsLoggingIn] = useState(false)
-
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoginError('')
 
-    console.log('[LOGIN] Attempting login for:', loginData.username)
+    console.log('[MASTER LOGIN] Attempting login for:', loginData.username)
 
     // Validate inputs
     if (!loginData.username || !loginData.password) {
@@ -815,68 +816,31 @@ export default function MasterAdminDashboard() {
 
     setIsLoggingIn(true)
 
-    // Create abort controller for timeout
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT)
-
     try {
-      console.log('[LOGIN] Attempting backend JWT authentication for:', loginData.username)
+      // Use shared admin login utility
+      const result = await handleAdminLogin(loginData.username, loginData.password, firebaseSignIn)
 
-      // Call backend API using configured endpoint
-      const authUrl = `${API_CONFIG.BACKEND_AUTH_URL}/login`
-      const response = await fetch(authUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: loginData.username,
-          password: loginData.password
-        }),
-        signal: controller.signal
-      })
-
-      clearTimeout(timeoutId)
-
-      const data = await response.json()
-
-      if (!response.ok || !data.success) {
-        console.error('[LOGIN] Backend authentication failed:', data.error)
-        setLoginError(`❌ ${data.error || 'Login failed'}`)
-        return
-      }
-
-      console.log('[LOGIN] Backend authentication successful for:', data.user.username)
-
-      // Store auth data
-      localStorage.setItem('adminToken', data.token)
+      // Store auth data (unified with AdminPanel)
+      localStorage.setItem('adminToken', result.token)
+      localStorage.setItem('firebaseAdminUid', result.user.uid)
       localStorage.setItem('masterAdminSession', JSON.stringify({
-        username: data.user.username,
-        role: data.user.role,
-        permissions: data.user.permissions,
+        username: loginData.username,
+        email: result.user.email,
+        uid: result.user.uid,
+        role: result.role,
+        permissions: result.permissions,
         timestamp: Date.now()
       }))
 
       setLoginError('')
       setIsAuthenticated(true)
       setIsDataLoaded(false) // Reset to trigger data load
-      setIsMasterAccount(data.user.role === 'master')
-      console.log('[LOGIN] Success! Role:', data.user.role)
+      setIsMasterAccount(result.role === 'master')
+      console.log('[MASTER LOGIN] Success! Role:', result.role)
       return
     } catch (error) {
-      clearTimeout(timeoutId)
-      console.error('[LOGIN] Authentication error:', error)
-      
-      // Provide more specific error messages based on error type
-      if (error.name === 'AbortError') {
-        setLoginError(`❌ Request timeout. The server took too long to respond. Please try again.`)
-      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        setLoginError(`❌ Unable to connect to authentication server. Please check your internet connection.`)
-      } else if (error instanceof SyntaxError) {
-        setLoginError(`❌ Server returned invalid response. Please contact support.`)
-      } else {
-        setLoginError(`❌ Unable to connect to server. Please try again.`)
-      }
+      console.error('[MASTER LOGIN] Authentication error:', error)
+      setLoginError(`❌ ${formatFirebaseAuthError(error)}`)
       return
     } finally {
       setIsLoggingIn(false)
@@ -885,6 +849,14 @@ export default function MasterAdminDashboard() {
 
   const handleLogout = async () => {
     console.log('[LOGOUT] Clearing admin session')
+
+    try {
+      // Sign out from Firebase
+      await firebaseSignOut()
+      console.log('[LOGOUT] Firebase sign out successful')
+    } catch (error) {
+      console.error('[LOGOUT] Firebase sign out error:', error)
+    }
 
     // Clear local session
     setIsAuthenticated(false)
