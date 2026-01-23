@@ -24,7 +24,8 @@ export const COLLECTIONS = {
   SETTINGS: 'settings',
   ACTIVITY_LOGS: 'activityLogs',
   STAKING: 'staking',
-  BONUSES: 'bonuses'
+  BONUSES: 'bonuses',
+  AI_ARBITRAGE_INVESTMENTS: 'aiArbitrageInvestments'
 };
 
 // Real-time listener configuration
