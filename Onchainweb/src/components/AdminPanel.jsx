@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { userAPI, uploadAPI, authAPI, tradingLevelsAPI, currenciesAPI, networksAPI, depositWalletsAPI, ratesAPI, settingsAPI } from '../lib/api'
 import { formatApiError, validatePassword } from '../lib/errorHandling'
 import { firebaseSignIn, firebaseSignOut, subscribeToUsers, isFirebaseEnabled } from '../lib/firebase'
-import { convertToAdminEmail, determineAdminRole, getDefaultPermissions, isEmailAllowed } from '../lib/adminAuth'
+import { handleAdminLogin, formatFirebaseAuthError } from '../lib/adminAuth'
 
 // Default Trading Levels
 const DEFAULT_TRADING_LEVELS = [
@@ -329,51 +329,20 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     try {
       console.log('[AdminPanel] Attempting login for:', loginUsername)
 
-      // Validate email against allowlist BEFORE Firebase login
-      let email;
-      try {
-        email = convertToAdminEmail(loginUsername)
-        console.log('[AdminPanel] Email validated:', email)
-      } catch (error) {
-        console.error('[AdminPanel] Email validation failed:', error.message)
-        if (error.message.includes('allowlist')) {
-          setLoginError('❌ This email is not authorized for admin access. Please contact the master admin.')
-        } else {
-          setLoginError(`❌ ${error.message}`)
-        }
-        return
-      }
-
-      // Double-check allowlist (defense in depth)
-      if (!isEmailAllowed(email)) {
-        setLoginError('❌ This account is not authorized for admin access.')
-        return
-      }
-
-      console.log('[AdminPanel] Using Firebase Authentication...')
-      const userCredential = await firebaseSignIn(email, loginPassword)
-      const user = userCredential.user
-
-      console.log('[AdminPanel] Firebase auth successful for:', user.email)
-
-      // Get Firebase ID token for API authorization
-      const token = await user.getIdToken()
-
-      // Determine role and permissions based on email
-      const role = determineAdminRole(user.email)
-      const permissions = getDefaultPermissions(role)
+      // Use shared admin login utility
+      const result = await handleAdminLogin(loginUsername, loginPassword, firebaseSignIn)
 
       // Store auth data
       const adminUser = {
         username: loginUsername,
-        email: user.email,
-        uid: user.uid,
-        role: role,
-        permissions: permissions
+        email: result.user.email,
+        uid: result.user.uid,
+        role: result.role,
+        permissions: result.permissions
       }
 
-      localStorage.setItem('adminToken', token)
-      localStorage.setItem('firebaseAdminUid', user.uid)
+      localStorage.setItem('adminToken', result.token)
+      localStorage.setItem('firebaseAdminUid', result.user.uid)
       localStorage.setItem('adminUser', JSON.stringify(adminUser))
 
       setLoginError('')
@@ -381,31 +350,10 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       setCurrentAdmin(adminUser)
       setLoginUsername('')
       setLoginPassword('')
-      console.log('[AdminPanel] Login successful! Role:', role)
+      console.log('[AdminPanel] Login successful! Role:', result.role)
     } catch (error) {
       console.error('[AdminPanel] Login error:', error)
-
-      // Handle Firebase-specific errors with helpful messages
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-        setLoginError(
-          '❌ Admin account not found in Firebase. ' +
-          'Please create this account in Firebase Console > Authentication > Users first. ' +
-          'See FIX_ADMIN_LOGIN_ERROR.md for instructions.'
-        )
-      } else if (error.code === 'auth/wrong-password') {
-        setLoginError('❌ Incorrect password. Please try again.')
-      } else if (error.code === 'auth/invalid-email') {
-        setLoginError('❌ Invalid email format.')
-      } else if (error.code === 'auth/too-many-requests') {
-        setLoginError('❌ Too many failed login attempts. Please try again later.')
-      } else if (error.message === 'Firebase not available') {
-        setLoginError(
-          '❌ Firebase authentication is not configured. ' +
-          'Please set VITE_FIREBASE_* environment variables in .env file.'
-        )
-      } else {
-        setLoginError(`❌ Login failed: ${error.message}`)
-      }
+      setLoginError(`❌ ${formatFirebaseAuthError(error)}`)
     } finally {
       setIsLoggingIn(false)
     }

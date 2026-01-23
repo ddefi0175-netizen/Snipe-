@@ -17,7 +17,7 @@ import {
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
 import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js'
 import { registerAdminWallet, getAdminWallets, revokeAdminWallet } from '../lib/adminProvisioning.js'
-import { convertToAdminEmail, determineAdminRole, getDefaultPermissions, isEmailAllowed } from '../lib/adminAuth.js'
+import { handleAdminLogin, formatFirebaseAuthError } from '../lib/adminAuth.js'
 import { API_CONFIG } from '../config/constants.js'
 
 // Lazy localStorage helper to avoid blocking initial render
@@ -817,88 +817,30 @@ export default function MasterAdminDashboard() {
     setIsLoggingIn(true)
 
     try {
-      console.log('[MASTER LOGIN] Validating email against allowlist...')
-
-      // Validate email against allowlist BEFORE Firebase login
-      let email;
-      try {
-        email = convertToAdminEmail(loginData.username)
-        console.log('[MASTER LOGIN] Email validated:', email)
-      } catch (error) {
-        console.error('[MASTER LOGIN] Email validation failed:', error.message)
-        if (error.message.includes('allowlist')) {
-          setLoginError('❌ This email is not authorized for master admin access. Please contact support.')
-        } else {
-          setLoginError(`❌ ${error.message}`)
-        }
-        return
-      }
-
-      // Double-check allowlist (defense in depth)
-      if (!isEmailAllowed(email)) {
-        setLoginError('❌ This account is not authorized for admin access.')
-        return
-      }
-
-      console.log('[MASTER LOGIN] Attempting Firebase authentication...')
-      const userCredential = await firebaseSignIn(email, loginData.password)
-      const user = userCredential.user
-
-      console.log('[MASTER LOGIN] Firebase auth successful for:', user.email)
-
-      // Get Firebase ID token for API authorization
-      const token = await user.getIdToken()
-
-      // Determine role and permissions based on email
-      const role = determineAdminRole(user.email)
-      const permissions = getDefaultPermissions(role)
-
-      console.log('[MASTER LOGIN] Role determined:', role)
+      // Use shared admin login utility
+      const result = await handleAdminLogin(loginData.username, loginData.password, firebaseSignIn)
 
       // Store auth data (unified with AdminPanel)
-      localStorage.setItem('adminToken', token)
-      localStorage.setItem('firebaseAdminUid', user.uid)
+      localStorage.setItem('adminToken', result.token)
+      localStorage.setItem('firebaseAdminUid', result.user.uid)
       localStorage.setItem('masterAdminSession', JSON.stringify({
         username: loginData.username,
-        email: user.email,
-        uid: user.uid,
-        role: role,
-        permissions: permissions,
+        email: result.user.email,
+        uid: result.user.uid,
+        role: result.role,
+        permissions: result.permissions,
         timestamp: Date.now()
       }))
 
       setLoginError('')
       setIsAuthenticated(true)
       setIsDataLoaded(false) // Reset to trigger data load
-      setIsMasterAccount(role === 'master')
-      console.log('[MASTER LOGIN] Success! Role:', role)
+      setIsMasterAccount(result.role === 'master')
+      console.log('[MASTER LOGIN] Success! Role:', result.role)
       return
     } catch (error) {
       console.error('[MASTER LOGIN] Authentication error:', error)
-      
-      // Handle Firebase-specific errors with helpful messages
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-        setLoginError(
-          '❌ Master admin account not found in Firebase. ' +
-          'Please create this account in Firebase Console > Authentication > Users first. ' +
-          'See FIX_ADMIN_LOGIN_ERROR.md for instructions.'
-        )
-      } else if (error.code === 'auth/wrong-password') {
-        setLoginError('❌ Incorrect password. Please try again.')
-      } else if (error.code === 'auth/invalid-email') {
-        setLoginError('❌ Invalid email format.')
-      } else if (error.code === 'auth/too-many-requests') {
-        setLoginError('❌ Too many failed login attempts. Please try again later.')
-      } else if (error.message === 'Firebase not available') {
-        setLoginError(
-          '❌ Firebase authentication is not configured. ' +
-          'Please set VITE_FIREBASE_* environment variables in .env file.'
-        )
-      } else if (error.message && error.message.includes('allowlist')) {
-        setLoginError(`❌ ${error.message}`)
-      } else {
-        setLoginError(`❌ Login failed: ${error.message}`)
-      }
+      setLoginError(`❌ ${formatFirebaseAuthError(error)}`)
       return
     } finally {
       setIsLoggingIn(false)
