@@ -1,8 +1,15 @@
 # Release Notes - Snipe v1.0.0
 
-**Release Date**: January 2026  
+**Release Date**: January 23, 2026  
 **Status**: Initial Public Release  
 **Type**: Major Release
+
+### Repository Cleanup
+- Organized 131 documentation files into structured directories
+- Reduced root-level documentation from 130+ to 10 essential files
+- Created comprehensive docs navigation in `docs/README.md`
+- Fixed build issues (esbuild platform compatibility)
+- Verified all security configurations
 
 ---
 

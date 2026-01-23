@@ -59,6 +59,7 @@ git push origin main
 
 ### Option C: Vercel CLI
 ```bash
+cd Onchainweb
 vercel --prod
 ```
 
