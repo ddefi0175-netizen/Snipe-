@@ -170,6 +170,92 @@ export function validateUsername(username) {
 }
 
 /**
+ * Validate email address
+ * @param {string} email - Email to validate
+ * @returns {Object} { valid: boolean, error: string }
+ */
+export function validateEmail(email) {
+  if (!email) {
+    return { valid: false, error: 'Email is required' }
+  }
+  
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) {
+    return { valid: false, error: 'Invalid email format' }
+  }
+  
+  return { valid: true, error: null }
+}
+
+/**
+ * Validate wallet address (basic validation)
+ * @param {string} address - Wallet address to validate
+ * @returns {Object} { valid: boolean, error: string }
+ */
+export function validateWalletAddress(address) {
+  if (!address) {
+    return { valid: false, error: 'Wallet address is required' }
+  }
+  
+  // Remove any whitespace
+  address = address.trim()
+  
+  // Basic length validation (most wallet addresses are 26-42 chars)
+  if (address.length < 26 || address.length > 50) {
+    return { valid: false, error: 'Invalid wallet address length' }
+  }
+  
+  // Check for common address formats
+  const patterns = [
+    /^0x[a-fA-F0-9]{40}$/, // Ethereum/BSC/Polygon (ERC-20/BEP-20)
+    /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/, // Bitcoin
+    /^T[a-zA-Z0-9]{33}$/, // Tron (TRC-20)
+    /^[1-9A-HJ-NP-Za-km-z]{32,44}$/, // Solana
+  ]
+  
+  const isValidFormat = patterns.some(pattern => pattern.test(address))
+  if (!isValidFormat) {
+    return { valid: false, error: 'Invalid wallet address format' }
+  }
+  
+  return { valid: true, error: null }
+}
+
+/**
+ * Validate trading amount
+ * @param {number} amount - Amount to validate
+ * @param {number} minAmount - Minimum amount allowed
+ * @param {number} maxAmount - Maximum amount allowed
+ * @param {number} balance - User's current balance (optional)
+ * @returns {Object} { valid: boolean, error: string }
+ */
+export function validateTradingAmount(amount, minAmount, maxAmount, balance = null) {
+  if (amount === null || amount === undefined || amount === '') {
+    return { valid: false, error: 'Amount is required' }
+  }
+  
+  const numAmount = Number(amount)
+  
+  if (isNaN(numAmount) || numAmount <= 0) {
+    return { valid: false, error: 'Amount must be a positive number' }
+  }
+  
+  if (numAmount < minAmount) {
+    return { valid: false, error: `Minimum amount is ${minAmount}` }
+  }
+  
+  if (numAmount > maxAmount) {
+    return { valid: false, error: `Maximum amount is ${maxAmount}` }
+  }
+  
+  if (balance !== null && numAmount > balance) {
+    return { valid: false, error: 'Insufficient balance' }
+  }
+  
+  return { valid: true, error: null }
+}
+
+/**
  * Check if localStorage is available
  * @returns {boolean} true if localStorage is available
  */
