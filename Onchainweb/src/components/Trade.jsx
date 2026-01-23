@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import CandlestickChart from './CandlestickChart'
+import { formatApiError } from '../lib/errorHandling'
 
 // CoinGecko API for real prices - same as Dashboard
 const CRYPTO_API = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h'
@@ -287,7 +288,9 @@ export default function Trade({ isOpen, onClose }) {
           setCoinGeckoPrices(priceMap)
         }
       } catch (error) {
-        console.log('Using fallback prices')
+        const errorMessage = formatApiError(error, { isColdStartAware: false })
+        console.error('Price fetch error:', errorMessage)
+        // Using fallback prices
       }
     }
 

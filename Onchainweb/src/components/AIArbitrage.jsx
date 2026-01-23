@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { tradeAPI } from '../lib/api'
+import { formatApiError } from '../lib/errorHandling'
 
 // Default AI Arbitrage levels configuration
 const DEFAULT_ARBITRAGE_LEVELS = [
@@ -265,7 +266,8 @@ export default function AIArbitrage({ isOpen, onClose }) {
         newInvestment.backendId = backendTrade._id
         console.log('AI Arbitrage investment synced to backend:', backendTrade.tradeId)
       } catch (error) {
-        console.error('Failed to sync investment to backend:', error)
+        const errorMessage = formatApiError(error, { isColdStartAware: true })
+        console.error('Failed to sync investment to backend:', errorMessage)
       }
 
       // Deduct from balance

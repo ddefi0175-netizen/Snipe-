@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react'
 import NewsModal from './NewsModal.jsx'
+import { formatApiError } from '../lib/errorHandling'
 
 // CoinGecko API - fetch top 250 coins (covers 60%+ of market)
 const CRYPTO_API = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=false&price_change_percentage=24h'
@@ -211,8 +212,9 @@ export default function Dashboard() {
           setCryptoData(data)
           setIsLiveData(true)
         }
-      } catch (err) {
-        console.error('Crypto fetch error:', err)
+      } catch (error) {
+        const errorMessage = formatApiError(error, { isColdStartAware: false })
+        console.error('Crypto fetch error:', errorMessage)
         // Keep using fallback data
       }
     }
@@ -225,8 +227,9 @@ export default function Dashboard() {
         if (mounted && data.Data?.length > 0) {
           setCryptoNews(data.Data.slice(0, 10))
         }
-      } catch (err) {
-        console.error('News fetch error:', err)
+      } catch (error) {
+        const errorMessage = formatApiError(error, { isColdStartAware: false })
+        console.error('News fetch error:', errorMessage)
         // Keep using fallback news
       }
     }
