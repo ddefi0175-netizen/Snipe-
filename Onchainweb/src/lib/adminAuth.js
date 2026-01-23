@@ -143,7 +143,15 @@ export const handleAdminLogin = async (username, password, firebaseSignIn) => {
   }
 
   console.log('[Admin Login] Attempting Firebase authentication...')
-  const userCredential = await firebaseSignIn(email, password)
+  
+  let userCredential;
+  try {
+    userCredential = await firebaseSignIn(email, password)
+  } catch (error) {
+    console.error('[Admin Login] Firebase authentication failed:', error.code || error.message)
+    throw error; // Re-throw to be caught by caller
+  }
+  
   const user = userCredential.user
 
   console.log('[Admin Login] Firebase auth successful for:', user.email)
