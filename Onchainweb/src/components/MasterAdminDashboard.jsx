@@ -789,9 +789,6 @@ export default function MasterAdminDashboard() {
     }
   }, [exchangeRates, isDataLoaded])
 
-  // Loading state for login
-  const [isLoggingIn, setIsLoggingIn] = useState(false)
-
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoginError('')
