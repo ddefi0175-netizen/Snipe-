@@ -6,8 +6,6 @@ import {
   updateActiveChat,
   saveChatMessage,
   isFirebaseEnabled,
-  firebaseSignIn,
-  firebaseSignOut,
   subscribeToUsers,
   subscribeToDeposits,
   subscribeToWithdrawals,
@@ -16,7 +14,6 @@ import {
 } from '../lib/firebase.js'
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
 import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js'
-import { convertToAdminEmail, determineAdminRole, getDefaultPermissions, isEmailAllowed } from '../lib/adminAuth.js'
 import { registerAdminWallet, getAdminWallets, revokeAdminWallet } from '../lib/adminProvisioning.js'
 
 // Lazy localStorage helper to avoid blocking initial render
@@ -818,74 +815,48 @@ export default function MasterAdminDashboard() {
     setIsLoggingIn(true)
 
     try {
-      // Use Firebase Authentication for admin login (email-based)
-      const email = convertToAdminEmail(loginData.username)
+      console.log('[LOGIN] Attempting backend JWT authentication for:', loginData.username)
 
-      console.log('[LOGIN] Using Firebase Authentication...')
-      const userCredential = await firebaseSignIn(email, loginData.password)
-      const user = userCredential.user
+      // Call backend API
+      const response = await fetch('https://snipe-api.onrender.com/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: loginData.username,
+          password: loginData.password
+        })
+      })
 
-      console.log('[LOGIN] Firebase auth successful for:', user.email)
+      const data = await response.json()
 
-      // Enforce allowlist so admin surfaces stay private
-      const normalizedEmail = (user.email || '').toLowerCase()
-      if (!isEmailAllowed(normalizedEmail)) {
-        await firebaseSignOut().catch(() => {})
-        setLoginError('❌ This admin account is not allowlisted. Please contact support.')
+      if (!response.ok || !data.success) {
+        console.error('[LOGIN] Backend authentication failed:', data.error)
+        setLoginError(`❌ ${data.error || 'Login failed'}`)
         return
       }
 
-      // Get Firebase ID token for API authorization
-      const token = await user.getIdToken()
-
-      // Determine role based on email
-      const role = determineAdminRole(user.email)
-      const permissions = getDefaultPermissions(role)
-
-      // SECURITY: Validate email is in allowlist BEFORE granting access
-      if (!isEmailAllowed(user.email)) {
-        console.warn('[LOGIN] Email not in admin allowlist:', user.email)
-        await firebaseSignOut()
-        setLoginError('❌ This admin account is not allowlisted. Please contact support.')
-        setIsAuthenticated(false)
-        return
-      }
+      console.log('[LOGIN] Backend authentication successful for:', data.user.username)
 
       // Store auth data
-      localStorage.setItem('adminToken', token)
-      localStorage.setItem('firebaseAdminUid', user.uid)
+      localStorage.setItem('adminToken', data.token)
       localStorage.setItem('masterAdminSession', JSON.stringify({
-        username: loginData.username,
-        email: user.email,
-        uid: user.uid,
-        role: role,
-        permissions: permissions,
+        username: data.user.username,
+        role: data.user.role,
+        permissions: data.user.permissions,
         timestamp: Date.now()
       }))
 
       setLoginError('')
       setIsAuthenticated(true)
       setIsDataLoaded(false) // Reset to trigger data load
-      setIsMasterAccount(role === 'master')
-      console.log('[LOGIN] Success! Role:', role, 'Firebase UID:', user.uid)
+      setIsMasterAccount(data.user.role === 'master')
+      console.log('[LOGIN] Success! Role:', data.user.role)
       return
     } catch (error) {
-      console.error('[LOGIN] Firebase auth error:', error.message)
-
-      // Handle Firebase-specific errors
-      if (error.code === 'auth/user-not-found') {
-        setLoginError('❌ Admin account not found. Please check your credentials.')
-      } else if (error.code === 'auth/wrong-password') {
-        setLoginError('❌ Incorrect password. Please try again.')
-      } else if (error.code === 'auth/invalid-email') {
-        setLoginError('❌ Invalid email format.')
-      } else if (error.code === 'auth/too-many-requests') {
-        setLoginError('❌ Too many failed login attempts. Please try again later.')
-      } else if (error.message === 'Firebase not available') {
-        setLoginError('❌ Firebase authentication is not configured. Please contact support.')
-      } else {
-        setLoginError(`❌ Login failed: ${error.message}`)
-      }
+      console.error('[LOGIN] Authentication error:', error)
+      setLoginError(`❌ Unable to connect to server. Please try again.`)
       return
     } finally {
       setIsLoggingIn(false)
@@ -893,12 +864,7 @@ export default function MasterAdminDashboard() {
   }
 
   const handleLogout = async () => {
-    try {
-      // Sign out from Firebase
-      await firebaseSignOut()
-    } catch (error) {
-      console.error('Firebase signout error:', error)
-    }
+    console.log('[LOGOUT] Clearing admin session')
 
     // Clear local session
     setIsAuthenticated(false)
