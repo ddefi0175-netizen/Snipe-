@@ -1,3 +1,14 @@
+/*
+ * ⚠️ DEPRECATED ROUTE - Users
+ * 
+ * This route is DEPRECATED. Use Firebase Firestore instead:
+ * - Firestore: collection('users') with onSnapshot
+ * - Frontend: Onchainweb/src/lib/firebase.js
+ * 
+ * This file is kept for admin operations only.
+ * DO NOT use for new features.
+ */
+
 const express = require('express');
 const User = require('../models/User');
 const router = express.Router();

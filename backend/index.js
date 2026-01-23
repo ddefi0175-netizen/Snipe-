@@ -1,5 +1,40 @@
 /*
  * ========================================
+ * ⚠️ DEPRECATED BACKEND - Phase 3 Status
+ * ========================================
+ * 
+ * This backend is DEPRECATED and maintained for legacy compatibility only.
+ * 
+ * PRIMARY DATABASE: Firebase Firestore
+ * - User authentication: Firebase Auth
+ * - Real-time data: Firestore collections with onSnapshot listeners
+ * - Trades, deposits, withdrawals: Firestore collections
+ * 
+ * THIS BACKEND SHOULD NOT BE USED FOR:
+ * ❌ User registration (→ Use Firebase Auth)
+ * ❌ User authentication (→ Use Firebase Auth)
+ * ❌ Real-time data sync (→ Use Firestore onSnapshot)
+ * ❌ New features or deployments
+ * 
+ * KEPT FOR LEGACY SUPPORT:
+ * ✓ Admin authentication (JWT + master credentials)
+ * ✓ Existing MongoDB data access (migration in progress)
+ * ✓ Backward compatibility with older clients
+ * 
+ * MIGRATION STATUS:
+ * - Frontend: Uses Firebase as primary (src/lib/firebase.js)
+ * - Real-time updates: Firestore listeners (no polling)
+ * - New deployments: Firebase only (Vercel + Firebase)
+ * 
+ * DO NOT ADD NEW FEATURES TO THIS BACKEND.
+ * See BACKEND_REPLACEMENT.md for migration details.
+ * 
+ * Last Updated: 2026-01-23 (Code Quality Audit)
+ * ========================================
+ */
+
+/*
+ * ========================================
  * ARCHITECTURE TRANSITION NOTICE (Phase 3)
  * ========================================
  * This backend is transitioning to Firebase as the primary authentication

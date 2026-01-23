@@ -11,7 +11,8 @@ import {
   subscribeToUsers,
   subscribeToDeposits,
   subscribeToWithdrawals,
-  subscribeToTrades
+  subscribeToTrades,
+  subscribeToAiArbitrageInvestments
 } from '../lib/firebase.js'
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
 import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js'
@@ -576,18 +577,12 @@ export default function MasterAdminDashboard() {
   useEffect(() => {
     if (!isAuthenticated || !isDataLoaded) return
 
-    // For now, use localStorage fallback as Firebase collection may not be set up
-    // In the future, when aiArbitrageInvestments collection is ready, use:
-    // const unsubscribe = collection(db, 'aiArbitrageInvestments').onSnapshot(...)
-    const refreshAiInvestments = () => {
-      const investments = getFromStorage('aiArbitrageInvestments', [])
+    // Use Firebase real-time listener
+    const unsubscribe = subscribeToAiArbitrageInvestments((investments) => {
       setAiInvestments(investments)
-    }
+    })
 
-    refreshAiInvestments()
-    // Use shorter interval for AI data to ensure freshness (Firebase will be instant once available)
-    const interval = setInterval(refreshAiInvestments, 5000) // Check every 5s (changed from 2s)
-    return () => clearInterval(interval)
+    return () => unsubscribe()
   }, [isAuthenticated, isDataLoaded])
 
   // Check authentication on load - fast initial check

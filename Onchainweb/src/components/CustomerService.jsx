@@ -7,6 +7,7 @@ import {
   markReplyDelivered,
   isFirebaseEnabled 
 } from '../lib/firebase.js'
+import { formatApiError } from '../lib/errorHandling'
 
 export default function CustomerService() {
   const [isOpen, setIsOpen] = useState(false)
@@ -189,8 +190,12 @@ export default function CustomerService() {
         try {
           const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQkAIHPQ3bF3HQkAgLTX15xQGBY=')
           audio.volume = 0.3
-          audio.play().catch(() => { })
-        } catch (e) { }
+          audio.play().catch((error) => {
+            console.error('Audio notification failed:', formatApiError(error))
+          })
+        } catch (error) {
+          console.error('Audio initialization failed:', formatApiError(error))
+        }
 
         // Update unread count if chat window is closed
         if (!isOpen) {

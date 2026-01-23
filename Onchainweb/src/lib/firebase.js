@@ -471,6 +471,57 @@ export const subscribeToTrades = (callback) => {
 };
 
 // ==========================================
+// AI ARBITRAGE INVESTMENTS FUNCTIONS
+// ==========================================
+
+export const subscribeToAiArbitrageInvestments = (callback) => {
+  if (!isFirebaseAvailable) {
+    // Fallback to localStorage
+    callback(getLocalStorageFallback('aiArbitrageInvestments'));
+    return () => {};
+  }
+
+  const q = query(
+    collection(db, 'aiArbitrageInvestments'),
+    orderBy('startTime', 'desc')
+  );
+
+  return onSnapshot(q, (snapshot) => {
+    const investments = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data(),
+      startTime: convertTimestamp(doc.data().startTime),
+      endTime: convertTimestamp(doc.data().endTime)
+    }));
+    callback(investments);
+  }, (error) => {
+    console.error('Subscribe to AI investments error:', error);
+    callback(getLocalStorageFallback('aiArbitrageInvestments'));
+  });
+};
+
+export const saveAiArbitrageInvestment = async (investment) => {
+  if (!isFirebaseAvailable) {
+    // Fallback to localStorage
+    const investments = getLocalStorageFallback('aiArbitrageInvestments');
+    const newInvestment = {
+      ...investment,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString()
+    };
+    investments.push(newInvestment);
+    localStorage.setItem('aiArbitrageInvestments', JSON.stringify(investments));
+    return newInvestment.id;
+  }
+
+  const docRef = await addDoc(collection(db, 'aiArbitrageInvestments'), {
+    ...investment,
+    createdAt: serverTimestamp()
+  });
+  return docRef.id;
+};
+
+// ==========================================
 // UTILITY FUNCTIONS
 // ==========================================
 

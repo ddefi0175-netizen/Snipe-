@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { userAPI, uploadAPI, authAPI, tradingLevelsAPI, currenciesAPI, networksAPI, depositWalletsAPI, ratesAPI, settingsAPI } from '../lib/api'
 import { formatApiError, validatePassword } from '../lib/errorHandling'
-import { firebaseSignIn, firebaseSignOut } from '../lib/firebase'
+import { firebaseSignIn, firebaseSignOut, subscribeToUsers, isFirebaseEnabled } from '../lib/firebase'
 import { convertToAdminEmail, determineAdminRole, getDefaultPermissions, isEmailAllowed } from '../lib/adminAuth'
 
 // Default Trading Levels
@@ -134,54 +134,85 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     }
   }, [isAuthenticated])
 
-  // Periodic refresh of backend data (every 30 seconds)
+  // Periodic refresh of backend data - use Firebase real-time listeners when available
   useEffect(() => {
     if (!isAuthenticated) return
 
-    const refreshBackendData = async () => {
-      try {
-        // Refresh users from backend
-        const response = await userAPI.getAll()
-        const users = Array.isArray(response) ? response : (response?.users || [])
-        if (Array.isArray(users)) {
-          setAllUsers(users)
-        }
+    // Use Firebase real-time listener for users if available
+    if (isFirebaseEnabled()) {
+      const unsubscribeUsers = subscribeToUsers((users) => {
+        setAllUsers(users)
+      })
 
-        // Refresh trading levels
-        const levels = await tradingLevelsAPI.getAll()
-        if (Array.isArray(levels)) {
-          const mappedLevels = levels.map((l, idx) => ({
-            level: l.level || idx + 1,
-            minCapital: l.minCapital,
-            maxCapital: l.maxCapital,
-            profit: l.profitPercent,
-            duration: l.countdown
-          }))
-          setTradingLevels(mappedLevels)
+      // Still need to fetch trading levels from backend API as they're not in Firebase yet
+      const refreshTradingLevels = async () => {
+        try {
+          const levels = await tradingLevelsAPI.getAll()
+          if (Array.isArray(levels)) {
+            const mappedLevels = levels.map((l, idx) => ({
+              level: l.level || idx + 1,
+              minCapital: l.minCapital,
+              maxCapital: l.maxCapital,
+              profit: l.profitPercent,
+              duration: l.countdown
+            }))
+            setTradingLevels(mappedLevels)
+          }
+        } catch (error) {
+          console.debug('Trading levels refresh:', formatApiError(error, { isColdStartAware: true }))
         }
-      } catch (error) {
-        // Silently handle background refresh errors to avoid blocking UI
-        console.debug('Background data refresh completed with message:', error.message || error)
       }
-    }
 
-    // Initial refresh after 2 second delay
-    const initialTimeout = setTimeout(() => {
-      refreshBackendData()
+      // Initial load of trading levels
+      refreshTradingLevels()
 
-      // Set up periodic refresh every 30 seconds
-      // TODO: Replace this polling with Firebase real-time listeners when users/trades collections are ready
-      // const unsubscribe = onSnapshot(query(collection(db, 'users')), (snapshot) => {
-      //   const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-      //   setAllUsers(users)
-      // })
-      const intervalId = setInterval(refreshBackendData, 30000)
-      return () => clearInterval(intervalId)
-    }, 2000)
+      // Periodic refresh for trading levels only (every 60 seconds - less frequent)
+      const intervalId = setInterval(refreshTradingLevels, 60000)
 
-    // Cleanup: clear timeout on unmount or when isAuthenticated changes
-    return () => {
-      clearTimeout(initialTimeout)
+      return () => {
+        unsubscribeUsers()
+        clearInterval(intervalId)
+      }
+    } else {
+      // Fallback: polling for both users and trading levels when Firebase not available
+      const refreshBackendData = async () => {
+        try {
+          // Refresh users from backend
+          const response = await userAPI.getAll()
+          const users = Array.isArray(response) ? response : (response?.users || [])
+          if (Array.isArray(users)) {
+            setAllUsers(users)
+          }
+
+          // Refresh trading levels
+          const levels = await tradingLevelsAPI.getAll()
+          if (Array.isArray(levels)) {
+            const mappedLevels = levels.map((l, idx) => ({
+              level: l.level || idx + 1,
+              minCapital: l.minCapital,
+              maxCapital: l.maxCapital,
+              profit: l.profitPercent,
+              duration: l.countdown
+            }))
+            setTradingLevels(mappedLevels)
+          }
+        } catch (error) {
+          console.debug('Background data refresh:', formatApiError(error, { isColdStartAware: true }))
+        }
+      }
+
+      // Initial refresh after 2 second delay
+      const initialTimeout = setTimeout(() => {
+        refreshBackendData()
+
+        // Periodic refresh every 30 seconds
+        const intervalId = setInterval(refreshBackendData, 30000)
+        return () => clearInterval(intervalId)
+      }, 2000)
+
+      return () => {
+        clearTimeout(initialTimeout)
+      }
     }
   }, [isAuthenticated])
 
