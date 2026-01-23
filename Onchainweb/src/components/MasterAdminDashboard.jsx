@@ -15,6 +15,7 @@ import {
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
 import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js'
 import { registerAdminWallet, getAdminWallets, revokeAdminWallet } from '../lib/adminProvisioning.js'
+import { API_CONFIG } from '../config/constants.js'
 
 // Lazy localStorage helper to avoid blocking initial render
 const getFromStorage = (key, defaultValue) => {
@@ -817,8 +818,9 @@ export default function MasterAdminDashboard() {
     try {
       console.log('[LOGIN] Attempting backend JWT authentication for:', loginData.username)
 
-      // Call backend API
-      const response = await fetch('https://snipe-api.onrender.com/api/auth/login', {
+      // Call backend API using configured endpoint
+      const authUrl = `${API_CONFIG.BACKEND_AUTH_URL}/login`
+      const response = await fetch(authUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -856,7 +858,17 @@ export default function MasterAdminDashboard() {
       return
     } catch (error) {
       console.error('[LOGIN] Authentication error:', error)
-      setLoginError(`❌ Unable to connect to server. Please try again.`)
+      
+      // Provide more specific error messages based on error type
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        setLoginError(`❌ Unable to connect to authentication server. Please check your internet connection.`)
+      } else if (error.name === 'AbortError') {
+        setLoginError(`❌ Request timeout. The server took too long to respond. Please try again.`)
+      } else if (error instanceof SyntaxError) {
+        setLoginError(`❌ Server returned invalid response. Please contact support.`)
+      } else {
+        setLoginError(`❌ Unable to connect to server. Please try again.`)
+      }
       return
     } finally {
       setIsLoggingIn(false)
