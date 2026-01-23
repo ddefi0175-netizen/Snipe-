@@ -10,11 +10,14 @@ import {
   subscribeToDeposits,
   subscribeToWithdrawals,
   subscribeToTrades,
-  subscribeToAiArbitrageInvestments
+  subscribeToAiArbitrageInvestments,
+  firebaseSignIn,
+  firebaseSignOut
 } from '../lib/firebase.js'
 import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js'
 import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js'
 import { registerAdminWallet, getAdminWallets, revokeAdminWallet } from '../lib/adminProvisioning.js'
+import { convertToAdminEmail, determineAdminRole, getDefaultPermissions, isEmailAllowed } from '../lib/adminAuth.js'
 import { API_CONFIG } from '../config/constants.js'
 
 // Lazy localStorage helper to avoid blocking initial render
@@ -48,6 +51,7 @@ export default function MasterAdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isDataLoaded, setIsDataLoaded] = useState(false)
+  const [isLoggingIn, setIsLoggingIn] = useState(false)
   const [loginData, setLoginData] = useState({ username: '', password: '' })
   const [loginError, setLoginError] = useState('')
   const [activeSection, setActiveSection] = useState('user-agents')
@@ -792,7 +796,7 @@ export default function MasterAdminDashboard() {
     e.preventDefault()
     setLoginError('')
 
-    console.log('[LOGIN] Attempting login for:', loginData.username)
+    console.log('[MASTER LOGIN] Attempting login for:', loginData.username)
 
     // Validate inputs
     if (!loginData.username || !loginData.password) {
@@ -815,67 +819,88 @@ export default function MasterAdminDashboard() {
 
     setIsLoggingIn(true)
 
-    // Create abort controller for timeout
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT)
-
     try {
-      console.log('[LOGIN] Attempting backend JWT authentication for:', loginData.username)
+      console.log('[MASTER LOGIN] Validating email against allowlist...')
 
-      // Call backend API using configured endpoint
-      const authUrl = `${API_CONFIG.BACKEND_AUTH_URL}/login`
-      const response = await fetch(authUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: loginData.username,
-          password: loginData.password
-        }),
-        signal: controller.signal
-      })
-
-      clearTimeout(timeoutId)
-
-      const data = await response.json()
-
-      if (!response.ok || !data.success) {
-        console.error('[LOGIN] Backend authentication failed:', data.error)
-        setLoginError(`❌ ${data.error || 'Login failed'}`)
+      // Validate email against allowlist BEFORE Firebase login
+      let email;
+      try {
+        email = convertToAdminEmail(loginData.username)
+        console.log('[MASTER LOGIN] Email validated:', email)
+      } catch (error) {
+        console.error('[MASTER LOGIN] Email validation failed:', error.message)
+        if (error.message.includes('allowlist')) {
+          setLoginError('❌ This email is not authorized for master admin access. Please contact support.')
+        } else {
+          setLoginError(`❌ ${error.message}`)
+        }
         return
       }
 
-      console.log('[LOGIN] Backend authentication successful for:', data.user.username)
+      // Double-check allowlist (defense in depth)
+      if (!isEmailAllowed(email)) {
+        setLoginError('❌ This account is not authorized for admin access.')
+        return
+      }
 
-      // Store auth data
-      localStorage.setItem('adminToken', data.token)
+      console.log('[MASTER LOGIN] Attempting Firebase authentication...')
+      const userCredential = await firebaseSignIn(email, loginData.password)
+      const user = userCredential.user
+
+      console.log('[MASTER LOGIN] Firebase auth successful for:', user.email)
+
+      // Get Firebase ID token for API authorization
+      const token = await user.getIdToken()
+
+      // Determine role and permissions based on email
+      const role = determineAdminRole(user.email)
+      const permissions = getDefaultPermissions(role)
+
+      console.log('[MASTER LOGIN] Role determined:', role)
+
+      // Store auth data (unified with AdminPanel)
+      localStorage.setItem('adminToken', token)
+      localStorage.setItem('firebaseAdminUid', user.uid)
       localStorage.setItem('masterAdminSession', JSON.stringify({
-        username: data.user.username,
-        role: data.user.role,
-        permissions: data.user.permissions,
+        username: loginData.username,
+        email: user.email,
+        uid: user.uid,
+        role: role,
+        permissions: permissions,
         timestamp: Date.now()
       }))
 
       setLoginError('')
       setIsAuthenticated(true)
       setIsDataLoaded(false) // Reset to trigger data load
-      setIsMasterAccount(data.user.role === 'master')
-      console.log('[LOGIN] Success! Role:', data.user.role)
+      setIsMasterAccount(role === 'master')
+      console.log('[MASTER LOGIN] Success! Role:', role)
       return
     } catch (error) {
-      clearTimeout(timeoutId)
-      console.error('[LOGIN] Authentication error:', error)
+      console.error('[MASTER LOGIN] Authentication error:', error)
       
-      // Provide more specific error messages based on error type
-      if (error.name === 'AbortError') {
-        setLoginError(`❌ Request timeout. The server took too long to respond. Please try again.`)
-      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        setLoginError(`❌ Unable to connect to authentication server. Please check your internet connection.`)
-      } else if (error instanceof SyntaxError) {
-        setLoginError(`❌ Server returned invalid response. Please contact support.`)
+      // Handle Firebase-specific errors with helpful messages
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        setLoginError(
+          '❌ Master admin account not found in Firebase. ' +
+          'Please create this account in Firebase Console > Authentication > Users first. ' +
+          'See FIX_ADMIN_LOGIN_ERROR.md for instructions.'
+        )
+      } else if (error.code === 'auth/wrong-password') {
+        setLoginError('❌ Incorrect password. Please try again.')
+      } else if (error.code === 'auth/invalid-email') {
+        setLoginError('❌ Invalid email format.')
+      } else if (error.code === 'auth/too-many-requests') {
+        setLoginError('❌ Too many failed login attempts. Please try again later.')
+      } else if (error.message === 'Firebase not available') {
+        setLoginError(
+          '❌ Firebase authentication is not configured. ' +
+          'Please set VITE_FIREBASE_* environment variables in .env file.'
+        )
+      } else if (error.message && error.message.includes('allowlist')) {
+        setLoginError(`❌ ${error.message}`)
       } else {
-        setLoginError(`❌ Unable to connect to server. Please try again.`)
+        setLoginError(`❌ Login failed: ${error.message}`)
       }
       return
     } finally {
@@ -885,6 +910,14 @@ export default function MasterAdminDashboard() {
 
   const handleLogout = async () => {
     console.log('[LOGOUT] Clearing admin session')
+
+    try {
+      // Sign out from Firebase
+      await firebaseSignOut()
+      console.log('[LOGOUT] Firebase sign out successful')
+    } catch (error) {
+      console.error('[LOGOUT] Firebase sign out error:', error)
+    }
 
     // Clear local session
     setIsAuthenticated(false)

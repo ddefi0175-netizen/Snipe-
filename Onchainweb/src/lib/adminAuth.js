@@ -11,27 +11,38 @@ const adminFeatureEnabled = import.meta.env?.VITE_ENABLE_ADMIN === 'true';
 
 /**
  * Converts username to Firebase email format
- * If input is already an email, returns as-is
- * Otherwise, appends @admin.onchainweb.app domain
+ * If input is already an email in the allowlist, returns it
+ * If input is a username, looks up the corresponding allowlisted email
+ * Otherwise, throws an error
  *
  * @param {string} usernameOrEmail - Username or email
  * @returns {string} Email in format suitable for Firebase Auth
+ * @throws {Error} If email not in allowlist
  */
 export const convertToAdminEmail = (usernameOrEmail) => {
-  if (!usernameOrEmail) return '';
+  if (!usernameOrEmail) {
+    throw new Error('Username or email is required');
+  }
+  
   const trimmed = usernameOrEmail.trim();
+  const lowerTrimmed = trimmed.toLowerCase();
 
-  // If already an email (contains @), return as-is
+  // If already an email (contains @), check if it's in the allowlist
   if (trimmed.includes('@')) {
-    return trimmed;
+    if (rawAllowlist.includes(lowerTrimmed)) {
+      return lowerTrimmed;
+    }
+    throw new Error('Email not in admin allowlist');
   }
 
   // If the username matches an allowlisted local-part, return that allowlisted email
-  const matchFromAllowlist = rawAllowlist.find(email => email.split('@')[0] === trimmed.toLowerCase());
-  if (matchFromAllowlist) return matchFromAllowlist;
+  const matchFromAllowlist = rawAllowlist.find(email => email.split('@')[0] === lowerTrimmed);
+  if (matchFromAllowlist) {
+    return matchFromAllowlist;
+  }
 
-  // Fallback to default admin domain
-  return `${trimmed}@admin.onchainweb.app`;
+  // No match found
+  throw new Error('Username not found in admin allowlist');
 };
 
 /**

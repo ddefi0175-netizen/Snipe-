@@ -329,8 +329,26 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     try {
       console.log('[AdminPanel] Attempting login for:', loginUsername)
 
-      // Use Firebase Authentication for admin login (email-based)
-      const email = convertToAdminEmail(loginUsername)
+      // Validate email against allowlist BEFORE Firebase login
+      let email;
+      try {
+        email = convertToAdminEmail(loginUsername)
+        console.log('[AdminPanel] Email validated:', email)
+      } catch (error) {
+        console.error('[AdminPanel] Email validation failed:', error.message)
+        if (error.message.includes('allowlist')) {
+          setLoginError('❌ This email is not authorized for admin access. Please contact the master admin.')
+        } else {
+          setLoginError(`❌ ${error.message}`)
+        }
+        return
+      }
+
+      // Double-check allowlist (defense in depth)
+      if (!isEmailAllowed(email)) {
+        setLoginError('❌ This account is not authorized for admin access.')
+        return
+      }
 
       console.log('[AdminPanel] Using Firebase Authentication...')
       const userCredential = await firebaseSignIn(email, loginPassword)
@@ -344,19 +362,6 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       // Determine role and permissions based on email
       const role = determineAdminRole(user.email)
       const permissions = getDefaultPermissions(role)
-
-      if (!isEmailAllowed(user.email)) {
-        await firebaseSignOut()
-        localStorage.removeItem('adminToken')
-        localStorage.removeItem('firebaseAdminUid')
-        localStorage.removeItem('adminUser')
-        setLoginError('❌ This account is not authorized for admin access.')
-        setIsAuthenticated(false)
-        setCurrentAdmin(null)
-        setLoginUsername('')
-        setLoginPassword('')
-        return
-      }
 
       // Store auth data
       const adminUser = {
@@ -380,9 +385,13 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     } catch (error) {
       console.error('[AdminPanel] Login error:', error)
 
-      // Handle Firebase-specific errors
-      if (error.code === 'auth/user-not-found') {
-        setLoginError('❌ Admin account not found. Please check your credentials.')
+      // Handle Firebase-specific errors with helpful messages
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        setLoginError(
+          '❌ Admin account not found in Firebase. ' +
+          'Please create this account in Firebase Console > Authentication > Users first. ' +
+          'See FIX_ADMIN_LOGIN_ERROR.md for instructions.'
+        )
       } else if (error.code === 'auth/wrong-password') {
         setLoginError('❌ Incorrect password. Please try again.')
       } else if (error.code === 'auth/invalid-email') {
@@ -390,7 +399,10 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       } else if (error.code === 'auth/too-many-requests') {
         setLoginError('❌ Too many failed login attempts. Please try again later.')
       } else if (error.message === 'Firebase not available') {
-        setLoginError('❌ Firebase authentication is not configured. Please contact support.')
+        setLoginError(
+          '❌ Firebase authentication is not configured. ' +
+          'Please set VITE_FIREBASE_* environment variables in .env file.'
+        )
       } else {
         setLoginError(`❌ Login failed: ${error.message}`)
       }
