@@ -85,19 +85,39 @@ Try it now:
 
 ### Admin Access
 
-**🔑 Firebase Authentication for Admin Login!**
+**🔑 Admin Authentication via Firebase!**
 
-Admin and Master accounts use **Firebase Authentication** with email + password.
+Admin and Master accounts use **Firebase Authentication** (email + password), NOT backend JWT.
 
-- **Master Dashboard**: [https://www.onchainweb.app/master-admin](https://www.onchainweb.app/master-admin)
-  - Email: Set in Firebase Console
-  - Password: Set in Firebase Console
-  - **Access**: Full system control, can create admins
+**Why Firebase Auth?**
+- ✅ No backend server needed (serverless)
+- ✅ No cold starts (instant login)
+- ✅ 99.95% uptime SLA
+- ✅ Built-in with Firestore database
+- ✅ Secure, managed service
 
-- **Admin Panel**: [https://www.onchainweb.app/admin](https://www.onchainweb.app/admin)
-  - Email: Created by master admin
-  - Password: Set when admin account is created
-  - **Access**: Permission-based (configured by master)
+**Setup Instructions:**
+1. **Create Admin Accounts in Firebase Console:**
+   - Go to [Firebase Console](https://console.firebase.google.com)
+   - Navigate to Authentication → Users
+   - Click "Add user" and create accounts with email/password
+   - Example: `master@gmail.com`, `admin@gmail.com`
+
+2. **Add to Allowlist:**
+   - Update `.env` file: `VITE_ADMIN_ALLOWLIST=master@gmail.com,admin@gmail.com`
+   - Set `VITE_ENABLE_ADMIN=true`
+
+3. **Access Admin Panels:**
+   - **Master Dashboard**: [/master-admin](https://www.onchainweb.app/master-admin)
+     - Login with Firebase email/password
+     - **Access**: Full system control, can create admins
+   
+   - **Admin Panel**: [/admin](https://www.onchainweb.app/admin)
+     - Login with Firebase email/password  
+     - **Access**: Permission-based (configured by master)
+
+**Note:** The legacy backend JWT system in `/backend` is deprecated and unused.  
+See [FIREBASE_VS_BACKEND_JWT_CLARIFICATION.md](FIREBASE_VS_BACKEND_JWT_CLARIFICATION.md) for details.
 
 - **Authentication**:
   - Firebase Authentication (Email/Password provider)
