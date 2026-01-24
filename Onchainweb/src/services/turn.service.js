@@ -123,6 +123,5 @@ export const clearIceServersCache = () => {
 export default {
   getCloudflareIceServers,
   getCachedIceServers,
-  clearIceServersCache,
-  getDefaultIceServers
+  clearIceServersCache
 };
