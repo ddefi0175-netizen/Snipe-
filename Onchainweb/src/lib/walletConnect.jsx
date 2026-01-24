@@ -18,6 +18,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { formatWalletError } from './errorHandling'
+import { getCachedIceServers } from '../services/turn.service'
 
 // ============ Constants ============
 const STORAGE_KEYS = {
@@ -330,7 +331,16 @@ const initWalletConnectProvider = async () => {
             )
         }
 
-        walletConnectProvider = await UniversalProvider.init({
+        // Fetch ICE servers from Cloudflare TURN API
+        let iceServers = []
+        try {
+            iceServers = await getCachedIceServers()
+            console.log('✅ Loaded ICE servers for WalletConnect:', iceServers)
+        } catch (error) {
+            console.warn('⚠️ Failed to load ICE servers, using defaults:', error)
+        }
+
+        const initConfig = {
             projectId,
             metadata: {
                 name: 'Snipe DeFi Platform',
@@ -339,7 +349,18 @@ const initWalletConnectProvider = async () => {
                 icons: [`${window.location.origin}/favicon.ico`]
             },
             relayUrl: 'wss://relay.walletconnect.com'
-        })
+        }
+
+        // Add ICE servers if available
+        if (iceServers && iceServers.length > 0) {
+            initConfig.client = {
+                peerConnection: {
+                    iceServers: iceServers
+                }
+            }
+        }
+
+        walletConnectProvider = await UniversalProvider.init(initConfig)
 
         return walletConnectProvider
     } catch (error) {
