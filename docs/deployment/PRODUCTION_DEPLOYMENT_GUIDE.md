@@ -200,9 +200,10 @@ Your repository already has CI/CD workflows configured. Update secrets:
    - Firebase deployment credentials (if needed)
 
 **Workflows included**:
-- ✅ `deploy.yml` - Automatic deployment to GitHub Pages
 - ✅ `security-audit.yml` - Weekly security audits
 - ✅ `health-check.yml` - Production health monitoring
+
+**Note**: Frontend deployment is now handled via Vercel or Cloudflare Pages (not GitHub Pages).
 
 ---
 

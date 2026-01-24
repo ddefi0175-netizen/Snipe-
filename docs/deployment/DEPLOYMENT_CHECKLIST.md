@@ -44,44 +44,41 @@
 - [x] dist/_redirects for routing rules
 - [x] Total build size: 1.88 MB (276 KB gzipped)
 
-### ✅ GitHub Configuration
+### ✅ CI/CD Configuration
 
-- [x] `.github/workflows/deploy.yml` present and configured
-- [x] Workflow triggers on push to `main` branch
-- [x] Workflow permissions properly set (pages: write, id-token: write)
-- [x] Node 20 configured with npm cache
-- [x] Build process includes SPA routing setup
+- [x] `.github/workflows/security-audit.yml` - Security checks
+- [x] `.github/workflows/health-check.yml` - Health monitoring
+- [x] Frontend deployment via Vercel or Cloudflare Pages
+- [x] Firebase backend configured
 
 ---
 
 ## Deployment Steps
 
-### Step 1: Merge PR to Main
+### Step 1: Deploy to Vercel
 
 ```bash
-# On GitHub:
-1. Go to Pull Request #12
-2. Review changes (dependencies installed, build verified)
-3. Click "Merge pull request"
-4. Confirm merge
-5. Delete branch (optional)
+# Follow the Vercel Deployment Guide:
+1. See docs/deployment/VERCEL_DEPLOYMENT_GUIDE.md
+2. Configure environment variables in Vercel dashboard
+3. Connect GitHub repository
+4. Deploy automatically on push to main
 ```
 
-### Step 2: Monitor GitHub Actions
+### Alternative: Deploy to Cloudflare Pages
 
 ```bash
-# On GitHub:
-1. Go to "Actions" tab
-2. Find "Deploy to GitHub Pages" workflow
-3. Watch build and deploy jobs
-4. Expected completion time: 2-3 minutes
+# Follow the Cloudflare Pages setup:
+1. See DEPLOYMENT.md for Cloudflare Pages instructions
+2. Configure build settings and environment variables
+3. Deploy automatically on push to main
 ```
 
-### Step 3: Verify Deployment
+### Step 2: Verify Deployment
 
 ```bash
 # Test the deployed site:
-1. Visit: https://ddefi0175-netizen.github.io/Snipe-/
+1. Visit: Your production domain (e.g., https://www.onchainweb.app)
 2. Check homepage loads
 3. Test wallet connection
 4. Navigate between pages (should not 404)
@@ -118,7 +115,7 @@
 - [ ] Configure repository settings:
   - [ ] Description: "Real-time trading platform with live chat, wallet integration, and admin control"
   - [ ] Topics: `trading`, `blockchain`, `react`, `nodejs`, `web3`, `walletconnect`, `defi`
-  - [ ] Website: https://ddefi0175-netizen.github.io/Snipe-/
+  - [ ] Website: https://www.onchainweb.app (or your custom domain)
 - [ ] Enable GitHub Discussions (optional)
 - [ ] Pin important issues/discussions (if any)
 
@@ -157,10 +154,10 @@ If deployment fails or critical issues found:
 ### Option 2: Rollback to Previous Version
 
 ```bash
-1. Go to GitHub repository
-2. Actions → Deploy to GitHub Pages
-3. Find last successful deployment
-4. Click "Re-run all jobs"
+1. Go to your deployment platform (Vercel or Cloudflare Pages)
+2. Navigate to Deployments section
+3. Find the last successful deployment
+4. Click "Redeploy" or "Rollback"
 ```
 
 ### Option 3: Revert Commit
@@ -177,7 +174,7 @@ git push origin main
 
 The deployment is considered successful when:
 
-- [x] Website loads at https://ddefi0175-netizen.github.io/Snipe-/
+- [x] Website loads at your production URL (Vercel or Cloudflare Pages)
 - [ ] All pages accessible (no 404 errors)
 - [ ] Wallet connection works
 - [ ] Admin/Master panels accessible
@@ -240,7 +237,7 @@ The deployment is considered successful when:
 
 **Repository**: https://github.com/ddefi0175-netizen/Snipe-  
 **Issues**: https://github.com/ddefi0175-netizen/Snipe-/issues  
-**Deployment**: https://ddefi0175-netizen.github.io/Snipe-/ (after merge)
+**Deployment**: Vercel (https://www.onchainweb.app) or Cloudflare Pages
 
 ---
 
