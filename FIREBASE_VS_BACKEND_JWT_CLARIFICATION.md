@@ -1,6 +1,6 @@
 # Firebase Auth vs Backend JWT - Architecture Clarification
 
-## Current State (As of January 2026)
+## Current State (As of January 2025)
 
 ### What's Actually Being Used
 
