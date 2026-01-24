@@ -1,12 +1,44 @@
 # Admin Login Guide
 
 ## Overview
-The Snipe platform has two types of admin interfaces:
 
-1. **Master Admin Dashboard** - For the master/super admin account
-2. **Admin Panel** - For regular admin accounts
+The Snipe platform admin system uses **Firebase Authentication** for secure, serverless admin access.
 
-Both use the same backend API (`https://snipe-api.onrender.com/api`) with consistent authentication.
+**Authentication Method:** Firebase Auth (Email/Password)
+**No Backend Server Required:** Serverless architecture
+**Why Not Backend JWT?** See [FIREBASE_VS_BACKEND_JWT_CLARIFICATION.md](../../FIREBASE_VS_BACKEND_JWT_CLARIFICATION.md)
+
+There are two types of admin interfaces:
+
+1. **Master Admin Dashboard** (`/master-admin`) - For the master/super admin account
+2. **Admin Panel** (`/admin`) - For regular admin accounts
+
+Both use Firebase Authentication with the same login flow.
+
+## Authentication Architecture
+
+### Current System (Firebase Auth) ✅
+
+```
+User Login Form
+    ↓
+Firebase Authentication
+    ↓
+Email/Password Verification
+    ↓
+Firebase ID Token Generated
+    ↓
+Allowlist Check (VITE_ADMIN_ALLOWLIST)
+    ↓
+Access Granted → Admin Dashboard
+```
+
+### Legacy System (Backend JWT) ⚠️ DEPRECATED
+
+The old backend JWT system in `/backend/routes/auth.js` is **deprecated and unused**.
+- It's kept for backward compatibility only
+- Will be removed in v3.0
+- Do not use for new deployments
 
 ## How to Login
 
@@ -26,97 +58,183 @@ Both use the same backend API (`https://snipe-api.onrender.com/api`) with consis
 
 ## Authentication Flow
 
-Both admin types now use the centralized authentication system:
+Firebase Authentication is used for all admin login:
 
-1. **API Endpoint**: `POST /auth/login`
-2. **Request Body**:
-   ```json
-   {
-     "username": "your-username",
-     "password": "your-password"
-   }
-   ```
+1. **User Input**: Email/password entered in login form
+2. **Allowlist Check**: Email verified against `VITE_ADMIN_ALLOWLIST`
+3. **Firebase Auth**: `signInWithEmailAndPassword()` called
+4. **Token Generation**: Firebase ID token retrieved
+5. **Role Assignment**: Role determined based on email (master@ prefix = master role)
+6. **Session Storage**: Token and user info stored in localStorage
+7. **Access Granted**: Admin dashboard or panel displayed
 
-3. **Response**:
-   ```json
-   {
-     "success": true,
-     "token": "jwt-token-here",
-     "user": {
-       "username": "your-username",
-       "role": "master" | "admin",
-       "permissions": {...}
-     }
-   }
-   ```
+### Authentication Code
 
-4. **Token Storage**:
-   - Token is stored in `localStorage` as `adminToken`
-   - User info stored as `adminUser`
-   - Session persists across page refreshes
+See `src/lib/adminAuth.js` for the implementation:
+- `handleAdminLogin()` - Main login function
+- `convertToAdminEmail()` - Validates email against allowlist
+- `determineAdminRole()` - Assigns master or admin role
+- Uses Firebase Auth, NOT backend JWT
 
-## Cold Start Handling
+## Setup Requirements
 
-The backend is hosted on Render's free tier, which may sleep after inactivity. The authentication system includes:
+### 1. Firebase Console Setup
 
-- **Automatic Retry**: Up to 2 retries on connection failures
-- **Timeout Handling**: 30s for first attempt, 60s for retries
-- **User Feedback**: Clear messages about server wake-up status
-- **Network Error Detection**: Handles "Failed to fetch" errors gracefully
+Create admin accounts in Firebase:
 
-### Expected Login Times
-- **Hot Server**: < 2 seconds
-- **Cold Start**: 10-60 seconds (first login after inactivity)
-- **Retry Messages**: User sees "API retry 1/2" and "API retry 2/2" during cold starts
+1. Go to [Firebase Console](https://console.firebase.google.com)
+2. Select your project
+3. Navigate to **Authentication** → **Users**
+4. Click **"Add user"**
+5. Enter email and password:
+   - Master: `master@gmail.com` (or `master@yourdomain.com`)
+   - Admin: `admin@gmail.com`, `admin1@gmail.com`, etc.
+6. Click **"Add user"**
+
+### 2. Environment Configuration
+
+Update `Onchainweb/.env`:
+
+```env
+# Enable admin features
+VITE_ENABLE_ADMIN=true
+
+# Add admin emails (comma-separated)
+VITE_ADMIN_ALLOWLIST=master@gmail.com,admin@gmail.com,admin1@gmail.com
+```
+
+### 3. Firebase Config
+
+Ensure Firebase is configured in `.env`:
+
+```env
+VITE_FIREBASE_API_KEY=your-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+# ... other Firebase config
+```
+
+## Login Process
+
+### Master Admin Login
+
+1. Navigate to `/master-admin` route
+2. Enter Firebase email (e.g., `master@gmail.com`)
+3. Enter password (set in Firebase Console)
+4. Click **"Login"**
+5. Firebase authenticates credentials
+6. If successful, master dashboard loads
+
+### Regular Admin Login
+
+1. Navigate to `/admin` route
+2. Enter Firebase email (e.g., `admin@gmail.com`)
+3. Enter password (set in Firebase Console)
+4. Click **"Login"**
+5. Firebase authenticates credentials
+6. If successful, admin panel loads with assigned permissions
 
 ## Troubleshooting
 
-### "Failed to fetch" Error
-- **Cause**: Server is waking up from sleep or network issue
-- **Solution**: Wait for automatic retries (up to 60 seconds total)
-- **Action**: System automatically retries 2 times
+### "Email not in admin allowlist"
+- **Cause**: Email not added to `VITE_ADMIN_ALLOWLIST`
+- **Solution**: Add email to allowlist in `.env` file
+- **Note**: Restart dev server after changing `.env`
 
-### Timeout Error
-- **Cause**: Server taking longer than 60s to wake up
-- **Solution**: Refresh page and try again
-- **Note**: Rare, usually only on first wake-up
+### "Admin account not found in Firebase"
+- **Cause**: Account not created in Firebase Console
+- **Solution**: 
+  1. Go to Firebase Console → Authentication → Users
+  2. Click "Add user"
+  3. Create account with email/password
+  4. Add email to allowlist
 
-### "Invalid username or password"
-- **Cause**: Wrong credentials
-- **Solution**: Verify username and password are correct
-- **Note**: Passwords are case-sensitive and must be at least 6 characters
+### "Firebase not available"
+- **Cause**: Firebase config missing from `.env`
+- **Solution**: Add all `VITE_FIREBASE_*` variables to `.env`
+- **Check**: Verify values in Firebase Console → Project Settings
 
-## API Configuration
-
-Both admin interfaces share the same API configuration from `/src/lib/api.js`:
-
-```javascript
-const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api';
-```
-
-To change the API endpoint:
-1. Create `.env` file in `Onchainweb/` directory
-2. Add: `VITE_API_BASE=https://your-api-domain.com/api`
-3. Rebuild the application
+### "Invalid email or password"
+- **Cause**: Wrong credentials or account doesn't exist
+- **Solution**: 
+  - Verify email matches Firebase account exactly
+  - Reset password in Firebase Console if needed
+  - Check caps lock is off
 
 ## Security Notes
 
-- All API requests include JWT token in `Authorization` header
-- Tokens expire after 24 hours
-- Failed login attempts are logged
-- Admin tokens are separate from user wallet authentication
-- Passwords must be at least 6 characters
-- Password validation performed on both client and server
+- All authentication uses Firebase (no backend server)
+- Passwords stored securely in Firebase (hashed + salted)
+- Admin tokens are Firebase ID tokens (JWT format)
+- Tokens expire after 1 hour (automatically refreshed)
+- Session stored in localStorage
+- Admin access gated by email allowlist
+- No rate limiting needed (Firebase handles it)
 
-## Creating New Admin Accounts
+## Legacy Backend (Deprecated)
 
-Master admin can create new admin accounts from the Master Admin Dashboard:
+The old backend JWT system (`/backend/routes/auth.js`) is **no longer used**:
 
-1. Navigate to "Admin Roles" section
-2. Click "Add New Admin"
-3. Set username, email, and password
-4. Configure permissions (what the admin can manage)
-5. Set user access mode (all users or assigned only)
-6. Click "Create Admin Account"
+- ❌ **Not used** for admin authentication
+- ❌ **Not used** for user authentication  
+- ⚠️ **Kept** for backward compatibility only
+- 🗑️ **Will be removed** in v3.0
 
-The new admin can then login at `/admin` using their credentials.
+**Do not** attempt to use backend JWT for authentication.  
+**Do not** deploy the `/backend` folder for authentication.  
+**Use** Firebase Auth exclusively.
+
+See [FIREBASE_VS_BACKEND_JWT_CLARIFICATION.md](../../FIREBASE_VS_BACKEND_JWT_CLARIFICATION.md) for full explanation.
+
+## API Operations (Admin CRUD)
+
+While **authentication** uses Firebase, some **admin management operations** still use the legacy API:
+
+- Creating new admin accounts (`authAPI.createAdmin()`)
+- Updating admin permissions (`authAPI.updateAdmin()`)
+- Deleting admin accounts (`authAPI.deleteAdmin()`)
+
+**Note:** These should be migrated to Firebase Admin SDK in the future, but authentication itself is 100% Firebase.
+
+## FAQ
+
+### Q: Do I need to deploy the backend for admin login?
+**A:** No. Admin login uses Firebase Auth only (serverless, no backend needed).
+
+### Q: What is VITE_BACKEND_AUTH_URL for?
+**A:** It's deprecated/unused. The code uses Firebase Auth, not backend JWT. This variable will be removed in v3.0.
+
+### Q: Can I use username instead of email?
+**A:** The code supports username → email mapping via the allowlist. If you enter "master", it looks up "master@gmail.com" from the allowlist.
+
+### Q: How do I reset an admin password?
+**A:** Go to Firebase Console → Authentication → Users → Select user → Reset password.
+
+### Q: Can admin and user use the same email?
+**A:** No. Admin accounts are in Firebase Auth, user accounts are wallet-based. They're separate systems.
+
+### Q: Why not use backend JWT like before?
+**A:** The backend JWT system had issues:
+- Cold starts (30-60 second delays)
+- Hosting costs ($7-15/month)
+- Maintenance overhead
+- Polling instead of real-time updates
+
+Firebase is faster, cheaper, and more reliable. See [BACKEND_REPLACEMENT.md](../../BACKEND_REPLACEMENT.md).
+
+## Additional Resources
+
+- [FIREBASE_VS_BACKEND_JWT_CLARIFICATION.md](../../FIREBASE_VS_BACKEND_JWT_CLARIFICATION.md) - Architecture explanation
+- [BACKEND_REPLACEMENT.md](../../BACKEND_REPLACEMENT.md) - Why we migrated to Firebase
+- [ADMIN_USER_GUIDE.md](../../ADMIN_USER_GUIDE.md) - How to use admin features
+- [Firebase Authentication Docs](https://firebase.google.com/docs/auth) - Firebase Auth documentation
+
+## Summary
+
+- ✅ **Authentication**: Firebase Auth (email/password)
+- ✅ **Database**: Firebase Firestore
+- ✅ **No Backend**: Serverless architecture
+- ❌ **Legacy JWT**: Deprecated, unused
+- 🔐 **Allowlist**: Email-based access control
+- 🚀 **Performance**: Instant login, no cold starts
+
