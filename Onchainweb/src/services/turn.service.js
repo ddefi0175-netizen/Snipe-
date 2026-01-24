@@ -44,26 +44,19 @@ export const getCloudflareIceServers = async () => {
 
     const data = await response.json();
     
-    // Cloudflare returns ICE servers in the format we need
-    if (data.iceServers && Array.isArray(data.iceServers.urls)) {
+    // Cloudflare returns ICE servers as an array of server configurations
+    // Format: { iceServers: [{ urls: [...], username: "...", credential: "..." }] }
+    if (data.iceServers && Array.isArray(data.iceServers) && data.iceServers.length > 0) {
       console.log('✅ Successfully fetched Cloudflare ICE servers:', {
-        count: data.iceServers.urls.length,
-        urls: data.iceServers.urls
+        count: data.iceServers.length,
+        servers: data.iceServers.map(s => ({
+          urlCount: s.urls?.length || 0,
+          hasCredentials: !!(s.username && s.credential)
+        }))
       });
       
-      return data.iceServers.urls.map(url => {
-        const config = { urls: url };
-        
-        // Add credentials if provided
-        if (data.iceServers.username) {
-          config.username = data.iceServers.username;
-        }
-        if (data.iceServers.credential) {
-          config.credential = data.iceServers.credential;
-        }
-        
-        return config;
-      });
+      // Return the ICE servers directly as they're already in the correct format
+      return data.iceServers;
     }
 
     console.warn('Invalid ICE server response from Cloudflare:', data);
