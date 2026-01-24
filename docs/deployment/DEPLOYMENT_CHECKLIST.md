@@ -49,7 +49,7 @@
 - [x] `.github/workflows/security-audit.yml` - Security checks
 - [x] `.github/workflows/health-check.yml` - Health monitoring
 - [x] Frontend deployment via Vercel or Cloudflare Pages
-- [x] Firebase backend configured
+- [x] Cloudflare backend configured
 
 ---
 
@@ -193,10 +193,10 @@ The deployment is considered successful when:
    - Risk: None (not in production build)
    - Action: Can be addressed in future update
 
-2. **Firebase Credentials Required**
-   - Impact: Firebase features need configuration
-   - Status: Documented in ERROR_AUDIT_REPORT.md
-   - Action: User must configure from Firebase console
+2. **Cloudflare Credentials Required**
+   - Impact: Cloudflare features need configuration
+   - Status: Documented in deployment guides
+   - Action: User must configure from Cloudflare Dashboard
 
 3. **Backend Deployment**
    - Impact: Backend not deployed yet
