@@ -1,394 +1,128 @@
 # 🚀 Snipe Deployment Guide
 
-**⚠️ IMPORTANT UPDATE**: This guide describes the deprecated MongoDB + Express.js backend.
+This guide covers deploying the Snipe platform using **Vercel** (frontend) and **Firebase** (backend/database).
 
-**For new deployments**, please use Firebase instead:
-- 📖 [Firebase Setup Guide](FIREBASE_SETUP.md) - Complete Firebase setup
-- 🚀 [Quick Start Guide](QUICK_START_FIREBASE.md) - 10-minute quick start
-- 🔥 [Backend Replacement Guide](BACKEND_REPLACEMENT.md) - Why Firebase is better
+## 🎯 Deployment Architecture
+
+- **Frontend**: Vercel (recommended) or Cloudflare Pages
+- **Backend/Database**: Firebase (Firestore + Authentication)
+- **CDN**: Cloudflare (optional, for additional edge caching)
 
 ---
 
-## Why Firebase Instead?
+## ✅ Recommended: Vercel + Firebase
 
-The platform has migrated from MongoDB backend to Firebase for:
-- ✅ **No Cold Starts**: Instant response (vs 30-60s with MongoDB backend)
-- ✅ **Real-Time Updates**: WebSocket listeners (vs 3-second polling)
-- ✅ **Lower Costs**: $0-5/month (vs $7-24/month for servers)
+### Why This Stack?
+
+- ✅ **No Cold Starts**: Instant response with serverless functions
+- ✅ **Real-Time Updates**: WebSocket listeners via Firebase
+- ✅ **Lower Costs**: $0-5/month for Firebase + free Vercel hosting
 - ✅ **Better Reliability**: 99.95% uptime SLA
-- ✅ **Easier Deployment**: Frontend-only (no backend server)
+- ✅ **Easier Deployment**: Frontend-only deployment, no backend server
+
+### Quick Deployment Steps
+
+1. **Set up Firebase Backend** (5 minutes)
+   - Follow the [Firebase Setup Guide](FIREBASE_SETUP.md)
+   - Configure Firestore database
+   - Set up Firebase Authentication
+
+2. **Deploy Frontend to Vercel** (5 minutes)
+   - Follow the [Vercel Deployment Guide](docs/deployment/VERCEL_DEPLOYMENT_GUIDE.md)
+   - Connect your GitHub repository
+   - Configure environment variables
+   - Deploy!
+
+📖 **Detailed Guide**: See [docs/deployment/VERCEL_DEPLOYMENT_GUIDE.md](docs/deployment/VERCEL_DEPLOYMENT_GUIDE.md)
 
 ---
 
-## Legacy MongoDB Deployment (Deprecated)
+## 🌐 Alternative: Cloudflare Pages
 
-**Note**: The following instructions are for the deprecated MongoDB + Express.js backend.  
-**For new projects**: Use [Firebase Setup Guide](FIREBASE_SETUP.md) instead.
+Cloudflare Pages can also be used as an alternative to Vercel for frontend hosting.
 
-<details>
-<summary>View MongoDB Backend Deployment Instructions (Not Recommended)</summary>
+### Setup Cloudflare Pages
 
-Complete guide for deploying the deprecated Snipe backend with MongoDB.
-
-## 📋 Table of Contents
-
-- [Prerequisites](#prerequisites)
-- [Quick Start](#quick-start)
-- [Backend Deployment](#backend-deployment)
-- [Frontend Deployment](#frontend-deployment)
-- [Database Setup](#database-setup)
-- [CI/CD Configuration](#cicd-configuration)
-- [Testing](#testing)
-- [Troubleshooting](#troubleshooting)
+1. Log in to [Cloudflare Dashboard](https://dash.cloudflare.com)
+2. Navigate to **Pages** → **Create a project**
+3. Connect your GitHub repository
+4. Configure build settings:
+   - **Build command**: `cd Onchainweb && npm install && npm run build`
+   - **Build output directory**: `Onchainweb/dist`
+   - **Root directory**: `/`
+5. Add environment variables (same as Vercel setup)
+6. Deploy!
 
 ---
 
-## Prerequisites
+## 📋 Environment Variables Required
 
-- Node.js 18+
-- npm or yarn
-- MongoDB Atlas account (or local MongoDB)
-- GitHub account
-- Render.com account (for backend)
-- Vercel or GitHub Pages (for frontend)
+For both Vercel and Cloudflare deployments, you need these environment variables:
 
----
-
-## Quick Start
-
-### 1. Clone & Setup
-
+### Firebase Configuration (Required)
 ```bash
-git clone https://github.com/ddefi0175-netizen/Snipe.git
-cd Snipe
+VITE_FIREBASE_API_KEY=your-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-auth-domain
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-storage-bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+VITE_FIREBASE_APP_ID=your-app-id
+VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
 ```
 
-### 2. Backend Setup
-
+### WalletConnect (Required for wallet connections)
 ```bash
-cd backend
-
-# Copy environment template
-cp .env.example .env
-
-# Edit .env with your values
-nano .env
-
-# Install dependencies
-npm install
-
-# Seed the database
-node seed.js
-
-# Start development server
-npm start
+VITE_WALLETCONNECT_PROJECT_ID=your-walletconnect-project-id
 ```
 
-### 3. Frontend Setup
-
-```bash
-cd Onchainweb
-
-# Copy environment template
-cp .env.example .env
-
-# Edit .env with your backend URL
-nano .env
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-```
+Get your WalletConnect Project ID from [WalletConnect Cloud](https://cloud.walletconnect.com)
 
 ---
 
-## Backend Deployment
+## 🔍 Post-Deployment Checklist
 
-### Environment Variables (Required)
-
-Create `.env` in `/backend/`:
-
-```env
-# Database - Replace with your MongoDB Atlas connection string
-MONGO_URI=mongodb+srv://USER:PASSWORD@cluster.mongodb.net/snipe?retryWrites=true&w=majority
-
-# Server
-PORT=4000
-
-# Authentication
-JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters
-
-# Master Account (set secure values - DO NOT commit real credentials)
-MASTER_USERNAME=master
-MASTER_PASSWORD=<set-secure-password-in-env>
-```
-
-### Deploy to Render.com
-
-1. **Create Web Service**
-   - Go to [Render Dashboard](https://dashboard.render.com)
-   - Click "New" → "Web Service"
-   - Connect your GitHub repo
-   - Select the `backend` folder as root directory
-
-2. **Configure Build Settings**
-
-   ```text
-   Root Directory: backend
-   Build Command: npm install
-   Start Command: node index.js
-   ```
-
-3. **Add Environment Variables**
-   - MONGO_URI
-   - JWT_SECRET
-   - MASTER_USERNAME
-   - MASTER_PASSWORD
-   - PORT=4000
-
-4. **Deploy**
-   - Render auto-deploys on push to `main`
-   - API URL: `https://your-app.onrender.com/api`
+- [ ] Environment variables configured
+- [ ] Firebase project set up and configured
+- [ ] Deployment succeeded without errors
+- [ ] App loads at your domain
+- [ ] No console errors in browser
+- [ ] Wallet connection works (MetaMask, WalletConnect)
+- [ ] Admin panel accessible
+- [ ] Real-time data updates working
 
 ---
 
-## Frontend Deployment
+## 🆘 Troubleshooting
 
-### Environment Variables
+### Build Failures
+- Verify all environment variables are set correctly
+- Check Node.js version is 18+ in deployment settings
+- Review build logs for specific errors
 
-Create `.env` in `/Onchainweb/`:
+### Firebase Connection Issues
+- Confirm Firebase credentials are correct
+- Check Firebase project is active
+- Verify Firestore security rules allow access
 
-```env
-VITE_API_BASE=https://your-backend.onrender.com/api
-```
-
-### Deploy to GitHub Pages (Current Setup)
-
-The workflow at `.github/workflows/deploy.yml` auto-deploys on push:
-
-```yaml
-# Triggered on push to main branch
-# Builds Onchainweb and deploys to GitHub Pages
-```
-
-### Deploy to Vercel (Alternative)
-
-1. Import repo in [Vercel](https://vercel.com)
-2. Set root directory: `Onchainweb`
-3. Add environment variable: `VITE_API_BASE`
-4. Deploy
+### Wallet Connection Problems
+- Ensure `VITE_WALLETCONNECT_PROJECT_ID` is set
+- Test with multiple browsers
+- Check browser console for specific errors
 
 ---
 
-## Database Setup
+## 📚 Additional Resources
 
-### Seed Initial Data
-
-Run the seed script to populate MongoDB with required initial data:
-
-```bash
-cd backend
-node seed.js
-```
-
-This creates:
-
-| Collection | Records |
-| ------------ | --------- |
-| Settings | Site configuration |
-| Admins | aqiang (admin) |
-| DepositWallets | BTC, ETH, BSC, TRC20, SOL, MATIC |
-| TradingLevels | 5 levels (Bronze → Diamond) |
-| Currencies | USDT, BTC, ETH, BNB, SOL, TRX, USDC, MATIC |
-| Networks | BTC, ETH, BSC, TRC20, SOL, MATIC |
-| ExchangeRates | Crypto/USDT pairs |
-
-### Login Credentials After Seeding
-
-> ⚠️ **Security Note**: Default credentials are set via environment variables.
-> See `ADMIN_ONLY.md` (internal document) for credential management.
-> Never commit actual passwords to version control.
-
-| Account | Username | Password |
-| --------- | ---------- | ---------- |
-| Master | master | Set via `MASTER_PASSWORD` env var |
-| Admin | (created via dashboard) | Set during admin creation |
+- [Vercel Deployment Guide](docs/deployment/VERCEL_DEPLOYMENT_GUIDE.md)
+- [Firebase Setup Guide](FIREBASE_SETUP.md)
+- [Backend Replacement Guide](BACKEND_REPLACEMENT.md)
+- [Quick Start Guide](QUICK_START_GUIDE.md)
 
 ---
 
-## CI/CD Configuration
+## 🗂️ Legacy MongoDB Deployment (Deprecated)
 
-### GitHub Actions Secrets
+**Note**: The MongoDB + Express.js backend is deprecated and no longer recommended.  
+**For new projects**: Use Firebase + Vercel as described above.
 
-Go to **Repository → Settings → Secrets and variables → Actions**
-
-Add these secrets if needed:
-
-| Secret | Purpose |
-| -------- | --------- |
-| `MONGO_URI` | MongoDB connection (if using in CI) |
-| `VERCEL_TOKEN` | For Vercel deployments |
-| `VERCEL_ORG_ID` | Vercel organization |
-| `VERCEL_PROJECT_ID` | Vercel project |
-
-### Current Workflow
-
-`.github/workflows/deploy.yml` - Deploys frontend to GitHub Pages on push to `main`
-
----
-
-## Testing
-
-### Run Deployment Tests
-
-```bash
-# Test against production API
-./test-deployment.sh https://snipe-api.onrender.com/api
-
-# Test against local
-./test-deployment.sh http://localhost:4000/api
-```
-
-### Manual API Tests
-
-```bash
-# Health check
-curl https://snipe-api.onrender.com/api/health
-
-# Login test (use your actual credentials)
-curl -X POST https://snipe-api.onrender.com/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"master","password":"YOUR_PASSWORD_HERE"}'
-
-# Get settings (with token)
-curl https://snipe-api.onrender.com/api/settings \
-  -H "Authorization: Bearer YOUR_TOKEN"
-```
-
----
-
-## Troubleshooting
-
-### Backend Issues
-
-#### "MongoDB connection error"
-
-- Check `MONGO_URI` is correct
-- Ensure IP is whitelisted in MongoDB Atlas (0.0.0.0/0 for Render)
-- Verify database name exists
-
-#### "No token provided"
-
-- Include `Authorization: Bearer TOKEN` header
-- Token expires after 24h, re-login
-
-#### Render cold starts (slow first request)
-
-- Free tier spins down after 15 mins inactivity
-- First request takes 30-60 seconds
-- Consider upgrading or use a keep-alive service
-
-### Frontend Issues
-
-#### "Failed to fetch" / CORS errors
-
-- Verify `VITE_API_BASE` matches your backend URL
-- Backend has `cors()` middleware enabled
-- Check browser console for exact error
-
-#### Login not working
-
-- Open browser DevTools → Network tab
-- Check if API request goes to correct URL
-- Verify response status and body
-
-### Database Issues
-
-#### Empty dashboard data
-
-- Run `node seed.js` to populate initial data
-- Check MongoDB Atlas collections have data
-
-#### Duplicate key errors
-
-- Seed script uses `upsert`, should not duplicate
-- Clear collection and re-run if needed
-
----
-
-## Project Structure
-
-```text
-Snipe/
-├── backend/                 # Node.js Express API
-│   ├── .env                 # Environment vars (not committed)
-│   ├── .env.example         # Template
-│   ├── index.js             # Entry point
-│   ├── seed.js              # Database seeder
-│   ├── models/              # Mongoose schemas
-│   └── routes/              # API routes
-├── Onchainweb/              # React Vite frontend
-│   ├── .env                 # Environment vars
-│   ├── .env.example         # Template
-│   ├── src/
-│   │   ├── components/      # React components
-│   │   └── lib/             # API client, utilities
-│   └── dist/                # Built files
-├── .github/workflows/       # CI/CD
-├── test-deployment.sh       # Deployment test script
-└── DEPLOYMENT.md            # This file
-```
-
----
-
-## API Endpoints Reference
-
-| Endpoint | Method | Auth | Description |
-| ---------- | -------- | ------ | ------------- |
-| `/api/health` | GET | No | Health check |
-| `/api/auth/login` | POST | No | Login |
-| `/api/auth/admins` | GET | Admin | List admins |
-| `/api/settings` | GET | Admin | Get settings |
-| `/api/settings` | PUT | Master | Update settings |
-| `/api/trading-levels` | GET | Admin | Get trading levels |
-| `/api/currencies` | GET | Admin | Get currencies |
-| `/api/networks` | GET | Admin | Get networks |
-| `/api/deposit-wallets` | GET | Admin | Get wallets |
-| `/api/rates` | GET | Admin | Get exchange rates |
-| `/api/users` | GET | Admin | List users |
-| `/api/chat/messages` | POST | No | Send chat message |
-| `/api/chat/admin/chats` | GET | Admin | Get chat sessions |
-| `/api/chat/admin/reply` | POST | Admin | Reply to chat |
-
----
-
-## Support
-
-- **Repository**: <https://github.com/ddefi0175-netizen/Snipe>
-- **Backend URL**: <https://snipe-api.onrender.com>
-- **Frontend URL**: <https://www.onchainweb.app>
-
-
-</details>
-
----
-
-## Recommended: Use Firebase
-
-For better reliability, performance, and lower costs, migrate to Firebase:
-
-1. Follow [FIREBASE_SETUP.md](FIREBASE_SETUP.md) for complete setup
-2. Use [BACKEND_REPLACEMENT.md](BACKEND_REPLACEMENT.md) to understand the benefits
-3. Deploy frontend only (no backend server needed)
-
-**Support**:
-- [GitHub Issues](https://github.com/ddefi0175-netizen/Snipe/issues) - Report problems
-- [Firebase Documentation](https://firebase.google.com/docs) - Firebase help
-
----
-
-**Last Updated**: January 2026  
-**Status**: MongoDB backend deprecated, use Firebase instead  
-**Version**: 2.0.0
+If you need legacy deployment instructions, refer to the git history or contact the maintainers.
