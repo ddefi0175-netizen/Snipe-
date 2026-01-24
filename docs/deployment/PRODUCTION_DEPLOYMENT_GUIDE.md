@@ -20,43 +20,55 @@ All tests have passed successfully:
 
 ## 🚀 Production Deployment Steps
 
-### Step 1: Cloudflare Backend Setup
+### Step 1: Firebase Project Setup
 
-If you haven't already set up Cloudflare, follow these steps:
+If you haven't already set up Firebase, follow these steps:
 
 ```bash
-# 1. Create Cloudflare account at https://dash.cloudflare.com
-# 2. Create D1 Database (serverless SQL database)
-# 3. Set up Cloudflare Workers for authentication
-# 4. Get your Cloudflare configuration
+# 1. Create Firebase project at https://console.firebase.google.com
+# 2. Enable Firestore Database (production mode)
+# 3. Enable Authentication (Email/Password provider)
+# 4. Get your Firebase configuration
 ```
 
-**Deploy Cloudflare Workers**:
+**Deploy Security Rules**:
 ```bash
-# Install Wrangler CLI if not already installed
-npm install -g wrangler
+# Install Firebase CLI if not already installed
+npm install -g firebase-tools
 
-# Login to Cloudflare
-wrangler login
+# Login to Firebase
+firebase login
 
-# Deploy your Workers
-wrangler deploy
+# Deploy Firestore rules and indexes
+firebase deploy --only firestore:rules,firestore:indexes
 ```
 
 **Create Master Admin Account**:
-1. Set up admin authentication in your Cloudflare Worker
-2. Create admin record in D1 database:
-   ```sql
-   INSERT INTO admins (id, email, role, permissions, userAccessMode, createdAt, active)
-   VALUES (
-     'master-uid',
-     'master@yourdomain.com',
-     'master',
-     '{"manageUsers":true,"manageBalances":true,"manageKYC":true,"manageTrades":true,"manageDeposits":true,"manageWithdrawals":true,"viewReports":true,"createAdmins":true,"siteSettings":true,"viewLogs":true}',
-     'all',
-     datetime('now'),
-     1
-   );
+1. Go to Firebase Console → Authentication → Users
+2. Click "Add user"
+3. Enter email and password for master account
+4. Copy the UID
+5. Go to Firestore Database → Create new document in `admins` collection:
+   ```
+   Document ID: [the UID from step 3]
+   Fields:
+     email: "master@yourdomain.com"
+     role: "master"
+     permissions: {
+       manageUsers: true,
+       manageBalances: true,
+       manageKYC: true,
+       manageTrades: true,
+       manageDeposits: true,
+       manageWithdrawals: true,
+       viewReports: true,
+       createAdmins: true,
+       siteSettings: true,
+       viewLogs: true
+     }
+     userAccessMode: "all"
+     createdAt: [current timestamp]
+     active: true
    ```
 
 ---
@@ -73,10 +85,14 @@ cp .env.example .env
 Edit `.env` with your production values:
 
 ```env
-# Cloudflare Configuration (REQUIRED)
-VITE_CLOUDFLARE_ACCOUNT_ID=your-account-id
-VITE_CLOUDFLARE_D1_DATABASE_ID=your-database-id
-VITE_CLOUDFLARE_API_TOKEN=your-api-token
+# Firebase Configuration (REQUIRED)
+VITE_FIREBASE_API_KEY=your-firebase-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+VITE_FIREBASE_APP_ID=your-app-id
+VITE_FIREBASE_MEASUREMENT_ID=your-measurement-id
 
 # WalletConnect Configuration (REQUIRED)
 VITE_WALLETCONNECT_PROJECT_ID=your-walletconnect-project-id
@@ -179,9 +195,9 @@ Your repository already has CI/CD workflows configured. Update secrets:
 
 1. Go to GitHub → Settings → Secrets and variables → Actions
 2. Add these secrets:
-   - `BACKEND_URL`: Your Cloudflare Worker URL
+   - `BACKEND_URL`: Your Firebase/API URL (if using separate backend)
    - `FRONTEND_URL`: Your production frontend URL
-   - Cloudflare deployment credentials (if needed)
+   - Firebase deployment credentials (if needed)
 
 **Workflows included**:
 - ✅ `security-audit.yml` - Weekly security audits
@@ -193,42 +209,40 @@ Your repository already has CI/CD workflows configured. Update secrets:
 
 ### Step 7: Set Up Monitoring
 
-**Enable Cloudflare Analytics**:
-1. Go to Cloudflare Dashboard → Analytics
-2. Enable Web Analytics
+**Enable Firebase Analytics**:
+1. Go to Firebase Console → Analytics
+2. Enable Google Analytics
 3. Follow setup wizard
 
-**Enable Cloudflare Workers Analytics**:
-1. Go to Cloudflare Dashboard → Workers & Pages
-2. Select your Worker
-3. Enable Analytics and Logs
+**Enable Firebase Performance Monitoring**:
+1. Go to Firebase Console → Performance
+2. Enable Performance Monitoring
+3. Redeploy your app
 
 **Set Up Alerts**:
-1. Configure Cloudflare alerts for:
+1. Configure Firebase alerts for:
    - Authentication failures
    - Database errors
-   - Worker execution errors
+   - Performance issues
 2. Set up email notifications
 
 ---
 
 ## 🔐 Security Configuration
 
-### D1 Database Security
+### Firestore Security Rules
 
-Ensure your D1 database is properly secured:
+Ensure your security rules are deployed:
 
 ```bash
-# Review your Worker security settings
-wrangler tail
+firebase deploy --only firestore:rules
 ```
 
-**Security Checklist**:
+**Verify rules in Firebase Console**:
 - Users can only access their own data
 - Admins require authentication
 - Activity logs are write-only
 - No public write access
-- API rate limiting enabled
 
 ### Environment Variables
 
@@ -241,7 +255,7 @@ wrangler tail
 
 **Best Practices**:
 1. Use strong passwords (16+ characters)
-2. Enable 2FA in Cloudflare Dashboard
+2. Enable 2FA in Firebase Console
 3. Limit master account access
 4. Create admin accounts with minimal necessary permissions
 5. Regularly audit admin actions via activity logs
@@ -253,20 +267,20 @@ wrangler tail
 
 ### Daily Checks
 - [ ] Check application uptime
-- [ ] Monitor error logs in Cloudflare Dashboard
+- [ ] Monitor error logs in Firebase Console
 - [ ] Review admin activity logs
 - [ ] Check user authentication metrics
 
 ### Weekly Checks
 - [ ] Review security audit results (automated via GitHub Actions)
 - [ ] Check for dependency updates
-- [ ] Monitor Cloudflare usage and quotas
+- [ ] Monitor Firebase usage and quotas
 - [ ] Review performance metrics
 
 ### Monthly Checks
 - [ ] Update dependencies
 - [ ] Review and update documentation
-- [ ] Backup D1 database data
+- [ ] Backup Firebase data
 - [ ] Review admin access and permissions
 - [ ] Test disaster recovery procedures
 
@@ -276,8 +290,8 @@ wrangler tail
 
 ### Common Issues
 
-**Issue: "Cloudflare not configured"**
-- Solution: Ensure all VITE_CLOUDFLARE_* variables are set in production environment
+**Issue: "Firebase not configured"**
+- Solution: Ensure all VITE_FIREBASE_* variables are set in production environment
 
 **Issue: "Admin login fails"**
 - Solution: Verify admin account exists in Firebase Authentication and Firestore `admins` collection
