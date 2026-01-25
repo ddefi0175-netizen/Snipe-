@@ -8,6 +8,9 @@ export * from './database.service.js';
 // Legacy API Service (for backward compatibility)
 export * from './api.service.js';
 
+// TURN Server Service
+export * from './turn.service.js';
+
 // Re-export commonly used functions with cleaner names
 export {
   isFirebaseEnabled,

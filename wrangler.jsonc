@@ -1,0 +1,11 @@
+{
+  "name": "snipe-onchainweb",
+  "compatibility_date": "2026-01-25",
+  "assets": {
+    "directory": "./Onchainweb/dist",
+    "binding": "ASSETS"
+  },
+  "build": {
+    "command": "cd Onchainweb && npm install && npm run build"
+  }
+}

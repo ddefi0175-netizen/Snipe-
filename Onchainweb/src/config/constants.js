@@ -49,6 +49,15 @@ export const WALLET_CONFIG = {
   ]
 };
 
+// Cloudflare TURN Server Configuration
+export const TURN_SERVER_CONFIG = {
+  SERVER_NAME: import.meta.env.VITE_CLOUDFLARE_TURN_SERVER_NAME || '',
+  TOKEN_ID: import.meta.env.VITE_CLOUDFLARE_TURN_TOKEN_ID || '',
+  API_TOKEN: import.meta.env.VITE_CLOUDFLARE_TURN_API_TOKEN || '',
+  API_ENDPOINT: 'https://rtc.live.cloudflare.com/v1/turn/keys',
+  TTL: 86400 // 24 hours
+};
+
 // Trading Configuration
 export const TRADING_CONFIG = {
   MIN_TRADE_AMOUNT: 0.001,

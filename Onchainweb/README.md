@@ -112,6 +112,29 @@ Required environment variable:
 VITE_API_BASE=http://localhost:4000/api  # or your backend URL
 ```
 
+## WalletConnect & TURN Server Setup
+
+For improved WalletConnect reliability, especially behind firewalls or NAT, configure Cloudflare TURN servers:
+
+```env
+# Optional: Cloudflare TURN Server for WalletConnect
+VITE_CLOUDFLARE_TURN_SERVER_NAME=your-server-name
+VITE_CLOUDFLARE_TURN_TOKEN_ID=your-token-id
+VITE_CLOUDFLARE_TURN_API_TOKEN=your-api-token
+```
+
+**Benefits:**
+- ✅ Better connection success rate through firewalls
+- ✅ Improved peer-to-peer connection reliability
+- ✅ Faster connection establishment
+
+**Testing:**
+1. Open `test-turn-server.html` in your browser
+2. Enter your Cloudflare credentials
+3. Click "Test Connection" to verify
+
+For detailed setup instructions, see [CLOUDFLARE_TURN_SETUP.md](../CLOUDFLARE_TURN_SETUP.md)
+
 ## Keyboard Navigation
 
 All UI elements are keyboard accessible:
