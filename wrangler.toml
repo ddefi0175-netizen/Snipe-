@@ -1,18 +1,8 @@
 name = "snipe-onchainweb"
 compatibility_date = "2024-01-01"
 
+# Cloudflare Pages configuration
+pages_build_output_dir = "Onchainweb/dist"
+
 [build]
 command = "cd Onchainweb && npm install && npm run build"
-
-[build.upload]
-format = "service-worker"
-
-[[build.upload.rules]]
-type = "ESModule"
-globs = ["**/*.js"]
-
-[site]
-bucket = "./Onchainweb/dist"
-
-# Pages configuration
-pages_build_output_dir = "./Onchainweb/dist"
