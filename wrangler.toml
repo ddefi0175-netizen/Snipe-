@@ -11,8 +11,8 @@ command = "cd Onchainweb && npm install && npm run build"
 # D1 Database binding
 [[d1_databases]]
 binding = "DB"
-database_name = "snipe-chat-db"
-database_id = "YOUR_DATABASE_ID" # Replace with your D1 database ID
+database_name = "onchainweb"
+database_id = "e3f277bd-092a-41d6-a477-4521200c79fe"
 
 # Observability settings for consistent deployments
 [observability]
