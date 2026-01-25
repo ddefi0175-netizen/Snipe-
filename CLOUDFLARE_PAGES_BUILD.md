@@ -1,6 +1,22 @@
-# Cloudflare Pages Build Configuration
+# Cloudflare Pages/Workers Build Configuration
 
-This document provides the configuration needed for deploying this project to Cloudflare Pages.
+This document provides the configuration needed for deploying this project to Cloudflare Pages or Workers.
+
+## Wrangler Configuration
+
+A `wrangler.jsonc` file is included in the root directory with the following configuration:
+
+```json
+{
+  "name": "snipe-onchainweb",
+  "compatibility_date": "2026-01-25",
+  "assets": {
+    "directory": "./Onchainweb/dist"
+  }
+}
+```
+
+This tells Cloudflare Workers where to find the built assets after the build process completes.
 
 ## Build Settings
 
@@ -68,6 +84,11 @@ VITE_FIREBASE_MEASUREMENT_ID=your-firebase-measurement-id
 
 ### Common Issues
 
+#### "error occurred while running deploy command"
+- This means Wrangler can't find the assets directory
+- The `wrangler.jsonc` file should be in the repository root
+- Ensure the build completes successfully before deployment
+
 #### "Module not found" errors
 - Ensure the build command includes `npm install`
 - Check that all dependencies are listed in `package.json`
@@ -80,6 +101,11 @@ VITE_FIREBASE_MEASUREMENT_ID=your-firebase-measurement-id
 - The TURN server variables are optional
 - The app will build and run without them (using default STUN servers)
 - Only add them if you need Cloudflare TURN server support
+
+#### "Assets directory not found"
+- Verify the build command creates `Onchainweb/dist` directory
+- Check that `wrangler.jsonc` points to the correct directory
+- Ensure build completes before Wrangler tries to deploy
 
 ## Deployment Steps
 
