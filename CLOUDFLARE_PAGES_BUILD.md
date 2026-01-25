@@ -11,12 +11,19 @@ A `wrangler.jsonc` file is included in the root directory with the following con
   "name": "snipe-onchainweb",
   "compatibility_date": "2026-01-25",
   "assets": {
-    "directory": "./Onchainweb/dist"
+    "directory": "./Onchainweb/dist",
+    "binding": "ASSETS"
+  },
+  "build": {
+    "command": "cd Onchainweb && npm install && npm run build"
   }
 }
 ```
 
-This tells Cloudflare Workers where to find the built assets after the build process completes.
+This configuration tells Cloudflare Workers:
+- Where to find the built assets (`./Onchainweb/dist`)
+- How to build the project before deployment (`build.command`)
+- The assets binding name for the Worker
 
 ## Build Settings
 
