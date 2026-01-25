@@ -31,7 +31,8 @@ Configure these settings in your Cloudflare Pages project dashboard:
 - **Root directory**: `/` (leave empty or set to root)
 
 ### Node.js version
-- **NODE_VERSION**: `18` or higher (set as environment variable)
+- **NODE_VERSION**: `20` or higher (set as environment variable)
+- **Required**: Node.js 20.0.0+ is required for Wrangler deployment
 
 ## Environment Variables (Optional)
 

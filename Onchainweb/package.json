@@ -30,7 +30,7 @@
     "url": "https://github.com/ddefi0175-netizen/Snipe/issues"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "dependencies": {
     "@vercel/analytics": "^1.6.1",
