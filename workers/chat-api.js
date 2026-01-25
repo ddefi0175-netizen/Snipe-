@@ -1,6 +1,10 @@
 // Cloudflare Workers API for Chat System
 // Handles chat messages with D1 database and Server-Sent Events for real-time updates
 
+// Cloudflare Access JWT configuration
+const JWT_CERTS_URL = 'https://ddefi0175.cloudflareaccess.com/cdn-cgi/access/certs';
+const JWT_AUDIENCE = '207729502441a29e10dfef4fab0349ce60fdc758ed208c9be7078c39ff236ca7';
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -10,7 +14,7 @@ export default {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, CF-Access-JWT-Assertion',
     };
 
     // Handle preflight
@@ -19,6 +23,18 @@ export default {
     }
 
     try {
+      // Routes that require authentication (admin endpoints)
+      const adminPaths = ['/api/chat/active', '/api/chat/reply'];
+      const requiresAuth = adminPaths.includes(path);
+
+      // Verify JWT for admin endpoints
+      if (requiresAuth) {
+        const authResult = await verifyJWT(request);
+        if (!authResult.valid) {
+          return jsonResponse({ error: 'Unauthorized', message: authResult.error }, 401, corsHeaders);
+        }
+      }
+
       // Routes
       if (path === '/api/chat/send' && request.method === 'POST') {
         return await handleSendMessage(request, env, corsHeaders);
@@ -47,6 +63,93 @@ export default {
     }
   },
 };
+
+// JWT Verification using Cloudflare Access
+async function verifyJWT(request) {
+  try {
+    // Get JWT from header (Cloudflare Access sends it in CF-Access-JWT-Assertion)
+    const jwt = request.headers.get('CF-Access-JWT-Assertion') || request.headers.get('Authorization')?.replace('Bearer ', '');
+    
+    if (!jwt) {
+      return { valid: false, error: 'No JWT token provided' };
+    }
+
+    // Decode JWT header to get key ID
+    const [headerB64] = jwt.split('.');
+    const header = JSON.parse(atob(headerB64.replace(/-/g, '+').replace(/_/g, '/')));
+    
+    // Fetch public keys from Cloudflare Access
+    const certsResponse = await fetch(JWT_CERTS_URL);
+    if (!certsResponse.ok) {
+      return { valid: false, error: 'Failed to fetch JWT certificates' };
+    }
+    
+    const certs = await certsResponse.json();
+    const publicKey = certs.keys.find(key => key.kid === header.kid);
+    
+    if (!publicKey) {
+      return { valid: false, error: 'Public key not found for token' };
+    }
+
+    // Import the public key
+    const key = await crypto.subtle.importKey(
+      'jwk',
+      publicKey,
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+
+    // Split and decode JWT
+    const [headerEncoded, payloadEncoded, signatureEncoded] = jwt.split('.');
+    const data = new TextEncoder().encode(`${headerEncoded}.${payloadEncoded}`);
+    const signature = base64UrlDecode(signatureEncoded);
+
+    // Verify signature
+    const isValid = await crypto.subtle.verify(
+      'RSASSA-PKCS1-v1_5',
+      key,
+      signature,
+      data
+    );
+
+    if (!isValid) {
+      return { valid: false, error: 'Invalid JWT signature' };
+    }
+
+    // Decode and verify payload
+    const payload = JSON.parse(atob(payloadEncoded.replace(/-/g, '+').replace(/_/g, '/')));
+    
+    // Verify audience
+    if (payload.aud && !payload.aud.includes(JWT_AUDIENCE)) {
+      return { valid: false, error: 'Invalid audience' };
+    }
+
+    // Verify expiration
+    if (payload.exp && Date.now() / 1000 > payload.exp) {
+      return { valid: false, error: 'Token expired' };
+    }
+
+    return { valid: true, payload };
+  } catch (error) {
+    console.error('JWT verification error:', error);
+    return { valid: false, error: `Verification failed: ${error.message}` };
+  }
+}
+
+// Helper function to decode base64url
+function base64UrlDecode(str) {
+  str = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (str.length % 4) {
+    str += '=';
+  }
+  const binary = atob(str);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes.buffer;
+}
 
 // Send a new chat message
 async function handleSendMessage(request, env, corsHeaders) {
