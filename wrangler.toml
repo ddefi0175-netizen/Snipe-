@@ -9,7 +9,7 @@ command = "cd Onchainweb && npm install && npm run build"
 
 # Observability settings for consistent deployments
 [observability]
-enabled = false
+enabled = true
 head_sampling_rate = 1
 
 [observability.logs]
