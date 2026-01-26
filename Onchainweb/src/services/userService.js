@@ -88,6 +88,11 @@ export const autoRegisterUser = async (walletAddress, additionalData = {}) => {
 
 /**
  * Fallback: Register user in localStorage when Firebase is unavailable
+ * This is used as a backup mechanism during development or Firebase outages
+ * 
+ * @param {string} walletAddress - User's wallet address
+ * @param {Object} additionalData - Optional additional user data
+ * @returns {Object} User document with isNewUser flag
  */
 const autoRegisterUserLocalStorage = (walletAddress, additionalData = {}) => {
   try {
@@ -139,11 +144,14 @@ const autoRegisterUserLocalStorage = (walletAddress, additionalData = {}) => {
 };
 
 /**
- * Generate a unique referral code based on wallet address
+ * Generate a unique referral code
+ * Note: This is a simple implementation for MVP
+ * For production, consider using crypto.randomUUID() or similar
  */
 const generateReferralCode = (walletAddress) => {
   const normalized = walletAddress.toLowerCase();
-  // Take first 4 and last 4 chars, convert to uppercase
+  // Simple hash-like approach using wallet address
+  // TODO: For production, use cryptographically secure random generator
   return `REF${normalized.slice(2, 6)}${normalized.slice(-4)}`.toUpperCase();
 };
 

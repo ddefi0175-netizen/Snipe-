@@ -54,6 +54,7 @@ export default function WalletGate({ onConnect, children, allowOpenAccess = fals
             console.log('User registered in Firebase:', firebaseUser)
 
             // Also register in legacy backend (if available)
+            // Legacy API backend is the deprecated MongoDB/Express system
             try {
                 const user = await userAPI.loginByWallet(
                     address,
@@ -73,7 +74,7 @@ export default function WalletGate({ onConnect, children, allowOpenAccess = fals
                     }
                 }
             } catch (legacyError) {
-                console.warn('Legacy backend registration failed (non-critical):', legacyError.message)
+                console.warn('Legacy API backend registration failed (non-critical):', legacyError.message)
             }
 
             return firebaseUser

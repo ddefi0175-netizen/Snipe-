@@ -938,6 +938,7 @@ export default function MasterAdminDashboard() {
       console.log('[MasterDashboard] Admin created:', result)
 
       // Show success message
+      // TODO: Replace alert with toast notification component for better UX
       alert(`✅ Admin account created successfully!\n\n` +
             `Username: ${newAdmin.username}\n` +
             `Email: ${newAdmin.email}\n\n` +

@@ -307,17 +307,12 @@ export const initializeMasterAccount = async (masterEmail, masterPassword) => {
     
     // If the error is that the user already exists in Auth but not in Firestore
     if (error.code === 'auth/email-already-in-use') {
-      // Try to get the UID from current auth state and create Firestore doc
-      try {
-        // User exists in Auth but not in Firestore, let's handle this
-        return {
-          success: false,
-          message: 'Master email already exists in Firebase Auth. Please sign in to complete setup.',
-          error: error.message
-        };
-      } catch (e) {
-        console.error('Failed to handle existing auth user:', e);
-      }
+      // TODO: Future enhancement - implement recovery logic to create Firestore doc for existing Auth user
+      return {
+        success: false,
+        message: 'Master email already exists in Firebase Auth. Please sign in to complete setup.',
+        error: error.message
+      };
     }
     
     throw error;
