@@ -1,0 +1,31 @@
+name = "snipe-onchainweb"
+compatibility_date = "2024-01-01"
+main = "workers/chat-api.js"
+
+# Cloudflare Pages configuration
+pages_build_output_dir = "Onchainweb/dist"
+
+[build]
+command = "cd Onchainweb && npm install && npm run build"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "onchainweb"
+database_id = "e3f277bd-092a-41d6-a477-4521200c79fe"
+
+# Observability settings for consistent deployments
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+[observability.logs]
+enabled = true
+head_sampling_rate = 1
+persist = true
+invocation_logs = true
+
+[observability.traces]
+enabled = true
+persist = true
+head_sampling_rate = 1

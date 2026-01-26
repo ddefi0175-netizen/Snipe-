@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { 
-  saveChatMessage, 
-  saveActiveChat, 
-  updateActiveChat,
-  subscribeToAdminReplies, 
-  markReplyDelivered,
-  isFirebaseEnabled 
-} from '../lib/firebase.js'
+  sendChatMessage, 
+  getChatMessages,
+  subscribeToChatMessages, 
+  isCloudflareApiAvailable 
+} from '../lib/cloudflareApi.js'
 import { formatApiError } from '../lib/errorHandling'
 
 export default function CustomerService() {
@@ -79,42 +77,26 @@ export default function CustomerService() {
     return autoResponses.default
   }
 
-  // Save message to Firebase/localStorage for admin to see - REAL TIME
+  // Save message to Cloudflare D1 for admin to see - REAL TIME
   const saveMessageToAdmin = async (message, type, agentName = null) => {
     const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
     const walletAddress = localStorage.getItem('walletAddress') || ''
 
     const newMessage = {
       sessionId: sessionId,
-      user: userProfile.username || 'Anonymous',
+      username: userProfile.username || 'Anonymous',
       userId: userProfile.userId || '',
       email: userProfile.email || '',
       wallet: walletAddress,
-      type: type,
+      sender: 'user',
       message: message,
       agentName: agentName,
       timestamp: new Date().toISOString(),
       read: false
     }
 
-    // Save message to Firebase
-    await saveChatMessage(newMessage)
-
-    // Update active chat
-    const chatData = {
-      sessionId: sessionId,
-      user: userProfile.username || 'Anonymous',
-      userId: userProfile.userId || '',
-      email: userProfile.email || '',
-      wallet: walletAddress,
-      startTime: new Date().toISOString(),
-      status: 'active',
-      unread: type === 'user' ? 1 : 0,
-      lastMessage: message,
-      lastMessageTime: new Date().toISOString()
-    }
-    
-    await saveActiveChat(chatData)
+    // Save message to Cloudflare D1
+    await sendChatMessage(newMessage)
   }
 
   const handleSendMessage = (e) => {
@@ -160,46 +142,46 @@ export default function CustomerService() {
     return names[Math.floor(Math.random() * names.length)]
   })
 
-  // Subscribe to admin replies using Firebase - REAL TIME across all devices
+  // Subscribe to admin replies using Cloudflare D1 - REAL TIME across all devices
   useEffect(() => {
-    const unsubscribe = subscribeToAdminReplies(sessionId, (replies) => {
-      replies.forEach(async (reply) => {
-        // If not connected to agent yet, auto-connect when admin replies
-        if (!isConnectedToAgent) {
-          setIsConnectedToAgent(true)
+    const unsubscribe = subscribeToChatMessages(sessionId, (newMessages) => {
+      newMessages.forEach(async (msg) => {
+        // Only process admin messages
+        if (msg.sender_type === 'admin') {
+          // If not connected to agent yet, auto-connect when admin replies
+          if (!isConnectedToAgent) {
+            setIsConnectedToAgent(true)
+            setMessages(prev => [...prev, {
+              id: Date.now() - 1,
+              type: 'system',
+              text: 'A support agent has joined the conversation.',
+              time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            }])
+          }
+
           setMessages(prev => [...prev, {
-            id: Date.now() - 1,
-            type: 'system',
-            text: 'A support agent has joined the conversation.',
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            id: msg.id,
+            type: 'agent',
+            text: msg.message,
+            time: new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            agentName: msg.sender_name || 'Support Agent'
           }])
-        }
 
-        setMessages(prev => [...prev, {
-          id: Date.now(),
-          type: 'agent',
-          text: reply.message,
-          time: new Date(reply.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          agentName: reply.agentName || 'Support Agent'
-        }])
+          // Play notification sound for user
+          try {
+            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQkAIHPQ3bF3HQkAgLTX15xQGBY=')
+            audio.volume = 0.3
+            audio.play().catch((error) => {
+              console.error('Audio notification failed:', formatApiError(error))
+            })
+          } catch (error) {
+            console.error('Audio initialization failed:', formatApiError(error))
+          }
 
-        // Mark reply as delivered in Firebase
-        await markReplyDelivered(reply.id, reply.firebaseKey)
-
-        // Play notification sound for user
-        try {
-          const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQkAIHPQ3bF3HQkAgLTX15xQGBY=')
-          audio.volume = 0.3
-          audio.play().catch((error) => {
-            console.error('Audio notification failed:', formatApiError(error))
-          })
-        } catch (error) {
-          console.error('Audio initialization failed:', formatApiError(error))
-        }
-
-        // Update unread count if chat window is closed
-        if (!isOpen) {
-          setUnreadCount(prev => prev + 1)
+          // Update unread count if chat window is closed
+          if (!isOpen) {
+            setUnreadCount(prev => prev + 1)
+          }
         }
       })
     })
@@ -218,16 +200,7 @@ export default function CustomerService() {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }])
 
-    // Save connection request to Firebase
-    const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
-    
-    await updateActiveChat(sessionId, {
-      status: 'waiting_agent',
-      requestedAgent: true,
-      requestTime: new Date().toISOString()
-    })
-
-    // Save notification for admin
+    // Save notification for admin (Cloudflare D1 handles active chat tracking automatically)
     await saveMessageToAdmin('Customer requested live agent connection', 'system')
 
     // Simulate connection delay - all stays in-app
@@ -239,12 +212,6 @@ export default function CustomerService() {
         text: `You are now connected with ${agentName} from our support team.`,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }])
-
-      // Update chat status in Firebase
-      await updateActiveChat(sessionId, {
-        status: 'connected',
-        connectedAgent: agentName
-      })
 
       // Agent greeting
       setTimeout(async () => {
