@@ -16,6 +16,8 @@ The deployment build error has been fixed by adding the `firebase` package to de
 
 Go to: **Cloudflare Dashboard → Pages → Your Project → Settings → Environment variables**
 
+**IMPORTANT:** Copy and paste these exact values into Cloudflare Pages environment variables. These are your project-specific credentials.
+
 #### Required Firebase Variables (7 total)
 ```bash
 VITE_FIREBASE_API_KEY=AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw
@@ -29,8 +31,10 @@ VITE_FIREBASE_MEASUREMENT_ID=G-1QDHSDQKDY
 
 #### Required WalletConnect (1 total)
 ```bash
-VITE_WALLETCONNECT_PROJECT_ID=42039c73d0dacb66d82c12faabf27c9b
+VITE_WALLETCONNECT_PROJECT_ID=N64KYvAPcdvA92IVWUverUJwtTmNW00jMX2JTYoI
 ```
+
+**Note:** This is your WalletConnect Project ID token. Set this in Cloudflare Pages for wallet connections to work.
 
 #### Optional Admin Configuration
 ```bash
