@@ -45,12 +45,16 @@ VITE_MASTER_ADMIN_ROUTE=/master-admin
 
 ### 2. Verify Build Configuration in Cloudflare
 
-Make sure your Cloudflare Pages project has:
+**CRITICAL:** Make sure your Cloudflare Pages project has these EXACT settings:
+
+Go to: **Cloudflare Dashboard → Pages → Your Project → Settings → Builds & deployments**
 
 - **Build command**: `cd Onchainweb && npm install && npm run build`
 - **Build output directory**: `Onchainweb/dist`
 - **Root directory**: `/` (project root)
 - **Node.js version**: 20.x
+
+⚠️ **If you see error "Could not read package.json: ENOENT"**, your build command is wrong. It MUST start with `cd Onchainweb &&` because the package.json is in the Onchainweb subdirectory, not the root.
 
 ### 3. Deploy
 
@@ -121,6 +125,31 @@ The Firebase code is designed to:
 4. Never commit `.env` files to git (they contain secrets)
 
 ## 🆘 Troubleshooting
+
+### Build Error: "Could not read package.json: ENOENT"
+
+**Full Error:**
+```
+npm error path /opt/buildhome/repo/package.json
+npm error errno -2
+npm error enoent Could not read package.json
+```
+
+**Cause:** The build command in Cloudflare Pages is incorrect. It's trying to run `npm` from the root directory, but the package.json is in the `Onchainweb/` subdirectory.
+
+**Solution:**
+1. Go to **Cloudflare Dashboard → Pages → Your Project → Settings → Builds & deployments**
+2. Click **"Edit configuration"**
+3. Change **Build command** to: `cd Onchainweb && npm install && npm run build`
+4. Ensure **Build output directory** is: `Onchainweb/dist`
+5. Click **Save**
+6. Trigger a new deployment (click "Retry deployment" or push a new commit)
+
+### Build Error: "Rollup failed to resolve import firebase/app"
+
+**Cause:** Firebase package is missing from dependencies.
+
+**Solution:** This PR fixes this issue by adding Firebase to package.json. Merge this PR and deploy.
 
 ### Build still fails?
 - Check that Node.js version is 20.x in Cloudflare Pages settings

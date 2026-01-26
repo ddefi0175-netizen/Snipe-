@@ -1,6 +1,21 @@
 # Cloudflare Pages Environment Variables Setup
 
-## Quick Reference: Copy-Paste These Exact Values
+## ⚠️ IMPORTANT: Build Settings First!
+
+**Before setting environment variables, ensure your build settings are correct:**
+
+Go to: **Cloudflare Dashboard → Pages → Your Project → Settings → Builds & deployments**
+
+Set these values:
+- **Build command:** `cd Onchainweb && npm install && npm run build`
+- **Build output directory:** `Onchainweb/dist`
+- **Root directory:** `/` (leave as project root)
+
+❌ **Common Error:** If you see `npm error path /opt/buildhome/repo/package.json`, your build command is incorrect. Make sure it starts with `cd Onchainweb &&`
+
+---
+
+## Environment Variables Setup
 
 Go to: **Cloudflare Dashboard → Pages → Your Project → Settings → Environment variables**
 
@@ -98,6 +113,35 @@ After setting all variables and deploying:
 - ✅ Site should load without errors
 - ✅ Browser console shows "Firebase initialized successfully"
 - ✅ Wallet connections work (MetaMask, WalletConnect)
+
+---
+
+## Troubleshooting Common Build Errors
+
+### Error: "Could not read package.json: ENOENT"
+```
+npm error path /opt/buildhome/repo/package.json
+npm error errno -2
+npm error enoent Could not read package.json
+```
+
+**Cause:** Build command is not pointing to the Onchainweb directory.
+
+**Solution:**
+1. Go to **Cloudflare Dashboard → Pages → Your Project → Settings → Builds & deployments**
+2. Click **"Edit configuration"**
+3. Set **Build command** to: `cd Onchainweb && npm install && npm run build`
+4. Set **Build output directory** to: `Onchainweb/dist`
+5. Click **Save**
+6. Trigger a new deployment
+
+### Error: "Rollup failed to resolve import firebase/app"
+**Cause:** Environment variables not set or Firebase package missing.
+
+**Solution:**
+1. Ensure all 8 environment variables are set (see above)
+2. Verify the Firebase package is in dependencies (this PR adds it)
+3. Trigger a new deployment
 
 ---
 
