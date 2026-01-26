@@ -29,7 +29,7 @@ cat CHECK_MASTER_ACCOUNT.md
 grep VITE_ADMIN_ALLOWLIST Onchainweb/.env
 ```
 
-The email starting with `master@` or `master.` is your master account.
+The email starting with `master@` or having local-part `master` is your master account.
 
 **Password**: Set in [Firebase Console](https://console.firebase.google.com)
 - Go to Authentication → Users
@@ -44,9 +44,11 @@ The email starting with `master@` or `master.` is your master account.
 
 ### Legacy Backend (Deprecated - For Reference Only)
 
-**Username**: `snipe_admin_secure_7ecb869e`
+**⚠️ SECURITY NOTE**: Actual credentials should NEVER be committed to version control.
 
-**Password**: `WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=`
+**Credentials Location**: 
+- Stored in secure environment variables (`backend/.env` or deployment platform)
+- Reference: See `docs/admin/MASTER_ACCOUNT_ACCESS_GUIDE.md` (in secure deployment environment)
 
 **API Endpoint**: `https://snipe-api.onrender.com/api/auth/login`
 
@@ -89,13 +91,19 @@ cd Onchainweb && npm run dev
 
 ### Test Legacy Backend Login (API)
 ```bash
+# Set your credentials in environment variables (NEVER commit these)
+export LEGACY_USERNAME="[your_username]"
+export LEGACY_PASSWORD="[your_password]"
+
 curl -X POST https://snipe-api.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{
-    "username": "snipe_admin_secure_7ecb869e",
-    "password": "WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E="
-  }'
+  -d "{
+    \"username\": \"${LEGACY_USERNAME}\",
+    \"password\": \"${LEGACY_PASSWORD}\"
+  }"
 ```
+
+**Note**: Replace placeholders with actual credentials from secure storage. See `docs/admin/MASTER_ACCOUNT_ACCESS_GUIDE.md`.
 
 ---
 

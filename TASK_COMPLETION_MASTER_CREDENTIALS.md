@@ -22,13 +22,20 @@
 - Scans your environment configuration
 - Identifies master account emails
 - Verifies Firebase setup
-- Shows legacy backend credentials
+- Shows legacy backend credential references
 - Provides next steps based on your setup
 - Color-coded output for easy reading
 
 **Usage**: 
 ```bash
+# Make executable (if needed):
+chmod +x check-master-credentials.sh
+
+# Run the script:
 ./check-master-credentials.sh
+
+# Or run without changing permissions:
+bash check-master-credentials.sh
 ```
 
 ### 3. MASTER_CREDENTIALS_SUMMARY.md
@@ -49,11 +56,11 @@ Added references to credential checking tools in:
 
 ### Firebase Authentication (Recommended)
 
-**Master Email**: `master@gmail.com` (from VITE_ADMIN_ALLOWLIST)
+**Master Email**: `master@example.com` (example from VITE_ADMIN_ALLOWLIST)
 
 **Password**: Managed in Firebase Console
 - Access: [Firebase Console](https://console.firebase.google.com)
-- Location: Authentication → Users → master@gmail.com
+- Location: Authentication → Users → master@example.com
 - Reset: Click "Reset Password" if forgotten
 
 **Login URL**:
@@ -66,15 +73,17 @@ Added references to credential checking tools in:
 
 ### Legacy Backend (Deprecated)
 
-**Username**: `snipe_admin_secure_7ecb869e`
+**⚠️ SECURITY NOTE**: Actual credentials should NEVER be committed to version control.
 
-**Password**: `WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=`
+**Credentials Location**: 
+- Stored in secure environment variables (`backend/.env` or deployment platform)
+- Reference: See `docs/admin/MASTER_ACCOUNT_ACCESS_GUIDE.md` (in secure deployment environment only)
 
 **API Endpoint**: `https://snipe-api.onrender.com/api/auth/login`
 
 **Status**: ⚠️ Deprecated - Use Firebase for new deployments
 
-**Note**: This is documented in `docs/admin/MASTER_ACCOUNT_ACCESS_GUIDE.md`
+**Note**: Actual credentials are documented in the secure deployment environment documentation
 
 ---
 
@@ -100,17 +109,23 @@ cat MASTER_CREDENTIALS_SUMMARY.md
 **Firebase (Recommended)**:
 1. Start dev server: `cd Onchainweb && npm run dev`
 2. Open: http://localhost:5173/master-admin
-3. Enter: `master@gmail.com` and your Firebase password
+3. Enter: Your Firebase email (e.g., `master@example.com`) and password
 
 **Legacy Backend (API only)**:
 ```bash
+# Set credentials in environment variables (NEVER commit these)
+export LEGACY_USERNAME="[your_username]"
+export LEGACY_PASSWORD="[your_password]"
+
 curl -X POST https://snipe-api.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{
-    "username": "snipe_admin_secure_7ecb869e",
-    "password": "WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E="
-  }'
+  -d "{
+    \"username\": \"${LEGACY_USERNAME}\",
+    \"password\": \"${LEGACY_PASSWORD}\"
+  }"
 ```
+
+**Note**: See `docs/admin/MASTER_ACCOUNT_ACCESS_GUIDE.md` for actual legacy credentials (in secure environment).
 
 ---
 
@@ -121,7 +136,7 @@ curl -X POST https://snipe-api.onrender.com/api/auth/login \
    - Legacy MongoDB backend (deprecated)
 
 2. **Firebase Master Account**:
-   - Email-based (master@gmail.com)
+   - Email-based (e.g., master@example.com)
    - Password in Firebase Console
    - Full UI dashboard at /master-admin
 
@@ -129,11 +144,12 @@ curl -X POST https://snipe-api.onrender.com/api/auth/login \
    - Username/password authentication
    - API-only access (no UI)
    - Still functional but not recommended
+   - Credentials in secure environment only
 
 4. **Easy Verification**:
    - Run `./check-master-credentials.sh` anytime
    - Check `CHECK_MASTER_ACCOUNT.md` for details
-   - All credentials documented and accessible
+   - All credential references documented securely
 
 ---
 
@@ -142,9 +158,9 @@ curl -X POST https://snipe-api.onrender.com/api/auth/login \
 | Component | Status | Credentials Location |
 |-----------|--------|---------------------|
 | Firebase Auth | ✅ Active | Firebase Console + VITE_ADMIN_ALLOWLIST |
-| Firebase Master Email | ✅ Configured | `master@gmail.com` |
-| Legacy Backend | ⚠️ Deprecated | backend/.env + MASTER_ACCOUNT_ACCESS_GUIDE.md |
-| Legacy Credentials | ✅ Documented | Username: snipe_admin_secure_7ecb869e |
+| Firebase Master Email | ✅ Configured | Example: `master@example.com` |
+| Legacy Backend | ⚠️ Deprecated | Secure environment variables only |
+| Legacy Credentials | 📄 Referenced | docs/admin/MASTER_ACCOUNT_ACCESS_GUIDE.md |
 | Admin UI | ✅ Working | /master-admin and /admin routes |
 
 ---
@@ -200,10 +216,12 @@ A: Run `./check-master-credentials.sh` - it will tell you the status
 All master account credentials have been identified, documented, and verified. You can now:
 
 - ✅ Check credentials anytime with `./check-master-credentials.sh`
-- ✅ Login to Firebase master account (master@gmail.com)
-- ✅ Access legacy backend if needed (deprecated)
+- ✅ Login to Firebase master account (e.g., master@example.com)
+- ✅ Access legacy backend if needed (credentials in secure environment)
 - ✅ Create new admin accounts using the guides
 - ✅ Troubleshoot issues using comprehensive documentation
+
+**Security Best Practice**: Actual production credentials are never committed to version control. They are stored securely in environment variables and deployment platform secrets.
 
 **Next Steps**: Run the checker script and login to verify everything works!
 

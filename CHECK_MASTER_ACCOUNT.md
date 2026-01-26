@@ -32,7 +32,7 @@ Firebase uses **email/password** authentication. The master account must be:
 Look for these settings:
 ```dotenv
 VITE_ENABLE_ADMIN=true
-VITE_ADMIN_ALLOWLIST=master@gmail.com,admin@example.com
+VITE_ADMIN_ALLOWLIST=master@example.com,admin@example.com
 ```
 
 The emails listed in `VITE_ADMIN_ALLOWLIST` are the authorized admin accounts.
@@ -42,7 +42,7 @@ The emails listed in `VITE_ADMIN_ALLOWLIST` are the authorized admin accounts.
 1. Open [Firebase Console](https://console.firebase.google.com)
 2. Select your project (e.g., `onchainweb-37d30`)
 3. Go to **Authentication** → **Users**
-4. Look for the master email (e.g., `master@gmail.com`)
+4. Look for the master email (e.g., `master@example.com`)
 
 #### Step 3: Master Account Login
 
@@ -61,20 +61,19 @@ The emails listed in `VITE_ADMIN_ALLOWLIST` are the authorized admin accounts.
 
 ### Current Legacy Credentials
 
-According to `docs/admin/MASTER_ACCOUNT_ACCESS_GUIDE.md`:
+**⚠️ SECURITY NOTE**: Actual credentials are stored in secure environment variables and should NEVER be committed to version control.
 
-```
-Username: snipe_admin_secure_7ecb869e
-Password: WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
-```
+Credentials are documented in `docs/admin/MASTER_ACCOUNT_ACCESS_GUIDE.md` (accessible only to authorized administrators).
 
 ### Where These Are Configured
 
 **Backend Environment Variables** (on Render.com or local `backend/.env`):
 ```bash
-MASTER_USERNAME=snipe_admin_secure_7ecb869e
-MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
+MASTER_USERNAME=[SECURE_CREDENTIAL_SEE_ADMIN_GUIDE]
+MASTER_PASSWORD=[SECURE_CREDENTIAL_SEE_ADMIN_GUIDE]
 ```
+
+**To access actual credentials**: Contact your system administrator or check `docs/admin/MASTER_ACCOUNT_ACCESS_GUIDE.md` in your secure deployment environment.
 
 ### Legacy Backend Login
 
@@ -83,12 +82,16 @@ MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
 
 **Example API Login**:
 ```bash
+# Use environment variables - never hardcode credentials
+export LEGACY_USERNAME="[your_legacy_username]"
+export LEGACY_PASSWORD="[your_legacy_password]"
+
 curl -X POST https://snipe-api.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{
-    "username": "snipe_admin_secure_7ecb869e",
-    "password": "WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E="
-  }'
+  -d "{
+    \"username\": \"${LEGACY_USERNAME}\",
+    \"password\": \"${LEGACY_PASSWORD}\"
+  }"
 ```
 
 ### ⚠️ Important: Legacy Backend is Deprecated
@@ -102,13 +105,12 @@ The MongoDB/Express backend is **no longer recommended** for new deployments. Us
 ### Check Firebase Admin Setup
 
 ```bash
-# Check if admin is enabled
-cd /home/runner/work/Snipe-/Snipe-
+# Check if admin is enabled (run from repository root)
 grep "VITE_ENABLE_ADMIN\|VITE_ADMIN_ALLOWLIST" Onchainweb/.env
 
 # Expected output:
 # VITE_ENABLE_ADMIN=true
-# VITE_ADMIN_ALLOWLIST=master@gmail.com,admin@example.com
+# VITE_ADMIN_ALLOWLIST=master@example.com,admin@example.com
 ```
 
 ### Check Legacy Backend Credentials
@@ -134,14 +136,14 @@ grep "MASTER_USERNAME\|MASTER_PASSWORD" .env 2>/dev/null || echo "No backend .en
 ### Test Legacy Backend Login (API)
 
 ```bash
-# Replace with your actual credentials
-export MASTER_USERNAME="snipe_admin_secure_7ecb869e"
-export MASTER_PASSWORD="WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E="
+# Set your actual credentials in environment variables (NEVER commit these)
+export LEGACY_USERNAME="[your_legacy_username]"
+export LEGACY_PASSWORD="[your_legacy_password]"
 
 # Test login
 curl -X POST https://snipe-api.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
-  -d "{\"username\":\"$MASTER_USERNAME\",\"password\":\"$MASTER_PASSWORD\"}" | jq .
+  -d "{\"username\":\"$LEGACY_USERNAME\",\"password\":\"$LEGACY_PASSWORD\"}" | jq .
 
 # Expected: {"success": true, "token": "...", "user": {...}}
 ```
@@ -178,8 +180,7 @@ curl -X POST https://snipe-api.onrender.com/api/auth/login \
 
 **Solution**:
 ```bash
-# Check your environment file
-cd /home/runner/work/Snipe-/Snipe-
+# Check your environment file (from repository root)
 cat Onchainweb/.env | grep VITE_ADMIN_ALLOWLIST
 
 # The master email is the one starting with 'master@' or 'master.'
@@ -199,7 +200,7 @@ cat Onchainweb/.env | grep VITE_ADMIN_ALLOWLIST
 1. Go to [Firebase Console](https://console.firebase.google.com)
 2. Navigate to Authentication → Users
 3. Click **"Add User"**
-4. Enter email (e.g., `master@gmail.com`)
+4. Enter email (e.g., `master@example.com`)
 5. Enter a strong password
 6. Click **"Add User"**
 7. Add the email to `VITE_ADMIN_ALLOWLIST` in `Onchainweb/.env`
@@ -301,4 +302,4 @@ npm run dev
 - Check Firebase Console for account status
 - Review browser console for error messages
 - Test with curl for API issues
-- Contact: ddefi0175@gmail.com
+- Open a GitHub issue in the repository for support

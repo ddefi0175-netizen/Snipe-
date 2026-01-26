@@ -110,10 +110,10 @@ cat CHECK_MASTER_ACCOUNT.md
    - Go to [Firebase Console](https://console.firebase.google.com)
    - Navigate to Authentication → Users
    - Click "Add user" and create accounts with email/password
-   - Example: `master@gmail.com`, `admin@gmail.com`
+   - Example: `master@example.com`, `admin@example.com`
 
 2. **Add to Allowlist:**
-   - Update `.env` file: `VITE_ADMIN_ALLOWLIST=master@gmail.com,admin@gmail.com`
+   - Update `.env` file: `VITE_ADMIN_ALLOWLIST=master@example.com,admin@example.com`
    - Set `VITE_ENABLE_ADMIN=true`
 
 3. **Access Admin Panels:**

@@ -3,7 +3,9 @@
 # Master Account Credential Checker
 # Helps verify and display current master account setup
 
-set -e
+# Note: We intentionally do NOT use `set -e` here to avoid aborting on
+# non-critical checks (e.g., optional environment variable lookups).
+# Critical failures are handled with explicit checks and exits.
 
 echo ""
 echo "🔐 Master Account Credential Checker"
@@ -60,7 +62,8 @@ if [ -f "Onchainweb/.env" ]; then
             IFS=',' read -ra EMAILS <<< "$allowlist"
             for email in "${EMAILS[@]}"; do
                 email=$(echo "$email" | xargs) # trim whitespace
-                if [[ $email == master@* ]] || [[ $email == master.* ]]; then
+                local_part="${email%@*}"
+                if [ "$local_part" = "master" ]; then
                     print_success "  • $email (MASTER ROLE)"
                 else
                     echo "    • $email (admin role)"
@@ -69,7 +72,7 @@ if [ -f "Onchainweb/.env" ]; then
         fi
     else
         print_warning "VITE_ADMIN_ALLOWLIST not found in .env"
-        echo "  → Add VITE_ADMIN_ALLOWLIST=master@gmail.com,admin@example.com"
+        echo "  → Add VITE_ADMIN_ALLOWLIST=master@example.com,admin@example.com"
     fi
     
     # Check Firebase config
@@ -118,14 +121,11 @@ print_header "Legacy Backend Credentials (Deprecated System)"
 if [ -f "backend/.env" ]; then
     print_info "Found backend/.env (legacy system)"
     
-    if grep -q "MASTER_USERNAME=" backend/.env; then
-        username=$(grep "MASTER_USERNAME=" backend/.env | cut -d'=' -f2-)
-        if [ -n "$username" ]; then
-            echo "  Username: $username"
-        fi
+    if grep -q "MASTER_USERNAME=" backend/.env 2>/dev/null; then
+        echo "  Username: [configured in backend/.env]"
     fi
     
-    if grep -q "MASTER_PASSWORD=" backend/.env; then
+    if grep -q "MASTER_PASSWORD=" backend/.env 2>/dev/null; then
         echo "  Password: [configured in backend/.env]"
     fi
     
@@ -134,14 +134,15 @@ else
     print_info "No backend/.env found (this is normal for Firebase-only deployments)"
 fi
 
-# Display known legacy credentials from documentation
+# Display reference to secure credentials
 echo ""
-print_info "Legacy Backend Credentials (from MASTER_ACCOUNT_ACCESS_GUIDE.md):"
-echo "  Username: snipe_admin_secure_7ecb869e"
-echo "  Password: WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E="
+print_info "Legacy Backend Credentials Reference:"
+echo "  For actual credentials, see: docs/admin/MASTER_ACCOUNT_ACCESS_GUIDE.md"
+echo "  (accessible only in secure deployment environment)"
 echo "  API Endpoint: https://snipe-api.onrender.com/api/auth/login"
 echo ""
-print_warning "These are for the deprecated MongoDB backend only"
+print_warning "⚠️  SECURITY: Never commit actual credentials to version control"
+print_warning "⚠️  These are for the deprecated MongoDB backend only"
 
 print_header "Quick Tests"
 
@@ -152,13 +153,19 @@ echo "  3. Enter Firebase email and password"
 echo ""
 
 echo "Test Legacy Backend Login (API):"
+echo "  # Set your credentials in environment variables first:"
+echo '  export LEGACY_USERNAME="[your_username]"'
+echo '  export LEGACY_PASSWORD="[your_password]"'
+echo ""
 echo '  curl -X POST https://snipe-api.onrender.com/api/auth/login \'
 echo '    -H "Content-Type: application/json" \'
 echo '    -d '"'"'{'
-echo '      "username": "snipe_admin_secure_7ecb869e",'
-echo '      "password": "WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E="'
+echo '      "username": "'"'"'${LEGACY_USERNAME}'"'"'",'
+echo '      "password": "'"'"'${LEGACY_PASSWORD}'"'"'"'
 echo '    }'"'"
 echo ""
+print_warning "Replace [your_username] and [your_password] with actual credentials"
+print_warning "See docs/admin/MASTER_ACCOUNT_ACCESS_GUIDE.md for details"
 
 print_header "Next Steps"
 
