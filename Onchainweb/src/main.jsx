@@ -15,6 +15,9 @@ import MainApp from './App.jsx'
 const MasterAdminDashboard = lazy(() => import('./components/MasterAdminDashboard.jsx'))
 const AdminPanel = lazy(() => import('./components/AdminPanel.jsx'))
 
+// Admin route guard for authentication
+import AdminRouteGuard from './components/AdminRouteGuard.jsx'
+
 // Admin auto-detection for wallet-based admin access
 import AdminAutoDetector from './components/AdminAutoDetector.jsx'
 
@@ -55,10 +58,24 @@ createRoot(document.getElementById('root')).render(
               <Routes>
                 <Route path={ROUTES.HOME} element={<MainApp />} />
                 {ADMIN_GUARD.ENABLED && (
-                  <Route path={ROUTES.ADMIN} element={<AdminPanel isOpen={true} onClose={() => window.location.href = '/'} />} />
+                  <Route 
+                    path={ROUTES.ADMIN} 
+                    element={
+                      <AdminRouteGuard requireMaster={false}>
+                        <AdminPanel isOpen={true} onClose={() => window.location.href = '/'} />
+                      </AdminRouteGuard>
+                    } 
+                  />
                 )}
                 {ADMIN_GUARD.ENABLED && (
-                  <Route path={ROUTES.MASTER_ADMIN} element={<MasterAdminDashboard />} />
+                  <Route 
+                    path={ROUTES.MASTER_ADMIN} 
+                    element={
+                      <AdminRouteGuard requireMaster={true}>
+                        <MasterAdminDashboard />
+                      </AdminRouteGuard>
+                    } 
+                  />
                 )}
               </Routes>
             </Suspense>
