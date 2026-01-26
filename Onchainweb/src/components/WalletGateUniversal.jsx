@@ -12,6 +12,7 @@
 import React, { useState, useEffect } from 'react'
 import { useUniversalWallet, WALLET_CONNECTORS, detectEnvironment, detectAvailableWallets } from '../lib/walletConnect.jsx'
 import { userAPI } from '../lib/api'
+import { autoRegisterUser } from '../services/userService.js'
 
 export default function WalletGate({ onConnect, children, allowOpenAccess = false }) {
     const wallet = useUniversalWallet()
@@ -36,31 +37,46 @@ export default function WalletGate({ onConnect, children, allowOpenAccess = fals
         }
     }, [allowOpenAccess])
 
-    // Register user in backend
+    // Register user in backend and Firebase
     const registerUserInBackend = async (address, walletType) => {
         try {
             console.log('Registering user in backend:', address, walletType)
             const existingProfile = localStorage.getItem('userProfile')
             const profileData = existingProfile ? JSON.parse(existingProfile) : {}
 
-            const user = await userAPI.loginByWallet(
-                address,
-                profileData.username || `User_${address.substring(2, 8)}`,
-                profileData.email || '',
-                walletType
-            )
+            // Register in Firebase (primary)
+            const firebaseUser = await autoRegisterUser(address, {
+                username: profileData.username || `User_${address.substring(2, 8)}`,
+                email: profileData.email || null,
+                walletType: walletType
+            })
 
-            if (user) {
-                console.log('User registered successfully:', user)
-                localStorage.setItem('backendUserId', user._id)
-                localStorage.setItem('backendUser', JSON.stringify(user))
-                if (user.userId) {
-                    localStorage.setItem('realAccountId', user.userId)
-                    const updatedProfile = { ...profileData, userId: user.userId, wallet: address, walletType }
-                    localStorage.setItem('userProfile', JSON.stringify(updatedProfile))
+            console.log('User registered in Firebase:', firebaseUser)
+
+            // Also register in legacy backend (if available)
+            try {
+                const user = await userAPI.loginByWallet(
+                    address,
+                    profileData.username || `User_${address.substring(2, 8)}`,
+                    profileData.email || '',
+                    walletType
+                )
+
+                if (user) {
+                    console.log('User registered in legacy backend:', user)
+                    localStorage.setItem('backendUserId', user._id)
+                    localStorage.setItem('backendUser', JSON.stringify(user))
+                    if (user.userId) {
+                        localStorage.setItem('realAccountId', user.userId)
+                        const updatedProfile = { ...profileData, userId: user.userId, wallet: address, walletType }
+                        localStorage.setItem('userProfile', JSON.stringify(updatedProfile))
+                    }
                 }
+            } catch (legacyError) {
+                console.warn('Legacy backend registration failed (non-critical):', legacyError.message)
             }
-            return user
+
+            return firebaseUser
         } catch (error) {
             console.error('Failed to register user:', error)
             return null
