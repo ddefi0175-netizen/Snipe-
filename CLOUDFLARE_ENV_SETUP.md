@@ -135,6 +135,20 @@ npm error enoent Could not read package.json
 5. Click **Save**
 6. Trigger a new deployment
 
+### Error: "Cannot use assets with a binding in an assets-only Worker"
+```
+✘ [ERROR] Cannot use assets with a binding in an assets-only Worker.
+Please remove the asset binding from your configuration file
+```
+
+**Cause:** The `wrangler.jsonc` file has an assets binding which conflicts with Pages-only deployment.
+
+**Solution:** This PR fixes this issue by removing the `binding` property from `wrangler.jsonc`. The configuration now correctly deploys as a static Pages site.
+
+If you see this error:
+1. Ensure you've merged this PR (commit f0a95f8 or later)
+2. Trigger a new deployment
+
 ### Error: "Rollup failed to resolve import firebase/app"
 **Cause:** Environment variables not set or Firebase package missing.
 

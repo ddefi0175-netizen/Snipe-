@@ -151,6 +151,18 @@ npm error enoent Could not read package.json
 
 **Solution:** This PR fixes this issue by adding Firebase to package.json. Merge this PR and deploy.
 
+### Build Error: "Cannot use assets with a binding in an assets-only Worker"
+
+**Full Error:**
+```
+✘ [ERROR] Cannot use assets with a binding in an assets-only Worker.
+Please remove the asset binding from your configuration file
+```
+
+**Cause:** The `wrangler.jsonc` configuration file had an assets binding that conflicts with Cloudflare Pages static site deployment.
+
+**Solution:** This PR fixes this issue by removing the `binding` property from `wrangler.jsonc`. Merge this PR and redeploy.
+
 ### Build still fails?
 - Check that Node.js version is 20.x in Cloudflare Pages settings
 - Verify the build command is exactly: `cd Onchainweb && npm install && npm run build`
