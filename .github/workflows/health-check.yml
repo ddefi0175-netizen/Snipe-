@@ -28,8 +28,30 @@ jobs:
       - name: Run health checks
         run: |
           echo "🔍 Running automated health checks..."
+          
+          # Validate that secrets are configured
+          if [ -z "$BACKEND_URL" ] || [ -z "$FRONTEND_URL" ]; then
+            echo ""
+            echo "⚠️ WARNING: Health check secrets are not configured"
+            echo ""
+            echo "ℹ️ To enable production monitoring, please configure the following secrets in your repository:"
+            echo "   - BACKEND_URL: The URL of your backend server (e.g., https://api.example.com)"
+            echo "   - FRONTEND_URL: The URL of your frontend application (e.g., https://example.com)"
+            echo ""
+            echo "📖 To add secrets:"
+            echo "   1. Go to: Settings → Secrets and variables → Actions"
+            echo "   2. Click 'New repository secret'"
+            echo "   3. Add BACKEND_URL and FRONTEND_URL with your deployment URLs"
+            echo ""
+            echo "✅ Skipping health checks (secrets not configured)"
+            exit 0
+          fi
+          
           echo "Backend URL: $BACKEND_URL"
           echo "Frontend URL: $FRONTEND_URL"
+
+          # Track overall status
+          CHECKS_PASSED=true
 
           # Test backend health
           echo ""
@@ -39,7 +61,7 @@ jobs:
             echo "✅ Backend health check passed (HTTP $BACKEND_HEALTH)"
           else
             echo "❌ Backend health check failed (HTTP $BACKEND_HEALTH)"
-            exit 1
+            CHECKS_PASSED=false
           fi
 
           # Test backend API endpoints
@@ -60,11 +82,16 @@ jobs:
             echo "✅ Frontend is accessible (HTTP $FRONTEND_STATUS)"
           else
             echo "❌ Frontend is not accessible (HTTP $FRONTEND_STATUS)"
-            exit 1
+            CHECKS_PASSED=false
           fi
 
           echo ""
-          echo "✅ All health checks passed!"
+          if [ "$CHECKS_PASSED" = true ]; then
+            echo "✅ All health checks passed!"
+          else
+            echo "❌ Some health checks failed!"
+            exit 1
+          fi
 
       - name: Notify on failure
         if: failure()
