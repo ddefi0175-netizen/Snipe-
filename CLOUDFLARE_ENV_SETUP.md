@@ -1,0 +1,109 @@
+# Cloudflare Pages Environment Variables Setup
+
+## Quick Reference: Copy-Paste These Exact Values
+
+Go to: **Cloudflare Dashboard → Pages → Your Project → Settings → Environment variables**
+
+Click **"Add variable"** for each entry below:
+
+---
+
+## Required Variables (8 total)
+
+### Variable 1: Firebase API Key
+- **Name:** `VITE_FIREBASE_API_KEY`
+- **Value:** `AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw`
+
+### Variable 2: Firebase Auth Domain
+- **Name:** `VITE_FIREBASE_AUTH_DOMAIN`
+- **Value:** `onchainweb-37d30.firebaseapp.com`
+
+### Variable 3: Firebase Project ID
+- **Name:** `VITE_FIREBASE_PROJECT_ID`
+- **Value:** `onchainweb-37d30`
+
+### Variable 4: Firebase Storage Bucket
+- **Name:** `VITE_FIREBASE_STORAGE_BUCKET`
+- **Value:** `onchainweb-37d30.firebasestorage.app`
+
+### Variable 5: Firebase Messaging Sender ID
+- **Name:** `VITE_FIREBASE_MESSAGING_SENDER_ID`
+- **Value:** `766146811888`
+
+### Variable 6: Firebase App ID
+- **Name:** `VITE_FIREBASE_APP_ID`
+- **Value:** `1:766146811888:web:a96012963dffe31508ef35`
+
+### Variable 7: Firebase Measurement ID
+- **Name:** `VITE_FIREBASE_MEASUREMENT_ID`
+- **Value:** `G-1QDHSDQKDY`
+
+### Variable 8: WalletConnect Project ID
+- **Name:** `VITE_WALLETCONNECT_PROJECT_ID`
+- **Value:** `N64KYvAPcdvA92IVWUverUJwtTmNW00jMX2JTYoI`
+
+---
+
+## Optional Admin Variables (if you need admin access)
+
+### Variable 9: Enable Admin
+- **Name:** `VITE_ENABLE_ADMIN`
+- **Value:** `true`
+
+### Variable 10: Admin Route
+- **Name:** `VITE_ADMIN_ROUTE`
+- **Value:** `/admin`
+
+### Variable 11: Master Admin Route
+- **Name:** `VITE_MASTER_ADMIN_ROUTE`
+- **Value:** `/master-admin`
+
+---
+
+## Step-by-Step Instructions
+
+1. Log in to **Cloudflare Dashboard**
+2. Go to **Pages** → Select your project
+3. Click **Settings** → **Environment variables**
+4. For each variable above:
+   - Click **"Add variable"**
+   - Copy the **Name** (e.g., `VITE_FIREBASE_API_KEY`)
+   - Copy the **Value** (e.g., `AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw`)
+   - Select environment: **Production** (and **Preview** if needed)
+   - Click **Save**
+5. After adding all variables, trigger a new deployment
+
+---
+
+## Quick Copy-Paste Format (All 8 Required Variables)
+
+If your Cloudflare interface supports bulk import, use this format:
+
+```
+VITE_FIREBASE_API_KEY=AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw
+VITE_FIREBASE_AUTH_DOMAIN=onchainweb-37d30.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=onchainweb-37d30
+VITE_FIREBASE_STORAGE_BUCKET=onchainweb-37d30.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=766146811888
+VITE_FIREBASE_APP_ID=1:766146811888:web:a96012963dffe31508ef35
+VITE_FIREBASE_MEASUREMENT_ID=G-1QDHSDQKDY
+VITE_WALLETCONNECT_PROJECT_ID=N64KYvAPcdvA92IVWUverUJwtTmNW00jMX2JTYoI
+```
+
+---
+
+## Verification
+
+After setting all variables and deploying:
+- ✅ Site should load without errors
+- ✅ Browser console shows "Firebase initialized successfully"
+- ✅ Wallet connections work (MetaMask, WalletConnect)
+
+---
+
+## Important Notes
+
+- **All variable names must be EXACTLY as shown** (case-sensitive)
+- **All variables must start with `VITE_`** (Vite requirement)
+- Set variables for **both Production and Preview** environments
+- After adding variables, you must **trigger a new deployment** for changes to take effect
