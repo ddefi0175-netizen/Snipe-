@@ -19,6 +19,7 @@ import { formatApiError, validatePassword, isLocalStorageAvailable } from '../li
 import { registerAdminWallet, getAdminWallets, revokeAdminWallet } from '../lib/adminProvisioning.js'
 import { handleAdminLogin, formatFirebaseAuthError } from '../lib/adminAuth.js'
 import { API_CONFIG } from '../config/constants.js'
+import { createAdminAccount, subscribeToAdmins, updateAdminAccount, deleteAdminAccount } from '../services/adminService.js'
 
 // Lazy localStorage helper to avoid blocking initial render
 const getFromStorage = (key, defaultValue) => {
@@ -148,8 +149,12 @@ export default function MasterAdminDashboard() {
     role: 'admin',
     permissions: [],
     userAccessMode: 'all',
-    assignedUsers: []
+    assignedUsers: [],
+    maxUsers: 0
   })
+
+  const [isCreatingAdmin, setIsCreatingAdmin] = useState(false)
+  const [adminCreationError, setAdminCreationError] = useState('')
 
   const [activityFilter, setActivityFilter] = useState('all')
 
@@ -587,6 +592,31 @@ export default function MasterAdminDashboard() {
     return () => unsubscribe()
   }, [isAuthenticated, isDataLoaded])
 
+  // Subscribe to admins in real-time (Firebase)
+  useEffect(() => {
+    if (!isAuthenticated || !isMasterAccount) return
+
+    // Use Firebase real-time listener for admins
+    const unsubscribe = subscribeToAdmins((admins) => {
+      console.log('[MasterDashboard] Admins updated:', admins.length)
+      setAdminRoles(admins.map(admin => ({
+        id: admin.uid,
+        username: admin.username,
+        email: admin.email,
+        role: admin.role === 'master' ? 'super_admin' : 'admin',
+        permissions: admin.permissions,
+        status: admin.status,
+        createdAt: admin.createdAt,
+        lastLogin: admin.lastLoginAt,
+        userAccessMode: admin.userAccessMode,
+        maxUsers: admin.maxUsers,
+        currentUserCount: admin.currentUserCount
+      })))
+    })
+
+    return () => unsubscribe()
+  }, [isAuthenticated, isMasterAccount, isDataLoaded])
+
   // Check authentication on load - fast initial check
   useEffect(() => {
     const checkAuth = () => {
@@ -864,6 +894,75 @@ export default function MasterAdminDashboard() {
     localStorage.removeItem('masterAdminSession')
     localStorage.removeItem('adminToken')
     localStorage.removeItem('firebaseAdminUid')
+  }
+
+  // Handle admin creation (Master only)
+  const handleCreateAdmin = async () => {
+    setAdminCreationError('')
+    setIsCreatingAdmin(true)
+
+    try {
+      // Validate inputs
+      if (!newAdmin.email || !newAdmin.password || !newAdmin.username) {
+        setAdminCreationError('Please fill in all required fields')
+        return
+      }
+
+      if (newAdmin.password.length < 8) {
+        setAdminCreationError('Password must be at least 8 characters')
+        return
+      }
+
+      if (newAdmin.permissions.length === 0) {
+        setAdminCreationError('Please select at least one permission')
+        return
+      }
+
+      // Get current admin email for createdBy
+      const session = JSON.parse(localStorage.getItem('masterAdminSession') || '{}')
+      const createdBy = session.email || 'master'
+
+      // Create admin in Firebase
+      const result = await createAdminAccount({
+        email: newAdmin.email,
+        password: newAdmin.password,
+        username: newAdmin.username,
+        role: 'admin',
+        permissions: newAdmin.permissions,
+        userAccessMode: newAdmin.userAccessMode || 'all',
+        assignedUserIds: newAdmin.assignedUsers || [],
+        maxUsers: parseInt(newAdmin.maxUsers) || 0,
+        createdBy: createdBy
+      })
+
+      console.log('[MasterDashboard] Admin created:', result)
+
+      // Show success message
+      alert(`✅ Admin account created successfully!\n\n` +
+            `Username: ${newAdmin.username}\n` +
+            `Email: ${newAdmin.email}\n\n` +
+            `The admin can now login at /admin with their email and password.`)
+
+      // Reset form
+      setNewAdmin({
+        username: '',
+        email: '',
+        password: '',
+        role: 'admin',
+        permissions: [],
+        userAccessMode: 'all',
+        assignedUsers: [],
+        maxUsers: 0
+      })
+
+      // Admin list will be updated automatically via real-time listener
+
+    } catch (error) {
+      console.error('[MasterDashboard] Admin creation error:', error)
+      setAdminCreationError(error.message || 'Failed to create admin account')
+    } finally {
+      setIsCreatingAdmin(false)
+    }
   }
 
   // Filter function for search
@@ -4925,27 +5024,39 @@ export default function MasterAdminDashboard() {
                       Select All Permissions
                     </button>
                   </div>
+                  <div className="form-field">
+                    <label>Max Users (0 = unlimited)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      placeholder="Enter max number of users (0 for unlimited)"
+                      value={newAdmin.maxUsers}
+                      onChange={(e) => setNewAdmin({ ...newAdmin, maxUsers: e.target.value })}
+                      style={{ width: '100%', padding: '10px', background: '#1e293b', border: '1px solid #334155', borderRadius: '8px', color: '#fff' }}
+                    />
+                  </div>
+                  {adminCreationError && (
+                    <div style={{ 
+                      padding: '12px', 
+                      background: 'rgba(239, 68, 68, 0.2)', 
+                      border: '1px solid #ef4444', 
+                      borderRadius: '8px', 
+                      color: '#fca5a5',
+                      marginTop: '12px'
+                    }}>
+                      ⚠️ {adminCreationError}
+                    </div>
+                  )}
                   <button
                     className="add-admin-btn"
-                    onClick={() => {
-                      alert(
-                        `📋 To create an admin account, follow these steps:\n\n` +
-                        `1️⃣ Go to Firebase Console:\n` +
-                        `   https://console.firebase.google.com\n\n` +
-                        `2️⃣ Select project: onchainweb-37d30\n\n` +
-                        `3️⃣ Navigate to: Authentication → Users\n\n` +
-                        `4️⃣ Click "Add user" and enter:\n` +
-                        `   Email: ${newAdmin.email || 'admin@example.com'}\n` +
-                        `   Password: ${newAdmin.password || '••••••••'}\n\n` +
-                        `5️⃣ Once created, add the email to Onchainweb/.env:\n` +
-                        `   VITE_ADMIN_ALLOWLIST=email1@example.com,${newAdmin.email || 'newemail@example.com'}\n\n` +
-                        `6️⃣ Restart the dev server (npm run dev)\n\n` +
-                        `7️⃣ Admin can now login at: /admin\n\n` +
-                        `📝 Note: Set admin permissions in Master Dashboard after login.`
-                      );
+                    onClick={handleCreateAdmin}
+                    disabled={isCreatingAdmin}
+                    style={{
+                      opacity: isCreatingAdmin ? 0.6 : 1,
+                      cursor: isCreatingAdmin ? 'not-allowed' : 'pointer'
                     }}
                   >
-                    ➕ Create Admin Account (via Firebase Console)
+                    {isCreatingAdmin ? '⏳ Creating Admin...' : '➕ Create Admin Account'}
                   </button>
                 </div>
               </div>
