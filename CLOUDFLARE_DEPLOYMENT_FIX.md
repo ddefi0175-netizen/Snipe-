@@ -163,6 +163,18 @@ Please remove the asset binding from your configuration file
 
 **Solution:** This PR fixes this issue by removing the `binding` property from `wrangler.jsonc`. Merge this PR and redeploy.
 
+### Build Error: "Invalid _redirects configuration: Infinite loop detected"
+
+**Full Error:**
+```
+✘ [ERROR] Invalid _redirects configuration:
+Line 1: Infinite loop detected in this rule
+```
+
+**Cause:** The `_redirects` file in `Onchainweb/public/` contained a catch-all rule (`/* /index.html 200`) that Cloudflare Pages interprets as an infinite loop.
+
+**Solution:** This PR fixes this by removing the `_redirects` file. Cloudflare Pages automatically handles Single Page Application (SPA) routing using the `404.html` file as a fallback, which is the proper way to handle client-side routing in Cloudflare Pages.
+
 ### Build still fails?
 - Check that Node.js version is 20.x in Cloudflare Pages settings
 - Verify the build command is exactly: `cd Onchainweb && npm install && npm run build`

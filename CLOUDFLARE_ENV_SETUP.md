@@ -149,6 +149,16 @@ If you see this error:
 1. Ensure you've merged this PR (commit f0a95f8 or later)
 2. Trigger a new deployment
 
+### Error: "Invalid _redirects configuration: Infinite loop detected"
+```
+✘ [ERROR] Invalid _redirects configuration:
+Line 1: Infinite loop detected in this rule
+```
+
+**Cause:** The `_redirects` file contains a catch-all rule (`/*`) that Cloudflare Pages detects as causing an infinite loop.
+
+**Solution:** This PR fixes this by removing the `_redirects` file. Cloudflare Pages automatically handles SPA routing using the `404.html` file as a fallback for client-side routing.
+
 ### Error: "Rollup failed to resolve import firebase/app"
 **Cause:** Environment variables not set or Firebase package missing.
 
