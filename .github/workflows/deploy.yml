@@ -37,7 +37,14 @@ jobs:
           
       - name: Install dependencies
         working-directory: Onchainweb
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "📦 Using npm ci (lockfile found)"
+            npm ci
+          else
+            echo "📦 Using npm install (no lockfile found)"
+            npm install
+          fi
         
       - name: Build
         working-directory: Onchainweb
