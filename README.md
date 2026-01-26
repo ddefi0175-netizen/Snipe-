@@ -96,6 +96,15 @@ Admin and Master accounts use **Firebase Authentication** (email + password), NO
 - ✅ Built-in with Firestore database
 - ✅ Secure, managed service
 
+**🔍 Check Your Master Account:**
+```bash
+# Quick check of current credentials
+./check-master-credentials.sh
+
+# Or view comprehensive guide
+cat CHECK_MASTER_ACCOUNT.md
+```
+
 **Setup Instructions:**
 1. **Create Admin Accounts in Firebase Console:**
    - Go to [Firebase Console](https://console.firebase.google.com)
@@ -126,10 +135,11 @@ See [FIREBASE_VS_BACKEND_JWT_CLARIFICATION.md](FIREBASE_VS_BACKEND_JWT_CLARIFICA
   - Works on any browser without wallet extensions
 
 - **📖 Documentation**:
-  - [Admin Setup Guide](ADMIN_SETUP_GUIDE.md) - **START HERE** - Complete setup instructions
+  - [Check Master Account](CHECK_MASTER_ACCOUNT.md) - **CREDENTIALS GUIDE** - How to find/verify credentials
+  - [How to Create Admin Credentials](HOW_TO_CREATE_ADMIN_CREDENTIALS.md) - Creating Firebase admin accounts
   - [Admin User Guide](ADMIN_USER_GUIDE.md) - How to use admin features
   - [Real-Time Data Architecture](REALTIME_DATA_ARCHITECTURE.md) - Data flow and updates
-  - [Implementation Summary](ADMIN_LOGIN_IMPLEMENTATION_SUMMARY.md) - Technical details
+  - [Master Account Access Guide](docs/admin/MASTER_ACCOUNT_ACCESS_GUIDE.md) - Legacy backend credentials (deprecated)
 
 - **🔧 Quick Setup**:
   1. Enable admin features: Set `VITE_ENABLE_ADMIN=true` in `Onchainweb/.env`
