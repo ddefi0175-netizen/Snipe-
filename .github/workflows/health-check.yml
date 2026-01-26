@@ -67,11 +67,11 @@ jobs:
           # Test backend API endpoints
           echo ""
           echo "=== API ENDPOINTS CHECK ==="
-          API_RESPONSE=$(curl -s "$BACKEND_URL/api/users" -H "Content-Type: application/json" || echo "{}")
-          if echo "$API_RESPONSE" | grep -q "users\|data"; then
-            echo "✅ API endpoints responding"
+          API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/api/users" -H "Content-Type: application/json" || echo "000")
+          if [ "$API_STATUS" = "200" ] || [ "$API_STATUS" = "401" ] || [ "$API_STATUS" = "403" ]; then
+            echo "✅ API endpoints responding (HTTP $API_STATUS)"
           else
-            echo "⚠️ API endpoints may have issues"
+            echo "⚠️ API endpoints may have issues (HTTP $API_STATUS)"
           fi
 
           # Test frontend availability

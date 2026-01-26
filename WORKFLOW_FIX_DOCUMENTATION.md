@@ -38,18 +38,13 @@ This document describes the fixes applied to resolve two critical GitHub Actions
 
 **Changes**:
 ```yaml
-# Added secret validation at the start
-if [ -z "$BACKEND_URL" ] || [ -z "$FRONTEND_URL" ]; then
-  echo "⚠️ WARNING: Health check secrets are not configured"
-  echo "ℹ️ To enable production monitoring, please configure..."
-  echo "✅ Skipping health checks (secrets not configured)"
-  exit 0
+# Changed API endpoint check to use HTTP status codes
+API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL/api/users" ...)
+if [ "$API_STATUS" = "200" ] || [ "$API_STATUS" = "401" ] || [ "$API_STATUS" = "403" ]; then
+  echo "✅ API endpoints responding (HTTP $API_STATUS)"
+else
+  echo "⚠️ API endpoints may have issues (HTTP $API_STATUS)"
 fi
-
-# Changed individual check failures to track status
-CHECKS_PASSED=true
-# Instead of: exit 1
-# Now: CHECKS_PASSED=false
 ```
 
 ## Benefits
@@ -59,12 +54,15 @@ CHECKS_PASSED=true
 - ✅ Faster builds when lockfile exists (npm ci)
 - ✅ Automatic fallback for edge cases
 - ✅ Clear logging for troubleshooting
+- ✅ Proper caching configured when lockfile is present
 
 ### For Health Check Workflow
 - ✅ No more false failures when secrets aren't configured
 - ✅ Helpful setup instructions provided automatically
 - ✅ Informational rather than blocking
 - ✅ Better user experience for contributors
+- ✅ More accurate API endpoint checking using HTTP status codes
+- ✅ Considers authentication-required endpoints as "healthy" (401/403)
 
 ## How to Use
 
