@@ -140,13 +140,13 @@ dist/assets/index-DH2TTh4D.js                 846.12 kB │ gzip: 200.85 kB
 
 ### Environment Variables Set
 ```
-✅ VITE_FIREBASE_API_KEY=AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw
-✅ VITE_FIREBASE_AUTH_DOMAIN=onchainweb-37d30.firebaseapp.com
-✅ VITE_FIREBASE_PROJECT_ID=onchainweb-37d30
-✅ VITE_FIREBASE_STORAGE_BUCKET=onchainweb-37d30.firebasestorage.app
-✅ VITE_FIREBASE_MESSAGING_SENDER_ID=766146811888
-✅ VITE_FIREBASE_APP_ID=1:766146811888:web:a96012963dffe31508ef35
-✅ VITE_FIREBASE_MEASUREMENT_ID=G-1QDHSDQKDY
+✅ VITE_FIREBASE_API_KEY=AIzaSy****** (configured)
+✅ VITE_FIREBASE_AUTH_DOMAIN=onchainweb-*****.firebaseapp.com (configured)
+✅ VITE_FIREBASE_PROJECT_ID=onchainweb-***** (configured)
+✅ VITE_FIREBASE_STORAGE_BUCKET=onchainweb-*****.firebasestorage.app (configured)
+✅ VITE_FIREBASE_MESSAGING_SENDER_ID=****** (configured)
+✅ VITE_FIREBASE_APP_ID=1:******:web:****** (configured)
+✅ VITE_FIREBASE_MEASUREMENT_ID=G-****** (configured)
 ```
 
 ### Admin Configuration
@@ -159,7 +159,7 @@ dist/assets/index-DH2TTh4D.js                 846.12 kB │ gzip: 200.85 kB
 
 ### WalletConnect Configuration
 ```
-✅ VITE_WALLETCONNECT_PROJECT_ID=42039c73d0dacb66d82c12faabf27c9b
+✅ VITE_WALLETCONNECT_PROJECT_ID=****** (configured)
 ```
 
 ### Firebase Initialization
