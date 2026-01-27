@@ -168,7 +168,8 @@ export function validatePassword(password, minLength = 8) {
     
     // Check for at least one special character
     // Common special characters: ! @ # $ % ^ & * ( ) - _ = + [ ] { } ; : ' " \ | , . < > / ?
-    const SPECIAL_CHARS = /[!@#$%^&*()\-_=+[\]{};:'",.<>/?\\|]/;
+    // Note: Hyphen at end to avoid range interpretation, square brackets escaped
+    const SPECIAL_CHARS = /[!@#$%^&*()_=+\[\]{};:'",.<>/?\\|-]/;
     if (!SPECIAL_CHARS.test(password)) {
       return { valid: false, error: 'Password must contain at least one special character (!@#$%^&*...)' }
     }

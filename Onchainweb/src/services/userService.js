@@ -150,14 +150,23 @@ const generateReferralCode = (walletAddress) => {
   const walletPart = `${normalized.slice(2, 6)}${normalized.slice(-4)}`.toUpperCase();
   
   // Add cryptographically secure random component with fixed length
-  const randomBytes = new Uint8Array(2);
-  crypto.getRandomValues(randomBytes);
-  // Convert to hex for predictable length (4 characters)
-  const randomPart = Array.from(randomBytes)
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('')
-    .toUpperCase()
-    .slice(0, 4);
+  let randomPart = '';
+  
+  // Check if crypto is available (HTTPS context or modern browsers)
+  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
+    const randomBytes = new Uint8Array(2);
+    crypto.getRandomValues(randomBytes);
+    // Convert to hex for predictable length (4 characters)
+    randomPart = Array.from(randomBytes)
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+      .toUpperCase()
+      .slice(0, 4);
+  } else {
+    // Fallback for environments without crypto (should be rare)
+    console.warn('[UserService] crypto.getRandomValues not available, using fallback');
+    randomPart = Math.random().toString(36).substring(2, 6).toUpperCase().padEnd(4, '0');
+  }
   
   return `REF${walletPart}${randomPart}`;
 };
