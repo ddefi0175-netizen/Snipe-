@@ -149,14 +149,15 @@ const generateReferralCode = (walletAddress) => {
   // Use wallet address for deterministic part
   const walletPart = `${normalized.slice(2, 6)}${normalized.slice(-4)}`.toUpperCase();
   
-  // Add cryptographically secure random component
+  // Add cryptographically secure random component with fixed length
   const randomBytes = new Uint8Array(2);
   crypto.getRandomValues(randomBytes);
+  // Convert to hex for predictable length (4 characters)
   const randomPart = Array.from(randomBytes)
-    .map(b => b.toString(36).toUpperCase())
+    .map(b => b.toString(16).padStart(2, '0'))
     .join('')
-    .slice(0, 4)
-    .padEnd(4, '0');
+    .toUpperCase()
+    .slice(0, 4);
   
   return `REF${walletPart}${randomPart}`;
 };

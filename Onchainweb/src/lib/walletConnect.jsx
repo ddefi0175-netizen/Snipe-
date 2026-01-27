@@ -672,18 +672,18 @@ const updateModalWithQR = (modal, uri) => {
             const qrWrapper = document.createElement('div')
             qrWrapper.className = 'wc-qr-code'
             
-            // Create a temporary container to parse SVG safely
-            const tempDiv = document.createElement('div')
-            tempDiv.innerHTML = svg
-            const svgElement = tempDiv.querySelector('svg')
+            // Use DOMParser for secure SVG parsing
+            const parser = new DOMParser()
+            const svgDoc = parser.parseFromString(svg, 'image/svg+xml')
+            const svgElement = svgDoc.querySelector('svg')
             
-            if (svgElement) {
-                qrWrapper.appendChild(svgElement)
-            } else {
-                // Fallback if SVG parsing fails
-                qrWrapper.textContent = 'QR code generation failed'
+            // Check for parsing errors
+            const parserError = svgDoc.querySelector('parsererror')
+            if (parserError || !svgElement) {
+                throw new Error('Failed to parse SVG')
             }
             
+            qrWrapper.appendChild(svgElement)
             qrDiv.appendChild(qrWrapper)
 
             // Update instruction
