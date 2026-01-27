@@ -87,56 +87,117 @@ After logging in as master:
 
 ## Alternative: After Public Release (Original Method)
 
-### Step 1: Navigate to Master Admin Page
+**Always use:**
+- ✅ Password managers (1Password, Bitwarden, LastPass)
+- ✅ Secure password generators
+- ✅ Two-factor authentication (2FA)
 
-Visit: `https://your-domain.com/master-admin`
+## Quick Setup
 
-### Step 2: Complete First-Time Setup
+### Option 1: Automated Script (Recommended)
 
-Fill in the form:
-- **Email**: Use the first email from `VITE_ADMIN_ALLOWLIST` in your `.env`
-- **Password**: Create a strong password (minimum 12 characters, include uppercase, lowercase, numbers, symbols)
-- **Confirm Password**: Re-enter the password
-
-### Step 3: Submit and Login
-
-Click "Create Master Account"
-
-The system will:
-1. Create the account in Firebase Authentication
-2. Create admin document in Firestore with master permissions
-3. Redirect you to the login page
-
-### Step 4: First Login
-
-Enter your credentials:
-- Username/Email: Your master email
-- Password: Your master password
-
-You'll be redirected to the Master Dashboard with full system access.
-
-## Security Recommendations
-
-- ✅ Use a password manager to generate and store credentials
-- ✅ Enable 2FA in Firebase Console (Project Settings → Users)
-- ✅ Regularly rotate master password (every 90 days)
-- ✅ Limit master email to secure domain (@yourdomain.com)
-- ✅ Monitor Firebase Console → Authentication → Users for suspicious activity
-
-## Master Account Credentials Template
-
-**DO NOT commit this information to git!**
-
-Save in your password manager:
-
+```bash
+./setup-master-account-secure.sh
 ```
-Service: Snipe Master Admin
-URL: https://your-domain.com/master-admin
-Email: master@yourdomain.com
-Password: [Generated secure password]
-Created: [Date]
-Last Rotated: [Date]
-```
+
+This will:
+1. Generate secure password
+2. Display credentials (save immediately!)
+3. Guide you through Firebase setup
+
+### Option 2: Manual Setup
+
+1. **Generate Password:**
+   Visit: https://passwordsgenerator.net/
+   Settings:
+   - Length: 16+ characters
+   - Include: Uppercase, Lowercase, Numbers, Symbols
+   - Example: `M@ster2026!xK9pSecure#Qw7`
+
+2. **Create in Firebase Console:**
+   - Visit: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+   - Click "Add user"
+   - Email: `master@onchainweb.site`
+   - Password: [Your generated password]
+   - Click "Add user"
+
+3. **Save to Password Manager:**
+   ```
+   Service: Snipe Master Admin
+   URL: https://onchainweb.site/master-admin
+   Username: master
+   Email: master@onchainweb.site
+   Password: [Your secure password]
+   ```
+
+4. **Update Environment Variable:**
+   ```bash
+   # In Vercel Dashboard or Onchainweb/.env
+   VITE_ADMIN_ALLOWLIST=master@onchainweb.site
+   ```
+
+5. **Deploy:**
+   ```bash
+   vercel --prod
+   ```
+
+6. **Login:**
+   - Visit: https://onchainweb.site/master-admin
+   - Enter credentials
+   - Access granted!
+
+## First Login
+
+After creating master account:
+
+1. **Navigate to:** https://onchainweb.site/master-admin
+2. **Login with:**
+   - Email: master@onchainweb.site
+   - Password: [Your secure password]
+3. **You'll see:** Master Dashboard with full access
+
+## Creating Additional Admins
+
+Once logged in as master:
+
+1. Go to "Admin Management" section
+2. Click "Create Admin"
+3. Fill in:
+   - Email: `admin1@onchainweb.site`
+   - Username: `admin1`
+   - Password: [Generate new secure password]
+   - Permissions: Select what they can do
+4. Click "Create"
+5. Share credentials securely with the new admin
+
+## Security Best Practices
+
+1. **Strong Passwords:**
+   - Min 16 characters
+   - Mixed case, numbers, symbols
+   - No dictionary words
+   - Example: `M@ster2026!xK9pSecure#Qw7`
+
+2. **Password Storage:**
+   - Use password manager
+   - Never in plain text files
+   - Never in emails/chats
+   - Never in code/git
+
+3. **Regular Rotation:**
+   - Change master password every 90 days
+   - Change admin passwords every 180 days
+   - Update immediately if compromised
+
+4. **Two-Factor Authentication:**
+   - Enable in Firebase Console
+   - Project Settings → Users → 2FA
+   - Strongly recommended for master account
+
+5. **Access Monitoring:**
+   - Review Firebase Console → Authentication → Users
+   - Check last sign-in dates
+   - Disable inactive accounts
 
 ## Troubleshooting
 

