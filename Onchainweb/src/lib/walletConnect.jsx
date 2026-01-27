@@ -20,8 +20,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { formatWalletError } from './errorHandling'
 import { getCachedIceServers } from '../services/turn.service'
-import { db, isFirebaseEnabled } from './firebase'
-import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore'
+import { autoRegisterUser } from '../services/walletService'
 
 // ============ Constants ============
 const STORAGE_KEYS = {
@@ -1002,6 +1001,16 @@ export function UniversalWalletProvider({ children }) {
 
             // Save session
             saveSession(result)
+
+            // Auto-register user in Firestore
+            if (result.address) {
+                try {
+                    await autoRegisterUser(result.address)
+                } catch (error) {
+                    console.error('[WalletConnect] Auto-registration failed:', error)
+                    // Don't block connection on registration failure
+                }
+            }
 
             // Update state
             setState(prev => ({

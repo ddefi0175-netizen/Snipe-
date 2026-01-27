@@ -1,12 +1,91 @@
-# Master Account Setup - onchainweb.site
+# Master Account Setup - Production
 
-## ⚠️ Security First
+## 🚨 Security Alert
 
-**NEVER share passwords in:**
-- ❌ Chat conversations
-- ❌ Emails
-- ❌ Public forums
-- ❌ Git commits
+**The password `Pyaegyi555@` mentioned in chat is COMPROMISED** because:
+- ❌ Visible in chat history
+- ❌ May be logged/stored
+- ❌ Cannot be used securely
+
+**Use the secure setup script instead.**
+
+## ✅ Secure Setup Method
+
+### Step 1: Run Secure Setup Script
+
+```bash
+./setup-master-account-secure.sh
+```
+
+This generates a NEW secure password and saves it to a temporary file.
+
+### Step 2: Save to Password Manager
+
+Copy the password from `master-credentials-SECURE.txt` and save to:
+- 1Password
+- Bitwarden
+- LastPass
+- Other secure password manager
+
+### Step 3: Create in Firebase Console
+
+1. Visit: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+2. Click "Add user"
+3. Enter:
+   - Email: `master@onchainweb.site`
+   - Password: [From secure file]
+4. Click "Add user"
+
+### Step 4: Delete Credentials File
+
+```bash
+rm master-credentials-SECURE.txt
+```
+
+### Step 5: Login
+
+1. Visit: https://onchainweb.site/master-admin
+2. Enter credentials from password manager
+3. ✅ Access granted!
+
+## Master Account Details
+
+```
+Domain:   onchainweb.site
+URL:      https://onchainweb.site/master-admin
+Email:    master@onchainweb.site
+Username: master
+Password: [Secure password from setup script]
+```
+
+## Create Additional Admins
+
+After logging in as master:
+1. Navigate to "Admin Management" tab
+2. Click "Create Admin"
+3. Fill in details
+4. Assign permissions
+5. New admin can login at: https://onchainweb.site/admin
+
+## Security Best Practices
+
+✅ **DO:**
+- Use password manager
+- Generate strong passwords (16+ characters)
+- Enable 2FA in Firebase Console
+- Rotate passwords every 90 days
+- Monitor Firebase Console for suspicious activity
+
+❌ **DON'T:**
+- Share credentials
+- Store in plain text
+- Use simple passwords
+- Commit credentials to git
+- Reuse passwords
+
+---
+
+## Alternative: After Public Release (Original Method)
 
 **Always use:**
 - ✅ Password managers (1Password, Bitwarden, LastPass)

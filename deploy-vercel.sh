@@ -1,44 +1,45 @@
 #!/bin/bash
-# Complete Vercel deployment for onchainweb.site
+# Complete Vercel deployment script for onchainweb.site
 
 set -e
 
-echo "🚀 Snipe - Vercel Deployment (onchainweb.site)"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "🚀 Deploying to Vercel (onchainweb.site)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-# Step 1: Validate configuration
-echo "📝 Step 1/5: Validating Configuration..."
-if [ ! -f "./validate-config.sh" ]; then
-  echo "⚠️  Warning: validate-config.sh not found, skipping validation"
-elif [ ! -x "./validate-config.sh" ]; then
-  echo "⚠️  Warning: validate-config.sh not executable, skipping validation"
-else
-  ./validate-config.sh || exit 1
-fi
+# Step 1: Run pre-deployment checks
+echo "📋 Step 1/5: Pre-deployment Checks"
+./pre-deploy-checklist.sh || exit 1
 
-# Step 2: Build application
-echo "🏗️  Step 2/5: Building Application..."
+# Step 2: Deploy Firestore rules
+echo "🔥 Step 2/5: Deploy Firestore Rules"
+./deploy-firestore-rules.sh || exit 1
+
+# Step 3: Build application
+echo "🏗️  Step 3/5: Building Application"
 cd Onchainweb
 npm install
 npm run build
 cd ..
 
-# Step 3: Deploy Firestore rules
-echo "🔥 Step 3/5: Deploying Firestore Rules..."
-firebase deploy --only firestore:rules,firestore:indexes
-
 # Step 4: Deploy to Vercel
-echo "🚀 Step 4/5: Deploying to Vercel..."
+echo "📤 Step 4/5: Deploying to Vercel"
 cd Onchainweb
-vercel --prod
+vercel --prod --yes
 cd ..
 
-# Step 5: Setup master account
-echo "👤 Step 5/5: Master Account Setup..."
+# Step 5: Post-deployment tests
+echo "✅ Step 5/5: Post-deployment Tests"
+./test-post-deployment.sh "https://onchainweb.site"
+
 echo ""
-echo "Visit: https://onchainweb.site/master-admin"
-echo "Email: master@onchainweb.site"
-echo "Create a strong password (min 16 characters)"
-echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "✅ Deployment Complete!"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "🌐 Live at: https://onchainweb.site"
+echo "🔐 Master Admin: https://onchainweb.site/master-admin"
+echo ""
+echo "📋 Next Steps:"
+echo "1. Create master account in Firebase Console"
+echo "2. Email: master@onchainweb.site"
+echo "3. Use secure password (see MASTER_ACCOUNT_SETUP.md)"

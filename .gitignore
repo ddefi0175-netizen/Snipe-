@@ -55,3 +55,9 @@ DEPLOYMENT_STATUS.md
 latest-update-manifest.*
 .vercel
 .env*.local
+
+# Sensitive files (added for production security)
+master-credentials*.txt
+service-account*.json
+.env.production
+*-private-key.json

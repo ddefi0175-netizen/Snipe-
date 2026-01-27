@@ -11609,3 +11609,43 @@ input[type="submit"] {
     min-width: 48px;
   }
 }
+
+/* ============================================
+   New User Notification Styles
+   ============================================ */
+
+/* Style for new user notifications (small, non-intrusive) */
+.new-user-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 9999;
+  animation: slideIn 0.3s ease-out;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Hide any warning banners or large alert icons */
+.alert-banner,
+.warning-icon-large,
+.hero-alert,
+.system-notice {
+  display: none !important;
+}
+

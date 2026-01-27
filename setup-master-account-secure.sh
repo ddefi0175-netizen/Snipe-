@@ -1,68 +1,81 @@
 #!/bin/bash
-# Secure master account setup with password generation
+# Secure master account setup script
 
-echo "🔐 Secure Master Account Setup"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
-# Check if Firebase CLI is available
-if ! command -v firebase &> /dev/null; then
-    echo "❌ Firebase CLI not found"
-    echo "Install: npm install -g firebase-tools"
-    exit 1
-fi
-
+echo "🔐 Master Account Setup (Secure Method)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "Master Account Details:"
-echo "  Email: master@onchainweb.site"
-echo "  Username: master"
+echo "⚠️  SECURITY NOTICE:"
+echo "The password mentioned in chat is compromised."
+echo "This script will guide you to create a NEW secure password."
 echo ""
 
-# Generate secure password
-echo "Generating secure password..."
-PASSWORD=$(openssl rand -base64 24 | tr -d "=+/" | cut -c1-16)M@ster$(date +%Y)!
+# Generate secure password suggestion
+SECURE_PASS=$(openssl rand -base64 16 | tr -d "=+/" | cut -c1-16)
+SECURE_PASS="M@ster${SECURE_PASS}2026!"
 
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "Suggested Secure Password:"
+echo "  $SECURE_PASS"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "Generated Password:"
-echo "  $PASSWORD"
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ This password is:"
+echo "   • Not compromised"
+echo "   • Strong (18+ characters)"
+echo "   • Unique"
 echo ""
-echo "⚠️  SAVE THIS PASSWORD NOW!"
-echo ""
-read -p "Saved? (y/N): " saved
 
-if [[ ! "$saved" =~ ^[Yy]$ ]]; then
-    echo "❌ Please save the password first"
-    exit 1
-fi
+read -p "Save this password now? (y/N): " confirm
 
-# Save to temporary secure file
-cat > /tmp/master-credentials-$(date +%s).txt << EOF
+if [[ $confirm == [yY] ]]; then
+    echo ""
+    echo "Creating credentials file..."
+    
+    cat > master-credentials-SECURE.txt << EOF
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-   SNIPE MASTER ACCOUNT CREDENTIALS
+   MASTER ACCOUNT CREDENTIALS
+   Domain: onchainweb.site
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Domain:   https://onchainweb.site
 Email:    master@onchainweb.site
 Username: master
-Password: $PASSWORD
+Password: $SECURE_PASS
 
-Created:  $(date)
+Created:  $(date '+%Y-%m-%d %H:%M:%S')
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚠️ DELETE THIS FILE AFTER SAVING TO PASSWORD MANAGER
+⚠️  SAVE TO PASSWORD MANAGER NOW!
+Then DELETE this file: rm master-credentials-SECURE.txt
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 EOF
 
-echo "✅ Credentials saved to: /tmp/master-credentials-*.txt"
-echo ""
-echo "Next steps:"
-echo "1. Create account in Firebase Console:"
-echo "   https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users"
-echo ""
-echo "2. Click 'Add user'"
-echo "3. Email: master@onchainweb.site"
-echo "4. Password: $PASSWORD"
-echo "5. Click 'Add user'"
-echo ""
-echo "6. OR visit: https://onchainweb.site/master-admin"
-echo "   and create account there"
+    echo "✅ Credentials saved to: master-credentials-SECURE.txt"
+    echo ""
+    echo "📋 Next Steps:"
+    echo "1. Open file: cat master-credentials-SECURE.txt"
+    echo "2. Save to password manager (1Password, Bitwarden, etc.)"
+    echo "3. Delete file: rm master-credentials-SECURE.txt"
+    echo ""
+    
+    # Open Firebase Console
+    echo "🔥 Opening Firebase Console..."
+    echo "Create account at: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users"
+    
+    if command -v xdg-open &> /dev/null; then
+        xdg-open "https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users" 2>/dev/null &
+    elif command -v open &> /dev/null; then
+        open "https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users" 2>/dev/null &
+    fi
+    
+    echo ""
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "Firebase Console Instructions:"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "1. Click 'Add user' button"
+    echo "2. Email: master@onchainweb.site"
+    echo "3. Password: [Use password from file]"
+    echo "4. Click 'Add user'"
+    echo "5. ✅ Done!"
+else
+    echo "❌ Setup cancelled"
+    exit 1
+fi
