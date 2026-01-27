@@ -16,13 +16,16 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Users collection
+    // Users collection - PRODUCTION HARDENED
     match /users/{userId} {
-      // Allow anyone to read and write (wallet-based auth, no Firebase auth required)
-      // The userId should be the wallet address
-      allow read, write: if true;
-      // Alternatively for better security in production:
-      // allow read, write: if request.resource.data.wallet == userId;
+      // Allow read only for authenticated users viewing their own data
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      // Allow write only for the user themselves
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+      // Admins can read all users
+      allow read: if isAdmin();
+      // Admins can write based on permissions
+      allow write: if isAdmin();
     }
 
     // Admins collection
