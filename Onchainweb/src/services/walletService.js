@@ -4,7 +4,7 @@
  * Automatically registers users in Firestore when they connect their wallet
  */
 
-import { db, isFirebaseAvailable } from '../lib/firebase.js'
+import { db, isFirebaseEnabled } from '../lib/firebase.js'
 import { collection, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
 
 /**
@@ -12,7 +12,7 @@ import { collection, doc, setDoc, getDoc, serverTimestamp } from 'firebase/fires
  * @param {string} walletAddress - Connected wallet address
  */
 export const autoRegisterUser = async (walletAddress) => {
-  if (!isFirebaseAvailable) {
+  if (!isFirebaseEnabled()) {
     console.log('[WalletService] Firebase not available, skipping auto-registration')
     return
   }
@@ -95,7 +95,7 @@ export const connectWalletWithRegistration = async (walletType, connectFunction)
  * @param {string} walletAddress - User's wallet address
  */
 export const updateUserActivity = async (walletAddress) => {
-  if (!isFirebaseAvailable || !walletAddress) return
+  if (!isFirebaseEnabled() || !walletAddress) return
 
   try {
     const userRef = doc(db, 'users', walletAddress)
@@ -113,7 +113,7 @@ export const updateUserActivity = async (walletAddress) => {
  * @returns {Promise<Object|null>}
  */
 export const getUserData = async (walletAddress) => {
-  if (!isFirebaseAvailable || !walletAddress) return null
+  if (!isFirebaseEnabled() || !walletAddress) return null
 
   try {
     const userRef = doc(db, 'users', walletAddress)
