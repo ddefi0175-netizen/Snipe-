@@ -14,11 +14,14 @@
  * 10. Scales across mobile, desktop, and cross-platform
  * 11. Wallet-agnostic until user action
  * 12. Universal-access strategy
+ * 13. Auto user registration on wallet connect
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { formatWalletError } from './errorHandling'
 import { getCachedIceServers } from '../services/turn.service'
+import { db, isFirebaseAvailable } from './firebase'
+import { doc, getDoc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore'
 
 // ============ Constants ============
 const STORAGE_KEYS = {
@@ -649,7 +652,54 @@ const createWalletConnectModal = (onClose) => {
     return modal
 }
 
-// Update modal with QR code
+// ============ Auto User Registration ============
+/**
+ * Automatically create or update user in Firestore when wallet connects
+ * @param {string} walletAddress - User's wallet address
+ * @param {number} balance - Current wallet balance
+ * @returns {Promise<void>}
+ */
+export const onWalletConnected = async (walletAddress, balance = 0) => {
+  if (!isFirebaseAvailable || !walletAddress) {
+    console.log('[Auto User Registration] Firebase not available or no wallet address')
+    return
+  }
+
+  try {
+    // Check if user exists
+    const userRef = doc(db, 'users', walletAddress)
+    const userDoc = await getDoc(userRef)
+    
+    if (!userDoc.exists()) {
+      // Create new user automatically
+      await setDoc(userRef, {
+        wallet: walletAddress,
+        balance: balance,
+        vipLevel: 1,
+        status: 'active',
+        points: 0,
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp()
+      })
+      
+      console.log('✅ New user created:', walletAddress)
+    } else {
+      // Update last login
+      await updateDoc(userRef, {
+        lastLogin: serverTimestamp(),
+        balance: balance
+      })
+      
+      console.log('✅ User login updated:', walletAddress)
+    }
+  } catch (error) {
+    console.error('❌ User registration error:', error)
+    // Silent fail - don't block wallet connection
+  }
+}
+
+// ============ Wallet Provider Component ============
+export function UniversalWalletProvider({ children }) {
 const updateModalWithQR = (modal, uri) => {
     const qrDiv = modal.querySelector('.wc-qr-placeholder')
     if (!qrDiv) return
@@ -967,6 +1017,11 @@ export function UniversalWalletProvider({ children }) {
                 provider: result.provider,
                 error: null,
             }))
+
+            // Auto-register or update user in Firestore
+            onWalletConnected(result.address, result.balance).catch(err => {
+                console.error('User registration failed (silent):', err)
+            })
 
             return result
 
