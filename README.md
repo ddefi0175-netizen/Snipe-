@@ -68,6 +68,7 @@ npm run dev
 | Guide | Purpose | Time |
 |-------|---------|------|
 | **[QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)** | Setup overview with both options | 5 min |
+| **[MASTER_PASSWORD_SETUP_GUIDE.md](MASTER_PASSWORD_SETUP_GUIDE.md)** | 🔐 Master account password setup | 10 min |
 | **[CONFIGURATION_STATUS.md](CONFIGURATION_STATUS.md)** | Current config status + how to get credentials | 10 min |
 | **[FIREBASE_CREDENTIALS_REPORT.md](FIREBASE_CREDENTIALS_REPORT.md)** | Detailed credentials breakdown | Reference |
 | **[backend/SETUP_GUIDE.md](backend/SETUP_GUIDE.md)** | Backend setup (optional, legacy) | 10 min |
