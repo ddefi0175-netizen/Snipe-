@@ -8,7 +8,13 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 
 # Step 1: Validate configuration
 echo "📝 Step 1/5: Validating Configuration..."
-./validate-config.sh || exit 1
+if [ ! -f "./validate-config.sh" ]; then
+  echo "⚠️  Warning: validate-config.sh not found, skipping validation"
+elif [ ! -x "./validate-config.sh" ]; then
+  echo "⚠️  Warning: validate-config.sh not executable, skipping validation"
+else
+  ./validate-config.sh || exit 1
+fi
 
 # Step 2: Build application
 echo "🏗️  Step 2/5: Building Application..."

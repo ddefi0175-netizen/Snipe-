@@ -83,6 +83,12 @@ const formatTelegramMessage = (message, metadata) => {
     timeStyle: 'short',
   })
 
+  // Format wallet address safely
+  let formattedWallet = wallet
+  if (wallet && wallet.length > 18) {
+    formattedWallet = `${wallet.slice(0, 10)}...${wallet.slice(-8)}`
+  }
+
   // Build message with HTML formatting
   let formatted = `<b>💬 Customer Service Message</b>\n\n`
   
@@ -94,7 +100,7 @@ const formatTelegramMessage = (message, metadata) => {
   
   formatted += `<b>User:</b> ${username}\n`
   formatted += `<b>Session:</b> <code>${sessionId}</code>\n`
-  formatted += `<b>Wallet:</b> <code>${wallet.slice(0, 10)}...${wallet.slice(-8)}</code>\n`
+  formatted += `<b>Wallet:</b> <code>${formattedWallet}</code>\n`
   formatted += `<b>Time:</b> ${time}\n`
   formatted += `\n<b>Message:</b>\n${message}\n`
   formatted += `\n<i>Sent to @${TELEGRAM_USERNAME}</i>`

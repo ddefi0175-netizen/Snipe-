@@ -8,11 +8,15 @@ Customer service messages are automatically forwarded to Telegram (username: **g
 
 ### Bot Token
 
-The Telegram bot token is already configured:
+**Note**: This is the production bot token for onchainweb.site. In your own deployments, replace this with your own bot token from @BotFather.
+
+The Telegram bot token for this deployment:
 ```
 Bot Token: 8535105293:AAGb-LRbaX8cwlfI6W_TJnlw6Az09Cd6oJ4
 Target Username: @goblin_niko4
 ```
+
+**⚠️ Security**: Keep your bot token secure. Only share in environment variables, never commit to public repositories.
 
 ### Getting Your Chat ID
 
