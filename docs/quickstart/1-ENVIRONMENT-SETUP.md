@@ -12,7 +12,53 @@ Configure Firebase credentials and environment variables for your application.
 - Firebase CLI installed
 - Node.js 18+ installed
 
-## Steps
+## For Vercel Deployment (onchainweb.site)
+
+### 1. Configure Firebase
+
+Create `Onchainweb/.env`:
+
+```bash
+# Firebase Configuration
+VITE_FIREBASE_API_KEY=AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw
+VITE_FIREBASE_AUTH_DOMAIN=onchainweb-37d30.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=onchainweb-37d30
+VITE_FIREBASE_STORAGE_BUCKET=onchainweb-37d30.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=766146811888
+VITE_FIREBASE_APP_ID=1:766146811888:web:a96012963dffe31508ef35
+VITE_FIREBASE_MEASUREMENT_ID=G-1QDHSDQKDY
+
+# WalletConnect
+VITE_WALLETCONNECT_PROJECT_ID=42039c73d0dacb66d82c12faabf27c9b
+
+# Admin Configuration
+VITE_ENABLE_ADMIN=true
+VITE_ADMIN_ALLOWLIST=master@onchainweb.site
+VITE_ADMIN_ROUTE=/admin
+VITE_MASTER_ADMIN_ROUTE=/master-admin
+
+# App Configuration
+VITE_APP_NAME=OnchainWeb
+VITE_APP_URL=https://onchainweb.site
+```
+
+### 2. Set in Vercel Dashboard
+
+Visit: https://vercel.com/YOUR-USERNAME/onchainweb-site/settings/environment-variables
+
+Add all variables above.
+
+### 3. Validate
+
+```bash
+./validate-config.sh
+```
+
+✅ Proceed to Step 2
+
+---
+
+## For General Deployment
 
 ### 1. Create Environment File
 
@@ -103,3 +149,4 @@ Or use the automated setup:
 ## Next Step
 
 [Step 2: Firestore Deployment →](2-FIRESTORE-DEPLOYMENT.md)
+

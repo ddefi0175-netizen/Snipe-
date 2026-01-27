@@ -141,6 +141,9 @@ export default function MasterAdminDashboard() {
   // Admin Roles Management - lazy loaded
   const [adminRoles, setAdminRoles] = useState([])
 
+  // New user notification state
+  const [newUserNotification, setNewUserNotification] = useState(null)
+
   const [newAdmin, setNewAdmin] = useState({
     username: '',
     email: '',
@@ -598,6 +601,23 @@ export default function MasterAdminDashboard() {
 
     return () => unsubscribe()
   }, [isAuthenticated, isMasterAccount, isDataLoaded])
+
+  // Listen for new user registration events
+  useEffect(() => {
+    const handleNewUser = (event) => {
+      const { wallet } = event.detail
+      setNewUserNotification(`New user connected: ${wallet.slice(0,6)}...${wallet.slice(-4)}`)
+      
+      // Clear notification after 5 seconds
+      setTimeout(() => setNewUserNotification(null), 5000)
+    }
+    
+    window.addEventListener('newUserRegistered', handleNewUser)
+    
+    return () => {
+      window.removeEventListener('newUserRegistered', handleNewUser)
+    }
+  }, [])
 
   // Check authentication on load - fast initial check
   useEffect(() => {
@@ -1253,6 +1273,13 @@ export default function MasterAdminDashboard() {
 
   return (
     <div className="master-admin-dashboard">
+      {/* New User Notification */}
+      {newUserNotification && (
+        <div className="new-user-notification">
+          🎉 {newUserNotification}
+        </div>
+      )}
+
       {/* New Message Alert Banner */}
       {newMessageAlert && (
         <div className="new-message-alert" onClick={() => {
