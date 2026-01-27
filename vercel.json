@@ -1,6 +1,9 @@
 {
+    "version": 2,
     "buildCommand": "cd Onchainweb && npm install && npm run build",
     "outputDirectory": "Onchainweb/dist",
+    "installCommand": "cd Onchainweb && npm install",
+    "framework": null,
     "rewrites": [
         {
             "source": "/(.*)",

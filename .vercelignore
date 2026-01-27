@@ -1,6 +1,6 @@
 # Deploy only the frontend app
 /*
-!.vercel.json
+!vercel.json
 !Onchainweb
 !Onchainweb/**
 
