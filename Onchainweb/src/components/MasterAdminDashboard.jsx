@@ -812,8 +812,8 @@ export default function MasterAdminDashboard() {
       return
     }
 
-    // Validate password
-    const passwordValidation = validatePassword(loginData.password, 6)
+    // Validate password (8 characters minimum for admin accounts)
+    const passwordValidation = validatePassword(loginData.password, 8)
     if (!passwordValidation.valid) {
       setLoginError(passwordValidation.error)
       return
