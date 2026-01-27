@@ -667,7 +667,24 @@ const updateModalWithQR = (modal, uri) => {
             const size = qr.getModuleCount()
             const svg = qr.createSvgTag(cellSize, margin)
 
-            qrDiv.innerHTML = `<div class="wc-qr-code">${svg}</div>`
+            // Clear and safely append QR code
+            qrDiv.textContent = '' // Clear existing content
+            const qrWrapper = document.createElement('div')
+            qrWrapper.className = 'wc-qr-code'
+            
+            // Create a temporary container to parse SVG safely
+            const tempDiv = document.createElement('div')
+            tempDiv.innerHTML = svg
+            const svgElement = tempDiv.querySelector('svg')
+            
+            if (svgElement) {
+                qrWrapper.appendChild(svgElement)
+            } else {
+                // Fallback if SVG parsing fails
+                qrWrapper.textContent = 'QR code generation failed'
+            }
+            
+            qrDiv.appendChild(qrWrapper)
 
             // Update instruction
             const instruction = modal.querySelector('.wc-instruction')
@@ -676,21 +693,47 @@ const updateModalWithQR = (modal, uri) => {
             }
         }).catch(err => {
             console.error('Failed to generate QR code:', err)
-            qrDiv.innerHTML = `
-                <div class="wc-qr-loading">
-                    <p style="color: #666;">QR Code Generation Failed</p>
-                    <p style="color: #888; font-size: 12px; margin-top: 8px;">Please try refreshing</p>
-                </div>
-            `
+            
+            // Clear and create error message safely
+            qrDiv.textContent = ''
+            const errorDiv = document.createElement('div')
+            errorDiv.className = 'wc-qr-loading'
+            
+            const errorText = document.createElement('p')
+            errorText.style.color = '#666'
+            errorText.textContent = 'QR Code Generation Failed'
+            
+            const errorSubtext = document.createElement('p')
+            errorSubtext.style.color = '#888'
+            errorSubtext.style.fontSize = '12px'
+            errorSubtext.style.marginTop = '8px'
+            errorSubtext.textContent = 'Please try refreshing'
+            
+            errorDiv.appendChild(errorText)
+            errorDiv.appendChild(errorSubtext)
+            qrDiv.appendChild(errorDiv)
         })
     } catch (error) {
         console.error('Error generating QR code:', error)
-        qrDiv.innerHTML = `
-            <div class="wc-qr-loading">
-                <p style="color: #666;">QR Code Error</p>
-                <p style="color: #888; font-size: 12px; margin-top: 8px;">${error.message}</p>
-            </div>
-        `
+        
+        // Clear and create error message safely
+        qrDiv.textContent = ''
+        const errorDiv = document.createElement('div')
+        errorDiv.className = 'wc-qr-loading'
+        
+        const errorText = document.createElement('p')
+        errorText.style.color = '#666'
+        errorText.textContent = 'QR Code Error'
+        
+        const errorSubtext = document.createElement('p')
+        errorSubtext.style.color = '#888'
+        errorSubtext.style.fontSize = '12px'
+        errorSubtext.style.marginTop = '8px'
+        errorSubtext.textContent = error.message || 'Unknown error'
+        
+        errorDiv.appendChild(errorText)
+        errorDiv.appendChild(errorSubtext)
+        qrDiv.appendChild(errorDiv)
     }
 }
 

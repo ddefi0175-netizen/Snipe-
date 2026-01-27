@@ -33,7 +33,6 @@ export const autoRegisterUser = async (walletAddress, additionalData = {}) => {
     const userSnap = await getDoc(userRef);
     
     if (userSnap.exists()) {
-      console.log('[UserService] User already registered:', normalizedWallet);
       
       // Update last connected timestamp
       await setDoc(userRef, {
@@ -67,7 +66,6 @@ export const autoRegisterUser = async (walletAddress, additionalData = {}) => {
 
     await setDoc(userRef, newUser);
 
-    console.log('[UserService] New user registered:', normalizedWallet);
 
     // Trigger notification event for admins
     window.dispatchEvent(new CustomEvent('newUserRegistered', {
@@ -102,7 +100,6 @@ const autoRegisterUserLocalStorage = (walletAddress, additionalData = {}) => {
     // Check if user exists
     const existingUser = users.find(u => u.wallet?.toLowerCase() === normalizedWallet);
     if (existingUser) {
-      console.log('[UserService] User already registered (localStorage):', normalizedWallet);
       // Update last connected
       existingUser.lastConnectedAt = new Date().toISOString();
       localStorage.setItem('registeredUsers', JSON.stringify(users));
@@ -135,7 +132,6 @@ const autoRegisterUserLocalStorage = (walletAddress, additionalData = {}) => {
       detail: { wallet: walletAddress, username: newUser.username }
     }));
 
-    console.log('[UserService] New user registered (localStorage):', normalizedWallet);
     return { ...newUser, isNewUser: true };
   } catch (error) {
     console.error('[UserService] localStorage fallback error:', error);
@@ -145,14 +141,24 @@ const autoRegisterUserLocalStorage = (walletAddress, additionalData = {}) => {
 
 /**
  * Generate a unique referral code
- * Note: This is a simple implementation for MVP
- * For production, consider using crypto.randomUUID() or similar
+ * Uses cryptographically secure random values for production safety
  */
 const generateReferralCode = (walletAddress) => {
   const normalized = walletAddress.toLowerCase();
-  // Simple hash-like approach using wallet address
-  // TODO: For production, use cryptographically secure random generator
-  return `REF${normalized.slice(2, 6)}${normalized.slice(-4)}`.toUpperCase();
+  
+  // Use wallet address for deterministic part
+  const walletPart = `${normalized.slice(2, 6)}${normalized.slice(-4)}`.toUpperCase();
+  
+  // Add cryptographically secure random component
+  const randomBytes = new Uint8Array(2);
+  crypto.getRandomValues(randomBytes);
+  const randomPart = Array.from(randomBytes)
+    .map(b => b.toString(36).toUpperCase())
+    .join('')
+    .slice(0, 4)
+    .padEnd(4, '0');
+  
+  return `REF${walletPart}${randomPart}`;
 };
 
 /**
