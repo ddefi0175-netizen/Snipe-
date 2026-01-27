@@ -1,5 +1,5 @@
-// wrangler.jsonc
-"name": "snipe-onchainweb",
+{
+  "name": "snipe-onchainweb",
   "compatibility_date": "2026-01-25",
   "assets": {
     "directory": "./Onchainweb/dist"

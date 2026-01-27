@@ -1,0 +1,22 @@
+{
+  "name": "snipe-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Snipe Trading Platform - Monorepo",
+  "scripts": {
+    "install:frontend": "cd Onchainweb && npm install",
+    "build": "cd Onchainweb && npm install && npm run build",
+    "dev": "cd Onchainweb && npm run dev",
+    "preview": "cd Onchainweb && npm run preview"
+  },
+  "workspaces": [
+    "Onchainweb"
+  ],
+  "keywords": [
+    "web3",
+    "trading",
+    "defi"
+  ],
+  "author": "ddefi0175-netizen",
+  "license": "MIT"
+}
