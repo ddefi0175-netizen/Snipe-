@@ -1,34 +1,118 @@
-# Vercel Deployment Guide for Snipe Frontend
-
-This guide ensures WalletConnect and all features work correctly on Vercel.
+# Vercel Deployment Guide - onchainweb.site
 
 ## Prerequisites
 
-1. Vercel account connected to your GitHub repository
-2. WalletConnect Project ID (get from https://cloud.walletconnect.com)
+1. **Vercel Account**: https://vercel.com/signup
+2. **Firebase Project**: onchainweb-37d30
+3. **Domain**: onchainweb.site (already connected)
 
-## Step 1: Get WalletConnect Project ID
+## Environment Variables
 
-WalletConnect is required for users to connect mobile wallets via QR code.
+Set these in Vercel Dashboard:
 
-1. Visit [WalletConnect Cloud](https://cloud.walletconnect.com)
-2. Sign up for a free account
-3. Create a new project
-4. Copy your Project ID (looks like: `2a1b3c4d5e6f7g8h9i0j1k2l3m4n5o6p`)
+### Required Firebase Variables:
+```bash
+VITE_FIREBASE_API_KEY=AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw
+VITE_FIREBASE_AUTH_DOMAIN=onchainweb-37d30.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=onchainweb-37d30
+VITE_FIREBASE_STORAGE_BUCKET=onchainweb-37d30.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=766146811888
+VITE_FIREBASE_APP_ID=1:766146811888:web:a96012963dffe31508ef35
+VITE_FIREBASE_MEASUREMENT_ID=G-1QDHSDQKDY
+VITE_WALLETCONNECT_PROJECT_ID=42039c73d0dacb66d82c12faabf27c9b
+```
 
-## Step 2: Configure Vercel Environment Variables
+### Admin Configuration:
+```bash
+VITE_ENABLE_ADMIN=true
+VITE_ADMIN_ROUTE=/admin
+VITE_MASTER_ADMIN_ROUTE=/master-admin
+VITE_ADMIN_ALLOWLIST=master@onchainweb.site
+```
+
+### Optional: Telegram Integration (for customer service):
+```bash
+VITE_TELEGRAM_BOT_TOKEN=your-telegram-bot-token
+VITE_TELEGRAM_CHAT_ID=your-telegram-chat-id
+```
+
+## Deployment Steps
+
+### Option 1: Automated Deployment (Recommended)
+
+```bash
+./deploy-vercel.sh
+```
+
+This will:
+1. Validate configuration
+2. Build application
+3. Deploy Firestore rules
+4. Deploy to Vercel
+5. Provide master account setup instructions
+
+### Option 2: Manual Deployment
+
+1. **Deploy to Vercel:**
+   ```bash
+   cd Onchainweb
+   vercel --prod
+   ```
+
+2. **Verify deployment:**
+   - Visit: https://onchainweb.site
+   - Check: https://onchainweb.site/master-admin
+
+3. **Create master account:**
+   - Navigate to: https://onchainweb.site/master-admin
+   - Email: master@onchainweb.site
+   - Password: [Generate secure password]
+
+## Vercel Configuration
+
+The build is configured in `vercel.json`:
+
+```json
+{
+  "version": 2,
+  "buildCommand": "cd Onchainweb && npm install && npm run build",
+  "outputDirectory": "Onchainweb/dist",
+  "framework": "vite",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ]
+}
+```
+
+This ensures:
+1. Dependencies are installed before build
+2. Build output goes to correct directory
+3. SPA routing works correctly
+4. Static assets are cached efficiently
+
+## Setting Environment Variables in Vercel
 
 ### Via Vercel Dashboard:
 
 1. Go to your Vercel project dashboard
 2. Click on "Settings"
 3. Navigate to "Environment Variables"
-4. Add the following variables:
-
-| Variable Name | Value | Environment |
-|--------------|-------|-------------|
-| `VITE_API_BASE` | `https://snipe-api.onrender.com/api` | Production, Preview, Development |
-| `VITE_WALLETCONNECT_PROJECT_ID` | `your-project-id-here` | Production, Preview, Development |
+4. Add each variable with the value
+5. Set for "Production, Preview, Development"
 
 ### Via Vercel CLI:
 
@@ -37,56 +121,33 @@ WalletConnect is required for users to connect mobile wallets via QR code.
 npm install -g vercel
 
 # Set environment variables
-vercel env add VITE_API_BASE production
-# Enter: https://snipe-api.onrender.com/api
+vercel env add VITE_FIREBASE_API_KEY production
+# Enter: AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw
 
-vercel env add VITE_WALLETCONNECT_PROJECT_ID production
-# Enter: your-project-id-here
+vercel env add VITE_FIREBASE_AUTH_DOMAIN production
+# Enter: onchainweb-37d30.firebaseapp.com
+
+# ... repeat for all variables
 ```
 
-## Step 3: Trigger Deployment
+## Post-Deployment Checklist
 
-### Option A: Push to GitHub
-```bash
-git push origin main
-# Vercel will auto-deploy
-```
-
-### Option B: Redeploy via Dashboard
-1. Go to Vercel dashboard
-2. Navigate to "Deployments"
-3. Click "Redeploy" on the latest deployment
-
-### Option C: Vercel CLI
-```bash
-cd Onchainweb
-vercel --prod
-```
-
-## Step 4: Verify Deployment
-
-After deployment completes:
-
-1. **Visit your app**: https://www.onchainweb.app
-2. **Test Build Logs**: Check that build shows no errors related to missing packages
-3. **Test Wallet Connection**:
-   - Click "Connect Wallet"
-   - Try connecting with MetaMask or another browser wallet
-   - Try WalletConnect (should show QR code)
-
-### Expected Build Output
-
-```
-✓ built in 4-6s
-dist/index.html                    0.88 kB
-dist/assets/index-[hash].css     167.81 kB
-dist/assets/index-[hash].js      359.64 kB
-dist/assets/index-[hash].js      496.01 kB
-```
+- [ ] Environment variables set in Vercel
+- [ ] Deployment succeeded without errors
+- [ ] App loads at https://onchainweb.site
+- [ ] No console errors in browser
+- [ ] "Connect Wallet" button appears
+- [ ] MetaMask connection works
+- [ ] WalletConnect QR code appears
+- [ ] Mobile wallet connection works
+- [ ] Admin panel accessible at /admin
+- [ ] Master dashboard accessible at /master-admin
+- [ ] Customer service chat working
+- [ ] Telegram integration operational (if configured)
 
 ## Troubleshooting
 
-### Build Fails with "Cannot resolve import 'react-router-dom'"
+### Build Fails with "Cannot resolve import"
 
 **Problem**: Dependencies not installed
 
@@ -115,57 +176,40 @@ dist/assets/index-[hash].js      496.01 kB
 2. **Environment Detection**: Make sure you're testing in a supported browser
 3. **Missing Dependencies**: Verify build logs show all packages installed
 
-### WalletConnect QR Code Doesn't Appear
+### Master Admin Route Not Working
 
 **Causes & Solutions**:
 
-1. **Project ID Invalid**: Verify Project ID is correct in Vercel settings
-2. **Network Error**: Check browser network tab for failed requests to WalletConnect relay
-3. **Ad Blocker**: Some ad blockers may block WalletConnect - try disabling
+1. **Environment Variable**: Verify `VITE_ENABLE_ADMIN=true` in Vercel
+2. **Allowlist**: Check `VITE_ADMIN_ALLOWLIST` is set correctly
+3. **SPA Routing**: Ensure `vercel.json` has the rewrite rule
 
-## Environment Variables Reference
+## Customer Service & Telegram Integration
 
-| Variable | Required | Purpose | Example |
-|----------|----------|---------|---------|
-| `VITE_API_BASE` | ✅ Yes | Backend API endpoint | `https://snipe-api.onrender.com/api` |
-| `VITE_WALLETCONNECT_PROJECT_ID` | ✅ Yes (for WalletConnect) | WalletConnect Project ID | `2a1b3c4d5e6f7g8h...` |
-| `VITE_APP_NAME` | ❌ No | App name for branding | `OnchainWeb` |
-| `VITE_APP_URL` | ❌ No | App URL for meta tags | `https://onchainweb.app` |
+The customer service chat automatically forwards messages to Telegram in real-time when configured:
 
-## Build Configuration
+1. **Create Telegram Bot:**
+   - Message @BotFather on Telegram
+   - Use /newbot command
+   - Get your bot token
 
-The build is configured in `vercel.json`:
+2. **Get Chat ID:**
+   - Message your bot
+   - Visit: https://api.telegram.org/bot<YOUR_BOT_TOKEN>/getUpdates
+   - Find your chat_id
 
-```json
-{
-  "buildCommand": "cd Onchainweb && npm install && npm run build",
-  "outputDirectory": "Onchainweb/dist",
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
-}
-```
+3. **Set Environment Variables:**
+   ```bash
+   VITE_TELEGRAM_BOT_TOKEN=your-bot-token
+   VITE_TELEGRAM_CHAT_ID=your-chat-id
+   ```
 
-This ensures:
-1. Dependencies are installed before build
-2. Build output goes to correct directory
-3. SPA routing works correctly
+4. **Redeploy:**
+   ```bash
+   vercel --prod
+   ```
 
-## Post-Deployment Checklist
-
-- [ ] Environment variables set in Vercel
-- [ ] Deployment succeeded without errors
-- [ ] App loads at https://www.onchainweb.app
-- [ ] No console errors in browser
-- [ ] "Connect Wallet" button appears
-- [ ] MetaMask connection works
-- [ ] WalletConnect QR code appears
-- [ ] Mobile wallet connection works
-- [ ] Admin panel accessible at /admin
-- [ ] Master dashboard accessible at /master-admin
+Messages from the customer service popup will now appear in your Telegram chat in real-time, transparently to the user.
 
 ## Support
 
@@ -174,8 +218,8 @@ If you encounter issues:
 1. Check build logs in Vercel dashboard
 2. Check browser console for JavaScript errors
 3. Verify all environment variables are set
-4. Review [WalletConnect Implementation Guide](WALLETCONNECT_IMPLEMENTATION.md)
-5. Check [WalletConnect Login Fix Documentation](WALLETCONNECT_LOGIN_FIX.md)
+4. Review [Master Account Setup Guide](../MASTER_ACCOUNT_SETUP.md)
+5. Check [Firebase Implementation](../../BACKEND_REPLACEMENT.md)
 
 ## Additional Resources
 
@@ -183,9 +227,11 @@ If you encounter issues:
 - [WalletConnect Cloud](https://cloud.walletconnect.com)
 - [WalletConnect Documentation](https://docs.walletconnect.com)
 - [Vite Environment Variables](https://vitejs.dev/guide/env-and-mode.html)
+- [Telegram Bot API](https://core.telegram.org/bots/api)
 
 ---
 
-**Last Updated**: 2026-01-08
+**Last Updated**: 2026-01-27
 **Deployment Platform**: Vercel
+**Domain**: onchainweb.site
 **Status**: ✅ Production Ready
