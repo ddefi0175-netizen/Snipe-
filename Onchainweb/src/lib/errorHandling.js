@@ -135,18 +135,44 @@ export function formatWalletError(error, walletName = 'Wallet') {
 }
 
 /**
- * Validate password strength (basic validation)
+ * Validate password strength with complexity requirements
  * @param {string} password - Password to validate
- * @param {number} minLength - Minimum password length (default: 6)
+ * @param {number} minLength - Minimum password length (default: 8)
  * @returns {Object} { valid: boolean, error: string }
  */
-export function validatePassword(password, minLength = 6) {
+export function validatePassword(password, minLength = 8) {
   if (!password) {
     return { valid: false, error: 'Password is required' }
   }
   
   if (password.length < minLength) {
     return { valid: false, error: `Password must be at least ${minLength} characters` }
+  }
+  
+  // For admin accounts, enforce stronger requirements
+  if (minLength >= 8) {
+    // Check for at least one uppercase letter
+    if (!/[A-Z]/.test(password)) {
+      return { valid: false, error: 'Password must contain at least one uppercase letter' }
+    }
+    
+    // Check for at least one lowercase letter
+    if (!/[a-z]/.test(password)) {
+      return { valid: false, error: 'Password must contain at least one lowercase letter' }
+    }
+    
+    // Check for at least one number
+    if (!/[0-9]/.test(password)) {
+      return { valid: false, error: 'Password must contain at least one number' }
+    }
+    
+    // Check for at least one special character
+    // Common special characters: ! @ # $ % ^ & * ( ) - _ = + [ ] { } ; : ' " \ | , . < > / ?
+    // Note: Hyphen at end to avoid range interpretation, square brackets escaped
+    const SPECIAL_CHARS = /[!@#$%^&*()_=+\[\]{};:'",.<>/?\\|-]/;
+    if (!SPECIAL_CHARS.test(password)) {
+      return { valid: false, error: 'Password must contain at least one special character (!@#$%^&*...)' }
+    }
   }
   
   return { valid: true, error: null }

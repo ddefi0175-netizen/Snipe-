@@ -265,7 +265,6 @@ export default function AdminPanel({ isOpen = true, onClose }) {
           setDepositAddresses(s.depositAddresses)
         }
 
-        console.log('Admin: Loaded all settings from backend')
       }
     } catch (error) {
       console.error('Failed to load settings from backend:', error)
@@ -317,8 +316,8 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       return
     }
 
-    // Validate password
-    const passwordValidation = validatePassword(loginPassword, 6)
+    // Validate password (8 characters minimum for admin accounts)
+    const passwordValidation = validatePassword(loginPassword, 8)
     if (!passwordValidation.valid) {
       setLoginError(passwordValidation.error)
       return
@@ -327,7 +326,6 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     setIsLoggingIn(true)
 
     try {
-      console.log('[AdminPanel] Attempting login for:', loginUsername)
 
       // Use shared admin login utility
       const result = await handleAdminLogin(loginUsername, loginPassword, firebaseSignIn)
@@ -350,7 +348,6 @@ export default function AdminPanel({ isOpen = true, onClose }) {
       setCurrentAdmin(adminUser)
       setLoginUsername('')
       setLoginPassword('')
-      console.log('[AdminPanel] Login successful! Role:', result.role)
     } catch (error) {
       console.error('[AdminPanel] Login error:', error)
       setLoginError(`❌ ${formatFirebaseAuthError(error)}`)
@@ -390,7 +387,6 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         const userData = JSON.parse(user)
         setIsAuthenticated(true)
         setCurrentAdmin(userData)
-        console.log('[AdminPanel] Session restored from localStorage')
       } catch (e) {
         console.error('[AdminPanel] Failed to parse user data:', e)
         localStorage.removeItem('adminToken')

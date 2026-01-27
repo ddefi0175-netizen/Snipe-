@@ -35,7 +35,6 @@ const getFromStorage = (key, defaultValue) => {
 const syncToBackend = async (api, method, data, fallbackKey) => {
   try {
     const result = await api[method](data)
-    console.log(`Backend sync success: ${method}`, result)
     return result
   } catch (error) {
     console.error(`Backend sync failed: ${method}`, error.message)
@@ -271,8 +270,6 @@ export default function MasterAdminDashboard() {
 
   // Load all data after authentication - single batch load
   const loadAllData = useCallback(async () => {
-    console.log('Loading all data...')
-
     // Helper for timeout-protected API calls
     const withTimeout = (promise, ms = 10000) => {
       return Promise.race([
@@ -286,10 +283,8 @@ export default function MasterAdminDashboard() {
       const backendUsers = await withTimeout(userAPI.getAll())
       if (Array.isArray(backendUsers) && backendUsers.length > 0) {
         setUsers(backendUsers)
-        console.log('Loaded users from backend:', backendUsers.length)
       } else {
         setUsers(getFromStorage('registeredUsers', []))
-        console.log('No users in backend, using localStorage')
       }
     } catch (error) {
       console.error('Failed to load users from backend:', error.message)
@@ -302,7 +297,6 @@ export default function MasterAdminDashboard() {
       if (Array.isArray(backendUploads)) {
         setPendingDeposits(backendUploads.filter(u => u.status === 'pending'))
         setDeposits(backendUploads)
-        console.log('Loaded uploads from backend:', backendUploads.length)
       }
     } catch (error) {
       console.error('Failed to load uploads from backend:', error.message)
@@ -337,7 +331,6 @@ export default function MasterAdminDashboard() {
           return { ...a, role: 'admin', status: 'active', permissions: permArray }
         })
         setAdminRoles([masterAdmin, ...processedAdmins])
-        console.log('Loaded admins from backend:', adminsResponse.admins.length)
       } else {
         setAdminRoles(getFromStorage('adminRoles', defaultData.adminRoles))
       }
@@ -354,7 +347,6 @@ export default function MasterAdminDashboard() {
         const history = backendTrades.filter(t => t.status !== 'active' && t.status !== 'pending')
         setActiveTrades(active)
         setTradeHistory(history)
-        console.log('Loaded trades from backend:', backendTrades.length)
       } else {
         setActiveTrades(getFromStorage('activeTrades', []))
         setTradeHistory(getFromStorage('tradeHistory', []))
@@ -369,7 +361,7 @@ export default function MasterAdminDashboard() {
     try {
       const backendStakes = await withTimeout(stakingAPI.getAll())
       if (Array.isArray(backendStakes)) {
-        console.log('Loaded stakes from backend:', backendStakes.length)
+        // Staking data loaded successfully
       }
     } catch (error) {
       console.error('Failed to load staking from backend:', error.message)
@@ -381,7 +373,6 @@ export default function MasterAdminDashboard() {
       const backendSettings = await withTimeout(settingsAPI.get())
       if (backendSettings && backendSettings.siteName) {
         setSiteSettings(backendSettings)
-        console.log('Loaded settings from backend')
       } else {
         setSiteSettings(getFromStorage('siteSettings', defaultData.siteSettings))
       }
@@ -404,7 +395,6 @@ export default function MasterAdminDashboard() {
           status: l.status
         }))
         setTradingLevels(mappedLevels)
-        console.log('Loaded trading levels from backend:', mappedLevels.length)
       } else {
         setTradingLevels(getFromStorage('adminTradingLevels', defaultData.tradingLevels))
       }
@@ -425,7 +415,6 @@ export default function MasterAdminDashboard() {
           status: c.status
         }))
         setCurrencies(mappedCurrencies)
-        console.log('Loaded currencies from backend:', mappedCurrencies.length)
       } else {
         setCurrencies(getFromStorage('adminCurrencies', defaultData.currencies))
       }
@@ -447,7 +436,6 @@ export default function MasterAdminDashboard() {
           status: n.status
         }))
         setNetworks(mappedNetworks)
-        console.log('Loaded networks from backend:', mappedNetworks.length)
       } else {
         setNetworks(getFromStorage('adminNetworks', defaultData.networks))
       }
@@ -468,7 +456,6 @@ export default function MasterAdminDashboard() {
           status: r.status
         }))
         setExchangeRates(mappedRates)
-        console.log('Loaded exchange rates from backend:', mappedRates.length)
       } else {
         setExchangeRates(getFromStorage('adminExchangeRates', defaultData.exchangeRates))
       }
@@ -489,7 +476,6 @@ export default function MasterAdminDashboard() {
           status: w.status
         }))
         setDepositWallets(mappedWallets)
-        console.log('Loaded deposit wallets from backend:', mappedWallets.length)
       } else {
         setDepositWallets(getFromStorage('adminDepositWallets', defaultData.depositWallets))
       }
@@ -516,7 +502,6 @@ export default function MasterAdminDashboard() {
           }
         })
         setBonusPrograms(bonusObj)
-        console.log('Loaded bonuses from backend:', backendBonuses.length)
       } else {
         setBonusPrograms(getFromStorage('bonusPrograms', defaultData.bonusPrograms))
       }
@@ -537,7 +522,6 @@ export default function MasterAdminDashboard() {
     setVipRequests(getFromStorage('adminVIPRequests', []))
 
     // ALWAYS mark data as loaded
-    console.log('Data loading complete')
     setIsDataLoaded(true)
   }, [defaultData])
 
@@ -555,7 +539,6 @@ export default function MasterAdminDashboard() {
         }
       } catch (error) {
         // Fallback to localStorage for any trades that might be there
-        console.log('Using localStorage for active trades fallback')
       }
 
       // Fallback to localStorage
@@ -598,7 +581,6 @@ export default function MasterAdminDashboard() {
 
     // Use Firebase real-time listener for admins
     const unsubscribe = subscribeToAdmins((admins) => {
-      console.log('[MasterDashboard] Admins updated:', admins.length)
       setAdminRoles(admins.map(admin => ({
         id: admin.uid,
         username: admin.username,
@@ -661,30 +643,25 @@ export default function MasterAdminDashboard() {
   useEffect(() => {
     if (!isAuthenticated || !isDataLoaded) return
 
-    console.log('[Firebase] Setting up real-time listeners...')
 
     // Subscribe to users in real-time
     const unsubscribeUsers = subscribeToUsers((users) => {
-      console.log('[Firebase] Users updated:', users.length)
       setUsers(users)
     })
 
     // Subscribe to deposits in real-time
     const unsubscribeDeposits = subscribeToDeposits((deposits) => {
-      console.log('[Firebase] Deposits updated:', deposits.length)
       setDeposits(deposits)
       setPendingDeposits(deposits.filter(d => d.status === 'pending'))
     })
 
     // Subscribe to withdrawals in real-time
     const unsubscribeWithdrawals = subscribeToWithdrawals((withdrawals) => {
-      console.log('[Firebase] Withdrawals updated:', withdrawals.length)
       setWithdrawals(withdrawals)
     })
 
     // Subscribe to trades in real-time
     const unsubscribeTrades = subscribeToTrades((trades) => {
-      console.log('[Firebase] Trades updated:', trades.length)
       setTradeHistory(trades)
     })
 
@@ -730,8 +707,13 @@ export default function MasterAdminDashboard() {
         try {
           const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2teleQkAIHPQ3bF3HQkAgLTX15xQGBY=')
           audio.volume = 0.5
-          audio.play().catch(() => { })
-        } catch (e) { }
+          audio.play().catch((err) => {
+            // Audio playback may fail due to browser autoplay policies - this is expected
+            console.warn('[MasterAdmin] Audio playback failed (browser policy):', err.message)
+          })
+        } catch (e) {
+          console.warn('[MasterAdmin] Failed to create audio notification:', e.message)
+        }
 
         // Show browser notification if permitted
         if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
@@ -823,7 +805,6 @@ export default function MasterAdminDashboard() {
     e.preventDefault()
     setLoginError('')
 
-    console.log('[MASTER LOGIN] Attempting login for:', loginData.username)
 
     // Validate inputs
     if (!loginData.username || !loginData.password) {
@@ -831,8 +812,8 @@ export default function MasterAdminDashboard() {
       return
     }
 
-    // Validate password
-    const passwordValidation = validatePassword(loginData.password, 6)
+    // Validate password (8 characters minimum for admin accounts)
+    const passwordValidation = validatePassword(loginData.password, 8)
     if (!passwordValidation.valid) {
       setLoginError(passwordValidation.error)
       return
@@ -866,7 +847,6 @@ export default function MasterAdminDashboard() {
       setIsAuthenticated(true)
       setIsDataLoaded(false) // Reset to trigger data load
       setIsMasterAccount(result.role === 'master')
-      console.log('[MASTER LOGIN] Success! Role:', result.role)
       return
     } catch (error) {
       console.error('[MASTER LOGIN] Authentication error:', error)
@@ -878,12 +858,10 @@ export default function MasterAdminDashboard() {
   }
 
   const handleLogout = async () => {
-    console.log('[LOGOUT] Clearing admin session')
 
     try {
       // Sign out from Firebase
       await firebaseSignOut()
-      console.log('[LOGOUT] Firebase sign out successful')
     } catch (error) {
       console.error('[LOGOUT] Firebase sign out error:', error)
     }
@@ -935,7 +913,6 @@ export default function MasterAdminDashboard() {
         createdBy: createdBy
       })
 
-      console.log('[MasterDashboard] Admin created:', result)
 
       // Show success message
       // TODO: Replace alert with toast notification component for better UX
@@ -1015,7 +992,6 @@ export default function MasterAdminDashboard() {
     try {
       if (editingUser._id) {
         await userAPI.update(editingUser._id, updates)
-        console.log('User updated in backend:', editingUser._id, updates)
       }
       setUsers(prev => prev.map(user =>
         (user.id === editingUser.id || user._id === editingUser._id) ? { ...user, ...updates } : user
@@ -1069,7 +1045,6 @@ export default function MasterAdminDashboard() {
         (d.id === id || d._id === id) ? { ...d, status: action } : d
       ))
 
-      console.log(`Deposit ${id} ${action} via backend`)
     } catch (error) {
       console.error('Failed to update deposit:', error)
       alert('Failed to update deposit: ' + error.message)
@@ -3742,7 +3717,6 @@ export default function MasterAdminDashboard() {
                                   const tradeId = trade._id || trade.id
                                   if (trade._id) {
                                     await tradeAPI.forceResult(trade._id, 'win')
-                                    console.log('Trade set to WIN via backend:', trade._id)
                                   }
                                   // Also update localStorage for compatibility
                                   const trades = JSON.parse(localStorage.getItem('activeTrades') || '[]')
@@ -3771,7 +3745,6 @@ export default function MasterAdminDashboard() {
                                   // Call backend API to force result
                                   if (trade._id) {
                                     await tradeAPI.forceResult(trade._id, 'lose')
-                                    console.log('Trade set to LOSE via backend:', trade._id)
                                   }
                                   // Also update localStorage for compatibility
                                   const trades = JSON.parse(localStorage.getItem('activeTrades') || '[]')
@@ -3804,7 +3777,6 @@ export default function MasterAdminDashboard() {
                                   // Reset via backend
                                   if (trade._id) {
                                     await tradeAPI.forceResult(trade._id, 'pending')
-                                    console.log('Trade outcome reset via backend:', trade._id)
                                   }
                                   const trades = JSON.parse(localStorage.getItem('activeTrades') || '[]')
                                   const updated = trades.map(t =>
@@ -5171,7 +5143,6 @@ export default function MasterAdminDashboard() {
                                       try {
                                         if (admin._id) {
                                           await authAPI.assignUsersToAdmin(admin._id, newAssignedUsers)
-                                          console.log('Users assigned to admin via backend:', admin.username, newAssignedUsers)
                                         }
                                       } catch (error) {
                                         console.error('Failed to assign users via backend:', error)

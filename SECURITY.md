@@ -10,6 +10,12 @@ This document outlines security measures and best practices for the Snipe tradin
 - Admin passwords are now hashed using bcrypt with 10 salt rounds
 - Automatic migration: existing plaintext passwords are upgraded to hashed versions on first login
 - Minimum password length: 8 characters (enforced for new admins and password resets)
+- **NEW:** Password complexity requirements enforced:
+  - At least one uppercase letter
+  - At least one lowercase letter
+  - At least one number
+  - At least one special character
+- Cryptographically secure random number generation for referral codes and tokens
 
 **⚠️ IMPORTANT:**
 - Master account password is stored in environment variable `MASTER_PASSWORD`
@@ -72,9 +78,9 @@ MASTER_PASSWORD=YourSecurePasswordHere-ChangeThis!
    - Vulnerable to brute force attacks
 
 2. **Password Policies**
-   - Minimum 8 characters enforced
-   - Consider adding: uppercase, lowercase, number, special character requirements
-   - Password expiration policies not implemented
+   - ✅ Minimum 8 characters enforced
+   - ✅ **IMPLEMENTED:** Uppercase, lowercase, number, special character requirements
+   - Password expiration policies not implemented (consider for future)
 
 3. **Session Management**
    - JWT tokens valid for 24 hours
@@ -82,8 +88,10 @@ MASTER_PASSWORD=YourSecurePasswordHere-ChangeThis!
    - No session revocation capability
 
 4. **Input Validation**
-   - Basic validation on critical endpoints
-   - Consider adding stronger input sanitization
+   - ✅ Strong password validation with complexity requirements
+   - ✅ Safe DOM manipulation (no unsafe innerHTML with user data)
+   - ✅ Error handling improvements (no silent error swallowing)
+   - Consider adding stronger input sanitization for other fields
 
 5. **Audit Logging**
    - Login attempts are logged to console
@@ -158,5 +166,22 @@ If you discover a security vulnerability:
 
 ---
 
-**Last Updated:** 2026-01-08
-**Security Review Date:** 2026-01-08
+**Last Updated:** 2026-01-27
+**Security Review Date:** 2026-01-27
+
+## Recent Security Improvements (2026-01-27)
+
+1. **Fixed Critical Issues:**
+   - Replaced unsafe `innerHTML` usage with safe DOM manipulation methods
+   - Fixed empty catch blocks that silently swallowed errors
+   - Implemented cryptographically secure random number generation (crypto.getRandomValues)
+   - Added proper error logging for debugging and security monitoring
+
+2. **Code Quality Improvements:**
+   - Removed 30+ debug console.log statements from production code
+   - Improved error context in catch blocks for better diagnostics
+   - Enforced stronger password complexity requirements
+
+3. **Known Issues:**
+   - Dev dependency vulnerabilities (esbuild/vite) - affects development environment only
+   - These require breaking changes to update (consider for next major version)
