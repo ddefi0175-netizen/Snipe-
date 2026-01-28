@@ -12,8 +12,14 @@ export async function handleAdmin(request, env) {
   }
   
   const token = authHeader.replace('Bearer ', '')
-  // TODO: Verify token with Firebase Admin SDK
-  // For now, basic validation
+  
+  // TODO: Implement proper token verification with Firebase Admin SDK
+  // For now, this is a placeholder that should be replaced with:
+  // 1. Firebase Admin SDK token verification
+  // 2. Check user role/permissions in Firestore
+  // 3. Validate token expiry and signature
+  
+  // Basic validation (REPLACE WITH FIREBASE ADMIN SDK)
   if (!token || token.length < 20) {
     return new Response('Invalid token', { 
       status: 401,
@@ -25,6 +31,7 @@ export async function handleAdmin(request, env) {
     const { action, data } = await request.json()
     
     // Handle admin operations securely
+    // IMPORTANT: Implement Firebase Admin SDK verification before production use
     switch (action) {
       case 'createUser':
         // TODO: Use Firebase Admin SDK in Worker

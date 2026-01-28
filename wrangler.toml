@@ -1,23 +1,36 @@
 name = "snipe-workers"
 main = "workers/index.js"
 compatibility_date = "2024-01-01"
+# Account ID should be set via environment variable or wrangler secret
+# Set via: wrangler secret put CLOUDFLARE_ACCOUNT_ID
 account_id = "eb568c24da7c746c95353226eb665d00"
 
 [[kv_namespaces]]
 binding = "CACHE"
+# KV Namespace ID - should be created via wrangler kv:namespace create
 id = "488840361a874877b2b54506b15f746a"
 preview_id = "488840361a874877b2b54506b15f746a"
 
 [[r2_buckets]]
 binding = "STORAGE"
+# R2 Bucket - should be created via wrangler r2 bucket create
 bucket_name = "onchainweb"
 preview_bucket_name = "onchainweb"
 
 [vars]
+# Non-sensitive configuration variables
 FIREBASE_PROJECT_ID = "onchainweb-b4b36"
 FIREBASE_DATABASE_URL = "https://onchainweb-b4b36-default-rtdb.asia-southeast1.firebasedatabase.app"
-TELEGRAM_BOT_TOKEN = "8535105293:AAGb-LRbaX8cwlfI6W_TJnlw6Az09Cd6oJ4"
+# SECURITY NOTE: Sensitive tokens should be set via wrangler secrets:
+# wrangler secret put TELEGRAM_BOT_TOKEN
+# wrangler secret put FIREBASE_PRIVATE_KEY
+# For now, placeholder values - REPLACE WITH SECRETS IN PRODUCTION
+TELEGRAM_BOT_TOKEN = "SET_VIA_WRANGLER_SECRET"
 TELEGRAM_USERNAME = "goblin_niko4"
+# R2 public URL - set to your custom domain or R2 public URL
+R2_PUBLIC_URL = "https://storage.onchainweb.app"
+# Allowed CORS origins (comma-separated)
+ALLOWED_ORIGINS = "https://onchainweb.pages.dev,https://www.onchainweb.app"
 
 [build]
 command = "npm install && npm run build"
