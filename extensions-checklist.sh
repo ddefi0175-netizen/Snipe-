@@ -6,7 +6,7 @@
 echo "╔════════════════════════════════════════════════════════════════╗"
 echo "║                                                                ║"
 echo "║   Firebase Extensions Setup Checklist                         ║"
-echo "║   Project: onchainweb-37d30                                   ║"
+echo "║   Project: YOUR_FIREBASE_PROJECT_ID                                   ║"
 echo "║                                                                ║"
 echo "╚════════════════════════════════════════════════════════════════╝"
 echo ""
@@ -20,7 +20,7 @@ Phase 1: Delete ERRORED Extension
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 [ ] Open Firebase Console
-    URL: https://console.firebase.google.com/project/onchainweb-37d30/extensions
+    URL: https://console.firebase.google.com/project/YOUR_FIREBASE_PROJECT_ID/extensions
 
 [ ] Find "Trigger Email from Firestore" extension (ERRORED state)
 
@@ -41,7 +41,7 @@ Phase 2: Reinstall Email Extension
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 [ ] Run installation command:
-    firebase ext:install firebase/firestore-send-email --project=onchainweb-37d30
+    firebase ext:install firebase/firestore-send-email --project=YOUR_FIREBASE_PROJECT_ID
 
 [ ] Select asia-east2 as location ⚠️ CRITICAL!
 
@@ -68,7 +68,7 @@ Phase 3: Verify Email Extension
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 [ ] Run verification:
-    firebase ext:list --project=onchainweb-37d30
+    firebase ext:list --project=YOUR_FIREBASE_PROJECT_ID
 
 [ ] Confirm firestore-send-email shows ACTIVE ✅
 
@@ -79,7 +79,7 @@ Phase 4: Install Delete User Data Extension
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 [ ] Run installation command:
-    firebase ext:install firebase/delete-user-data --project=onchainweb-37d30
+    firebase ext:install firebase/delete-user-data --project=YOUR_FIREBASE_PROJECT_ID
 
 [ ] Select asia-east2 as location
 
@@ -106,7 +106,7 @@ Phase 5: Deploy Cloud Functions
     cd ..
 
 [ ] Deploy functions:
-    firebase deploy --only functions --project=onchainweb-37d30
+    firebase deploy --only functions --project=YOUR_FIREBASE_PROJECT_ID
 
 [ ] ⏱️  Wait for deployment to complete
 
@@ -115,7 +115,7 @@ Phase 6: Final Verification
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 [ ] Verify extensions:
-    firebase ext:list --project=onchainweb-37d30
+    firebase ext:list --project=YOUR_FIREBASE_PROJECT_ID
 
     Expected output:
     ✅ firestore-send-email ........... ACTIVE
@@ -123,7 +123,7 @@ Phase 6: Final Verification
     ✅ storage-resize-images .......... ACTIVE
 
 [ ] Verify Cloud Functions:
-    firebase functions:list --project=onchainweb-37d30
+    firebase functions:list --project=YOUR_FIREBASE_PROJECT_ID
 
     Expected functions:
     ✅ bulkDeleteDocuments

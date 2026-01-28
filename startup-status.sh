@@ -61,8 +61,8 @@ fi
 
 echo ""
 echo -e "${CYAN}Firebase Project Reference:${NC}"
-if grep -q '"default": "onchainweb-37d30"' .firebaserc; then
-  echo -e "  ${GREEN}✅${NC} .firebaserc: onchainweb-37d30"
+if grep -q '"default": "YOUR_FIREBASE_PROJECT_ID"' .firebaserc; then
+  echo -e "  ${GREEN}✅${NC} .firebaserc: YOUR_FIREBASE_PROJECT_ID"
 else
   echo -e "  ${RED}❌${NC} .firebaserc: Not configured"
 fi
@@ -142,12 +142,12 @@ echo ""
 passes=0
 total=11
 
-grep -q "JWT_SECRET=" backend/.env && passes=$((passes + 1))
-grep -q "MASTER_USERNAME=snipe_admin" backend/.env && passes=$((passes + 1))
-grep -q "MASTER_PASSWORD=Snipe" backend/.env && passes=$((passes + 1))
-grep -q "VITE_FIREBASE_PROJECT_ID=onchainweb-37d30" Onchainweb/.env && passes=$((passes + 1))
-grep -q "VITE_FIREBASE_API_KEY=AIzaSyD" Onchainweb/.env && passes=$((passes + 1))
-grep -q '"default": "onchainweb-37d30"' .firebaserc && passes=$((passes + 1))
+grep -q "JWT_SECRET=" backend/.env 2>/dev/null && passes=$((passes + 1))
+grep -q "MASTER_USERNAME=" backend/.env 2>/dev/null && passes=$((passes + 1))
+grep -q "MASTER_PASSWORD=" backend/.env 2>/dev/null && passes=$((passes + 1))
+grep -q "VITE_FIREBASE_PROJECT_ID=" Onchainweb/.env 2>/dev/null && passes=$((passes + 1))
+grep -q "VITE_FIREBASE_API_KEY=" Onchainweb/.env 2>/dev/null && passes=$((passes + 1))
+grep -q '"default":' .firebaserc 2>/dev/null && passes=$((passes + 1))
 [ -f "firestore.rules" ] && passes=$((passes + 1))
 lsof -Pi :4000 -sTCP:LISTEN -t >/dev/null 2>&1 && passes=$((passes + 1))
 lsof -Pi :5173 -sTCP:LISTEN -t >/dev/null 2>&1 && passes=$((passes + 1))

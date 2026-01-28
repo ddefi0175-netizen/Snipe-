@@ -38,7 +38,7 @@ VITE_FIREBASE_MEASUREMENT_ID=YOUR_MEASUREMENT_ID
 
 ### WalletConnect (Required)
 ```bash
-VITE_WALLETCONNECT_PROJECT_ID=42039c73d0dacb66d82c12faabf27c9b
+VITE_WALLETCONNECT_PROJECT_ID=your-walletconnect-project-id
 ```
 
 ### Admin (Required)

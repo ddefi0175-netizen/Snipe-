@@ -33,7 +33,7 @@ This document describes the security fixes applied to prepare the Snipe platform
    - Found in 15 files (documentation, test scripts, HTML files)
    - Replaced with: `YOUR_FIREBASE_API_KEY`
 
-2. **Master Password**: `WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=`
+2. **Master Password**: `YOUR_MASTER_PASSWORD`
    - Found in 7 test scripts and 33 documentation files
    - Replaced with: `YOUR_MASTER_PASSWORD` or removed default value
 
@@ -41,19 +41,19 @@ This document describes the security fixes applied to prepare the Snipe platform
    - Found in multiple documentation files
    - Replaced with: `YOUR_MASTER_USERNAME`
 
-4. **JWT Secret**: `G1oUFXpp5sPSGJ+JXXqA1dFcKkUx2UH37PA6JDzUm9c=`
+4. **JWT Secret**: `YOUR_JWT_SECRET`
    - Found in 3 shell scripts
    - Replaced with: `YOUR_JWT_SECRET` or removed from checks
 
-5. **WalletConnect Project ID**: `42039c73d0dacb66d82c12faabf27c9b`
+5. **WalletConnect Project ID**: `your-walletconnect-project-id`
    - Found in 3 documentation files
    - Replaced with: `your-walletconnect-project-id`
 
 6. **Firebase Configuration Values**:
-   - Project ID: `onchainweb-37d30` → `YOUR_FIREBASE_PROJECT_ID`
-   - Auth Domain: `onchainweb-37d30.firebaseapp.com` → `YOUR_FIREBASE_PROJECT_ID.firebaseapp.com`
-   - Messaging Sender ID: `766146811888` → `YOUR_SENDER_ID`
-   - App ID: `1:766146811888:web:a96012963dffe31508ef35` → `YOUR_FIREBASE_APP_ID`
+   - Project ID: `YOUR_FIREBASE_PROJECT_ID` → `YOUR_FIREBASE_PROJECT_ID`
+   - Auth Domain: `YOUR_FIREBASE_PROJECT_ID.firebaseapp.com` → `YOUR_FIREBASE_PROJECT_ID.firebaseapp.com`
+   - Messaging Sender ID: `YOUR_SENDER_ID` → `YOUR_SENDER_ID`
+   - App ID: `1:YOUR_SENDER_ID:web:a96012963dffe31508ef35` → `YOUR_FIREBASE_APP_ID`
    - Measurement ID: `G-1QDHSDQKDY` → `YOUR_MEASUREMENT_ID`
 
 **Impact**: CRITICAL - Prevented unauthorized access to production systems

@@ -152,7 +152,7 @@ VITE_FIREBASE_APP_ID=your-app-id
 VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
 
 # WalletConnect
-VITE_WALLETCONNECT_PROJECT_ID=42039c73d0dacb66d82c12faabf27c9b
+VITE_WALLETCONNECT_PROJECT_ID=your-walletconnect-project-id
 
 # Admin Allowlist
 VITE_ADMIN_ALLOWLIST=master@gmail.com,admin@gmail.com

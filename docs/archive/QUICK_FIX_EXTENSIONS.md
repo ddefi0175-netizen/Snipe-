@@ -21,7 +21,7 @@ The email extension failed during installation because:
 
 **Open this URL:**
 ```
-https://console.firebase.google.com/project/onchainweb-37d30/extensions
+https://console.firebase.google.com/project/YOUR_FIREBASE_PROJECT_ID/extensions
 ```
 
 **Then:**
@@ -41,7 +41,7 @@ https://console.firebase.google.com/project/onchainweb-37d30/extensions
 **Open a terminal and run:**
 
 ```bash
-firebase ext:install firebase/firestore-send-email --project=onchainweb-37d30
+firebase ext:install firebase/firestore-send-email --project=YOUR_FIREBASE_PROJECT_ID
 ```
 
 **When you see these prompts, answer exactly as shown:**
@@ -89,7 +89,7 @@ firebase ext:install firebase/firestore-send-email --project=onchainweb-37d30
 **Run this command:**
 
 ```bash
-firebase ext:list --project=onchainweb-37d30
+firebase ext:list --project=YOUR_FIREBASE_PROJECT_ID
 ```
 
 **Expected output:**
@@ -109,7 +109,7 @@ Once the email extension is working, run these commands:
 ### Install Delete User Data Extension
 
 ```bash
-firebase ext:install firebase/delete-user-data --project=onchainweb-37d30
+firebase ext:install firebase/delete-user-data --project=YOUR_FIREBASE_PROJECT_ID
 ```
 
 **Answers:**
@@ -126,7 +126,7 @@ Others: Press Enter
 cd functions
 npm install
 cd ..
-firebase deploy --only functions --project=onchainweb-37d30
+firebase deploy --only functions --project=YOUR_FIREBASE_PROJECT_ID
 ```
 
 ---

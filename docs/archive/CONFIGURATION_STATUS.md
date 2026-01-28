@@ -18,7 +18,7 @@
 ### Configured ✅
 
 ```text
-✅ VITE_WALLETCONNECT_PROJECT_ID=42039c73d0dacb66d82c12faabf27c9b
+✅ VITE_WALLETCONNECT_PROJECT_ID=your-walletconnect-project-id
 ```
 
 ### Missing ❌ (REQUIRED)

@@ -41,7 +41,7 @@ fi
 echo ""
 echo "🌐 Opening Firebase Console..."
 echo ""
-echo "URL: https://console.firebase.google.com/project/onchainweb-37d30/extensions"
+echo "URL: https://console.firebase.google.com/project/YOUR_FIREBASE_PROJECT_ID/extensions"
 echo ""
 echo "📋 ACTION REQUIRED:"
 echo "  1. Find 'Trigger Email from Firestore' (ERRORED state)"
@@ -53,9 +53,9 @@ echo ""
 
 # Try to open browser
 if command -v xdg-open &> /dev/null; then
-  xdg-open "https://console.firebase.google.com/project/onchainweb-37d30/extensions" 2>/dev/null &
+  xdg-open "https://console.firebase.google.com/project/YOUR_FIREBASE_PROJECT_ID/extensions" 2>/dev/null &
 elif command -v "$BROWSER" &> /dev/null; then
-  "$BROWSER" "https://console.firebase.google.com/project/onchainweb-37d30/extensions" &
+  "$BROWSER" "https://console.firebase.google.com/project/YOUR_FIREBASE_PROJECT_ID/extensions" &
 fi
 
 echo -n "Press Enter when you've deleted the extension..."

@@ -11,7 +11,7 @@ Complete step-by-step guide to deploy the application to Cloudflare Pages with a
 - [x] API Token available: `SLb2SImiGCIwqBVUQFxhFZpH-JxwpwOxy2NoPepQ`
 
 ### 2. WalletConnect Setup
-- [x] WalletConnect Project ID: `42039c73d0dacb66d82c12faabf27c9b`
+- [x] WalletConnect Project ID: `your-walletconnect-project-id`
 
 ### 3. JWT Authentication
 - [x] JWT Certs URL: `https://ddefi0175.cloudflareaccess.com/cdn-cgi/access/certs`
@@ -108,7 +108,7 @@ Click **Add variable** for each:
    - Click **Save**
 
 2. **VITE_WALLETCONNECT_PROJECT_ID**
-   - Value: `42039c73d0dacb66d82c12faabf27c9b`
+   - Value: `your-walletconnect-project-id`
    - Environment: ✅ Production ✅ Preview
    - Click **Save**
 
@@ -266,7 +266,7 @@ wrangler d1 execute onchainweb --command="SELECT * FROM chat_messages LIMIT 5;"
 
 ### WalletConnect Not Working
 **Cause:** Invalid project ID  
-**Solution:** Verify `VITE_WALLETCONNECT_PROJECT_ID=42039c73d0dacb66d82c12faabf27c9b`
+**Solution:** Verify `VITE_WALLETCONNECT_PROJECT_ID=your-walletconnect-project-id`
 
 ## Verification Checklist
 
@@ -312,11 +312,11 @@ Certs URL: https://ddefi0175.cloudflareaccess.com/cdn-cgi/access/certs
 Audience: 207729502441a29e10dfef4fab0349ce60fdc758ed208c9be7078c39ff236ca7
 
 # WalletConnect
-Project ID: 42039c73d0dacb66d82c12faabf27c9b
+Project ID: your-walletconnect-project-id
 
 # Environment Variables (Cloudflare Pages)
 VITE_CLOUDFLARE_WORKER_URL=https://snipe-onchainweb.<your-subdomain>.workers.dev
-VITE_WALLETCONNECT_PROJECT_ID=42039c73d0dacb66d82c12faabf27c9b
+VITE_WALLETCONNECT_PROJECT_ID=your-walletconnect-project-id
 VITE_APP_NAME=OnchainWeb (optional)
 VITE_APP_URL=https://your-site.pages.dev (optional)
 ```

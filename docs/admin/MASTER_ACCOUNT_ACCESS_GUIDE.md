@@ -118,20 +118,20 @@ For development and deployment:
 **Local (.env files)**:
 ```dotenv
 MASTER_USERNAME=snipe_admin_secure_7ecb869e
-MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
+MASTER_PASSWORD=YOUR_MASTER_PASSWORD
 ```
 
 **Vercel Dashboard**:
 Navigate to Project Settings → Environment Variables, then add:
 ```
 Variable: MASTER_PASSWORD
-Value: WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
+Value: YOUR_MASTER_PASSWORD
 ```
 
 **Render.com Dashboard** (if applicable):
 Navigate to Service Settings → Environment, then add:
 ```
-MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
+MASTER_PASSWORD=YOUR_MASTER_PASSWORD
 ```
 
 ## Testing Login
@@ -143,7 +143,7 @@ curl -X POST https://snipe-api.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "username": "snipe_admin_secure_7ecb869e",
-    "password": "WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E="
+    "password": "YOUR_MASTER_PASSWORD"
   }' | jq .
 ```
 
@@ -171,7 +171,7 @@ Expected response:
 
 ```bash
 # Run real-time test
-MASTER_PASSWORD='WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=' ./test-admin-realtime.sh
+MASTER_PASSWORD='YOUR_MASTER_PASSWORD' ./test-admin-realtime.sh
 
 # Expected: Shows "✅ Backend Health Check: OK"
 ```
