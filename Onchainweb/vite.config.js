@@ -22,27 +22,27 @@ export default defineConfig({
   build: {
     // Increase chunk size warning limit (default is 500kB)
     chunkSizeWarningLimit: 1000,
-    // Enable minification
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug'],
-      },
-    },
+    // Enable minification with esbuild (faster than terser)
+    minify: 'esbuild',
     // Source maps for debugging (disable in production for smaller builds)
-    sourcemap: process.env.NODE_ENV !== 'production',
+    sourcemap: false,
     rollupOptions: {
       output: {
         // Manual chunk splitting for better caching and smaller bundles
-        manualChunks: {
-          // React core libraries
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          // Firebase
-          'vendor-firebase': ['firebase'],
-          // WalletConnect and Web3 libraries
-          'vendor-wallet': ['@walletconnect/universal-provider'],
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor-react';
+            }
+            if (id.includes('firebase')) {
+              return 'vendor-firebase';
+            }
+            if (id.includes('@walletconnect')) {
+              return 'vendor-wallet';
+            }
+            // Group all other vendor libraries
+            return 'vendor-misc';
+          }
         },
         // Asset file names for better caching
         assetFileNames: (assetInfo) => {
@@ -63,7 +63,5 @@ export default defineConfig({
     cssCodeSplit: true,
     // Report compressed size
     reportCompressedSize: true,
-    // Chunk size limit
-    chunkSizeWarningLimit: 1000,
   },
 })
