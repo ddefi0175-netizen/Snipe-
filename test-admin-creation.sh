@@ -3,11 +3,11 @@
 
 API_BASE="${BACKEND_URL:-https://snipe-api.onrender.com}"
 MASTER_USERNAME="${MASTER_USERNAME:-snipe_admin_secure_7ecb869e}"
-MASTER_PASSWORD="${MASTER_PASSWORD:-WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=}"
+MASTER_PASSWORD="${MASTER_PASSWORD}"
 
 if [ -z "$MASTER_PASSWORD" ]; then
   echo "❌ ERROR: MASTER_PASSWORD environment variable is required"
-  echo "Usage: MASTER_PASSWORD='WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=' ./test-admin-creation.sh"
+  echo "Usage: MASTER_PASSWORD='your-master-password' ./test-admin-creation.sh"
   exit 1
 fi
 

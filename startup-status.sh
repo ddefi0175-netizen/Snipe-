@@ -38,16 +38,17 @@ else
   echo -e "  ${RED}❌${NC} Master Username: Not configured"
 fi
 
-if grep -q "MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=" backend/.env; then
-  echo -e "  ${GREEN}✅${NC} Master Password: SECURE (configured - Updated Jan 18, 2026)"
+if grep -q "MASTER_PASSWORD=" backend/.env 2>/dev/null; then
+  echo -e "  ${GREEN}✅${NC} Master Password: Configured in backend/.env"
 else
-  echo -e "  ${RED}❌${NC} Master Password: Not configured or not updated"
+  echo -e "  ${YELLOW}⚠️${NC}  Master Password: Not found (file may not exist)"
 fi
 
 echo ""
 echo -e "${CYAN}Frontend Configuration:${NC}"
-if grep -q "VITE_FIREBASE_PROJECT_ID=onchainweb-37d30" Onchainweb/.env; then
-  echo -e "  ${GREEN}✅${NC} Firebase Project ID: onchainweb-37d30"
+if grep -q "VITE_FIREBASE_PROJECT_ID=" Onchainweb/.env 2>/dev/null; then
+  PROJECT_ID=$(grep "VITE_FIREBASE_PROJECT_ID=" Onchainweb/.env | cut -d'=' -f2)
+  echo -e "  ${GREEN}✅${NC} Firebase Project ID: $PROJECT_ID"
 else
   echo -e "  ${RED}❌${NC} Firebase Project ID: Not configured"
 fi

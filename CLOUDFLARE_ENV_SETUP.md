@@ -27,7 +27,7 @@ Click **"Add variable"** for each entry below:
 
 ### Variable 1: Firebase API Key
 - **Name:** `VITE_FIREBASE_API_KEY`
-- **Value:** `AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw`
+- **Value:** `YOUR_FIREBASE_API_KEY_HERE`
 
 ### Variable 2: Firebase Auth Domain
 - **Name:** `VITE_FIREBASE_AUTH_DOMAIN`
@@ -83,7 +83,7 @@ Click **"Add variable"** for each entry below:
 4. For each variable above:
    - Click **"Add variable"**
    - Copy the **Name** (e.g., `VITE_FIREBASE_API_KEY`)
-   - Copy the **Value** (e.g., `AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw`)
+   - Copy the **Value** (e.g., `YOUR_FIREBASE_API_KEY_HERE`)
    - Select environment: **Production** (and **Preview** if needed)
    - Click **Save**
 5. After adding all variables, trigger a new deployment
@@ -95,7 +95,7 @@ Click **"Add variable"** for each entry below:
 If your Cloudflare interface supports bulk import, use this format:
 
 ```
-VITE_FIREBASE_API_KEY=AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw
+VITE_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY_HERE
 VITE_FIREBASE_AUTH_DOMAIN=onchainweb-37d30.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=onchainweb-37d30
 VITE_FIREBASE_STORAGE_BUCKET=onchainweb-37d30.firebasestorage.app

@@ -12,7 +12,7 @@ Set these in Vercel Dashboard:
 
 ### Required Firebase Variables:
 ```bash
-VITE_FIREBASE_API_KEY=AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw
+VITE_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY_HERE
 VITE_FIREBASE_AUTH_DOMAIN=onchainweb-37d30.firebaseapp.com
 VITE_FIREBASE_PROJECT_ID=onchainweb-37d30
 VITE_FIREBASE_STORAGE_BUCKET=onchainweb-37d30.firebasestorage.app
@@ -122,7 +122,7 @@ npm install -g vercel
 
 # Set environment variables
 vercel env add VITE_FIREBASE_API_KEY production
-# Enter: AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw
+# Enter: YOUR_FIREBASE_API_KEY_HERE
 
 vercel env add VITE_FIREBASE_AUTH_DOMAIN production
 # Enter: onchainweb-37d30.firebaseapp.com

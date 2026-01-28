@@ -9,7 +9,7 @@
 # Configuration
 API_BASE="${1:-https://snipe-api.onrender.com/api}"
 MASTER_USER="${MASTER_USERNAME:-snipe_admin_secure_7ecb869e}"
-MASTER_PASS="${MASTER_PASSWORD:-WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=}"
+MASTER_PASS="${MASTER_PASSWORD}"
 ADMIN_USER="${ADMIN_USERNAME:-aqiang}"
 ADMIN_PASS="${ADMIN_PASSWORD}"
 
