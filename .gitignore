@@ -1,4 +1,9 @@
-# Firebase
+# Existing Firebase section
+
+# Firebase Service Account Keys (CRITICAL - Never commit these!)
 serviceAccountKey.json
 **/serviceAccountKey*.json
 firebase-adminsdk-*.json
+*-service-account.json
+
+# Other existing content...
