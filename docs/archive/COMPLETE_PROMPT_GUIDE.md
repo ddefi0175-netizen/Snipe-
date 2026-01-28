@@ -140,7 +140,7 @@ After installation, you should see something like:
 
 Then run:
 ```bash
-firebase ext:list --project=onchainweb-37d30
+firebase ext:list --project=YOUR_FIREBASE_PROJECT_ID
 ```
 
 You should see:

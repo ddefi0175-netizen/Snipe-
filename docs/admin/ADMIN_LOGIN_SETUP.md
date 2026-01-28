@@ -17,13 +17,13 @@ Edit `Onchainweb/.env` file:
 VITE_ENABLE_ADMIN=true
 
 # Firebase Configuration (REQUIRED)
-VITE_FIREBASE_API_KEY=AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw
-VITE_FIREBASE_AUTH_DOMAIN=onchainweb-37d30.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=onchainweb-37d30
-VITE_FIREBASE_STORAGE_BUCKET=onchainweb-37d30.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=766146811888
-VITE_FIREBASE_APP_ID=1:766146811888:web:a96012963dffe31508ef35
-VITE_FIREBASE_MEASUREMENT_ID=G-1QDHSDQKDY
+VITE_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY_HERE
+VITE_FIREBASE_AUTH_DOMAIN=YOUR_FIREBASE_PROJECT_ID.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET=YOUR_FIREBASE_PROJECT_ID.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_SENDER_ID
+VITE_FIREBASE_APP_ID=YOUR_FIREBASE_APP_ID
+VITE_FIREBASE_MEASUREMENT_ID=YOUR_MEASUREMENT_ID
 
 # Admin Allowlist (IMPORTANT: Use real email addresses)
 VITE_ADMIN_ALLOWLIST=master@gmail.com,admin@gmail.com
@@ -37,7 +37,7 @@ VITE_ADMIN_ALLOWLIST=master@gmail.com,admin@gmail.com
 
 #### A. Open Firebase Console
 1. Go to: https://console.firebase.google.com
-2. Select project: `onchainweb-37d30`
+2. Select project: `YOUR_FIREBASE_PROJECT_ID`
 3. Navigate to: **Authentication → Users**
 
 #### B. Create Master Account
@@ -107,7 +107,7 @@ Server starts at: http://localhost:5173
 |--------|---------|--------|
 | Gmail | `master@gmail.com` | ✅ Yes |
 | Your domain | `admin@yourdomain.com` | ✅ Yes |
-| Firebase domain | `master@onchainweb-37d30.firebaseapp.com` | ✅ Yes |
+| Firebase domain | `master@YOUR_FIREBASE_PROJECT_ID.firebaseapp.com` | ✅ Yes |
 | Fake domain | `master@admin.onchainweb.app` | ❌ No (Firebase rejects) |
 
 ### How It Works

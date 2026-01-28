@@ -16,7 +16,7 @@
 ### Phase 1: Firebase Setup (5 min)
 ```
 [ ] 1. Go to: https://console.firebase.google.com
-[ ] 2. Select project: onchainweb-37d30
+[ ] 2. Select project: YOUR_FIREBASE_PROJECT_ID
 [ ] 3. Click: Authentication > Users
 [ ] 4. Click: + Create user
 [ ] 5. Email: master@gmail.com
@@ -194,7 +194,7 @@ cat Onchainweb/.env | grep VITE_FIREBASE
 **Fix**: Create master user in Firebase Console
 ```
 1. Go to: console.firebase.google.com
-2. Select: onchainweb-37d30
+2. Select: YOUR_FIREBASE_PROJECT_ID
 3. Authentication > Users > + Create user
 ```
 
@@ -322,7 +322,7 @@ Password:        (Create in Firebase)
 
 ### Project Info
 ```
-Firebase Project:      onchainweb-37d30
+Firebase Project:      YOUR_FIREBASE_PROJECT_ID
 Firestore Database:    Cloud Firestore
 Authentication:        Email/Password
 Backend:               Express (Render.com)

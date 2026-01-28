@@ -3,7 +3,7 @@
 ## Prerequisites
 
 1. **Vercel Account**: https://vercel.com/signup
-2. **Firebase Project**: onchainweb-37d30
+2. **Firebase Project**: YOUR_FIREBASE_PROJECT_ID
 3. **Domain**: onchainweb.site (already connected)
 
 ## Environment Variables
@@ -12,14 +12,14 @@ Set these in Vercel Dashboard:
 
 ### Required Firebase Variables:
 ```bash
-VITE_FIREBASE_API_KEY=AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw
-VITE_FIREBASE_AUTH_DOMAIN=onchainweb-37d30.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=onchainweb-37d30
-VITE_FIREBASE_STORAGE_BUCKET=onchainweb-37d30.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=766146811888
-VITE_FIREBASE_APP_ID=1:766146811888:web:a96012963dffe31508ef35
-VITE_FIREBASE_MEASUREMENT_ID=G-1QDHSDQKDY
-VITE_WALLETCONNECT_PROJECT_ID=42039c73d0dacb66d82c12faabf27c9b
+VITE_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY_HERE
+VITE_FIREBASE_AUTH_DOMAIN=YOUR_PROJECT.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET=YOUR_FIREBASE_PROJECT_ID.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_SENDER_ID
+VITE_FIREBASE_APP_ID=YOUR_FIREBASE_APP_ID
+VITE_FIREBASE_MEASUREMENT_ID=YOUR_MEASUREMENT_ID
+VITE_WALLETCONNECT_PROJECT_ID=your-walletconnect-project-id
 ```
 
 ### Admin Configuration:
@@ -122,10 +122,10 @@ npm install -g vercel
 
 # Set environment variables
 vercel env add VITE_FIREBASE_API_KEY production
-# Enter: AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw
+# Enter: YOUR_FIREBASE_API_KEY_HERE
 
 vercel env add VITE_FIREBASE_AUTH_DOMAIN production
-# Enter: onchainweb-37d30.firebaseapp.com
+# Enter: YOUR_PROJECT.firebaseapp.com
 
 # ... repeat for all variables
 ```

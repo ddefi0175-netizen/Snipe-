@@ -22,7 +22,7 @@ We need to delete the errored extension from Firebase Console and reinstall with
 Since `firebase ext:uninstall` doesn't work (extension not in firebase.json), we must use Firebase Console:
 
 1. **Go to Firebase Console**
-   - URL: https://console.firebase.google.com/project/onchainweb-37d30/extensions
+   - URL: https://console.firebase.google.com/project/YOUR_FIREBASE_PROJECT_ID/extensions
 
 2. **Find "Trigger Email from Firestore"**
    - Look for extension with ERRORED state
@@ -42,7 +42,7 @@ Since `firebase ext:uninstall` doesn't work (extension not in firebase.json), we
 After deletion completes, run this command:
 
 ```bash
-firebase ext:install firebase/firestore-send-email --project=onchainweb-37d30
+firebase ext:install firebase/firestore-send-email --project=YOUR_FIREBASE_PROJECT_ID
 ```
 
 When prompted, **answer as follows**:
@@ -104,7 +104,7 @@ Press Enter to skip (you can configure later)
 ## Step 3: Verify Installation
 
 ```bash
-firebase ext:list --project=onchainweb-37d30
+firebase ext:list --project=YOUR_FIREBASE_PROJECT_ID
 ```
 
 Expected output:
@@ -163,7 +163,7 @@ firestore-send-email  | ACTIVE | asia-east2
 Just press Enter when asked for SMTP URI. You can add it later via:
 
 ```bash
-firebase ext:configure firestore-send-email --project=onchainweb-37d30
+firebase ext:configure firestore-send-email --project=YOUR_FIREBASE_PROJECT_ID
 ```
 
 ---
@@ -214,7 +214,7 @@ After 10-30 seconds, the document should update:
 
 1. **Check region**:
    ```bash
-   gcloud firestore databases list --project=onchainweb-37d30
+   gcloud firestore databases list --project=YOUR_FIREBASE_PROJECT_ID
    ```
    Confirm database is in `asia-east2`
 
@@ -244,7 +244,7 @@ After 10-30 seconds, the document should update:
 
 2. **Check extension logs**:
    ```bash
-   firebase functions:log --project=onchainweb-37d30
+   firebase functions:log --project=YOUR_FIREBASE_PROJECT_ID
    ```
 
 ---

@@ -61,7 +61,7 @@ http://localhost:5175/firebase-debug.html
 **Check These:**
 
 1. **Firestore Database Exists**
-   - Go to: https://console.firebase.google.com/u/0/project/onchainweb-37d30/firestore/data
+   - Go to: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/firestore/data
    - Should show "Cloud Firestore" in the left sidebar
    - If not, click "Create database"
 
@@ -142,7 +142,7 @@ http://localhost:5175/firebase-debug.html
 
 If app isn't saving data, you can manually add a test user:
 
-1. Go to: https://console.firebase.google.com/u/0/project/onchainweb-37d30/firestore/data
+1. Go to: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/firestore/data
 
 2. Click **"+ Start collection"**
 
@@ -239,7 +239,7 @@ Document ID: 0x5678...
 ### Once Data is Appearing:
 
 1. **Create Admin Account**
-   - Go to: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+   - Go to: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
    - Click "Add user"
    - Email: `master@gmail.com` (use REAL email)
    - Password: [strong password]
@@ -313,7 +313,7 @@ Document ID: 0x5678...
 
 **Links:**
 - Debug Console: http://localhost:5175/firebase-debug.html
-- Firestore Console: https://console.firebase.google.com/u/0/project/onchainweb-37d30/firestore/data
+- Firestore Console: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/firestore/data
 - Your App: http://localhost:5175
 
 ---

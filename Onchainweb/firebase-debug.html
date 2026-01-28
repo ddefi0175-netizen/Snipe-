@@ -22,12 +22,12 @@
 
         // Firebase config
         const firebaseConfig = {
-            apiKey: "AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw",
-            authDomain: "onchainweb-37d30.firebaseapp.com",
-            projectId: "onchainweb-37d30",
-            storageBucket: "onchainweb-37d30.firebasestorage.app",
-            messagingSenderId: "766146811888",
-            appId: "1:766146811888:web:a96012963dffe31508ef35"
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "YOUR_FIREBASE_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_FIREBASE_PROJECT_ID",
+            storageBucket: "YOUR_FIREBASE_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_FIREBASE_APP_ID"
         };
 
         // Initialize Firebase
@@ -70,7 +70,7 @@
                 output.innerHTML += '📊 User Data:\n';
                 output.innerHTML += JSON.stringify(userData, null, 2) + '\n\n';
                 output.innerHTML += '🔍 Check Firestore Console:\n';
-                output.innerHTML += 'https://console.firebase.google.com/u/0/project/onchainweb-37d30/firestore/data\n\n';
+                output.innerHTML += 'https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/firestore/data\n\n';
                 output.innerHTML += 'Collection: users\n';
                 output.innerHTML += `Document ID: ${testWallet}\n`;
 
@@ -127,8 +127,8 @@
 
             output.innerHTML += '📊 Configuration:\n';
             output.innerHTML += '───────────────────────────────────\n';
-            output.innerHTML += 'Project ID: onchainweb-37d30\n';
-            output.innerHTML += 'Auth Domain: onchainweb-37d30.firebaseapp.com\n';
+            output.innerHTML += 'Project ID: YOUR_FIREBASE_PROJECT_ID\n';
+            output.innerHTML += 'Auth Domain: YOUR_FIREBASE_PROJECT_ID.firebaseapp.com\n';
             output.innerHTML += 'Firestore Ready: YES\n\n';
 
             output.innerHTML += '🔐 Security Rules:\n';
@@ -301,12 +301,12 @@ and connect a wallet. The user should appear here when you click<br>
         <div class="info">
             <h3>🔗 Useful Links:</h3>
             <p>
-<a href="https://console.firebase.google.com/u/0/project/onchainweb-37d30/firestore/data"
+<a href="https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/firestore/data"
    target="_blank"
    style="color: #00ff00; text-decoration: underline;">
    📊 Firestore Console
 </a> - View data in real-time<br>
-<a href="https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication"
+<a href="https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication"
    target="_blank"
    style="color: #00ff00; text-decoration: underline;">
    🔐 Authentication Console

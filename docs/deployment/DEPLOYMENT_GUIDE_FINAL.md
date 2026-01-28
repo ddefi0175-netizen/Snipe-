@@ -41,7 +41,7 @@ grep "VITE_FIREBASE" Onchainweb/.env | wc -l
 
 # Check WalletConnect ID
 grep "VITE_WALLETCONNECT_PROJECT_ID" Onchainweb/.env
-# Should show: VITE_WALLETCONNECT_PROJECT_ID=42039c73d0dacb66d82c12faabf27c9b
+# Should show: VITE_WALLETCONNECT_PROJECT_ID=your-walletconnect-project-id
 ```
 
 ### 4. Clear Build Cache

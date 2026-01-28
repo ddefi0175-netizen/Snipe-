@@ -47,12 +47,12 @@ Update `backend/.env` with your values:
 
 ```dotenv
 # Firebase Project ID (REQUIRED)
-FIREBASE_PROJECT_ID=onchainweb-37d30
+FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
 
 # Authentication
 JWT_SECRET=your-32-char-random-key
 MASTER_USERNAME=snipe_admin_secure_7ecb869e
-MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
+MASTER_PASSWORD=YOUR_MASTER_PASSWORD
 
 # Server
 PORT=4000

@@ -62,7 +62,7 @@ Now admins are created manually via Firebase Console:
    - https://console.firebase.google.com
 
 2. **Select Project**
-   - Project: `onchainweb-37d30`
+   - Project: `YOUR_FIREBASE_PROJECT_ID`
 
 3. **Navigate to Authentication → Users**
 
@@ -95,7 +95,7 @@ Now admins are created manually via Firebase Console:
    - https://console.firebase.google.com
 
 2. **Select Project**
-   - Project: `onchainweb-37d30`
+   - Project: `YOUR_FIREBASE_PROJECT_ID`
 
 3. **Navigate to Authentication → Users**
 
@@ -207,12 +207,12 @@ npm run dev
 
 ### Deploy to Firebase
 ```bash
-firebase deploy --project onchainweb-37d30
+firebase deploy --project YOUR_FIREBASE_PROJECT_ID
 ```
 
 ### View Logs
 ```bash
-firebase logging:read --project onchainweb-37d30
+firebase logging:read --project YOUR_FIREBASE_PROJECT_ID
 ```
 
 ---
@@ -220,7 +220,7 @@ firebase logging:read --project onchainweb-37d30
 ## Support Resources
 
 - **Firebase Console**: https://console.firebase.google.com
-- **Project ID**: `onchainweb-37d30`
+- **Project ID**: `YOUR_FIREBASE_PROJECT_ID`
 - **Firebase Docs**: https://firebase.google.com/docs
 - **Admin Guide**: See `ADMIN_USER_GUIDE.md`
 

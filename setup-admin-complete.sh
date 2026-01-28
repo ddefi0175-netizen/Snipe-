@@ -35,7 +35,7 @@ echo "Option 2: Your Own Domain"
 echo "  Examples: master@yourdomain.com, admin@yourdomain.com"
 echo ""
 echo "Option 3: Firebase Auth Domain"
-echo "  Examples: master@onchainweb-37d30.firebaseapp.com"
+echo "  Examples: master@YOUR_FIREBASE_PROJECT_ID.firebaseapp.com"
 echo ""
 
 read -p "Which option do you prefer? (1/2/3): " OPTION
@@ -62,8 +62,8 @@ case $OPTION in
     echo ""
     echo "🔥 Using Firebase domain"
     echo ""
-    MASTER_EMAIL="master@onchainweb-37d30.firebaseapp.com"
-    ADMIN_EMAIL="admin@onchainweb-37d30.firebaseapp.com"
+    MASTER_EMAIL="master@YOUR_FIREBASE_PROJECT_ID.firebaseapp.com"
+    ADMIN_EMAIL="admin@YOUR_FIREBASE_PROJECT_ID.firebaseapp.com"
     echo "Master email: $MASTER_EMAIL"
     echo "Admin email: $ADMIN_EMAIL"
     ;;
@@ -83,14 +83,14 @@ echo "════════════════════════�
 echo ""
 echo "🌐 Opening Firebase Console..."
 echo ""
-echo "URL: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users"
+echo "URL: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users"
 echo ""
 
 # Try to open the URL in browser
 if command -v xdg-open > /dev/null; then
-    xdg-open "https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users" 2>/dev/null &
+    xdg-open "https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users" 2>/dev/null &
 elif command -v open > /dev/null; then
-    open "https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users" 2>/dev/null &
+    open "https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users" 2>/dev/null &
 fi
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

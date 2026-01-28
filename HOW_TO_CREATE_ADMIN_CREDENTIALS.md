@@ -38,7 +38,7 @@ VITE_ADMIN_ALLOWLIST=master@gmail.com,admin@gmail.com
 
 1. **Go to Firebase Console**
    - URL: https://console.firebase.google.com
-   - Select your project: `onchainweb-37d30` (or your project)
+   - Select your project: `YOUR_FIREBASE_PROJECT_ID` (or your project)
 
 2. **Navigate to Authentication**
    - Click **"Authentication"** in left sidebar
@@ -73,7 +73,7 @@ npm install -g firebase-tools
 firebase login
 
 # Create user programmatically
-firebase auth:import users.json --project onchainweb-37d30
+firebase auth:import users.json --project YOUR_FIREBASE_PROJECT_ID
 ```
 
 **users.json** example:

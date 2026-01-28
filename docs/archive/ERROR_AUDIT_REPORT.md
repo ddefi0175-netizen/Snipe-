@@ -75,7 +75,7 @@ VITE_FIREBASE_APP_ID=your_app_id
 VITE_FIREBASE_MEASUREMENT_ID=G-XXXXX
 ```
 
-**Result**: Firebase deployed to onchainweb-37d30 ✅
+**Result**: Firebase deployed to YOUR_FIREBASE_PROJECT_ID ✅
 
 ---
 
@@ -246,7 +246,7 @@ app.use(limiter);
 ## ✅ Completion Checklist
 
 - ✅ Phase 1: Dependencies installed (417 total with deps)
-- ✅ Phase 2: Firebase deployed (project: onchainweb-37d30)
+- ✅ Phase 2: Firebase deployed (project: YOUR_FIREBASE_PROJECT_ID)
 - ✅ Phase 3: Wallet UX improvements (Switch/Disconnect buttons)
 - ✅ Phase 4: Testing (9/9 tests passing)
 - ✅ Security: Helmet + Rate limiting + Input validation

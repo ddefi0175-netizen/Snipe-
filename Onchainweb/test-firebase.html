@@ -9,12 +9,12 @@
 
         // Your Firebase config
         const firebaseConfig = {
-            apiKey: "AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw",
-            authDomain: "onchainweb-37d30.firebaseapp.com",
-            projectId: "onchainweb-37d30",
-            storageBucket: "onchainweb-37d30.firebasestorage.app",
-            messagingSenderId: "766146811888",
-            appId: "1:766146811888:web:a96012963dffe31508ef35"
+            apiKey: "YOUR_FIREBASE_API_KEY",
+            authDomain: "YOUR_FIREBASE_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_FIREBASE_PROJECT_ID",
+            storageBucket: "YOUR_FIREBASE_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_FIREBASE_APP_ID"
         };
 
         // Initialize Firebase
@@ -50,7 +50,7 @@
 
                 output.innerHTML += '\n✅ SUCCESS! User added to Firestore!\n';
                 output.innerHTML += '\n🔍 Check Firebase Console now:\n';
-                output.innerHTML += 'https://console.firebase.google.com/u/0/project/onchainweb-37d30/firestore/data\n';
+                output.innerHTML += 'https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/firestore/data\n';
                 output.innerHTML += '\nYou should see:\n';
                 output.innerHTML += '  Collection: users\n';
                 output.innerHTML += `    └── Document: ${testWallet}\n`;

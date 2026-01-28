@@ -1,6 +1,6 @@
 # 🔧 Firebase Extensions Setup - Snipe Platform
 
-**Project:** onchainweb-37d30
+**Project:** YOUR_FIREBASE_PROJECT_ID
 **Status:** Ready to Install
 **Date:** January 20, 2026
 
@@ -63,7 +63,7 @@ I've selected **4 extensions** that are perfectly compatible with your Web3 trad
 ## 🚀 Installation Instructions
 
 ### **Step 1: Open Firebase Console**
-Go to: https://console.firebase.google.com/project/onchainweb-37d30/extensions
+Go to: https://console.firebase.google.com/project/YOUR_FIREBASE_PROJECT_ID/extensions
 
 ### **Step 2: Install Each Extension**
 
@@ -195,11 +195,11 @@ After installation:
 
 ## 🆘 Need Help?
 
-**Firebase Console:** https://console.firebase.google.com/project/onchainweb-37d30/extensions
+**Firebase Console:** https://console.firebase.google.com/project/YOUR_FIREBASE_PROJECT_ID/extensions
 
-**Project Settings:** https://console.firebase.google.com/project/onchainweb-37d30/settings/general
+**Project Settings:** https://console.firebase.google.com/project/YOUR_FIREBASE_PROJECT_ID/settings/general
 
-**Cloud Functions:** https://console.firebase.google.com/project/onchainweb-37d30/functions
+**Cloud Functions:** https://console.firebase.google.com/project/YOUR_FIREBASE_PROJECT_ID/functions
 
 ---
 

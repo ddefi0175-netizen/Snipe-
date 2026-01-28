@@ -58,12 +58,12 @@ EOF
     
     # Open Firebase Console
     echo "🔥 Opening Firebase Console..."
-    echo "Create account at: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users"
+    echo "Create account at: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users"
     
     if command -v xdg-open &> /dev/null; then
-        xdg-open "https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users" 2>/dev/null &
+        xdg-open "https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users" 2>/dev/null &
     elif command -v open &> /dev/null; then
-        open "https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users" 2>/dev/null &
+        open "https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users" 2>/dev/null &
     fi
     
     echo ""

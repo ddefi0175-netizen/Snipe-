@@ -42,7 +42,7 @@
 ┌─────────────────────────────────────────────────┐
 │ SNIPE PLATFORM - SYSTEM STATUS                  │
 ├─────────────────────────────────────────────────┤
-│ Firebase Project: onchainweb-37d30              │
+│ Firebase Project: YOUR_FIREBASE_PROJECT_ID              │
 │ Status: ✅ OPERATIONAL                          │
 │                                                  │
 │ Components:                                     │
@@ -80,7 +80,7 @@
 ```bash
 # Go to Firebase Console
 # URL: https://console.firebase.google.com
-# Project: onchainweb-37d30
+# Project: YOUR_FIREBASE_PROJECT_ID
 #
 # 1. Click: Authentication > Users
 # 2. Click: + Create user
@@ -158,7 +158,7 @@ On public site (http://localhost:5173):
 
 ### Firebase Project
 ```
-Project ID: onchainweb-37d30
+Project ID: YOUR_FIREBASE_PROJECT_ID
 Region: us-central1
 Database: Firestore
 Auth: Email/Password
@@ -305,7 +305,7 @@ firebase status
 firebase firestore:list
 
 # Backup Firestore
-firebase firestore:export gs://onchainweb-37d30.appspot.com/backups
+firebase firestore:export gs://YOUR_FIREBASE_PROJECT_ID.appspot.com/backups
 
 # Login to Firebase
 firebase login

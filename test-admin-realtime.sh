@@ -14,12 +14,12 @@ NC='\033[0m' # No Color
 # API Configuration
 API_BASE="${API_BASE:-https://snipe-api.onrender.com/api}"
 MASTER_USERNAME="${MASTER_USERNAME:-snipe_admin_secure_7ecb869e}"
-MASTER_PASSWORD="${MASTER_PASSWORD:-WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=}"
+MASTER_PASSWORD="${MASTER_PASSWORD}"
 
 if [ -z "$MASTER_PASSWORD" ]; then
   echo -e "${RED}Error: MASTER_PASSWORD environment variable is required${NC}"
-  echo "Usage: export MASTER_PASSWORD='WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=' && ./test-admin-realtime.sh"
-  echo "Or: MASTER_PASSWORD='WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=' ./test-admin-realtime.sh"
+  echo "Usage: export MASTER_PASSWORD='your-master-password' && ./test-admin-realtime.sh"
+  echo "Or: MASTER_PASSWORD='your-master-password' ./test-admin-realtime.sh"
   echo ""
   echo "Note: Using export is more secure as it keeps the password out of shell history"
   exit 1

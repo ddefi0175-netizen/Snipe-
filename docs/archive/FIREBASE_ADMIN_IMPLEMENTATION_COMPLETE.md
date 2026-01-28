@@ -95,7 +95,7 @@ Master Dashboard → [Create Admin Button] → Shows Instructions
 
 ### Create New Admin
 
-1. **Firebase Console**: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+1. **Firebase Console**: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
 2. **Click "Create user"** → Enter email & password
 3. **Update `.env`**: Add email to `VITE_ADMIN_ALLOWLIST`
 4. **Restart server**: `npm run dev`
@@ -196,7 +196,7 @@ Master Dashboard → [Create Admin Button] → Shows Instructions
 
 ## Support & References
 
-- **Firebase Console**: https://console.firebase.google.com/u/0/project/onchainweb-37d30
+- **Firebase Console**: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID
 - **Setup Guide**: `FIREBASE_ADMIN_SETUP_CHECKLIST.md`
 - **Management Guide**: `FIREBASE_ADMIN_MANAGEMENT_GUIDE.md`
 - **Quick Reference**: `FIREBASE_ADMIN_QUICK_SETUP.md`

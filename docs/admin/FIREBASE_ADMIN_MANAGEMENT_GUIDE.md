@@ -10,7 +10,7 @@ Since Snipe Platform uses Firebase for authentication and data storage, admin ac
 
 ### Step 1: Create User in Firebase Console
 
-1. Go to: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+1. Go to: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
 2. Click **"Create user"** button
 3. Enter:
    - **Email**: Use a REAL email address
@@ -65,7 +65,7 @@ npm run dev
 
 ### Method 1: Firebase Console (Recommended)
 
-1. Go to: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+1. Go to: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
 2. Find the admin account (search by email)
 3. Click the **3-dot menu** on the right side
 4. Select **"Reset password"**
@@ -82,7 +82,7 @@ If you want admins to reset their own passwords through the app, they can use th
 
 ### To remove an admin:
 
-1. Go to: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+1. Go to: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
 2. Find the admin account
 3. Click the **3-dot menu** on the right
 4. Select **"Delete user"**
@@ -143,7 +143,7 @@ If you want admins to reset their own passwords through the app, they can use th
 **Fix:**
 1. Make sure you're logged into Google account
 2. Go to: https://console.firebase.google.com
-3. Select project: `onchainweb-37d30`
+3. Select project: `YOUR_FIREBASE_PROJECT_ID`
 4. Click "Authentication" in left sidebar
 
 ---
@@ -190,5 +190,5 @@ A: Yes. Firebase Authentication is Google-managed with enterprise security. Pass
 ---
 
 **Last Updated**: January 11, 2026
-**Firebase Project**: onchainweb-37d30
+**Firebase Project**: YOUR_FIREBASE_PROJECT_ID
 **Version**: Firebase Auth v2.0

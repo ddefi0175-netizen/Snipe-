@@ -29,7 +29,7 @@ Copy the password from `master-credentials-SECURE.txt` and save to:
 
 ### Step 3: Create in Firebase Console
 
-1. Visit: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+1. Visit: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
 2. Click "Add user"
 3. Enter:
    - Email: `master@onchainweb.site`
@@ -115,7 +115,7 @@ This will:
    - Example: `M@ster2026!xK9pSecure#Qw7`
 
 2. **Create in Firebase Console:**
-   - Visit: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+   - Visit: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
    - Click "Add user"
    - Email: `master@onchainweb.site`
    - Password: [Your generated password]

@@ -92,7 +92,7 @@ await createUser(userData)  // Saves to Firestore
    - Wait for page reload
 
 3. **Check Firebase Console**:
-   - Go to: https://console.firebase.google.com/u/0/project/onchainweb-37d30/firestore/data
+   - Go to: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/firestore/data
    - You should see:
      ```
      Collection: users
@@ -122,7 +122,7 @@ Now that regular users are saving to Firebase, create your admin account:
 
 ### Step 1: Create Firebase Account
 
-1. Go to: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+1. Go to: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
 2. Click "Add user"
 3. Enter:
    - **Email**: `master@gmail.com` (use real email!)
@@ -178,12 +178,12 @@ After following all steps, verify:
 
 Check `.env` file has all Firebase credentials:
 ```env
-VITE_FIREBASE_API_KEY=AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw
-VITE_FIREBASE_AUTH_DOMAIN=onchainweb-37d30.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=onchainweb-37d30
-VITE_FIREBASE_STORAGE_BUCKET=onchainweb-37d30.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=766146811888
-VITE_FIREBASE_APP_ID=1:766146811888:web:a96012963dffe31508ef35
+VITE_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY_HERE
+VITE_FIREBASE_AUTH_DOMAIN=YOUR_FIREBASE_PROJECT_ID.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET=YOUR_FIREBASE_PROJECT_ID.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_SENDER_ID
+VITE_FIREBASE_APP_ID=YOUR_FIREBASE_APP_ID
 ```
 
 ### Still no data in Firestore
@@ -230,5 +230,5 @@ VITE_FIREBASE_APP_ID=1:766146811888:web:a96012963dffe31508ef35
 ---
 
 **Dev Server**: http://localhost:5174
-**Firebase Console**: https://console.firebase.google.com/u/0/project/onchainweb-37d30
+**Firebase Console**: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID
 **Last Updated**: January 11, 2026

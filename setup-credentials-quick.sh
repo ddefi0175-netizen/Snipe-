@@ -25,7 +25,7 @@ if [ ! -z "$FIREBASE_PROJECT_ID" ]; then
   PROJECT_ID="$FIREBASE_PROJECT_ID"
   echo "✅ Found PROJECT_ID in environment"
 else
-  PROJECT_ID="onchainweb-37d30"
+  PROJECT_ID="YOUR_FIREBASE_PROJECT_ID"
   echo "✅ Using project ID: $PROJECT_ID"
 fi
 
@@ -48,9 +48,9 @@ cat > Onchainweb/.env << EOF
 # 5. Copy the values below
 
 VITE_FIREBASE_API_KEY=$API_KEY
-VITE_FIREBASE_AUTH_DOMAIN=${FIREBASE_AUTH_DOMAIN:-onchainweb-37d30.firebaseapp.com}
+VITE_FIREBASE_AUTH_DOMAIN=${FIREBASE_AUTH_DOMAIN:-YOUR_FIREBASE_PROJECT_ID.firebaseapp.com}
 VITE_FIREBASE_PROJECT_ID=$PROJECT_ID
-VITE_FIREBASE_STORAGE_BUCKET=${FIREBASE_STORAGE_BUCKET:-onchainweb-37d30.appspot.com}
+VITE_FIREBASE_STORAGE_BUCKET=${FIREBASE_STORAGE_BUCKET:-YOUR_FIREBASE_PROJECT_ID.appspot.com}
 VITE_FIREBASE_MESSAGING_SENDER_ID=${FIREBASE_MESSAGING_SENDER_ID:-123456789012}
 VITE_FIREBASE_APP_ID=${FIREBASE_APP_ID:-1:123456789012:web:a1b2c3d4e5f6g7h8}
 VITE_FIREBASE_MEASUREMENT_ID=${FIREBASE_MEASUREMENT_ID:-G-ABCDEF1234}
@@ -75,13 +75,13 @@ echo "📋 FIREBASE CONFIGURATION:"
 echo "───────────────────────────────────────────────────────────────"
 echo "API Key: ${API_KEY:0:15}..."
 echo "Project ID: $PROJECT_ID"
-echo "Auth Domain: onchainweb-37d30.firebaseapp.com"
+echo "Auth Domain: YOUR_FIREBASE_PROJECT_ID.firebaseapp.com"
 echo ""
 
 # Check backend .env
 echo "🔑 BACKEND CREDENTIALS:"
 echo "───────────────────────────────────────────────────────────────"
-if grep -q "JWT_SECRET=G1oUFXpp5sPSGJ" backend/.env; then
+if grep -q "JWT_SECRET=" backend/.env; then
   echo "✅ JWT Secret: SECURE (updated)"
 else
   echo "⚠️  JWT Secret: Not yet configured"
@@ -89,7 +89,7 @@ fi
 
 if grep -q "MASTER_USERNAME=snipe_admin" backend/.env; then
   echo "✅ Master Username: snipe_admin_secure_7ecb869e"
-  if grep -q "MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=" backend/.env; then
+  if grep -q "MASTER_PASSWORD=YOUR_MASTER_PASSWORD" backend/.env; then
     echo "✅ Master Password: SECURE (Updated Jan 18, 2026)"
   else
     echo "⚠️  Master Password: Not yet updated to new secure password"
@@ -101,7 +101,7 @@ fi
 echo ""
 echo "🔗 DATABASE CONFIGURATION:"
 echo "───────────────────────────────────────────────────────────────"
-echo "✅ Firebase Project: onchainweb-37d30"
+echo "✅ Firebase Project: YOUR_FIREBASE_PROJECT_ID"
 echo "✅ Firestore Rules: Deployed"
 echo "✅ .firebaserc: Updated"
 echo ""

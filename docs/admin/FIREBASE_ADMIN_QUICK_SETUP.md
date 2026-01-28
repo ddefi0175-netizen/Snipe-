@@ -12,7 +12,7 @@
 ## How to Create New Admin Accounts
 
 ### Step 1: Open Firebase Console
-**URL:** https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+**URL:** https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
 
 ### Step 2: Click "Create user"
 - **Email**: `admin@gmail.com` (or any REAL email)
@@ -57,7 +57,7 @@ npm run dev
 
 ### Direct Method (Fastest):
 1. Open Firebase Console:
-   https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+   https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
 2. Find admin account (search by email)
 3. Click **3-dot menu** on right
 4. Select **"Reset password"**
@@ -135,7 +135,7 @@ npm run dev
 **Fix**:
 1. Go to: https://console.firebase.google.com
 2. Click "Go to console"
-3. Select project: `onchainweb-37d30`
+3. Select project: `YOUR_FIREBASE_PROJECT_ID`
 4. Click "Authentication" in left sidebar
 
 ---

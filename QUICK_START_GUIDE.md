@@ -9,7 +9,7 @@
 ✅ Firebase Setup                  - Configured
 ✅ Firestore Rules                 - Deployed
 ✅ WalletConnect Integration       - Configured
-✅ VITE_WALLETCONNECT_PROJECT_ID   - Set (42039c73d0dacb66d82c12faabf27c9b)
+✅ VITE_WALLETCONNECT_PROJECT_ID   - Set (your-walletconnect-project-id)
 ```
 
 ### Missing (CRITICAL) ❌
@@ -73,7 +73,7 @@ VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=123456789012
 VITE_FIREBASE_APP_ID=1:123456789012:web:a1b2c3d4e5f6g7h8
 VITE_FIREBASE_MEASUREMENT_ID=G-ABCDEF1234
-VITE_WALLETCONNECT_PROJECT_ID=42039c73d0dacb66d82c12faabf27c9b
+VITE_WALLETCONNECT_PROJECT_ID=your-walletconnect-project-id
 ```
 
 **⚠️ IMPORTANT**:

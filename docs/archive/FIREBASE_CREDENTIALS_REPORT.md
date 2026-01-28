@@ -120,7 +120,7 @@ VITE_FIREBASE_PROJECT_ID
 
 **Go to**: [Firebase Console](https://console.firebase.google.com)
 
-1. Select your Firebase project (onchainweb-37d30 or similar)
+1. Select your Firebase project (YOUR_FIREBASE_PROJECT_ID or similar)
 2. Click ⚙️ (gear icon) → Project Settings
 3. Scroll to "Your apps" section
 4. Click on your Web app (or create one if needed)
@@ -129,7 +129,7 @@ VITE_FIREBASE_PROJECT_ID
 ```text
 📌 VITE_FIREBASE_API_KEY = AIza... (starts with "AIza")
 📌 VITE_FIREBASE_AUTH_DOMAIN = ...firebaseapp.com
-📌 VITE_FIREBASE_PROJECT_ID = onchainweb-37d30 (or your ID)
+📌 VITE_FIREBASE_PROJECT_ID = YOUR_FIREBASE_PROJECT_ID (or your ID)
 📌 VITE_FIREBASE_STORAGE_BUCKET = ...appspot.com
 📌 VITE_FIREBASE_MESSAGING_SENDER_ID = 10-15 digits
 📌 VITE_FIREBASE_APP_ID = 1:numbers:web:alphanumeric
@@ -287,7 +287,7 @@ Status: 4/12 checks passing (33%)
 A: [Firebase Console](https://console.firebase.google.com) → Project
 Settings → Your apps → Web app → Copy config
 
-**Q: Can I use the onchainweb-37d30 project already set up?**
+**Q: Can I use the YOUR_FIREBASE_PROJECT_ID project already set up?**
 
 A: Yes, if you have access. Otherwise, create a new project.
 
@@ -344,7 +344,7 @@ $ curl http://localhost:4000/api/health
 ```javascript
 Browser Console:
 > import.meta.env.VITE_FIREBASE_PROJECT_ID
-"onchainweb-37d30"  ✅
+"YOUR_FIREBASE_PROJECT_ID"  ✅
 ```
 
 ---

@@ -53,14 +53,14 @@ The Snipe Trading Platform has been successfully transformed from a non-function
 **Status**: ✅ 100% Complete
 
 **Deliverables**:
-- Firebase project configured (onchainweb-37d30)
+- Firebase project configured (YOUR_FIREBASE_PROJECT_ID)
 - Firestore rules deployed and compiled
 - Authentication system initialized
 - All 7 Firebase credentials configured
 
 **Configuration**:
 ```
-Project: onchainweb-37d30
+Project: YOUR_FIREBASE_PROJECT_ID
 Region: asia-east2
 Firestore: ✅ Deployed
 Auth: ✅ Configured
@@ -198,7 +198,7 @@ npm run test:ui         # Test dashboard
 - **Rate Limiting**: express-rate-limit
 
 ### Infrastructure
-- **Firebase Project**: onchainweb-37d30 (asia-east2)
+- **Firebase Project**: YOUR_FIREBASE_PROJECT_ID (asia-east2)
 - **Firestore**: Configured + rules deployed
 - **Auth**: Firebase Authentication
 - **Dev Servers**: Backend (4000), Frontend (5174)

@@ -26,7 +26,7 @@ echo ""
 
 # Check backend config
 echo -e "${CYAN}Backend Configuration:${NC}"
-if grep -q "JWT_SECRET=G1oUFXpp5sPSGJ" backend/.env; then
+if grep -q "JWT_SECRET=" backend/.env; then
   echo -e "  ${GREEN}✅${NC} JWT Secret: SECURE (configured)"
 else
   echo -e "  ${RED}❌${NC} JWT Secret: Not configured"
@@ -38,16 +38,17 @@ else
   echo -e "  ${RED}❌${NC} Master Username: Not configured"
 fi
 
-if grep -q "MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=" backend/.env; then
-  echo -e "  ${GREEN}✅${NC} Master Password: SECURE (configured - Updated Jan 18, 2026)"
+if grep -q "MASTER_PASSWORD=" backend/.env 2>/dev/null; then
+  echo -e "  ${GREEN}✅${NC} Master Password: Configured in backend/.env"
 else
-  echo -e "  ${RED}❌${NC} Master Password: Not configured or not updated"
+  echo -e "  ${YELLOW}⚠️${NC}  Master Password: Not found (file may not exist)"
 fi
 
 echo ""
 echo -e "${CYAN}Frontend Configuration:${NC}"
-if grep -q "VITE_FIREBASE_PROJECT_ID=onchainweb-37d30" Onchainweb/.env; then
-  echo -e "  ${GREEN}✅${NC} Firebase Project ID: onchainweb-37d30"
+if grep -q "VITE_FIREBASE_PROJECT_ID=" Onchainweb/.env 2>/dev/null; then
+  PROJECT_ID=$(grep "VITE_FIREBASE_PROJECT_ID=" Onchainweb/.env | cut -d'=' -f2)
+  echo -e "  ${GREEN}✅${NC} Firebase Project ID: $PROJECT_ID"
 else
   echo -e "  ${RED}❌${NC} Firebase Project ID: Not configured"
 fi
@@ -60,8 +61,8 @@ fi
 
 echo ""
 echo -e "${CYAN}Firebase Project Reference:${NC}"
-if grep -q '"default": "onchainweb-37d30"' .firebaserc; then
-  echo -e "  ${GREEN}✅${NC} .firebaserc: onchainweb-37d30"
+if grep -q '"default": "YOUR_FIREBASE_PROJECT_ID"' .firebaserc; then
+  echo -e "  ${GREEN}✅${NC} .firebaserc: YOUR_FIREBASE_PROJECT_ID"
 else
   echo -e "  ${RED}❌${NC} .firebaserc: Not configured"
 fi
@@ -141,12 +142,12 @@ echo ""
 passes=0
 total=11
 
-grep -q "JWT_SECRET=G1oUFXpp5sPSGJ" backend/.env && passes=$((passes + 1))
-grep -q "MASTER_USERNAME=snipe_admin" backend/.env && passes=$((passes + 1))
-grep -q "MASTER_PASSWORD=Snipe" backend/.env && passes=$((passes + 1))
-grep -q "VITE_FIREBASE_PROJECT_ID=onchainweb-37d30" Onchainweb/.env && passes=$((passes + 1))
-grep -q "VITE_FIREBASE_API_KEY=AIzaSyD" Onchainweb/.env && passes=$((passes + 1))
-grep -q '"default": "onchainweb-37d30"' .firebaserc && passes=$((passes + 1))
+grep -q "JWT_SECRET=" backend/.env 2>/dev/null && passes=$((passes + 1))
+grep -q "MASTER_USERNAME=" backend/.env 2>/dev/null && passes=$((passes + 1))
+grep -q "MASTER_PASSWORD=" backend/.env 2>/dev/null && passes=$((passes + 1))
+grep -q "VITE_FIREBASE_PROJECT_ID=" Onchainweb/.env 2>/dev/null && passes=$((passes + 1))
+grep -q "VITE_FIREBASE_API_KEY=" Onchainweb/.env 2>/dev/null && passes=$((passes + 1))
+grep -q '"default":' .firebaserc 2>/dev/null && passes=$((passes + 1))
 [ -f "firestore.rules" ] && passes=$((passes + 1))
 lsof -Pi :4000 -sTCP:LISTEN -t >/dev/null 2>&1 && passes=$((passes + 1))
 lsof -Pi :5173 -sTCP:LISTEN -t >/dev/null 2>&1 && passes=$((passes + 1))

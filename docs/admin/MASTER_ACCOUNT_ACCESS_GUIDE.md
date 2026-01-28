@@ -8,9 +8,11 @@
 ### Login Credentials
 
 ```
-Username: snipe_admin_secure_7ecb869e
-Password: WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
+Username: [SET IN backend/.env as MASTER_USERNAME]
+Password: [SET IN backend/.env as MASTER_PASSWORD]
 ```
+
+**IMPORTANT**: The actual credentials are stored in your `backend/.env` file and should NEVER be committed to version control. See "Setup Instructions" below.
 
 ### Access URLs
 
@@ -18,13 +20,20 @@ Password: WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
 - **Master Dashboard**: https://www.onchainweb.app/master-admin
 - **Backend API**: https://snipe-api.onrender.com/api/auth/login
 
+## Setup Instructions
+
+1. Copy the credentials from your secure storage or `backend/.env` file
+2. Keep credentials in a secure password manager
+3. Never commit credentials to git
+4. Use environment variables for automation
+
 ## How to Login
 
 ### Via Browser
 
 1. Open: https://www.onchainweb.app/master-admin
-2. Enter username: `snipe_admin_secure_7ecb869e`
-3. Enter password: `WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=`
+2. Enter your master username (from backend/.env)
+3. Enter your master password (from backend/.env)
 4. Click **Login**
 
 ### Via API (curl)
@@ -33,17 +42,17 @@ Password: WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
 curl -X POST https://snipe-api.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "username": "snipe_admin_secure_7ecb869e",
-    "password": "WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E="
+    "username": "YOUR_MASTER_USERNAME",
+    "password": "YOUR_MASTER_PASSWORD"
   }'
 ```
 
 ### Via Environment Variables
 
 ```bash
-# Set environment variables
-export MASTER_USERNAME="snipe_admin_secure_7ecb869e"
-export MASTER_PASSWORD="WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E="
+# Set environment variables from your backend/.env file
+export MASTER_USERNAME="your-master-username"
+export MASTER_PASSWORD="your-master-password"
 
 # Use in scripts
 ./test-admin-realtime.sh
@@ -109,20 +118,20 @@ For development and deployment:
 **Local (.env files)**:
 ```dotenv
 MASTER_USERNAME=snipe_admin_secure_7ecb869e
-MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
+MASTER_PASSWORD=YOUR_MASTER_PASSWORD
 ```
 
 **Vercel Dashboard**:
 Navigate to Project Settings → Environment Variables, then add:
 ```
 Variable: MASTER_PASSWORD
-Value: WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
+Value: YOUR_MASTER_PASSWORD
 ```
 
 **Render.com Dashboard** (if applicable):
 Navigate to Service Settings → Environment, then add:
 ```
-MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
+MASTER_PASSWORD=YOUR_MASTER_PASSWORD
 ```
 
 ## Testing Login
@@ -134,7 +143,7 @@ curl -X POST https://snipe-api.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "username": "snipe_admin_secure_7ecb869e",
-    "password": "WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E="
+    "password": "YOUR_MASTER_PASSWORD"
   }' | jq .
 ```
 
@@ -162,7 +171,7 @@ Expected response:
 
 ```bash
 # Run real-time test
-MASTER_PASSWORD='WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=' ./test-admin-realtime.sh
+MASTER_PASSWORD='YOUR_MASTER_PASSWORD' ./test-admin-realtime.sh
 
 # Expected: Shows "✅ Backend Health Check: OK"
 ```

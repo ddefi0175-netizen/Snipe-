@@ -41,7 +41,7 @@ cd ..
 ### Step 2: Deploy Functions
 
 ```bash
-firebase deploy --only functions --project=onchainweb-37d30
+firebase deploy --only functions --project=YOUR_FIREBASE_PROJECT_ID
 ```
 
 Expected output:
@@ -54,14 +54,14 @@ Expected output:
 ### Step 3: Deploy Database Rules
 
 ```bash
-firebase deploy --only database --project=onchainweb-37d30
+firebase deploy --only database --project=YOUR_FIREBASE_PROJECT_ID
 ```
 
 ### Step 4: Verify Deployment
 
 Check functions:
 ```bash
-firebase functions:list --project=onchainweb-37d30
+firebase functions:list --project=YOUR_FIREBASE_PROJECT_ID
 ```
 
 Should show all 8 functions with status ✓
@@ -286,7 +286,7 @@ rm -rf functions/node_modules
 cd functions && npm install && cd ..
 
 # Deploy again
-firebase deploy --only functions --project=onchainweb-37d30
+firebase deploy --only functions --project=YOUR_FIREBASE_PROJECT_ID
 ```
 
 ### Real-time sync not working

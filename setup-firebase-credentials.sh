@@ -13,7 +13,7 @@ echo "╚═══════════════════════�
 echo ""
 
 # Check if Firebase credentials already exist
-if grep -q "VITE_FIREBASE_PROJECT_ID=onchainweb-37d30" Onchainweb/.env 2>/dev/null && \
+if grep -q "VITE_FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID" Onchainweb/.env 2>/dev/null && \
    ! grep -q "VITE_FIREBASE_PROJECT_ID=your-" Onchainweb/.env 2>/dev/null; then
   echo "✅ Firebase credentials already configured!"
   echo ""
@@ -30,7 +30,7 @@ echo "📋 INSTRUCTIONS:"
 echo "─────────────────────────────────────────────────────────────"
 echo ""
 echo "1. Open https://console.firebase.google.com"
-echo "2. Select project: onchainweb-37d30"
+echo "2. Select project: YOUR_FIREBASE_PROJECT_ID"
 echo "3. Go to: Settings ⚙️ → Project Settings → Your Apps → Web"
 echo "4. Copy the values from the configuration block"
 echo ""
@@ -40,7 +40,7 @@ echo ""
 # Array to hold responses
 declare -a creds_array
 declare -a creds_names=("API_KEY" "AUTH_DOMAIN" "PROJECT_ID" "STORAGE_BUCKET" "MESSAGING_SENDER_ID" "APP_ID" "MEASUREMENT_ID")
-declare -a creds_examples=("AIzaSyD..." "project.firebaseapp.com" "onchainweb-37d30" "project.appspot.com" "123456789012" "1:123456789012:web:abc123" "G-XXXXXXX")
+declare -a creds_examples=("AIzaSyD..." "project.firebaseapp.com" "YOUR_FIREBASE_PROJECT_ID" "project.appspot.com" "123456789012" "1:123456789012:web:abc123" "G-XXXXXXX")
 declare -a creds_env=("VITE_FIREBASE_API_KEY" "VITE_FIREBASE_AUTH_DOMAIN" "VITE_FIREBASE_PROJECT_ID" "VITE_FIREBASE_STORAGE_BUCKET" "VITE_FIREBASE_MESSAGING_SENDER_ID" "VITE_FIREBASE_APP_ID" "VITE_FIREBASE_MEASUREMENT_ID")
 
 # Collect credentials

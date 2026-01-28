@@ -10,7 +10,7 @@ This guide walks you through setting up Firebase with all necessary extensions, 
 
 | Component | Status | Details |
 |-----------|--------|---------|
-| Firebase Project | ✅ Active | `onchainweb-37d30` |
+| Firebase Project | ✅ Active | `YOUR_FIREBASE_PROJECT_ID` |
 | Firestore Database | ✅ Ready | Collections configured |
 | Authentication | ✅ Enabled | Email/Password method |
 | Storage Bucket | ⚠️ Optional | For file uploads |
@@ -65,7 +65,7 @@ firebase ext:install firebase/storage-resize-images
 ```
 
 **Configuration**:
-- Input bucket: `gs://onchainweb-37d30.appspot.com`
+- Input bucket: `gs://YOUR_FIREBASE_PROJECT_ID.appspot.com`
 - Sizes: `200x200`, `500x500`, `1024x1024`
 - Output format: WebP (for compression)
 
@@ -109,16 +109,16 @@ firebase ext:install firebase/send-email
 
 ```env
 # Firebase Credentials (Already Set)
-VITE_FIREBASE_API_KEY=AIzaSyA56Pq_WcE6TehQDayLTZ0ibCHCwZkUUlw
-VITE_FIREBASE_AUTH_DOMAIN=onchainweb-37d30.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=onchainweb-37d30
-VITE_FIREBASE_STORAGE_BUCKET=onchainweb-37d30.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=766146811888
-VITE_FIREBASE_APP_ID=1:766146811888:web:a96012963dffe31508ef35
-VITE_FIREBASE_MEASUREMENT_ID=G-1QDHSDQKDY
+VITE_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY_HERE
+VITE_FIREBASE_AUTH_DOMAIN=YOUR_FIREBASE_PROJECT_ID.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET=YOUR_FIREBASE_PROJECT_ID.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_SENDER_ID
+VITE_FIREBASE_APP_ID=YOUR_FIREBASE_APP_ID
+VITE_FIREBASE_MEASUREMENT_ID=YOUR_MEASUREMENT_ID
 
 # WalletConnect
-VITE_WALLETCONNECT_PROJECT_ID=42039c73d0dacb66d82c12faabf27c9b
+VITE_WALLETCONNECT_PROJECT_ID=your-walletconnect-project-id
 
 # Admin Configuration
 VITE_ENABLE_ADMIN=true
@@ -155,7 +155,7 @@ ENABLE_DEBUG_LOGS=false
 ### In Firebase Console (Global Settings)
 
 1. Go to https://console.firebase.google.com
-2. Select project: `onchainweb-37d30`
+2. Select project: `YOUR_FIREBASE_PROJECT_ID`
 3. Go to **Project Settings** ⚙️
 4. Set environment variables in **Functions** section
 
@@ -203,7 +203,7 @@ firebase deploy --only firestore:indexes
 ### Via Firebase Console
 
 1. Go to https://console.firebase.google.com
-2. Select `onchainweb-37d30` project
+2. Select `YOUR_FIREBASE_PROJECT_ID` project
 3. Click **Authentication** → **Users**
 4. Click **+ Create user**
 5. Fill in:
@@ -240,7 +240,7 @@ admin.auth().createUser({
 
 ```bash
 # Add storage bucket
-firebase storage:bucket add gs://onchainweb-37d30.appspot.com
+firebase storage:bucket add gs://YOUR_FIREBASE_PROJECT_ID.appspot.com
 
 # Deploy storage rules
 firebase deploy --only storage

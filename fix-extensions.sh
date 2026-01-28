@@ -5,7 +5,7 @@
 
 set -e  # Exit on error
 
-PROJECT_ID="onchainweb-37d30"
+PROJECT_ID="YOUR_FIREBASE_PROJECT_ID"
 REGION="asia-east2"  # Your Firestore region
 
 echo "╔════════════════════════════════════════════════════════════════╗"

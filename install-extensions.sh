@@ -2,11 +2,11 @@
 
 # Firebase Extensions Setup Script for Snipe Platform
 # Installs compatible extensions automatically
-# Project: onchainweb-37d30
+# Project: YOUR_FIREBASE_PROJECT_ID
 
 set -e
 
-PROJECT_ID="onchainweb-37d30"
+PROJECT_ID="YOUR_FIREBASE_PROJECT_ID"
 
 echo "╔════════════════════════════════════════════════════════════════════════════╗"
 echo "║                                                                            ║"
