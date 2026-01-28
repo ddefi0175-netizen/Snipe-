@@ -9,7 +9,7 @@
 
 ### Step 1: Create Accounts with Real Emails
 
-Go to: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+Go to: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
 
 Click "Add user" and create:
 
@@ -21,7 +21,7 @@ Password: [your strong password]
 
 **Option B: Use Firebase Domain**
 ```
-Email: master@onchainweb-37d30.firebaseapp.com
+Email: master@YOUR_FIREBASE_PROJECT_ID.firebaseapp.com
 Password: [your strong password]
 ```
 
@@ -85,7 +85,7 @@ Firestore collections are created automatically when first data is written.
 
 ### Or add manually:
 
-1. Go to: https://console.firebase.google.com/u/0/project/onchainweb-37d30/firestore/data
+1. Go to: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/firestore/data
 2. Start collection: `users`
 3. Add document:
    ```
@@ -124,7 +124,7 @@ Firestore collections are created automatically when first data is written.
 ⚠️ **FIREBASE REJECTS FAKE DOMAINS**
 - ✅ `master@gmail.com`
 - ✅ `master@yourdomain.com`
-- ✅ `master@onchainweb-37d30.firebaseapp.com`
+- ✅ `master@YOUR_FIREBASE_PROJECT_ID.firebaseapp.com`
 - ❌ `master@admin.onchainweb.app` (rejected!)
 
 ---

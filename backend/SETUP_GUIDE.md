@@ -47,7 +47,7 @@ Update `backend/.env` with your values:
 
 ```dotenv
 # Firebase Project ID (REQUIRED)
-FIREBASE_PROJECT_ID=onchainweb-37d30
+FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
 
 # Authentication
 JWT_SECRET=your-32-char-random-key

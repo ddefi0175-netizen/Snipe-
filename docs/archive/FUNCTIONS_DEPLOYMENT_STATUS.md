@@ -5,7 +5,7 @@
 ## Current Status
 
 ### ✅ Completed
-- **Realtime Database Rules**: Successfully deployed to `onchainweb-37d30-default-rtdb`
+- **Realtime Database Rules**: Successfully deployed to `YOUR_FIREBASE_PROJECT_ID-default-rtdb`
 - **RTDB Security**: Master/admin access controls active
 - **Code**: All 8 Cloud Functions written and ready in `/functions/index.js`
 - **Dependencies**: firebase-functions ^5.1.0, firebase-admin ^12.0.0 installed
@@ -35,14 +35,14 @@ All in region: **asia-east2**
 ## IAM Permissions Granted
 
 ### Service Accounts Configured
-1. **Compute Service Account**: `766146811888-compute@developer.gserviceaccount.com`
+1. **Compute Service Account**: `YOUR_SENDER_ID-compute@developer.gserviceaccount.com`
    - Storage Object Viewer ✅
 
-2. **Cloud Build Service Account**: `766146811888@cloudbuild.gserviceaccount.com`
+2. **Cloud Build Service Account**: `YOUR_SENDER_ID@cloudbuild.gserviceaccount.com`
    - Storage Admin ✅
    - Artifact Registry Reader ✅
 
-3. **Cloud Functions Service Agent**: `service-766146811888@gcf-admin-robot.iam.gserviceaccount.com`
+3. **Cloud Functions Service Agent**: `service-YOUR_SENDER_ID@gcf-admin-robot.iam.gserviceaccount.com`
    - Storage Admin ✅
    - Artifact Registry Reader ✅
 
@@ -71,15 +71,15 @@ The consistent build failures with no accessible logs suggest one of:
 
 ### Option 1: Enable Missing APIs (Try First)
 ```bash
-gcloud services enable run.googleapis.com --project=onchainweb-37d30
-gcloud services enable eventarc.googleapis.com --project=onchainweb-37d30
-gcloud services enable firebasedatabase.googleapis.com --project=onchainweb-37d30
+gcloud services enable run.googleapis.com --project=YOUR_FIREBASE_PROJECT_ID
+gcloud services enable eventarc.googleapis.com --project=YOUR_FIREBASE_PROJECT_ID
+gcloud services enable firebasedatabase.googleapis.com --project=YOUR_FIREBASE_PROJECT_ID
 ```
 
 Then redeploy:
 ```bash
 cd /workspaces/Snipe-
-firebase deploy --only functions --project=onchainweb-37d30
+firebase deploy --only functions --project=YOUR_FIREBASE_PROJECT_ID
 ```
 
 ### Option 2: Grant Log Viewer Access
@@ -112,7 +112,7 @@ npm install
 firebase emulators:start --only functions
 ```
 
-This will run functions at `http://localhost:5001/onchainweb-37d30/asia-east2/<functionName>`
+This will run functions at `http://localhost:5001/YOUR_FIREBASE_PROJECT_ID/asia-east2/<functionName>`
 
 ## Files Modified Today
 

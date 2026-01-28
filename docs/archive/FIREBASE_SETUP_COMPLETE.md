@@ -35,7 +35,7 @@
 
 | Component | Status | Details |
 |-----------|--------|---------|
-| Firebase Project | ✅ Active | `onchainweb-37d30` |
+| Firebase Project | ✅ Active | `YOUR_FIREBASE_PROJECT_ID` |
 | Firestore | ✅ Deployed | Rules + Indexes ready |
 | Authentication | ✅ Ready | Master account needed |
 | Environment | ✅ Complete | All vars in `.env` |
@@ -50,7 +50,7 @@
 ### Step 1: Create Master Account
 
 1. Go to: https://console.firebase.google.com
-2. Select project: `onchainweb-37d30`
+2. Select project: `YOUR_FIREBASE_PROJECT_ID`
 3. Click **Authentication** → **Users**
 4. Click **+ Create user**
 5. Fill in:

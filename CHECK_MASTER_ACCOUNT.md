@@ -40,7 +40,7 @@ The emails listed in `VITE_ADMIN_ALLOWLIST` are the authorized admin accounts.
 #### Step 2: Verify Account Exists in Firebase
 
 1. Open [Firebase Console](https://console.firebase.google.com)
-2. Select your project (e.g., `onchainweb-37d30`)
+2. Select your project (e.g., `YOUR_FIREBASE_PROJECT_ID`)
 3. Go to **Authentication** → **Users**
 4. Look for the master email (e.g., `master@example.com`)
 

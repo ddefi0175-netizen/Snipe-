@@ -18,7 +18,7 @@ https://console.firebase.google.com
 
 ### Step 2: Select Project
 ```
-Project: onchainweb-37d30
+Project: YOUR_FIREBASE_PROJECT_ID
 ```
 
 ### Step 3: Navigate to Authentication
@@ -107,12 +107,12 @@ npm run build
 
 ### Deploy to Firebase
 ```bash
-firebase deploy --project onchainweb-37d30
+firebase deploy --project YOUR_FIREBASE_PROJECT_ID
 ```
 
 ### Verify Deployment
 ```
-https://onchainweb-37d30.web.app
+https://YOUR_FIREBASE_PROJECT_ID.web.app
 ```
 
 ---
@@ -206,10 +206,10 @@ cd Onchainweb && npm run dev
 cd Onchainweb && npm run build
 
 # Deploy to Firebase
-firebase deploy --project onchainweb-37d30
+firebase deploy --project YOUR_FIREBASE_PROJECT_ID
 
 # View Firebase logs
-firebase logging:read --project onchainweb-37d30
+firebase logging:read --project YOUR_FIREBASE_PROJECT_ID
 ```
 
 ---

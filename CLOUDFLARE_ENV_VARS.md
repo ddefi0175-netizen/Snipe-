@@ -14,10 +14,10 @@ VITE_CLOUDFLARE_WORKER_URL=https://snipe-onchainweb.your-subdomain.workers.dev
 Replace `your-subdomain` with your actual Cloudflare Workers subdomain after deployment.
 
 ### WalletConnect (1 variable)
-Already configured with your project ID:
+Get your own free project ID from https://cloud.walletconnect.com
 
 ```
-VITE_WALLETCONNECT_PROJECT_ID=42039c73d0dacb66d82c12faabf27c9b
+VITE_WALLETCONNECT_PROJECT_ID=your-walletconnect-project-id
 ```
 
 ## Optional Variables

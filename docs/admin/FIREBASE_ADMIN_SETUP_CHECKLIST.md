@@ -13,7 +13,7 @@
 ## Phase 2: Create First Admin Account
 
 ### Step 1: Firebase Console Setup
-- [ ] Open: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+- [ ] Open: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
 - [ ] Click "Create user"
 - [ ] Enter email: **admin@gmail.com** (or your preferred email)
 - [ ] Enter password: (choose strong password)
@@ -150,7 +150,7 @@
 
 ### Firebase Console URL
 ```
-https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
 ```
 
 ### Dev Server Command

@@ -100,7 +100,7 @@ cd Onchainweb && npm run dev
 cd Onchainweb && npm run build
 
 # Deploy to Firebase
-firebase deploy --project onchainweb-37d30
+firebase deploy --project YOUR_FIREBASE_PROJECT_ID
 
 # View specific admin email in allowlist
 cat Onchainweb/.env | grep VITE_ADMIN_ALLOWLIST

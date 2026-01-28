@@ -8,14 +8,14 @@
 
 Go to: https://console.firebase.google.com
 
-1. **Select/Create Project**: `onchainweb-37d30` (or your project name)
+1. **Select/Create Project**: `YOUR_FIREBASE_PROJECT_ID` (or your project name)
 2. **Go to**: Project Settings (gear icon) → Your apps → Web app
 3. **Copy these 7 values**:
    ```
    API Key: AIza...
    Auth Domain: your-project.firebaseapp.com
-   Project ID: onchainweb-37d30
-   Storage Bucket: onchainweb-37d30.appspot.com
+   Project ID: YOUR_FIREBASE_PROJECT_ID
+   Storage Bucket: YOUR_FIREBASE_PROJECT_ID.appspot.com
    Messaging Sender ID: 123456789
    App ID: 1:123456789:web:abc123def456
    Measurement ID: G-ABCD1234EF
@@ -29,8 +29,8 @@ Replace placeholder values:
 ```bash
 VITE_FIREBASE_API_KEY=AIza... # Your actual API key
 VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=onchainweb-37d30
-VITE_FIREBASE_STORAGE_BUCKET=onchainweb-37d30.appspot.com
+VITE_FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET=YOUR_FIREBASE_PROJECT_ID.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
 VITE_FIREBASE_APP_ID=1:123456789:web:abc123def456
 VITE_FIREBASE_MEASUREMENT_ID=G-ABCD1234EF
@@ -51,7 +51,7 @@ MASTER_USERNAME=admin_snipe_2025
 MASTER_PASSWORD=SuperSecurePasswordHere123!@#
 
 # Firebase project ID
-FIREBASE_PROJECT_ID=onchainweb-37d30
+FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
 ```
 
 ### Step 4: Validate (1 min)
@@ -83,7 +83,7 @@ npm run dev
 ```javascript
 // Should show your Firebase project ID (not "your-")
 console.log(import.meta.env.VITE_FIREBASE_PROJECT_ID)
-// Output: onchainweb-37d30
+// Output: YOUR_FIREBASE_PROJECT_ID
 ```
 
 **In Terminal**:

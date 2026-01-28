@@ -64,7 +64,7 @@
 
 1. **Select your Firebase Project**
    ```
-   Project name: onchainweb-37d30 (or your project)
+   Project name: YOUR_FIREBASE_PROJECT_ID (or your project)
    Region: asia-east2
    ```
 
@@ -76,7 +76,7 @@
 3. **Copy these 7 values exactly**:
    - `VITE_FIREBASE_API_KEY` → API Key value
    - `VITE_FIREBASE_AUTH_DOMAIN` → Auth Domain (e.g., project.firebaseapp.com)
-   - `VITE_FIREBASE_PROJECT_ID` → Project ID (e.g., onchainweb-37d30)
+   - `VITE_FIREBASE_PROJECT_ID` → Project ID (e.g., YOUR_FIREBASE_PROJECT_ID)
    - `VITE_FIREBASE_STORAGE_BUCKET` → Storage Bucket (e.g., project.appspot.com)
    - `VITE_FIREBASE_MESSAGING_SENDER_ID` → Sender ID (10 digits)
    - `VITE_FIREBASE_APP_ID` → App ID (1:numbers:web:alphanumeric)
@@ -100,9 +100,9 @@ VITE_FIREBASE_MEASUREMENT_ID=
 
 # AFTER (with real values)
 VITE_FIREBASE_API_KEY=AIzaSyD_real_api_key_here_32_chars_min
-VITE_FIREBASE_AUTH_DOMAIN=onchainweb-37d30.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=onchainweb-37d30
-VITE_FIREBASE_STORAGE_BUCKET=onchainweb-37d30.appspot.com
+VITE_FIREBASE_AUTH_DOMAIN=YOUR_PROJECT.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET=YOUR_FIREBASE_PROJECT_ID.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=123456789012
 VITE_FIREBASE_APP_ID=1:123456789012:web:a1b2c3d4e5f6g7h8
 VITE_FIREBASE_MEASUREMENT_ID=G-ABCDEF1234
@@ -149,7 +149,7 @@ MASTER_PASSWORD=Superstr0ng!@#$%^&*()_+-=[]{}|;:',.<>?/`~
 "default": "your-firebase-project-id"
 
 # AFTER
-"default": "onchainweb-37d30"
+"default": "YOUR_FIREBASE_PROJECT_ID"
 ```
 
 **Important**: Must match VITE_FIREBASE_PROJECT_ID exactly
@@ -167,7 +167,7 @@ npm run dev
 **Expected Output**:
 ```
 ✓ Server running on port 4000
-✓ Firebase initialized with project: onchainweb-37d30
+✓ Firebase initialized with project: YOUR_FIREBASE_PROJECT_ID
 ✓ Database connection: Active
 ```
 
@@ -219,7 +219,7 @@ npm run dev
 ```javascript
 // Check Firebase is initialized
 console.log(import.meta.env.VITE_FIREBASE_PROJECT_ID)
-// Should output: onchainweb-37d30 (NOT "your-firebase-project-id")
+// Should output: YOUR_FIREBASE_PROJECT_ID (NOT "your-firebase-project-id")
 
 // Check auth module available
 if (firebase && firebase.auth) {

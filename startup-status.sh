@@ -26,7 +26,7 @@ echo ""
 
 # Check backend config
 echo -e "${CYAN}Backend Configuration:${NC}"
-if grep -q "JWT_SECRET=G1oUFXpp5sPSGJ" backend/.env; then
+if grep -q "JWT_SECRET=" backend/.env; then
   echo -e "  ${GREEN}✅${NC} JWT Secret: SECURE (configured)"
 else
   echo -e "  ${RED}❌${NC} JWT Secret: Not configured"
@@ -142,7 +142,7 @@ echo ""
 passes=0
 total=11
 
-grep -q "JWT_SECRET=G1oUFXpp5sPSGJ" backend/.env && passes=$((passes + 1))
+grep -q "JWT_SECRET=" backend/.env && passes=$((passes + 1))
 grep -q "MASTER_USERNAME=snipe_admin" backend/.env && passes=$((passes + 1))
 grep -q "MASTER_PASSWORD=Snipe" backend/.env && passes=$((passes + 1))
 grep -q "VITE_FIREBASE_PROJECT_ID=onchainweb-37d30" Onchainweb/.env && passes=$((passes + 1))

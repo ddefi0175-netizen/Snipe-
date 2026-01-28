@@ -29,7 +29,7 @@ The platform supports two separate authentication methods:
 ### Step 1: Enable Email/Password Authentication in Firebase
 
 1. Go to [Firebase Console](https://console.firebase.google.com)
-2. Select your project: `onchainweb-37d30`
+2. Select your project: `YOUR_FIREBASE_PROJECT_ID`
 3. Navigate to **Authentication** → **Sign-in method**
 4. Click on **Email/Password**
 5. Enable both:

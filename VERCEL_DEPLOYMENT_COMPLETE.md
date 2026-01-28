@@ -283,7 +283,7 @@ Admin Portal:     https://onchainweb.site/admin
 ### Firebase Project:
 ```
 Project ID:       onchainweb-37d30
-Auth Domain:      onchainweb-37d30.firebaseapp.com
+Auth Domain:      YOUR_PROJECT.firebaseapp.com
 Storage Bucket:   onchainweb-37d30.firebasestorage.app
 ```
 

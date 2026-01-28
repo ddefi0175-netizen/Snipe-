@@ -1,13 +1,16 @@
 # 🔐 MASTER ACCOUNT CREDENTIALS - QUICK REFERENCE
 
 **Status**: ✅ Active (Updated Jan 18, 2026)
+**Note**: This is an archived document. Actual credentials are in `backend/.env` and should NOT be in git.
 
 ## Login Credentials
 
 ```
-Username: snipe_admin_secure_7ecb869e
-Password: WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
+Username: [STORED IN backend/.env as MASTER_USERNAME]
+Password: [STORED IN backend/.env as MASTER_PASSWORD]
 ```
+
+**⚠️ SECURITY WARNING**: Never commit actual credentials to git repositories!
 
 ## Access URLs
 
@@ -20,16 +23,16 @@ Password: WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
 ## Quick Login Test
 
 ```bash
-# Test via curl
+# Test via curl (using env vars)
 curl -X POST https://snipe-api.onrender.com/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{
-    "username": "snipe_admin_secure_7ecb869e",
-    "password": "WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E="
-  }'
+  -d "{
+    \"username\": \"$MASTER_USERNAME\",
+    \"password\": \"$MASTER_PASSWORD\"
+  }"
 
 # Test via environment variables
-export MASTER_PASSWORD='WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E='
+export MASTER_PASSWORD='your-master-password'
 ./test-admin-realtime.sh
 ```
 
@@ -50,6 +53,7 @@ export MASTER_PASSWORD='WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E='
 - Store as environment variable: `MASTER_PASSWORD`
 - Rotate password quarterly
 - Log out after session ends
+- NEVER commit credentials to version control
 
 ## Documents
 
@@ -61,16 +65,17 @@ export MASTER_PASSWORD='WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E='
 
 ## Recent Changes
 
-- **Jan 18, 2026**: Rotated password from `Snipe$Admin@Secure#2025!7d97a66f` to new secure credential
+- **Jan 18, 2026**: Rotated password to new secure credential
+- **Security Fix**: Removed hardcoded credentials from all documentation
 - **Commits**: df532b7, 5ed0e0e, 3d07b16
 
 ## Environment Variables
 
-For deployment systems, set:
+For deployment systems, set in your secure environment (not in git):
 
 ```env
-MASTER_USERNAME=snipe_admin_secure_7ecb869e
-MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
+MASTER_USERNAME=your-master-username
+MASTER_PASSWORD=your-master-password
 ```
 
 ## Troubleshooting
@@ -86,3 +91,4 @@ MASTER_PASSWORD=WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
 
 **Generated**: January 18, 2026
 **Status**: ✅ Active and Verified
+**Security Update**: January 28, 2026 - Removed exposed credentials

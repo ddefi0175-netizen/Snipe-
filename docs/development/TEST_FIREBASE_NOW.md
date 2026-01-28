@@ -58,7 +58,7 @@ Document ID: 0x1234567890...
 |------|---------|
 | http://localhost:5175/firebase-debug.html | **🔥 Use This to Test** |
 | http://localhost:5175 | Your App |
-| https://console.firebase.google.com/u/0/project/onchainweb-37d30/firestore/data | Firestore Console |
+| https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/firestore/data | Firestore Console |
 
 ---
 

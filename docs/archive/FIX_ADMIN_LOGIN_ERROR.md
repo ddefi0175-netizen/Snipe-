@@ -25,7 +25,7 @@ You need to create the admin accounts in Firebase Console.
 
 ### Step 1: Open Firebase Console
 
-🌐 **URL**: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+🌐 **URL**: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
 
 1. Login with your Google account
 2. You should see the Authentication → Users page
@@ -50,8 +50,8 @@ admin@yourdomain.com
 
 **Option 3: Use Firebase Auth Domain**
 ```
-master@onchainweb-37d30.firebaseapp.com
-admin@onchainweb-37d30.firebaseapp.com
+master@YOUR_FIREBASE_PROJECT_ID.firebaseapp.com
+admin@YOUR_FIREBASE_PROJECT_ID.firebaseapp.com
 ```
 
 ### Step 3: Create Master Account
@@ -147,7 +147,7 @@ The old system tried to convert usernames to emails (e.g., `master` → `master@
 **Use real email addresses:**
 - ✅ `master@gmail.com`
 - ✅ `admin@yourdomain.com`
-- ✅ `master@onchainweb-37d30.firebaseapp.com`
+- ✅ `master@YOUR_FIREBASE_PROJECT_ID.firebaseapp.com`
 - ❌ `master@admin.onchainweb.app` (Firebase will reject this)
 
 ### Allowed Emails
@@ -176,7 +176,7 @@ If you don't see any user data in Firestore:
    - Until a user connects their wallet and uses the app, collections will be empty
 
 2. **Check the right place**
-   - Go to: https://console.firebase.google.com/u/0/project/onchainweb-37d30/firestore/data
+   - Go to: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/firestore/data
    - Look for these collections:
      - `users` - User wallet data
      - `chatMessages` - Chat messages
@@ -220,7 +220,7 @@ Now you should see data in Firestore!
 **Fix**: Use real email format:
 - Gmail: `master@gmail.com`
 - Your domain: `master@yourdomain.com`
-- Firebase domain: `master@onchainweb-37d30.firebaseapp.com`
+- Firebase domain: `master@YOUR_FIREBASE_PROJECT_ID.firebaseapp.com`
 
 Then update `.env`:
 ```env
@@ -257,11 +257,11 @@ Then restart: `npm run dev`
 **Fix**: Check your `.env` has all these variables:
 ```env
 VITE_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY_HERE
-VITE_FIREBASE_AUTH_DOMAIN=onchainweb-37d30.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=onchainweb-37d30
-VITE_FIREBASE_STORAGE_BUCKET=onchainweb-37d30.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=766146811888
-VITE_FIREBASE_APP_ID=1:766146811888:web:a96012963dffe31508ef35
+VITE_FIREBASE_AUTH_DOMAIN=YOUR_FIREBASE_PROJECT_ID.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET=YOUR_FIREBASE_PROJECT_ID.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_SENDER_ID
+VITE_FIREBASE_APP_ID=YOUR_FIREBASE_APP_ID
 ```
 
 ---

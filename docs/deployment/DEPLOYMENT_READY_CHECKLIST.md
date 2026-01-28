@@ -6,7 +6,7 @@
 
 ## Core Infrastructure
 
-- ✅ Firebase Project: `onchainweb-37d30` (Spark - Free Tier)
+- ✅ Firebase Project: `YOUR_FIREBASE_PROJECT_ID` (Spark - Free Tier)
 - ✅ Firestore Database: Configured and working
 - ✅ Firebase Authentication: Email/password + Wallet connect
 - ✅ Firestore Security Rules: Deployed successfully
@@ -144,9 +144,9 @@
 ```env
 # Firebase Configuration
 VITE_FIREBASE_API_KEY=your-api-key
-VITE_FIREBASE_AUTH_DOMAIN=onchainweb-37d30.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=onchainweb-37d30
-VITE_FIREBASE_STORAGE_BUCKET=onchainweb-37d30.appspot.com
+VITE_FIREBASE_AUTH_DOMAIN=YOUR_FIREBASE_PROJECT_ID.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET=YOUR_FIREBASE_PROJECT_ID.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
 VITE_FIREBASE_APP_ID=your-app-id
 VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
@@ -171,7 +171,7 @@ VITE_ADMIN_ALLOWLIST=master@gmail.com,admin@gmail.com
 
 ```bash
 # Check Firebase login
-firebase auth:export /tmp/users.json --project onchainweb-37d30
+firebase auth:export /tmp/users.json --project YOUR_FIREBASE_PROJECT_ID
 
 # Verify env file
 cat Onchainweb/.env | grep -v "^#"
@@ -183,13 +183,13 @@ cd Onchainweb && npm run build
 ### 2. Deploy Firestore Rules
 
 ```bash
-firebase deploy --only firestore:rules --project onchainweb-37d30
+firebase deploy --only firestore:rules --project YOUR_FIREBASE_PROJECT_ID
 ```
 
 ### 3. Deploy Firestore Indexes
 
 ```bash
-firebase deploy --only firestore:indexes --project onchainweb-37d30
+firebase deploy --only firestore:indexes --project YOUR_FIREBASE_PROJECT_ID
 ```
 
 ### 4. Build Frontend
@@ -201,16 +201,16 @@ cd Onchainweb && npm run build
 ### 5. Deploy to Firebase Hosting
 
 ```bash
-firebase deploy --only hosting --project onchainweb-37d30
+firebase deploy --only hosting --project YOUR_FIREBASE_PROJECT_ID
 ```
 
 ### 6. Verify Deployment
 
 ```bash
-firebase hosting:list --project onchainweb-37d30
+firebase hosting:list --project YOUR_FIREBASE_PROJECT_ID
 
 # Test live site
-open https://onchainweb-37d30.web.app
+open https://YOUR_FIREBASE_PROJECT_ID.web.app
 ```
 
 ---
@@ -271,10 +271,10 @@ If issues arise after deployment:
 
 ```bash
 # View deployment history
-firebase hosting:versions --project onchainweb-37d30
+firebase hosting:versions --project YOUR_FIREBASE_PROJECT_ID
 
 # Rollback to previous version
-firebase hosting:clone onchainweb-37d30:PREVIOUS_ID onchainweb-37d30:LIVE
+firebase hosting:clone YOUR_FIREBASE_PROJECT_ID:PREVIOUS_ID YOUR_FIREBASE_PROJECT_ID:LIVE
 ```
 
 ---
@@ -283,17 +283,17 @@ firebase hosting:clone onchainweb-37d30:PREVIOUS_ID onchainweb-37d30:LIVE
 
 ### Firebase Console
 - **Link**: https://console.firebase.google.com
-- **Project**: onchainweb-37d30
+- **Project**: YOUR_FIREBASE_PROJECT_ID
 - **Features**: Realtime Database, Firestore, Auth, Hosting
 
 ### Verify Active Deployment
 ```bash
-firebase status --project onchainweb-37d30
+firebase status --project YOUR_FIREBASE_PROJECT_ID
 ```
 
 ### View Logs
 ```bash
-firebase logging:read --project onchainweb-37d30
+firebase logging:read --project YOUR_FIREBASE_PROJECT_ID
 ```
 
 ### Contact & Support

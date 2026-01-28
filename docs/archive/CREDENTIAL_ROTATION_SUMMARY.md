@@ -12,8 +12,8 @@ Master account credentials have been rotated to use a cryptographically secure p
 
 | Property | Value |
 |----------|-------|
-| **Master Username** | `snipe_admin_secure_7ecb869e` |
-| **Master Password** | `WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=` |
+| **Master Username** | `YOUR_MASTER_USERNAME` |
+| **Master Password** | `YOUR_MASTER_PASSWORD` |
 | **Access URLs** | `/admin` and `/master-admin` on https://www.onchainweb.app |
 | **Generation Date** | January 18, 2026 |
 | **Generation Method** | `openssl rand -base64 32` |
@@ -24,7 +24,7 @@ The new master password was generated using OpenSSL's cryptographic random numbe
 
 ```bash
 openssl rand -base64 32
-# Output: WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
+# Output: YOUR_MASTER_PASSWORD
 ```
 
 This generates a 32-byte (256-bit) random value encoded in base64, providing strong cryptographic security.
@@ -33,7 +33,7 @@ This generates a 32-byte (256-bit) random value encoded in base64, providing str
 
 | Property | Value |
 |----------|-------|
-| **Master Username** | `snipe_admin_secure_7ecb869e` (unchanged) |
+| **Master Username** | `YOUR_MASTER_USERNAME` (unchanged) |
 | **Master Password** | `Snipe$Admin@Secure#2025!7d97a66f` ❌ DEPRECATED |
 
 ⚠️ **The old password is no longer valid.** All systems have been updated to use the new credential.
@@ -99,7 +99,7 @@ The credential update has been pushed to GitHub. Vercel will automatically redep
 4. Update or create `MASTER_PASSWORD`:
    ```
    Variable Name: MASTER_PASSWORD
-   Value: WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=
+   Value: YOUR_MASTER_PASSWORD
    Environment: Production, Preview, Development
    ```
 5. Click **Save**
@@ -123,18 +123,18 @@ Test using the new credentials:
 
 ```bash
 # Set environment variable
-export MASTER_PASSWORD="WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E="
-export MASTER_USERNAME="snipe_admin_secure_7ecb869e"
+export MASTER_PASSWORD="YOUR_MASTER_PASSWORD"
+export MASTER_USERNAME="YOUR_MASTER_USERNAME"
 
 # Test admin login
-MASTER_PASSWORD='WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=' ./test-admin-realtime.sh
+MASTER_PASSWORD='YOUR_MASTER_PASSWORD' ./test-admin-realtime.sh
 
 # Or with curl directly
 curl -X POST http://localhost:4000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{
-    "username": "snipe_admin_secure_7ecb869e",
-    "password": "WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E="
+    "username": "YOUR_MASTER_USERNAME",
+    "password": "YOUR_MASTER_PASSWORD"
   }'
 ```
 
@@ -144,8 +144,8 @@ After updating Vercel environment variables:
 
 1. Visit: https://www.onchainweb.app/admin
 2. Enter credentials:
-   - **Username**: `snipe_admin_secure_7ecb869e`
-   - **Password**: `WQAff7VnYKqV1+qes2hHFvTGJToJvwk1sNLvZTXAW3E=`
+   - **Username**: `YOUR_MASTER_USERNAME`
+   - **Password**: `YOUR_MASTER_PASSWORD`
 3. Click **Login**
 4. Expected: Dashboard loads successfully
 

@@ -31,27 +31,27 @@ Click **"Add variable"** for each entry below:
 
 ### Variable 2: Firebase Auth Domain
 - **Name:** `VITE_FIREBASE_AUTH_DOMAIN`
-- **Value:** `onchainweb-37d30.firebaseapp.com`
+- **Value:** `YOUR_PROJECT.firebaseapp.com`
 
 ### Variable 3: Firebase Project ID
 - **Name:** `VITE_FIREBASE_PROJECT_ID`
-- **Value:** `onchainweb-37d30`
+- **Value:** `YOUR_FIREBASE_PROJECT_ID`
 
 ### Variable 4: Firebase Storage Bucket
 - **Name:** `VITE_FIREBASE_STORAGE_BUCKET`
-- **Value:** `onchainweb-37d30.firebasestorage.app`
+- **Value:** `YOUR_FIREBASE_PROJECT_ID.firebasestorage.app`
 
 ### Variable 5: Firebase Messaging Sender ID
 - **Name:** `VITE_FIREBASE_MESSAGING_SENDER_ID`
-- **Value:** `766146811888`
+- **Value:** `YOUR_SENDER_ID`
 
 ### Variable 6: Firebase App ID
 - **Name:** `VITE_FIREBASE_APP_ID`
-- **Value:** `1:766146811888:web:a96012963dffe31508ef35`
+- **Value:** `YOUR_FIREBASE_APP_ID`
 
 ### Variable 7: Firebase Measurement ID
 - **Name:** `VITE_FIREBASE_MEASUREMENT_ID`
-- **Value:** `G-1QDHSDQKDY`
+- **Value:** `YOUR_MEASUREMENT_ID`
 
 ### Variable 8: WalletConnect Project ID
 - **Name:** `VITE_WALLETCONNECT_PROJECT_ID`
@@ -96,12 +96,12 @@ If your Cloudflare interface supports bulk import, use this format:
 
 ```
 VITE_FIREBASE_API_KEY=YOUR_FIREBASE_API_KEY_HERE
-VITE_FIREBASE_AUTH_DOMAIN=onchainweb-37d30.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=onchainweb-37d30
-VITE_FIREBASE_STORAGE_BUCKET=onchainweb-37d30.firebasestorage.app
-VITE_FIREBASE_MESSAGING_SENDER_ID=766146811888
-VITE_FIREBASE_APP_ID=1:766146811888:web:a96012963dffe31508ef35
-VITE_FIREBASE_MEASUREMENT_ID=G-1QDHSDQKDY
+VITE_FIREBASE_AUTH_DOMAIN=YOUR_PROJECT.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=YOUR_FIREBASE_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET=YOUR_FIREBASE_PROJECT_ID.firebasestorage.app
+VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_SENDER_ID
+VITE_FIREBASE_APP_ID=YOUR_FIREBASE_APP_ID
+VITE_FIREBASE_MEASUREMENT_ID=YOUR_MEASUREMENT_ID
 VITE_WALLETCONNECT_PROJECT_ID=N64KYvAPcdvA92IVWUverUJwtTmNW00jMX2JTYoI
 ```
 

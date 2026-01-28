@@ -4,7 +4,7 @@
 
 ### Step 1️⃣: Firebase Console
 ```
-URL: https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+URL: https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
 Action: Click "Create user"
 Email: admin@gmail.com (MUST be real email)
 Password: Your choice
@@ -99,7 +99,7 @@ Email: support@yourdomain.com
 ### Can't find Firebase Console
 ```
 URL: https://console.firebase.google.com
-Select project: onchainweb-37d30
+Select project: YOUR_FIREBASE_PROJECT_ID
 Click: Authentication in left sidebar
 ```
 
@@ -124,7 +124,7 @@ Click: Authentication in left sidebar
 
 **Firebase Console**
 ```
-https://console.firebase.google.com/u/0/project/onchainweb-37d30/authentication/users
+https://console.firebase.google.com/u/0/project/YOUR_FIREBASE_PROJECT_ID/authentication/users
 ```
 
 **Master Dashboard**

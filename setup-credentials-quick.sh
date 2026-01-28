@@ -81,7 +81,7 @@ echo ""
 # Check backend .env
 echo "🔑 BACKEND CREDENTIALS:"
 echo "───────────────────────────────────────────────────────────────"
-if grep -q "JWT_SECRET=G1oUFXpp5sPSGJ" backend/.env; then
+if grep -q "JWT_SECRET=" backend/.env; then
   echo "✅ JWT Secret: SECURE (updated)"
 else
   echo "⚠️  JWT Secret: Not yet configured"
