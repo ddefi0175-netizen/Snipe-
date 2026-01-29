@@ -16,6 +16,8 @@ cd Onchainweb
 cp .env.example .env
 ```
 
+> 📝 **Note**: The `.env.example` file exists in the `Onchainweb/` directory and contains all required variables with placeholder values.
+
 ### Step 2: Enable Admin Routes
 Open the `.env` file and ensure these lines are present:
 
@@ -24,21 +26,27 @@ Open the `.env` file and ensure these lines are present:
 VITE_ENABLE_ADMIN=true
 VITE_ADMIN_ROUTE=/admin
 VITE_MASTER_ADMIN_ROUTE=/master-admin
-VITE_ADMIN_ALLOWLIST=master@onchainweb.site
+# Replace with your actual admin email address(es) - comma-separated for multiple admins
+VITE_ADMIN_ALLOWLIST=your-admin-email@example.com
 ```
+
+> 💡 **Tip**: For multiple admins, use comma-separated emails: `admin1@example.com,admin2@example.com`
 
 ### Step 3: Configure Firebase (Required)
 The admin system requires Firebase Authentication. Add your Firebase configuration to the `.env` file:
 
 ```bash
-VITE_FIREBASE_API_KEY=your-firebase-api-key-here
-VITE_FIREBASE_AUTH_DOMAIN=your-project-id.firebaseapp.com
-VITE_FIREBASE_PROJECT_ID=your-project-id
-VITE_FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
-VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
-VITE_FIREBASE_APP_ID=your-app-id
+# IMPORTANT: Replace ALL placeholder values below with your actual Firebase credentials
+VITE_FIREBASE_API_KEY=YOUR_ACTUAL_API_KEY_HERE
+VITE_FIREBASE_AUTH_DOMAIN=YOUR_PROJECT_ID.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=YOUR_PROJECT_ID
+VITE_FIREBASE_STORAGE_BUCKET=YOUR_PROJECT_ID.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_SENDER_ID
+VITE_FIREBASE_APP_ID=YOUR_APP_ID
 VITE_FIREBASE_MEASUREMENT_ID=G-XXXXXXXXXX
 ```
+
+> ⚠️ **Note**: Replace all `YOUR_*` placeholders with your actual Firebase credentials before running the app.
 
 Get your Firebase credentials from: https://console.firebase.google.com
 - Go to Project Settings → General → Your apps → SDK setup and configuration
@@ -55,10 +63,12 @@ After following these steps, you should be able to access:
 1. **Master Admin Portal**: http://localhost:5173/master-admin
    - Requires master role authentication
    - Shows login page for authorized personnel
+   - Note: Port may vary (check your terminal for actual port)
 
 2. **Regular Admin Panel**: http://localhost:5173/admin
    - Requires admin role authentication
    - Shows login page for admin users
+   - Note: Port may vary (check your terminal for actual port)
 
 ## Security Notes
 
@@ -98,7 +108,7 @@ The admin system works as follows:
    # In browser console on the admin route
    console.log(import.meta.env.VITE_ENABLE_ADMIN)
    ```
-   Should output: `"true"`
+   Should output: `"true"` (as a string, not boolean)
 
 2. **Verify server restart:**
    - Stop the dev server (Ctrl+C)
@@ -126,8 +136,8 @@ Refer to `ADMIN_SYSTEM_SETUP_GUIDE.md` for complete setup instructions.
 
 For production deployment (Vercel/Netlify/etc.):
 
-1. Add environment variables in your hosting platform's dashboard
-2. Never use `.env` files in production - use platform environment variables
+1. Add environment variables in your hosting platform's environment variable management system
+2. Do not commit `.env` files - use your platform's secure environment configuration instead
 3. Ensure `VITE_ENABLE_ADMIN=true` is set in production environment
 4. Update `VITE_ADMIN_ALLOWLIST` with production admin emails
 
