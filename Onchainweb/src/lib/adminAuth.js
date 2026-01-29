@@ -48,7 +48,7 @@ export const convertToAdminEmail = (usernameOrEmail) => {
 
 /**
  * Determines admin role based on email
- * Master admins use 'master' prefix or master@domain
+ * Master admins use emails starting with master@domain (e.g., master@gmail.com)
  * Regular admins use other emails
  *
  * @param {string} email - Firebase user email
@@ -57,8 +57,10 @@ export const convertToAdminEmail = (usernameOrEmail) => {
 export const determineAdminRole = (email) => {
   if (!email) return 'admin';
 
-  // Check if email starts with 'master'
-  if (email.startsWith('master@') || email.startsWith('master.')) {
+  // Check if email starts with 'master@'
+  // Note: Only master@ pattern is checked, not master. to avoid false matches
+  // like master.admin@domain.com which should be regular admin accounts
+  if (email.startsWith('master@')) {
     return 'master';
   }
 
