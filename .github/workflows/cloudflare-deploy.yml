@@ -23,14 +23,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: Onchainweb/package-lock.json
+          node-version: '20'
       
       - name: Install dependencies
         run: |
           cd Onchainweb
-          npm ci
+          npm install
       
       - name: Run linter
         run: |
@@ -58,14 +56,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: Onchainweb/package-lock.json
+          node-version: '20'
       
       - name: Install dependencies
         run: |
           cd Onchainweb
-          npm ci
+          npm install
       
       - name: Build production bundle
         run: |
@@ -102,7 +98,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
       
       - name: Deploy Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
