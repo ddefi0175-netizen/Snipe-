@@ -2,6 +2,32 @@
 
 This document tracks known issues, limitations, and technical debt in the Snipe project.
 
+## Recently Fixed Issues
+
+### Content Security Policy (CSP) Blocking Eval ✅ FIXED (2026-01-29)
+
+**Issue:** CSP errors preventing master account domain from opening on computers
+- Error: "Content Security Policy of your site blocks the use of 'eval' in JavaScript"
+- Caused by terser minification generating code requiring `unsafe-eval`
+- No explicit CSP headers configured
+
+**Resolution:**
+- ✅ Switched from terser to esbuild minifier (CSP-safe, no eval needed)
+- ✅ Added comprehensive CSP headers to vercel.json
+- ✅ Verified no eval patterns in production build
+- ✅ Documented CSP configuration in docs/CSP_CONFIGURATION.md
+
+**Security Headers Added:**
+- Content-Security-Policy (without unsafe-eval)
+- X-Content-Type-Options: nosniff
+- X-Frame-Options: DENY
+- X-XSS-Protection: 1; mode=block
+- Referrer-Policy: strict-origin-when-cross-origin
+
+See `docs/CSP_CONFIGURATION.md` for full details.
+
+---
+
 ## Security Issues
 
 ### Dev Dependency Vulnerabilities (Low Priority)

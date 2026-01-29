@@ -21,13 +21,12 @@ export default defineConfig({
   },
   build: {
     target: 'es2020',
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-        pure_funcs: ['console.log', 'console.info', 'console.debug'],
-      },
+    minify: 'esbuild',
+    // Use esbuild instead of terser to avoid CSP issues with eval
+    // esbuild minification is CSP-safe and doesn't require 'unsafe-eval'
+    esbuildOptions: {
+      drop: ['console', 'debugger'],
+      legalComments: 'none',
     },
     rollupOptions: {
       output: {
