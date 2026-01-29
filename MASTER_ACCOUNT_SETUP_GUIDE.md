@@ -47,7 +47,7 @@ This guide will walk you through setting up master account access for the Snipe 
 2. Click **"Add user"** button
 3. Enter master account details:
    - **Email**: `master@onchainweb.site` (or your custom domain)
-   - **Password**: Choose a strong password (min 8 characters)
+   - **Password**: Choose a strong password (minimum 8 characters required by Firebase, but 12+ characters recommended for security)
    - **Note**: Email MUST start with `master@` to be recognized as master account
 4. Click **"Add user"**
 5. **Save your password** - you'll need it to login

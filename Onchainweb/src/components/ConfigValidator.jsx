@@ -58,7 +58,7 @@ export default function ConfigValidator() {
         title: 'Admin Features Disabled',
         message: 'VITE_ENABLE_ADMIN is not set to "true"',
         solution: 'To enable master account login, set VITE_ENABLE_ADMIN=true in .env file and restart dev server.',
-        docs: '/master-admin'
+        docs: null
       });
     } else {
       // Admin is enabled, check allowlist
@@ -69,7 +69,7 @@ export default function ConfigValidator() {
           title: 'Admin Allowlist Empty',
           message: 'VITE_ADMIN_ALLOWLIST is not configured',
           solution: 'Add admin emails to VITE_ADMIN_ALLOWLIST in .env file (e.g., master@onchainweb.site). Master accounts MUST start with "master@".',
-          docs: 'See FIX_MASTER_ACCOUNT_DOMAIN_LOGIN.md'
+          docs: null
         });
       } else {
         // Check if allowlist has a master account
@@ -81,7 +81,7 @@ export default function ConfigValidator() {
             title: 'No Master Account in Allowlist',
             message: 'No email starting with "master@" found in VITE_ADMIN_ALLOWLIST',
             solution: 'Add a master account email starting with "master@" (e.g., master@onchainweb.site) to access the master admin dashboard.',
-            docs: 'See FIX_MASTER_ACCOUNT_DOMAIN_LOGIN.md'
+            docs: null
           });
         }
       }
@@ -102,6 +102,7 @@ export default function ConfigValidator() {
           className="config-validator-close"
           onClick={() => setIsVisible(false)}
           title="Dismiss"
+          aria-label="Close configuration validator"
         >
           ×
         </button>
@@ -125,8 +126,9 @@ export default function ConfigValidator() {
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="config-issue-docs"
+                aria-label={`Open documentation in new tab: ${issue.docs}`}
               >
-                📖 Documentation →
+                📖 Documentation <span aria-hidden="true">↗</span>
               </a>
             )}
           </div>
@@ -136,7 +138,7 @@ export default function ConfigValidator() {
         <p>💡 These warnings only appear in development mode</p>
       </div>
 
-      <style jsx>{`
+      <style>{`
         .config-validator {
           position: fixed;
           bottom: 20px;
