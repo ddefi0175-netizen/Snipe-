@@ -1,4 +1,4 @@
-name = "snipe-workers"
+name = "wrangler1createsnipe-chat-db"
 main = "workers/index.js"
 compatibility_date = "2024-01-01"
 # Account ID should be set via environment variable or wrangler secret
