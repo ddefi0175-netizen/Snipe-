@@ -20,29 +20,25 @@ export default defineConfig({
     },
   },
   build: {
-    // Increase chunk size warning limit (default is 500kB)
-    chunkSizeWarningLimit: 1000,
-    // Enable minification with esbuild (faster than terser)
-    minify: 'esbuild',
-    // Source maps for debugging (disable in production for smaller builds)
-    sourcemap: false,
+    target: 'es2020',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true,
+        drop_debugger: true,
+        pure_funcs: ['console.log', 'console.info', 'console.debug'],
+      },
+    },
     rollupOptions: {
       output: {
         // Manual chunk splitting for better caching and smaller bundles
-        manualChunks: (id) => {
-          if (id.includes('node_modules')) {
-            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
-              return 'vendor-react';
-            }
-            if (id.includes('firebase')) {
-              return 'vendor-firebase';
-            }
-            if (id.includes('@walletconnect')) {
-              return 'vendor-wallet';
-            }
-            // Group all other vendor libraries
-            return 'vendor-misc';
-          }
+        manualChunks: {
+          // React core libraries
+          'vendor-react': ['react', 'react-dom'],
+          // Firebase
+          'firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          // WalletConnect
+          'wallet': ['@walletconnect/universal-provider'],
         },
         // Asset file names for better caching
         assetFileNames: (assetInfo) => {
@@ -59,9 +55,11 @@ export default defineConfig({
         entryFileNames: 'assets/js/[name]-[hash].js',
       },
     },
-    // Enable CSS code splitting
-    cssCodeSplit: true,
-    // Report compressed size
-    reportCompressedSize: true,
+    // Increase chunk size warning limit (default is 500kB)
+    chunkSizeWarningLimit: 1000,
+    sourcemap: false,
+  },
+  server: {
+    port: 5173,
   },
 })

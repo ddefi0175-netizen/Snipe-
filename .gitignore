@@ -1,124 +1,110 @@
-# ============================================
-# Node & Dependencies
-# ============================================
+# ===========================================
+# COMPREHENSIVE .GITIGNORE FOR SNIPE PROJECT
+# ===========================================
+
+# Dependencies
 node_modules/
+*/node_modules/
+.pnp
+.pnp.js
+package-lock.json
+yarn.lock
+
+# Testing
+coverage/
+.nyc_output/
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
 lerna-debug.log*
-package-lock.json
 
-# ============================================
-# Build Outputs
-# ============================================
+# Production builds
 dist/
-dist-ssr/
 build/
-.output/
-.vercel/
-.wrangler/
-*.local
+.vercel
+.netlify
+.firebase/
+.cache/
 
-# ============================================
-# Environment & Secrets
-# ============================================
+# Environment files (NEVER COMMIT!)
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
-.env.workers.local
-*.env
+.env.*.local
+.env.production
+.env.development
+**/.env
+**/config.env
 
-# Firebase Service Account Keys (CRITICAL - Never commit these!)
+# Firebase credentials (CRITICAL - Never commit these!)
 serviceAccountKey.json
 **/serviceAccountKey*.json
 firebase-adminsdk-*.json
 *-service-account.json
+.firebase/
 firebase-debug.log
-firebase-debug*.log
+firestore-debug.log
+database-debug.log
+ui-debug.log
+*.log
 
-# ============================================
-# Development & Test Files
-# ============================================
-archive/
-test-*.html
-*-debug.html
-test-*.sh
-verify-*.sh
-*.test.js
-*.spec.js
-coverage/
-.nyc_output/
+# Cloudflare
+.wrangler/
+wrangler.toml.local
+.dev.vars
 
-# ============================================
-# Backup & Version Files
-# ============================================
-*.backup
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*~
+.DS_Store
+Thumbs.db
+*.sublime-project
+*.sublime-workspace
+
+# Sensitive files
+ADMIN_ONLY.md
+DEPLOYMENT_STATUS.md
+master-credentials*.txt
+**/credentials*.json
+**/secrets*.json
+
+# Backup and version files
 *.bak
+*.backup
 *-old.*
 *_old.*
 *_Version*.*
 *.orig
 
-# ============================================
-# Editor & IDE
-# ============================================
-.vscode/*
-!.vscode/extensions.json
-.idea/
-.DS_Store
-*.swp
-*.swo
-*~
-.project
-.classpath
-.settings/
-*.sublime-workspace
-*.sublime-project
-
-# ============================================
-# Logs & Temporary
-# ============================================
-logs/
-*.log
+# Build artifacts
+*.tgz
+*.tar.gz
+.tmp/
 tmp/
 temp/
-*.tmp
 
-# ============================================
-# OS Files
-# ============================================
-Thumbs.db
+# OS files
 .DS_Store
-desktop.ini
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# ============================================
-# Database & Cache
-# ============================================
-*.sqlite
-*.sqlite3
-*.db
-.cache/
+# Lock files (keep package-lock.json for consistency)
+# Uncomment if using yarn:
+# yarn.lock
 
-# ============================================
-# Cloudflare
-# ============================================
-.dev.vars
-.wrangler/
-wrangler.toml.local
+# Test files to exclude
+firebase-debug.html
+test-firebase.html
+test-turn-server.html
 
-# ============================================
-# Firebase
-# ============================================
-.firebase/
-firebase-debug.log*
-firestore-debug.log*
-
-# ============================================
-# Git
-# ============================================
-*.patch
-*.diff
-.git-backup/
+# Documentation artifacts
+*.pdf
+*.docx
