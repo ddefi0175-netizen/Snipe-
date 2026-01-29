@@ -24,6 +24,10 @@ export default defineConfig({
     minify: 'esbuild',
     // Use esbuild instead of terser to avoid CSP issues with eval
     // esbuild minification is CSP-safe and doesn't require 'unsafe-eval'
+    esbuildOptions: {
+      drop: ['console', 'debugger'],
+      legalComments: 'none',
+    },
     rollupOptions: {
       output: {
         // Manual chunk splitting for better caching and smaller bundles

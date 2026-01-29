@@ -199,14 +199,41 @@ If deploying to Cloudflare Pages, add a `_headers` file to the `public/` directo
 1. **Nonce-based CSP**: Use cryptographic nonces for inline scripts
    - Requires server-side rendering or build-time injection
    - More secure than `'unsafe-inline'`
+   - Example: `script-src 'self' 'nonce-random123'`
 
 2. **Stricter Image Sources**: Whitelist specific domains
    - Replace `https:` with specific wallet provider domains
    - Requires maintaining list of allowed image sources
+   - Example domains: `https://raw.githubusercontent.com`, `https://assets.trustwallet.com`
 
 3. **Report-Only Mode**: Monitor CSP violations
    - Add `Content-Security-Policy-Report-Only` header
    - Send violation reports to monitoring service
+   - Helps identify issues before enforcing strict CSP
+
+4. **Hash-based CSP**: Use SHA-256 hashes for inline scripts
+   - Alternative to nonces for static content
+   - More suitable for static site deployments
+   - Example: `script-src 'self' 'sha256-...'`
+
+### Known Trade-offs
+
+The current CSP implementation balances security with functionality:
+
+**`'unsafe-inline'` for scripts**:
+- ⚠️ **Trade-off**: Reduces XSS protection
+- ✅ **Benefit**: Required for React/SPA functionality
+- 📝 **Note**: Documented as future improvement (nonce/hash-based CSP)
+
+**`https:` for images**:
+- ⚠️ **Trade-off**: Allows any HTTPS image source
+- ✅ **Benefit**: Supports various wallet providers without hardcoding domains
+- 📝 **Note**: Can be tightened to specific domains if needed
+
+**No `unsafe-eval`**:
+- ✅ **Security**: Prevents dynamic code execution
+- ✅ **Benefit**: Achieved by switching to esbuild from terser
+- 🎯 **Result**: Core security issue resolved
 
 ## References
 
