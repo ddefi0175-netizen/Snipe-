@@ -1,6 +1,6 @@
 name = "snipe-onchainweb"
 compatibility_date = "2024-01-01"
-main = "workers/chat-api.js"
+main = "workers/routes.js"
 
 # Cloudflare Pages configuration
 pages_build_output_dir = "Onchainweb/dist"
@@ -8,13 +8,58 @@ pages_build_output_dir = "Onchainweb/dist"
 [build]
 command = "cd Onchainweb && npm install && npm run build"
 
-# D1 Database binding
+# ============================================
+# KV Namespaces - Edge Caching
+# ============================================
+# Benefits: 100K reads/day free, sub-millisecond latency
+
+# General cache for Firestore data
+[[kv_namespaces]]
+binding = "CACHE_KV"
+id = "CACHE_KV_ID_HERE"  # Replace with: wrangler kv:namespace create "CACHE_KV"
+
+# User data cache
+[[kv_namespaces]]
+binding = "USERS_KV"
+id = "USERS_KV_ID_HERE"  # Replace with: wrangler kv:namespace create "USERS_KV"
+
+# Statistics cache
+[[kv_namespaces]]
+binding = "STATS_KV"
+id = "STATS_KV_ID_HERE"  # Replace with: wrangler kv:namespace create "STATS_KV"
+
+# Rate limiting counters
+[[kv_namespaces]]
+binding = "RATE_LIMIT_KV"
+id = "RATE_LIMIT_KV_ID_HERE"  # Replace with: wrangler kv:namespace create "RATE_LIMIT_KV"
+
+# ============================================
+# R2 Storage - File Uploads
+# ============================================
+# Benefits: Zero egress fees, $0.015/GB storage
+
+[[r2_buckets]]
+binding = "STORAGE_BUCKET"
+bucket_name = "snipe-storage"  # Create with: wrangler r2 bucket create snipe-storage
+
+# ============================================
+# D1 Database - Relational Data (Optional)
+# ============================================
 [[d1_databases]]
 binding = "DB"
 database_name = "onchainweb"
 database_id = "e3f277bd-092a-41d6-a477-4521200c79fe"
 
-# Observability settings for consistent deployments
+# ============================================
+# Environment Variables
+# ============================================
+[vars]
+ENVIRONMENT = "production"
+API_VERSION = "v1"
+
+# ============================================
+# Observability Settings
+# ============================================
 [observability]
 enabled = true
 head_sampling_rate = 1
@@ -29,3 +74,10 @@ invocation_logs = true
 enabled = true
 persist = true
 head_sampling_rate = 1
+
+# ============================================
+# Routes Configuration
+# ============================================
+# routes = [
+#   { pattern = "api.yourdomain.com/api/*", zone_name = "yourdomain.com" }
+# ]
