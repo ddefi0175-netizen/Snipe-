@@ -37,6 +37,13 @@ A production-ready, cost-optimized DeFi trading platform with real-time features
 ## ⚡ Quick Start
 
 ### Prerequisites
+
+- Node.js 20+ ([Download](https://nodejs.org))
+- Firebase account ([Free](https://console.firebase.google.com))
+- Cloudflare account ([Free](https://dash.cloudflare.com)) - Optional for full features
+
+### 1. Clone & Install
+
 ```bash
 Node.js 18+
 npm or yarn

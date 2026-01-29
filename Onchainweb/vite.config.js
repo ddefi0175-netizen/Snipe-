@@ -9,6 +9,8 @@ export default defineConfig({
     loader: 'jsx',
     include: /src\/.*\.jsx?$/,
     exclude: [],
+    // Remove console.log in production
+    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
   },
   optimizeDeps: {
     esbuildOptions: {
@@ -38,6 +40,19 @@ export default defineConfig({
           // WalletConnect
           'wallet': ['@walletconnect/universal-provider'],
         },
+        // Asset file names for better caching
+        assetFileNames: (assetInfo) => {
+          const info = assetInfo.name.split('.')
+          let extType = info[info.length - 1]
+          if (/png|jpe?g|svg|gif|tiff|bmp|ico|webp/i.test(extType)) {
+            extType = 'img'
+          } else if (/woff|woff2|ttf|otf|eot/i.test(extType)) {
+            extType = 'fonts'
+          }
+          return `assets/${extType}/[name]-[hash][extname]`
+        },
+        chunkFileNames: 'assets/js/[name]-[hash].js',
+        entryFileNames: 'assets/js/[name]-[hash].js',
       },
     },
     // Increase chunk size warning limit (default is 500kB)

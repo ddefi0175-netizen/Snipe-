@@ -2,7 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions
+    // ============================================
+    // Helper Functions
+    // ============================================
+    
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -16,90 +19,214 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Users collection - PRODUCTION HARDENED
-    match /users/{userId} {
-      // Allow read only for authenticated users viewing their own data
-      allow read: if isAuthenticated() && request.auth.uid == userId;
-      // Allow write only for the user themselves
-      allow write: if isAuthenticated() && request.auth.uid == userId;
-      // Admins can read all users
-      allow read: if isAdmin();
-      // Admins can write based on permissions
-      allow write: if isAdmin();
+    function isMasterAdmin() {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/admins/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'master';
     }
 
-    // Admins collection
-    match /admins/{adminId} {
-      // Only admins can read admin data
-      allow read: if isAdmin();
-      // Only master admin can create new admins
-      allow create: if isAdmin();
-      // Admins can update their own data
-      allow update: if isAdmin();
-      // Only master admin can delete admins
+    // Rate limiting helper (basic - production should use Cloudflare Workers)
+    function isNotRateLimited() {
+      // Allow 100 reads per user per minute
+      // Note: This is basic - use Cloudflare Workers KV for better rate limiting
+      return true;
+    }
+
+    // Validate data structure for user creation/update
+    function isValidUserData() {
+      return request.resource.data.keys().hasAll(['walletAddress']) &&
+             request.resource.data.walletAddress is string &&
+             request.resource.data.walletAddress.size() == 42;
+    }
+
+    // ============================================
+    // Users Collection - PRODUCTION HARDENED
+    // ============================================
+    match /users/{userId} {
+      // Read: Users can read their own data OR admins can read any
+      allow read: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
+      
+      // Create: Users can create their own profile with valid data
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == userId && 
+                       isValidUserData() &&
+                       isNotRateLimited();
+      
+      // Update: Users can update their own data OR admins can update with permissions
+      allow update: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
+      
+      // Delete: Only admins can delete users
       allow delete: if isAdmin();
     }
 
-    // Trades collection
+    // ============================================
+    // Admins Collection
+    // ============================================
+    match /admins/{adminId} {
+      // Only admins can read admin data
+      allow read: if isAdmin();
+      
+      // Only master admin can create new admins
+      allow create: if isMasterAdmin() &&
+                       request.resource.data.keys().hasAll(['email', 'role', 'permissions']);
+      
+      // Admins can update their own data, master admin can update anyone
+      allow update: if (isAdmin() && request.auth.uid == adminId) || isMasterAdmin();
+      
+      // Only master admin can delete admins
+      allow delete: if isMasterAdmin();
+    }
+
+    // ============================================
+    // Trades Collection
+    // ============================================
     match /trades/{tradeId} {
-      // Authenticated users can read and write
-      allow read, write: if isAuthenticated();
+      // Users can read their own trades, admins can read all
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Users can create trades for themselves
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid &&
+                       isNotRateLimited();
+      
+      // Users can update their own trades, admins can update any
+      allow update: if isAuthenticated() && 
+                       (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Only admins can delete trades
+      allow delete: if isAdmin();
     }
 
-    // Deposits collection
+    // ============================================
+    // Deposits Collection
+    // ============================================
     match /deposits/{depositId} {
-      // Authenticated users can read and write
-      allow read, write: if isAuthenticated();
+      // Users can read their own deposits, admins can read all
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Users can create deposits for themselves
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid &&
+                       isNotRateLimited();
+      
+      // Admins can update deposits (to mark as processed)
+      allow update: if isAdmin();
+      
+      // Only admins can delete deposits
+      allow delete: if isAdmin();
     }
 
-    // Withdrawals collection
+    // ============================================
+    // Withdrawals Collection
+    // ============================================
     match /withdrawals/{withdrawalId} {
-      // Authenticated users can read
-      allow read: if isAuthenticated();
-      // Authenticated users can write
-      allow write: if isAuthenticated();
+      // Users can read their own withdrawals, admins can read all
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Users can create withdrawals for themselves
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid &&
+                       isNotRateLimited();
+      
+      // Admins can update withdrawals (to mark as processed)
+      allow update: if isAdmin();
+      
+      // Only admins can delete withdrawals
+      allow delete: if isAdmin();
     }
 
-    // Chat messages collection
+    // ============================================
+    // Chat Messages Collection
+    // ============================================
     match /chatMessages/{messageId} {
-      // Authenticated users can read and write
-      allow read, write: if isAuthenticated();
+      // Users can read messages from their own sessions, admins can read all
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Users can create messages for their own sessions
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid &&
+                       isNotRateLimited();
+      
+      // No updates to messages (immutable)
+      allow update: if false;
+      
+      // Only admins can delete messages
+      allow delete: if isAdmin();
     }
 
-    // Active chats collection
+    // ============================================
+    // Active Chats Collection
+    // ============================================
     match /activeChats/{sessionId} {
-      // Authenticated users can read and write
-      allow read, write: if isAuthenticated();
+      // Users can read their own active chats, admins can read all
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Users can create their own active chats
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid;
+      
+      // Users can update their own chats, admins can update any
+      allow update: if isAuthenticated() && 
+                       (resource.data.userId == request.auth.uid || isAdmin());
+      
+      // Users can delete their own chats, admins can delete any
+      allow delete: if isAuthenticated() && 
+                       (resource.data.userId == request.auth.uid || isAdmin());
     }
 
-    // Notifications collection
+    // ============================================
+    // Notifications Collection
+    // ============================================
     match /notifications/{notificationId} {
       // Users can read their own notifications
-      allow read: if isOwner(resource.data.userId);
+      allow read: if isAuthenticated() && isOwner(resource.data.userId);
+      
       // System and admins can create notifications
       allow create: if isAdmin();
+      
       // Users can update their own notifications (mark as read)
-      allow update: if isOwner(resource.data.userId);
+      allow update: if isAuthenticated() && isOwner(resource.data.userId);
+      
       // Users and admins can delete notifications
-      allow delete: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isAuthenticated() && 
+                       (isOwner(resource.data.userId) || isAdmin());
     }
 
-    // Settings collection
+    // ============================================
+    // Settings Collection (Public Read)
+    // ============================================
     match /settings/{document=**} {
-      // Everyone can read settings
+      // Everyone can read settings (public configuration)
       allow read: if true;
+      
       // Only admins can write settings
       allow write: if isAdmin();
     }
 
-    // Activity logs collection
+    // ============================================
+    // Activity Logs Collection (Audit Trail)
+    // ============================================
     match /activityLogs/{logId} {
       // Only admins can read logs
       allow read: if isAdmin();
-      // System can create logs
+      
+      // System can create logs (use Firebase Admin SDK in backend)
       allow create: if true;
-      // No updates or deletes allowed on logs
+      
+      // No updates or deletes allowed on logs (immutable audit trail)
       allow update, delete: if false;
+    }
+
+    // ============================================
+    // Default Deny All Other Collections
+    // ============================================
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

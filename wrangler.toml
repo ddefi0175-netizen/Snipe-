@@ -62,3 +62,10 @@ invocation_logs = true
 enabled = true
 persist = true
 head_sampling_rate = 1
+
+# ============================================
+# Routes Configuration
+# ============================================
+# routes = [
+#   { pattern = "api.yourdomain.com/api/*", zone_name = "yourdomain.com" }
+# ]
