@@ -133,7 +133,7 @@ echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━�
 
 # Check worker health
 echo -n "Checking workers..."
-WORKER_URL="https://snipe-workers.onchainweb.workers.dev/health"
+WORKER_URL="https://snipe-onchainweb.onchainweb.workers.dev/health"
 if curl -s -o /dev/null -w "%{http_code}" "$WORKER_URL" | grep -q "200"; then
     echo -e " ${GREEN}✅ Workers are healthy${NC}"
 else
@@ -150,7 +150,7 @@ echo ""
 echo -e "${BLUE}🌐 Your application is now live at:${NC}"
 echo ""
 echo -e "   ${YELLOW}Frontend:${NC} https://onchainweb.pages.dev"
-echo -e "   ${YELLOW}Workers:${NC}  https://snipe-workers.onchainweb.workers.dev"
+echo -e "   ${YELLOW}Workers:${NC}  https://snipe-onchainweb.onchainweb.workers.dev"
 echo ""
 echo -e "${BLUE}📝 Next steps:${NC}"
 echo "   1. Test all features on the live site"
