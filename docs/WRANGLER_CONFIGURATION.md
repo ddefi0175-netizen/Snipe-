@@ -142,9 +142,6 @@ invocation_logs = true
 ```bash
 # Deploy to *.workers.dev subdomain (default environment)
 wrangler deploy
-
-# Or explicitly target default environment
-wrangler deploy --env=""
 ```
 
 ### Staging Deployment
@@ -297,7 +294,7 @@ wrangler rollback [version-id] --env production
 
 **Solution**: Explicitly specify the environment:
 ```bash
-wrangler deploy --env=""          # For default/dev environment
+wrangler deploy                   # For default/dev environment
 wrangler deploy --env staging     # For staging
 wrangler deploy --env production  # For production
 ```
