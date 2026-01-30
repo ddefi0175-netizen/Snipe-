@@ -36,7 +36,7 @@ ALLOWED_ORIGINS = "https://onchainweb.pages.dev,https://www.onchainweb.app"
 command = "npm install && npm run build"
 
 [env.production]
-name = "snipe-workers-production"
+name = "snipe-onchainweb-production"
 
 # Cloudflare Pages configuration
 pages_build_output_dir = "Onchainweb/dist"
