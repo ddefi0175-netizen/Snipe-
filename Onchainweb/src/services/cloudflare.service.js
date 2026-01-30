@@ -11,7 +11,7 @@
  * - Sub-millisecond response times from edge locations
  */
 
-const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'https://snipe-workers.onchainweb.workers.dev'
+const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'https://snipe-onchainweb.onchainweb.workers.dev'
 
 /**
  * Get user data with KV caching
