@@ -78,7 +78,9 @@ vars = { ENVIRONMENT = "production", DEBUG = "false" }
 # Production-specific KV namespace
 [[env.production.kv_namespaces]]
 binding = "CACHE"
-id = "488840361a874877b2b54506b15f746a"
+# IMPORTANT: Create production KV namespace with: wrangler kv:namespace create "CACHE" --env production
+# Then replace this placeholder with the actual namespace ID from the output
+id = "PRODUCTION_KV_NAMESPACE_ID_PLACEHOLDER"
 # IMPORTANT: Create separate preview namespace with: wrangler kv:namespace create "CACHE" --env production --preview
 # This isolates preview deployments from production data
 preview_id = "PRODUCTION_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER"
