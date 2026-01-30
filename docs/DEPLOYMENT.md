@@ -167,8 +167,8 @@ curl https://onchainweb.pages.dev/
 
 #### B. Check Workers
 ```bash
-curl https://snipe-workers.onchainweb.workers.dev/health
-# Should return: {"status":"healthy","service":"snipe-workers","version":"1.0.0"}
+curl https://snipe-onchainweb.onchainweb.workers.dev/health
+# Should return: {"status":"healthy","service":"snipe-onchainweb","version":"1.0.0"}
 ```
 
 #### C. Test Features

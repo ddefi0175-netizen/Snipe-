@@ -32,7 +32,7 @@ export default {
       if (url.pathname === '/health' || url.pathname === '/') {
         return new Response(JSON.stringify({ 
           status: 'healthy',
-          service: 'snipe-workers',
+          service: 'snipe-onchainweb',
           version: '1.0.0'
         }), {
           headers: {
