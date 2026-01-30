@@ -21,6 +21,9 @@ import AdminRouteGuard from './components/AdminRouteGuard.jsx'
 // Admin auto-detection for wallet-based admin access
 import AdminAutoDetector from './components/AdminAutoDetector.jsx'
 
+// Configuration validator (development only)
+import ConfigValidator from './components/ConfigValidator.jsx'
+
 // Loading spinner for lazy loaded routes
 const LoadingSpinner = () => (
   <div style={{
@@ -54,6 +57,7 @@ createRoot(document.getElementById('root')).render(
         <UniversalWalletProvider>
           <AdminAutoDetector>
             <APIStatusBanner />
+            <ConfigValidator />
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>
                 <Route path={ROUTES.HOME} element={<MainApp />} />
