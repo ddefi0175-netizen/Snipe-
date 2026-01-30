@@ -88,8 +88,8 @@ preview_id = "PRODUCTION_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER"
 # Production-specific R2 bucket
 [[env.production.r2_buckets]]
 binding = "STORAGE"
-bucket_name = "onchainweb"
-preview_bucket_name = "onchainweb-preview"  # Separate preview bucket to protect production data
+bucket_name = "onchainweb-production"
+preview_bucket_name = "onchainweb-production-preview"  # Separate preview bucket to protect production data
 
 # Production routes - uncomment and configure for custom domain
 # routes = [
