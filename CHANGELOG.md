@@ -9,11 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Wrangler Configuration**: Modernized `wrangler.toml` with 2026 best practices
-  - Updated `compatibility_date` to 2026-01-30 for latest Cloudflare Workers features
+  - Updated `compatibility_date` to 2026-01-30 (verify availability in [Cloudflare's official documentation](https://developers.cloudflare.com/workers/configuration/compatibility-dates/))
   - Replaced deprecated `node_compat` with `nodejs_compat` compatibility flag
   - Added environment-specific configurations (staging and production)
   - Enhanced observability settings with proper sampling rates
   - Improved route configuration examples for custom domains
+  - Separated preview resources (KV namespaces and R2 buckets) from production to prevent data contamination
   - Added comprehensive documentation in `docs/WRANGLER_CONFIGURATION.md`
 
 ### Added

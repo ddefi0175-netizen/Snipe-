@@ -19,12 +19,14 @@ The `wrangler.toml` file has been updated with modern best practices as of 2026,
 compatibility_date = "2026-01-30"
 ```
 
-The compatibility date has been updated to the current date. This ensures:
+The compatibility date has been updated to use a modern date. This ensures:
 - Access to the latest Cloudflare Workers features
 - Proper security updates
 - Consistent runtime behavior
 
-**Best Practice**: Update this date periodically when starting new projects or making major updates.
+**Important**: Always verify the date is available in [Cloudflare's official compatibility dates documentation](https://developers.cloudflare.com/workers/configuration/compatibility-dates/) before using it. Use the latest stable date available from Cloudflare, not necessarily the literal current date.
+
+**Best Practice**: Update this date periodically when starting new projects or making major updates, but only to dates officially supported by Cloudflare.
 
 ### 2. Node.js Compatibility
 
@@ -63,6 +65,14 @@ workers_dev = true
 name = "snipe-onchainweb-staging"
 workers_dev = true
 vars = { ENVIRONMENT = "staging", DEBUG = "true" }
+```
+
+**Note**: Environment variables like `DEBUG` are set as strings. In your Worker code, you'll need to check them as strings:
+```javascript
+// In your worker code
+if (env.DEBUG === "true") {
+  // Debug logic
+}
 ```
 
 **Usage**:
@@ -187,12 +197,20 @@ wrangler secret delete SECRET_NAME
 # Create production KV namespace
 wrangler kv:namespace create "CACHE"
 
+# Create production preview namespace (important for isolation)
+wrangler kv:namespace create "CACHE" --preview
+
 # Create staging KV namespace
 wrangler kv:namespace create "CACHE" --env staging
+
+# Create staging preview namespace
+wrangler kv:namespace create "CACHE" --env staging --preview
 
 # List KV namespaces
 wrangler kv:namespace list
 ```
+
+**Important**: Always create separate preview namespaces to isolate preview deployments from production/staging data.
 
 ### R2 Buckets
 
@@ -200,12 +218,20 @@ wrangler kv:namespace list
 # Create production R2 bucket
 wrangler r2 bucket create onchainweb
 
+# Create production preview bucket (important for isolation)
+wrangler r2 bucket create onchainweb-preview
+
 # Create staging R2 bucket
 wrangler r2 bucket create onchainweb-staging
+
+# Create staging preview bucket
+wrangler r2 bucket create onchainweb-staging-preview
 
 # List R2 buckets
 wrangler r2 bucket list
 ```
+
+**Important**: Always create separate preview buckets to prevent preview deployments from modifying production/staging data.
 
 ### D1 Databases
 
@@ -309,12 +335,14 @@ wrangler deploy --env production  # For production
 
 If you're upgrading from an older Wrangler configuration:
 
-1. **Update compatibility_date**: Set to current date
+1. **Update compatibility_date**: Set to the latest stable date from [Cloudflare's compatibility dates documentation](https://developers.cloudflare.com/workers/configuration/compatibility-dates/)
 2. **Replace node_compat**: Use `compatibility_flags = ["nodejs_compat"]`
 3. **Add environments**: Create staging and production environments
-4. **Update observability**: Use new `head_sampling_rate` format (1.0 instead of 1)
+4. **Update observability**: Optionally update `head_sampling_rate` format to use float (1.0) for consistency, though integer format (1) also works
 5. **Review routes**: Update to new route syntax with `custom_domain` or `zone_name`
-6. **Test thoroughly**: Deploy to staging and verify all functionality
+6. **Create preview resources**: Set up separate KV namespaces and R2 buckets for preview deployments
+7. **Update namespace/bucket IDs**: Replace placeholder values with actual IDs after creating resources
+8. **Test thoroughly**: Deploy to staging and verify all functionality
 
 ## 📞 Support
 

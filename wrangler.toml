@@ -54,14 +54,16 @@ vars = { ENVIRONMENT = "staging", DEBUG = "true" }
 # Staging-specific KV namespace
 [[env.staging.kv_namespaces]]
 binding = "CACHE"
-id = "staging_cache_namespace_id"  # Create with: wrangler kv:namespace create "CACHE" --env staging
-preview_id = "staging_cache_namespace_id"
+# TODO: Create staging KV namespace with: wrangler kv:namespace create "CACHE" --env staging
+# Then replace this placeholder with the actual namespace ID
+id = "STAGING_KV_NAMESPACE_ID_PLACEHOLDER"
+preview_id = "STAGING_KV_PREVIEW_ID_PLACEHOLDER"  # Separate preview namespace recommended
 
 # Staging-specific R2 bucket
 [[env.staging.r2_buckets]]
 binding = "STORAGE"
 bucket_name = "onchainweb-staging"
-preview_bucket_name = "onchainweb-staging"
+preview_bucket_name = "onchainweb-staging-preview"  # Separate preview bucket for isolation
 
 # ============================================
 # Production Environment
@@ -75,13 +77,15 @@ vars = { ENVIRONMENT = "production", DEBUG = "false" }
 [[env.production.kv_namespaces]]
 binding = "CACHE"
 id = "488840361a874877b2b54506b15f746a"
-preview_id = "488840361a874877b2b54506b15f746a"
+# IMPORTANT: Create separate preview namespace with: wrangler kv:namespace create "CACHE" --env production --preview
+# This isolates preview deployments from production data
+preview_id = "PRODUCTION_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER"
 
 # Production-specific R2 bucket
 [[env.production.r2_buckets]]
 binding = "STORAGE"
 bucket_name = "onchainweb"
-preview_bucket_name = "onchainweb"
+preview_bucket_name = "onchainweb-preview"  # Separate preview bucket to protect production data
 
 # Production routes - uncomment and configure for custom domain
 # routes = [
