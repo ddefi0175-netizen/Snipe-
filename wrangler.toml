@@ -118,11 +118,6 @@ head_sampling_rate = 1.0
 persist = true
 invocation_logs = true
 
-[observability.traces]
-enabled = true
-persist = true
-head_sampling_rate = 1.0
-
 # ============================================
 # Routes Configuration (for production custom domains)
 # ============================================

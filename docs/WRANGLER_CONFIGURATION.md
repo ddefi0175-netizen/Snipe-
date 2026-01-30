@@ -106,20 +106,16 @@ enabled = true
 head_sampling_rate = 1.0
 persist = true
 invocation_logs = true
-
-[observability.traces]
-enabled = true
-persist = true
-head_sampling_rate = 1.0
 ```
 
 **Features**:
 - Full request/response logging
-- Distributed tracing support
 - Performance monitoring
 - Error tracking
 
 **Note**: `head_sampling_rate = 1.0` means 100% of requests are logged (suitable for development; adjust for production based on volume).
+
+**Wrangler Version Notice**: The `[observability.traces]` configuration block requires Wrangler 4.0 or later. With Wrangler 3.x (including v3.114.17), only `[observability]` and `[observability.logs]` are supported. If you need distributed tracing support, upgrade Wrangler to version 4.x or later.
 
 ### 6. Custom Domain Routes
 
