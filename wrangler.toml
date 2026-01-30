@@ -17,13 +17,15 @@ workers_dev = true
 binding = "CACHE"
 # KV Namespace ID - should be created via wrangler kv:namespace create
 id = "488840361a874877b2b54506b15f746a"
-preview_id = "488840361a874877b2b54506b15f746a"
+# Create separate preview namespace: wrangler kv:namespace create "CACHE" --preview
+preview_id = "DEV_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER"  # Separate preview namespace for dev isolation
 
 [[r2_buckets]]
 binding = "STORAGE"
 # R2 Bucket - should be created via wrangler r2 bucket create
 bucket_name = "onchainweb"
-preview_bucket_name = "onchainweb"
+# Create separate preview bucket: wrangler r2 bucket create onchainweb-dev-preview
+preview_bucket_name = "onchainweb-dev-preview"  # Separate preview bucket for dev isolation
 
 [vars]
 # Non-sensitive configuration variables

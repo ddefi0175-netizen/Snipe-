@@ -194,11 +194,17 @@ wrangler secret delete SECRET_NAME
 ### KV Namespaces
 
 ```bash
-# Create production KV namespace
+# Create default/dev KV namespace (if not already exists)
 wrangler kv:namespace create "CACHE"
 
-# Create production preview namespace (important for isolation)
+# Create default/dev preview namespace (important for isolation)
 wrangler kv:namespace create "CACHE" --preview
+
+# Create production KV namespace
+wrangler kv:namespace create "CACHE" --env production
+
+# Create production preview namespace (important for isolation)
+wrangler kv:namespace create "CACHE" --env production --preview
 
 # Create staging KV namespace
 wrangler kv:namespace create "CACHE" --env staging
@@ -210,11 +216,17 @@ wrangler kv:namespace create "CACHE" --env staging --preview
 wrangler kv:namespace list
 ```
 
-**Important**: Always create separate preview namespaces to isolate preview deployments from production/staging data.
+**Important**: Always create separate preview namespaces to isolate preview deployments from production/staging/dev data.
 
 ### R2 Buckets
 
 ```bash
+# Create default/dev R2 bucket (if not already exists)
+wrangler r2 bucket create onchainweb
+
+# Create default/dev preview bucket (important for isolation)
+wrangler r2 bucket create onchainweb-dev-preview
+
 # Create production R2 bucket
 wrangler r2 bucket create onchainweb
 
@@ -231,7 +243,7 @@ wrangler r2 bucket create onchainweb-staging-preview
 wrangler r2 bucket list
 ```
 
-**Important**: Always create separate preview buckets to prevent preview deployments from modifying production/staging data.
+**Important**: Always create separate preview buckets to prevent preview deployments from modifying production/staging/dev data.
 
 ### D1 Databases
 
