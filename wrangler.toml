@@ -1,21 +1,33 @@
 name = "snipe-onchainweb"
 main = "workers/index.js"
-compatibility_date = "2024-01-01"
-# Account ID should be set via environment variable or wrangler secret
-# Set via: wrangler secret put CLOUDFLARE_ACCOUNT_ID
+compatibility_date = "2026-01-30"
+# Account ID is public metadata and can be set via:
+# 1. Hardcoded in wrangler.toml (current approach below), OR
+# 2. CLOUDFLARE_ACCOUNT_ID environment variable
+# Note: account_id is NOT a secret and cannot be set via wrangler secret put
 account_id = "eb568c24da7c746c95353226eb665d00"
+
+# Node.js compatibility flag for modern Node.js APIs
+# See: https://developers.cloudflare.com/workers/runtime-apis/nodejs
+compatibility_flags = ["nodejs_compat"]
+
+# Development mode - deploy to *.workers.dev subdomain
+# Set to false for production with custom routes
+workers_dev = true
 
 [[kv_namespaces]]
 binding = "CACHE"
 # KV Namespace ID - should be created via wrangler kv:namespace create
 id = "488840361a874877b2b54506b15f746a"
-preview_id = "488840361a874877b2b54506b15f746a"
+# Create separate preview namespace: wrangler kv:namespace create "CACHE" --preview
+preview_id = "DEV_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER"  # Separate preview namespace for dev isolation
 
 [[r2_buckets]]
 binding = "STORAGE"
 # R2 Bucket - should be created via wrangler r2 bucket create
 bucket_name = "onchainweb"
-preview_bucket_name = "onchainweb"
+# Create separate preview bucket: wrangler r2 bucket create onchainweb-dev-preview
+preview_bucket_name = "onchainweb-dev-preview"  # Separate preview bucket for dev isolation
 
 [vars]
 # Non-sensitive configuration variables
@@ -35,8 +47,56 @@ ALLOWED_ORIGINS = "https://onchainweb.pages.dev,https://www.onchainweb.app"
 [build]
 command = "npm install && npm run build"
 
+# ============================================
+# Staging Environment
+# ============================================
+[env.staging]
+name = "snipe-onchainweb-staging"
+workers_dev = true
+vars = { ENVIRONMENT = "staging", DEBUG = "true" }
+
+# Staging-specific KV namespace
+[[env.staging.kv_namespaces]]
+binding = "CACHE"
+# TODO: Create staging KV namespace with: wrangler kv:namespace create "CACHE" --env staging
+# Then replace this placeholder with the actual namespace ID
+id = "STAGING_KV_NAMESPACE_ID_PLACEHOLDER"
+preview_id = "STAGING_KV_PREVIEW_ID_PLACEHOLDER"  # Separate preview namespace recommended
+
+# Staging-specific R2 bucket
+[[env.staging.r2_buckets]]
+binding = "STORAGE"
+bucket_name = "onchainweb-staging"
+preview_bucket_name = "onchainweb-staging-preview"  # Separate preview bucket for isolation
+
+# ============================================
+# Production Environment
+# ============================================
 [env.production]
 name = "snipe-onchainweb-production"
+workers_dev = false  # Disable *.workers.dev in production
+vars = { ENVIRONMENT = "production", DEBUG = "false" }
+
+# Production-specific KV namespace
+[[env.production.kv_namespaces]]
+binding = "CACHE"
+# IMPORTANT: Create production KV namespace with: wrangler kv:namespace create "CACHE" --env production
+# Then replace this placeholder with the actual namespace ID from the output
+id = "PRODUCTION_KV_NAMESPACE_ID_PLACEHOLDER"
+# IMPORTANT: Create separate preview namespace with: wrangler kv:namespace create "CACHE" --env production --preview
+# This isolates preview deployments from production data
+preview_id = "PRODUCTION_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER"
+
+# Production-specific R2 bucket
+[[env.production.r2_buckets]]
+binding = "STORAGE"
+bucket_name = "onchainweb-production"
+preview_bucket_name = "onchainweb-production-preview"  # Separate preview bucket to protect production data
+
+# Production routes - uncomment and configure for custom domain
+# routes = [
+#   { pattern = "api.onchainweb.app/*", custom_domain = true }
+# ]
 
 # Cloudflare Pages configuration
 pages_build_output_dir = "Onchainweb/dist"
@@ -47,25 +107,30 @@ binding = "DB"
 database_name = "onchainweb"
 database_id = "e3f277bd-092a-41d6-a477-4521200c79fe"
 
-# Observability settings
+# ============================================
+# Observability & Monitoring
+# ============================================
 [observability]
 enabled = true
-head_sampling_rate = 1
+head_sampling_rate = 1.0
 
 [observability.logs]
 enabled = true
-head_sampling_rate = 1
+head_sampling_rate = 1.0
 persist = true
 invocation_logs = true
 
-[observability.traces]
-enabled = true
-persist = true
-head_sampling_rate = 1
-
 # ============================================
-# Routes Configuration
+# Routes Configuration (for production custom domains)
 # ============================================
+# Uncomment and configure for custom domain routing
 # routes = [
-#   { pattern = "api.yourdomain.com/api/*", zone_name = "yourdomain.com" }
+#   { pattern = "api.onchainweb.app/*", custom_domain = true },
+#   { pattern = "onchainweb.app/api/*", zone_name = "onchainweb.app" }
+# ]
+#
+# For multiple domains:
+# routes = [
+#   { pattern = "api.domain1.com/*", zone_name = "domain1.com" },
+#   { pattern = "api.domain2.com/*", zone_name = "domain2.com" }
 # ]

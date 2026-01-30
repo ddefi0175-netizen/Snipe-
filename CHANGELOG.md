@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **Wrangler Configuration**: Modernized `wrangler.toml` with 2026 best practices
+  - Updated `compatibility_date` to 2026-01-30 (verify availability in [Cloudflare's official documentation](https://developers.cloudflare.com/workers/configuration/compatibility-dates/))
+  - Replaced deprecated `node_compat` with `nodejs_compat` compatibility flag
+  - Added environment-specific configurations (staging and production)
+  - Enhanced observability settings with proper sampling rates
+  - Improved route configuration examples for custom domains
+  - Separated preview resources (KV namespaces and R2 buckets) from production to prevent data contamination
+  - Added comprehensive documentation in `docs/WRANGLER_CONFIGURATION.md`
+
+### Added
+- **Documentation**: New Wrangler Configuration Guide (`docs/WRANGLER_CONFIGURATION.md`)
+  - Deployment commands for staging and production
+  - Secrets management best practices
+  - Resource setup instructions (KV, R2, D1)
+  - Monitoring and debugging guide
+  - Common issues and solutions
+  - Migration guide from older configurations
+
 ## [1.0.0] - 2026-01-23
 
 ### Initial Public Release 🎉

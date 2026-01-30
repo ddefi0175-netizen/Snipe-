@@ -110,6 +110,7 @@ Get your WalletConnect Project ID from [WalletConnect Cloud](https://cloud.walle
 
 ## 📚 Additional Resources
 
+- [Wrangler Configuration Guide](docs/WRANGLER_CONFIGURATION.md) ⭐ **NEW**
 - [Vercel Deployment Guide](docs/deployment/VERCEL_DEPLOYMENT_GUIDE.md)
 - [Cloudflare D1 Documentation](https://developers.cloudflare.com/d1/)
 - [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)

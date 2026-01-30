@@ -29,6 +29,7 @@ Quick reference documents for getting started:
 - [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - Command reference
 - [QUICK_LAUNCH.md](QUICK_LAUNCH.md) - Launch checklist
 - [README_SETUP.md](README_SETUP.md) - Setup instructions
+- [WRANGLER_CONFIGURATION.md](WRANGLER_CONFIGURATION.md) - Cloudflare Workers setup ⭐ **NEW**
 
 ### Admin Documentation
 
@@ -49,6 +50,7 @@ Production deployment and infrastructure:
 - Deployment checklists
 - Production environment setup
 - Vercel deployment guide
+- **Wrangler configuration for Cloudflare Workers** ⭐ **NEW**
 - Monitoring and maintenance
 
 [View deployment docs →](deployment/)
