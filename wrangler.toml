@@ -1,8 +1,10 @@
 name = "snipe-onchainweb"
 main = "workers/index.js"
 compatibility_date = "2026-01-30"
-# Account ID should be set via environment variable or wrangler secret
-# Set via: wrangler secret put CLOUDFLARE_ACCOUNT_ID
+# Account ID is public metadata and can be set via:
+# 1. Hardcoded in wrangler.toml (current approach below), OR
+# 2. CLOUDFLARE_ACCOUNT_ID environment variable
+# Note: account_id is NOT a secret and cannot be set via wrangler secret put
 account_id = "eb568c24da7c746c95353226eb665d00"
 
 # Node.js compatibility flag for modern Node.js APIs
