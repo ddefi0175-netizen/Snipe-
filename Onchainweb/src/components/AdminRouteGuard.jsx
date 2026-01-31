@@ -90,10 +90,10 @@ export default function AdminRouteGuard({
   // Show loading while checking
   if (authState === 'checking') {
     return (
-      <div className="admin-guard-loading" suppressHydrationWarning>
+      <div className="admin-guard-loading">
         <div className="spinner"></div>
         <p>Verifying access...</p>
-        <style jsx>{`
+        <style>{`
           .admin-guard-loading {
             display: flex;
             flex-direction: column;
