@@ -141,7 +141,7 @@ export default function NotFound() {
                 padding: '2px 6px', 
                 borderRadius: '4px',
                 color: '#fbbf24'
-              }}>VITE_ENABLE_ADMIN=true</code> in your environment</li>
+              }} aria-label="Environment variable VITE_ENABLE_ADMIN equals true">VITE_ENABLE_ADMIN=true</code> in your environment</li>
               <li>Configure Firebase Authentication</li>
               <li>Set admin email allowlist</li>
               <li>Restart the development server</li>
@@ -178,6 +178,14 @@ export default function NotFound() {
               e.currentTarget.style.transform = 'translateY(0)';
               e.currentTarget.style.boxShadow = '0 4px 12px rgba(124, 58, 237, 0.3)';
             }}
+            onFocus={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(124, 58, 237, 0.4)';
+            }}
+            onBlur={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(124, 58, 237, 0.3)';
+            }}
           >
             ← Back to Home
           </button>
@@ -200,6 +208,14 @@ export default function NotFound() {
               e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
             }}
             onMouseOut={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+            }}
+            onFocus={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            }}
+            onBlur={(e) => {
               e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
               e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
             }}
