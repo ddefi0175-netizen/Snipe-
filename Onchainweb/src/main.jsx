@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { UniversalWalletProvider } from './lib/walletConnect.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
-import { APIStatusBanner } from './components/APIStatus.jsx'
 import { ROUTES, ADMIN_GUARD } from './config/constants.js'
 import './index.css'
 import './styles/master-admin.css'
@@ -23,6 +22,9 @@ import AdminAutoDetector from './components/AdminAutoDetector.jsx'
 
 // Configuration validator (development only)
 import ConfigValidator from './components/ConfigValidator.jsx'
+
+// 404 Not Found page
+import NotFound from './components/NotFound.jsx'
 
 // Loading spinner for lazy loaded routes
 const LoadingSpinner = () => (
@@ -56,7 +58,6 @@ createRoot(document.getElementById('root')).render(
       <BrowserRouter>
         <UniversalWalletProvider>
           <AdminAutoDetector>
-            <APIStatusBanner />
             <ConfigValidator />
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>
@@ -81,6 +82,8 @@ createRoot(document.getElementById('root')).render(
                     } 
                   />
                 )}
+                {/* Catch-all route for 404 - must be last */}
+                <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
           </AdminAutoDetector>
