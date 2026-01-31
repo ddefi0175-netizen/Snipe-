@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { firebaseSignIn, onAuthChange } from '../lib/firebase.js';
 import { handleAdminLogin, formatFirebaseAuthError } from '../lib/adminAuth.js';
 import { getAdminByEmail, updateAdminLastLogin } from '../services/adminService.js';
@@ -14,8 +14,17 @@ export default function AdminLogin({ onLoginSuccess, allowedRoute = '/admin' }) 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  
+  // Use ref to store stable callback reference
+  const onLoginSuccessRef = useRef(onLoginSuccess);
+  
+  // Update ref when callback changes, but don't trigger re-render
+  useEffect(() => {
+    onLoginSuccessRef.current = onLoginSuccess;
+  }, [onLoginSuccess]);
 
   // Check if already authenticated
+  // Note: Using ref pattern so callback stays updated without triggering re-renders
   useEffect(() => {
     const unsubscribe = onAuthChange(async (user) => {
       if (user) {
@@ -25,8 +34,8 @@ export default function AdminLogin({ onLoginSuccess, allowedRoute = '/admin' }) 
           if (adminData) {
             console.log('[AdminLogin] Already authenticated:', user.email);
             await updateAdminLastLogin(adminData.uid);
-            if (onLoginSuccess) {
-              onLoginSuccess({
+            if (onLoginSuccessRef.current) {
+              onLoginSuccessRef.current({
                 user,
                 admin: adminData,
                 role: adminData.role,
@@ -42,7 +51,7 @@ export default function AdminLogin({ onLoginSuccess, allowedRoute = '/admin' }) 
     });
 
     return () => unsubscribe();
-  }, [onLoginSuccess]);
+  }, []); // Empty dependency array - only run once on mount
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -84,7 +93,7 @@ export default function AdminLogin({ onLoginSuccess, allowedRoute = '/admin' }) 
 
   if (isCheckingAuth) {
     return (
-      <div className="admin-login-container">
+      <div className="admin-login-container" suppressHydrationWarning>
         <div className="admin-login-box">
           <div className="admin-login-loading">
             <div className="spinner"></div>

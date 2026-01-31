@@ -26,7 +26,37 @@
 </head>
 
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <!-- Loading skeleton to prevent blank screen until JS loads -->
+    <div style="
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0a0a0f 100%);
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    ">
+      <div style="text-align: center;">
+        <div style="
+          width: 50px;
+          height: 50px;
+          border: 3px solid rgba(124, 58, 237, 0.3);
+          border-top: 3px solid #7c3aed;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin: 0 auto 16px;
+        "></div>
+        <p style="margin: 0; opacity: 0.8;">Loading OnchainWeb...</p>
+      </div>
+      <style>
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      </style>
+    </div>
+  </div>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 

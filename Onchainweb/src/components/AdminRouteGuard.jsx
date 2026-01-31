@@ -23,12 +23,9 @@ export default function AdminRouteGuard({
   const [adminData, setAdminData] = useState(null);
   const navigate = useNavigate();
 
+  // Check authentication state - only run once on mount
   useEffect(() => {
-    checkAuthState();
-  }, []);
-
-  const checkAuthState = async () => {
-    // Check if already authenticated
+    // Set up auth state listener (synchronous, returns unsubscribe immediately)
     const unsubscribe = onAuthChange(async (user) => {
       if (user) {
         // User is signed in, verify they're an admin
@@ -64,9 +61,14 @@ export default function AdminRouteGuard({
         setAuthState('need_login');
       }
     });
-
-    return () => unsubscribe();
-  };
+    
+    // Cleanup listener on unmount
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [requireMaster]); // Only depend on requireMaster which is stable
 
   const handleMasterSetupComplete = (masterInfo) => {
     console.log('[AdminRouteGuard] Master setup complete:', masterInfo);
@@ -88,7 +90,7 @@ export default function AdminRouteGuard({
   // Show loading while checking
   if (authState === 'checking') {
     return (
-      <div className="admin-guard-loading">
+      <div className="admin-guard-loading" suppressHydrationWarning>
         <div className="spinner"></div>
         <p>Verifying access...</p>
         <style jsx>{`
