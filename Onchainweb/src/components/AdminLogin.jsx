@@ -23,7 +23,8 @@ export default function AdminLogin({ onLoginSuccess, allowedRoute = '/admin' }) 
     onLoginSuccessRef.current = onLoginSuccess;
   }, [onLoginSuccess]);
 
-  // Check if already authenticated - only run once on mount
+  // Check if already authenticated
+  // Note: Using ref pattern so callback stays updated without triggering re-renders
   useEffect(() => {
     const unsubscribe = onAuthChange(async (user) => {
       if (user) {
