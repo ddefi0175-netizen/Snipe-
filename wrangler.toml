@@ -114,6 +114,9 @@ database_id = "e3f277bd-092a-41d6-a477-4521200c79fe"
 enabled = true
 head_sampling_rate = 1.0
 
+# NOTE: observability.logs is supported in Wrangler 4.x+
+# This will generate a warning in Wrangler 3.x but won't cause deployment failures
+# The configuration is kept for forward compatibility
 [observability.logs]
 enabled = true
 head_sampling_rate = 1.0
