@@ -18,6 +18,14 @@ export default function AdminAutoDetector({ children }) {
     const checkAdminAccess = async () => {
       // Skip if no wallet connected or already checked
       if (!wallet?.address || hasChecked) return
+      
+      // Prevent redirect loop - don't check if already on admin route
+      const currentPath = window.location.pathname
+      if (currentPath === ROUTES.MASTER_ADMIN || currentPath === ROUTES.ADMIN) {
+        console.log('[ADMIN-DETECT] Already on admin route, skipping check')
+        setHasChecked(true)
+        return
+      }
 
       try {
         console.log('[ADMIN-DETECT] Checking wallet for admin access:', wallet.address)
@@ -78,7 +86,7 @@ export default function AdminAutoDetector({ children }) {
   // Show loading overlay while redirecting
   if (isAdminRedirecting) {
     return (
-      <div style={{
+      <div suppressHydrationWarning style={{
         position: 'fixed',
         top: 0,
         left: 0,

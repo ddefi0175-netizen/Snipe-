@@ -23,50 +23,58 @@ export default function AdminRouteGuard({
   const [adminData, setAdminData] = useState(null);
   const navigate = useNavigate();
 
+  // Check authentication state - only run once on mount
   useEffect(() => {
-    checkAuthState();
-  }, []);
+    let unsubscribe = null;
+    
+    // Set up auth state listener
+    const initAuth = async () => {
+      unsubscribe = onAuthChange(async (user) => {
+        if (user) {
+          // User is signed in, verify they're an admin
+          try {
+            const admin = await getAdminByEmail(user.email);
+            
+            if (admin) {
+              // Check if route requires master role
+              if (requireMaster && admin.role !== 'master') {
+                console.warn('[AdminRouteGuard] User is not a master admin');
+                setAuthState('need_login');
+                setCurrentUser(null);
+                setAdminData(null);
+                return;
+              }
 
-  const checkAuthState = async () => {
-    // Check if already authenticated
-    const unsubscribe = onAuthChange(async (user) => {
-      if (user) {
-        // User is signed in, verify they're an admin
-        try {
-          const admin = await getAdminByEmail(user.email);
-          
-          if (admin) {
-            // Check if route requires master role
-            if (requireMaster && admin.role !== 'master') {
-              console.warn('[AdminRouteGuard] User is not a master admin');
-              setAuthState('need_login');
-              setCurrentUser(null);
-              setAdminData(null);
+              console.log('[AdminRouteGuard] User authenticated:', user.email);
+              setCurrentUser(user);
+              setAdminData(admin);
+              setAuthState('authenticated');
               return;
+            } else {
+              console.warn('[AdminRouteGuard] User not found in admin collection');
+              setAuthState('need_login');
             }
-
-            console.log('[AdminRouteGuard] User authenticated:', user.email);
-            setCurrentUser(user);
-            setAdminData(admin);
-            setAuthState('authenticated');
-            return;
-          } else {
-            console.warn('[AdminRouteGuard] User not found in admin collection');
+          } catch (err) {
+            console.error('[AdminRouteGuard] Error checking admin status:', err);
             setAuthState('need_login');
           }
-        } catch (err) {
-          console.error('[AdminRouteGuard] Error checking admin status:', err);
+        } else {
+          // Not signed in
+          console.log('[AdminRouteGuard] No user signed in');
           setAuthState('need_login');
         }
-      } else {
-        // Not signed in
-        console.log('[AdminRouteGuard] No user signed in');
-        setAuthState('need_login');
+      });
+    };
+    
+    initAuth();
+    
+    // Cleanup listener on unmount
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
       }
-    });
-
-    return () => unsubscribe();
-  };
+    };
+  }, [requireMaster]); // Only depend on requireMaster which is stable
 
   const handleMasterSetupComplete = (masterInfo) => {
     console.log('[AdminRouteGuard] Master setup complete:', masterInfo);
@@ -88,7 +96,7 @@ export default function AdminRouteGuard({
   // Show loading while checking
   if (authState === 'checking') {
     return (
-      <div className="admin-guard-loading">
+      <div className="admin-guard-loading" suppressHydrationWarning>
         <div className="spinner"></div>
         <p>Verifying access...</p>
         <style jsx>{`

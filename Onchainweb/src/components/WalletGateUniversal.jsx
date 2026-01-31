@@ -100,8 +100,9 @@ export default function WalletGate({ onConnect, children, allowOpenAccess = fals
                 onConnect(result.address)
             }
 
-            // Reload to show app
-            window.location.reload()
+            // Connection successful - wallet state will update and children will render
+            // No need to reload, React will re-render automatically
+            console.log('[WalletGate] Connection successful:', result.address)
 
         } catch (err) {
             if (err.message !== 'REDIRECT_TO_WALLET') {
