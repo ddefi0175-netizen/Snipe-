@@ -22,9 +22,6 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Make test script executable
-        run: chmod +x ./test-deployment.sh
-
       - name: Run health checks
         run: |
           echo "🔍 Running automated health checks..."
