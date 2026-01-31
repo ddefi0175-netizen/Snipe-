@@ -26,6 +26,9 @@ import ConfigValidator from './components/ConfigValidator.jsx'
 // 404 Not Found page
 import NotFound from './components/NotFound.jsx'
 
+// Admin feature disabled page
+import AdminFeatureDisabled from './components/AdminFeatureDisabled.jsx'
+
 // Loading spinner for lazy loaded routes
 const LoadingSpinner = () => (
   <div style={{
@@ -62,26 +65,32 @@ createRoot(document.getElementById('root')).render(
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>
                 <Route path={ROUTES.HOME} element={<MainApp />} />
-                {ADMIN_GUARD.ENABLED && (
-                  <Route 
-                    path={ROUTES.ADMIN} 
-                    element={
+                {/* Admin route - always registered, but shows disabled message if feature not enabled */}
+                <Route 
+                  path={ROUTES.ADMIN} 
+                  element={
+                    ADMIN_GUARD.ENABLED ? (
                       <AdminRouteGuard requireMaster={false}>
                         <AdminPanel isOpen={true} onClose={() => window.location.href = '/'} />
                       </AdminRouteGuard>
-                    } 
-                  />
-                )}
-                {ADMIN_GUARD.ENABLED && (
-                  <Route 
-                    path={ROUTES.MASTER_ADMIN} 
-                    element={
+                    ) : (
+                      <AdminFeatureDisabled isMasterRoute={false} />
+                    )
+                  } 
+                />
+                {/* Master Admin route - always registered, but shows disabled message if feature not enabled */}
+                <Route 
+                  path={ROUTES.MASTER_ADMIN} 
+                  element={
+                    ADMIN_GUARD.ENABLED ? (
                       <AdminRouteGuard requireMaster={true}>
                         <MasterAdminDashboard />
                       </AdminRouteGuard>
-                    } 
-                  />
-                )}
+                    ) : (
+                      <AdminFeatureDisabled isMasterRoute={true} />
+                    )
+                  } 
+                />
                 {/* Catch-all route for 404 - must be last */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
