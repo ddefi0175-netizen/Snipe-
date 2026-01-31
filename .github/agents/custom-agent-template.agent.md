@@ -133,7 +133,7 @@ firebase deploy --only firestore:indexes
 ## Common Issues & Solutions
 
 ### Issue: Firebase not initializing
-**Solution**: Check that all 8 Firebase env vars are set in `Onchainweb/.env`
+**Solution**: Check that all 7 Firebase env vars are set in `Onchainweb/.env`
 
 ### Issue: Cold starts or polling delays
 **Solution**: Use onSnapshot listeners, not setInterval polling
