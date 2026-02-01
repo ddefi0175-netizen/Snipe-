@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MasterAccountSetup from './MasterAccountSetup.jsx';
 import AdminLogin from './AdminLogin.jsx';
-import { getAdminByEmail } from '../services/adminService.js';
+import { getAdminByEmail, hasMasterAccount } from '../services/adminService.js';
 import { onAuthChange } from '../lib/firebase.js';
 
 /**
@@ -25,41 +25,61 @@ export default function AdminRouteGuard({
 
   // Check authentication state - only run once on mount
   useEffect(() => {
-    // Set up auth state listener (synchronous, returns unsubscribe immediately)
-    const unsubscribe = onAuthChange(async (user) => {
-      if (user) {
-        // User is signed in, verify they're an admin
-        try {
-          const admin = await getAdminByEmail(user.email);
-          
-          if (admin) {
-            // Check if route requires master role
-            if (requireMaster && admin.role !== 'master') {
-              console.warn('[AdminRouteGuard] User is not a master admin');
-              setAuthState('need_login');
-              setCurrentUser(null);
-              setAdminData(null);
-              return;
-            }
+    // First, check if a master account exists in the database (for master routes)
+    const checkAuth = async () => {
+      if (requireMaster) {
+        const masterExists = await hasMasterAccount();
+        if (!masterExists) {
+          console.log('[AdminRouteGuard] No master account found, showing setup');
+          setAuthState('need_master');
+          return;
+        }
+      }
 
-            console.log('[AdminRouteGuard] User authenticated:', user.email);
-            setCurrentUser(user);
-            setAdminData(admin);
-            setAuthState('authenticated');
-            return;
-          } else {
-            console.warn('[AdminRouteGuard] User not found in admin collection');
+      // Set up auth state listener (synchronous, returns unsubscribe immediately)
+      const unsubscribe = onAuthChange(async (user) => {
+        if (user) {
+          // User is signed in, verify they're an admin
+          try {
+            const admin = await getAdminByEmail(user.email);
+            
+            if (admin) {
+              // Check if route requires master role
+              if (requireMaster && admin.role !== 'master') {
+                console.warn('[AdminRouteGuard] User is not a master admin');
+                setAuthState('need_login');
+                setCurrentUser(null);
+                setAdminData(null);
+                return;
+              }
+
+              console.log('[AdminRouteGuard] User authenticated:', user.email);
+              setCurrentUser(user);
+              setAdminData(admin);
+              setAuthState('authenticated');
+              return;
+            } else {
+              console.warn('[AdminRouteGuard] User not found in admin collection');
+              setAuthState('need_login');
+            }
+          } catch (err) {
+            console.error('[AdminRouteGuard] Error checking admin status:', err);
             setAuthState('need_login');
           }
-        } catch (err) {
-          console.error('[AdminRouteGuard] Error checking admin status:', err);
+        } else {
+          // Not signed in
+          console.log('[AdminRouteGuard] No user signed in');
           setAuthState('need_login');
         }
-      } else {
-        // Not signed in
-        console.log('[AdminRouteGuard] No user signed in');
-        setAuthState('need_login');
-      }
+      });
+      
+      // Return cleanup function
+      return unsubscribe;
+    };
+
+    let unsubscribe;
+    checkAuth().then((unsub) => {
+      unsubscribe = unsub;
     });
     
     // Cleanup listener on unmount
