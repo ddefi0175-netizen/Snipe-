@@ -264,6 +264,29 @@ export const hasPermission = (admin, permission) => {
 };
 
 /**
+ * Check if a master account exists in the database
+ * @returns {Promise<boolean>} True if master account exists, false otherwise
+ */
+export const hasMasterAccount = async () => {
+  if (!isFirebaseEnabled()) {
+    console.warn('[AdminService] Firebase not available');
+    return false;
+  }
+
+  try {
+    const q = query(
+      collection(db, COLLECTIONS.ADMINS),
+      where('role', '==', 'master')
+    );
+    const snapshot = await getDocs(q);
+    return !snapshot.empty;
+  } catch (error) {
+    console.error('[AdminService] Check master account error:', error);
+    return false;
+  }
+};
+
+/**
  * Initialize master account if not exists
  * This should be called on app initialization
  */
@@ -329,5 +352,6 @@ export default {
   subscribeToAdmins,
   canManageUser,
   hasPermission,
+  hasMasterAccount,
   initializeMasterAccount
 };
