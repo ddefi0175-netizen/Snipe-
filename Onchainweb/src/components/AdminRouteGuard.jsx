@@ -25,19 +25,22 @@ export default function AdminRouteGuard({
 
   // Check authentication state - only run once on mount
   useEffect(() => {
-    // First, check if a master account exists in the database (for master routes)
+    let unsubscribe;
+    
+    // Async function to check master account existence and set up auth listener
     const checkAuth = async () => {
+      // For master routes, first check if a master account exists in the database
       if (requireMaster) {
         const masterExists = await hasMasterAccount();
         if (!masterExists) {
           console.log('[AdminRouteGuard] No master account found, showing setup');
           setAuthState('need_master');
-          return;
+          return; // Don't set up auth listener if no master exists
         }
       }
 
       // Set up auth state listener (synchronous, returns unsubscribe immediately)
-      const unsubscribe = onAuthChange(async (user) => {
+      unsubscribe = onAuthChange(async (user) => {
         if (user) {
           // User is signed in, verify they're an admin
           try {
@@ -72,15 +75,10 @@ export default function AdminRouteGuard({
           setAuthState('need_login');
         }
       });
-      
-      // Return cleanup function
-      return unsubscribe;
     };
 
-    let unsubscribe;
-    checkAuth().then((unsub) => {
-      unsubscribe = unsub;
-    });
+    // Execute the async check
+    checkAuth();
     
     // Cleanup listener on unmount
     return () => {
