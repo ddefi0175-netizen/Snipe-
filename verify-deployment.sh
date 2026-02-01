@@ -2,7 +2,8 @@
 # Deployment Verification Script for Snipe Platform
 # This script verifies that all components are ready for deployment
 
-set -e
+# Don't exit on errors, we want to collect all issues
+set +e
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🔍 Snipe Platform - Deployment Verification"
