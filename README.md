@@ -4,10 +4,15 @@
 [![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen)](https://nodejs.org)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-1.0.0-green.svg)](RELEASE_NOTES.md)
+[![Deploy Ready](https://img.shields.io/badge/deploy-ready-success.svg)](DEPLOYMENT_READINESS.md)
 
 A production-ready, cost-optimized DeFi trading platform with real-time features, multi-wallet support, and comprehensive admin management.
 
 **✨ Key Features**: 11 Wallet Providers • Real-Time Trading • Live Chat • Admin System • AI Arbitrage • Edge Caching • Zero Egress Fees
+
+> **🚀 Latest Release**: [v1.0.0](RELEASE_NOTES.md) - February 1, 2026  
+> **📋 Deployment**: [Ready for production](DEPLOYMENT_READINESS.md) - [Deployment Guide](FINAL_DEPLOYMENT_GUIDE.md)
 
 ---
 
