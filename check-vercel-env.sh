@@ -119,20 +119,33 @@ fi
 echo ""
 print_info "Checking project link..."
 
-cd Onchainweb 2>/dev/null || true
-
+# Check in root directory first
 if [ -f ".vercel/project.json" ]; then
     PROJECT_ID=$(cat .vercel/project.json | grep -o '"projectId":"[^"]*"' | cut -d'"' -f4)
     PROJECT_NAME=$(cat .vercel/project.json | grep -o '"name":"[^"]*"' | cut -d'"' -f4 || echo "Unknown")
     print_success "Linked to project: $PROJECT_NAME"
-else
-    print_warning "Not linked to a Vercel project"
-    echo "Run 'vercel link' from the Onchainweb directory to link this project."
+elif [ -d "Onchainweb" ]; then
+    if ! cd Onchainweb; then
+        print_error "Failed to access Onchainweb directory"
+        exit 1
+    fi
+    
+    if [ -f ".vercel/project.json" ]; then
+        PROJECT_ID=$(cat .vercel/project.json | grep -o '"projectId":"[^"]*"' | cut -d'"' -f4)
+        PROJECT_NAME=$(cat .vercel/project.json | grep -o '"name":"[^"]*"' | cut -d'"' -f4 || echo "Unknown")
+        print_success "Linked to project: $PROJECT_NAME"
+    else
+        print_warning "Not linked to a Vercel project"
+        echo "Run 'vercel link' from the Onchainweb directory to link this project."
+        cd ..
+        exit 1
+    fi
+    
     cd ..
+else
+    print_error "Onchainweb directory not found"
     exit 1
 fi
-
-cd ..
 
 # Get list of all environment variables
 print_header "Fetching Environment Variables"
@@ -224,24 +237,32 @@ rm -f "$TEMP_ENV_FILE"
 print_header "Deployment Status"
 
 echo "Checking latest deployment..."
-cd Onchainweb 2>/dev/null || true
 
-# Get latest deployment info
-LATEST_DEPLOYMENT=$(vercel ls --meta githubDeployment=1 2>/dev/null | head -2 | tail -1 || echo "")
+# Change to Onchainweb directory for deployment check
+if [ -d "Onchainweb" ]; then
+    if ! cd Onchainweb; then
+        print_warning "Failed to access Onchainweb directory for deployment check"
+    else
+        # Get latest deployment info (limit to 1 for efficiency)
+        LATEST_DEPLOYMENT=$(vercel ls 2>/dev/null | head -2 | tail -1 || echo "")
 
-if [ -n "$LATEST_DEPLOYMENT" ]; then
-    DEPLOY_URL=$(echo "$LATEST_DEPLOYMENT" | awk '{print $2}')
-    DEPLOY_STATUS=$(echo "$LATEST_DEPLOYMENT" | awk '{print $4}')
-    DEPLOY_AGE=$(echo "$LATEST_DEPLOYMENT" | awk '{print $5}')
-    
-    echo -e "Latest Deployment: ${BLUE}$DEPLOY_URL${NC}"
-    echo -e "Status: $DEPLOY_STATUS"
-    echo -e "Age: $DEPLOY_AGE"
+        if [ -n "$LATEST_DEPLOYMENT" ]; then
+            DEPLOY_URL=$(echo "$LATEST_DEPLOYMENT" | awk '{print $2}')
+            DEPLOY_STATUS=$(echo "$LATEST_DEPLOYMENT" | awk '{print $4}')
+            DEPLOY_AGE=$(echo "$LATEST_DEPLOYMENT" | awk '{print $5}')
+            
+            echo -e "Latest Deployment: ${BLUE}$DEPLOY_URL${NC}"
+            echo -e "Status: $DEPLOY_STATUS"
+            echo -e "Age: $DEPLOY_AGE"
+        else
+            print_warning "Could not retrieve deployment status"
+        fi
+        
+        cd ..
+    fi
 else
-    print_warning "Could not retrieve deployment status"
+    print_warning "Onchainweb directory not found. Skipping deployment check."
 fi
-
-cd ..
 
 # Summary
 print_header "Summary"

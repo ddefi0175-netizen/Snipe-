@@ -77,11 +77,15 @@ set_vercel_env() {
     
     # Set for each environment
     for env in $env_scope; do
-        echo "$var_value" | vercel env add "$var_name" "$env" --force 2>&1 | grep -v "Warning:"
-        if [ $? -eq 0 ]; then
+        # Capture the vercel command output and status separately
+        OUTPUT=$(echo "$var_value" | vercel env add "$var_name" "$env" --force 2>&1)
+        STATUS=$?
+        
+        if [ $STATUS -eq 0 ]; then
             print_success "Set $var_name for $env"
         else
             print_error "Failed to set $var_name for $env"
+            echo "$OUTPUT" | grep -v "Warning:" >&2
             return 1
         fi
     done
@@ -151,7 +155,10 @@ if [ -f ".vercel/project.json" ]; then
     PROJECT_ID=$(cat .vercel/project.json | grep -o '"projectId":"[^"]*"' | cut -d'"' -f4)
     print_success "Detected project from .vercel/project.json"
 elif [ -d "Onchainweb" ]; then
-    cd Onchainweb
+    if ! cd Onchainweb; then
+        print_error "Failed to access Onchainweb directory"
+        exit 1
+    fi
     if [ -f ".vercel/project.json" ]; then
         PROJECT_ID=$(cat .vercel/project.json | grep -o '"projectId":"[^"]*"' | cut -d'"' -f4)
         print_success "Detected project from Onchainweb/.vercel/project.json"
@@ -163,9 +170,18 @@ if [ -z "$PROJECT_ID" ]; then
     print_warning "Could not auto-detect project. Please link this directory to your Vercel project."
     echo ""
     echo "Linking to Vercel project..."
-    cd Onchainweb 2>/dev/null || true
-    vercel link
-    cd ..
+    
+    if [ -d "Onchainweb" ]; then
+        if ! cd Onchainweb; then
+            print_error "Failed to access Onchainweb directory"
+            exit 1
+        fi
+        vercel link
+        cd ..
+    else
+        print_error "Onchainweb directory not found. Please run this script from the project root."
+        exit 1
+    fi
 fi
 
 print_success "Ready to configure environment variables"
@@ -266,7 +282,16 @@ print_header "Step 7: Triggering Production Redeployment"
 echo "The environment variables have been set. Now triggering a production redeployment..."
 echo ""
 
-cd Onchainweb 2>/dev/null || true
+# Change to Onchainweb directory
+if [ -d "Onchainweb" ]; then
+    if ! cd Onchainweb; then
+        print_error "Failed to access Onchainweb directory for deployment"
+        exit 1
+    fi
+else
+    print_error "Onchainweb directory not found. Cannot deploy."
+    exit 1
+fi
 
 # Trigger redeploy with --prod flag
 echo "Deploying to production..."
