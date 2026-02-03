@@ -1,5 +1,72 @@
 # Vercel Deployment Guide - onchainweb.site
 
+## Quick Fix: "Admin Features Disabled" Issue
+
+**Problem:** Visiting `https://onchainweb.site/master-admin` shows "Admin Features Disabled" with the message:
+```
+Current Status: VITE_ENABLE_ADMIN = undefined
+```
+
+**Root Cause:** Required environment variables are missing in your Vercel deployment.
+
+**Solution:** Use our automated scripts to configure environment variables and redeploy:
+
+### Option 1: Automated Setup (Recommended) ⚡
+
+```bash
+# Run the automated setup script
+./setup-vercel-env.sh
+```
+
+This interactive script will:
+- ✅ Check Vercel CLI installation (installs if needed)
+- ✅ Verify your Vercel login status
+- ✅ Set all required admin environment variables
+- ✅ Prompt for Firebase credentials
+- ✅ Trigger production redeployment automatically
+- ✅ Provide verification steps
+
+### Option 2: Check Current Status 🔍
+
+```bash
+# Check which environment variables are currently set
+./check-vercel-env.sh
+```
+
+This will show you:
+- Which environment variables are set vs. missing
+- Status for Production, Preview, and Development environments
+- Clear ✅/❌ indicators for each variable
+- Current deployment status
+
+### Required Environment Variables
+
+The following variables **must** be set for admin features to work:
+
+```bash
+VITE_ENABLE_ADMIN=true
+VITE_ADMIN_ROUTE=/admin
+VITE_MASTER_ADMIN_ROUTE=/master-admin
+VITE_ADMIN_ALLOWLIST=master@onchainweb.site
+```
+
+Plus Firebase credentials (see below).
+
+### After Running the Script
+
+1. **Wait for deployment** to complete (2-3 minutes)
+2. **Create master account** in Firebase Console:
+   - Go to: https://console.firebase.google.com
+   - Navigate to: Authentication → Users → Add user
+   - Email: `master@onchainweb.site`
+   - Password: [Strong password, 12+ characters]
+3. **Verify the fix**:
+   - Visit: https://onchainweb.site/master-admin
+   - Expected: Login page (not "Admin Features Disabled")
+   - Status should show: `VITE_ENABLE_ADMIN = true`
+
+---
+
 ## Prerequisites
 
 1. **Vercel Account**: https://vercel.com/signup
@@ -176,13 +243,38 @@ vercel env add VITE_FIREBASE_AUTH_DOMAIN production
 2. **Environment Detection**: Make sure you're testing in a supported browser
 3. **Missing Dependencies**: Verify build logs show all packages installed
 
-### Master Admin Route Not Working
+### Master Admin Route Shows "Admin Features Disabled"
 
-**Causes & Solutions**:
+**Problem**: Visiting `/master-admin` shows the "Admin Features Disabled" message instead of the login page.
 
-1. **Environment Variable**: Verify `VITE_ENABLE_ADMIN=true` in Vercel
-2. **Allowlist**: Check `VITE_ADMIN_ALLOWLIST` is set correctly
-3. **SPA Routing**: Ensure `vercel.json` has the rewrite rule
+**Root Cause**: Environment variables are not set in Vercel deployment.
+
+**Solution**:
+
+1. **Quick Fix (Recommended)**:
+   ```bash
+   ./setup-vercel-env.sh
+   ```
+   This will configure all required variables and redeploy automatically.
+
+2. **Check Current Status**:
+   ```bash
+   ./check-vercel-env.sh
+   ```
+   This shows which variables are set vs. missing.
+
+3. **Manual Fix**:
+   - Set `VITE_ENABLE_ADMIN=true` in Vercel Dashboard
+   - Set `VITE_ADMIN_ROUTE=/admin`
+   - Set `VITE_MASTER_ADMIN_ROUTE=/master-admin`
+   - Set `VITE_ADMIN_ALLOWLIST=master@onchainweb.site`
+   - Redeploy: `vercel --prod`
+
+**Additional Checks**:
+
+1. **Allowlist**: Verify `VITE_ADMIN_ALLOWLIST` contains the correct email
+2. **SPA Routing**: Ensure `vercel.json` has the rewrite rule
+3. **Firebase Auth**: Create the master account in Firebase Console
 
 ## Customer Service & Telegram Integration
 
