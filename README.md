@@ -108,6 +108,22 @@ npm run deploy:all
 ./deploy.sh
 ```
 
+### Vercel Deployment
+
+**Quick Fix for "Admin Features Disabled" Issue:**
+
+If you're deploying to Vercel and see "Admin Features Disabled", use our automated scripts:
+
+```bash
+# Configure environment variables and redeploy
+./setup-vercel-env.sh
+
+# Check current environment variable status
+./check-vercel-env.sh
+```
+
+See [VERCEL_ENV_SCRIPTS_README.md](VERCEL_ENV_SCRIPTS_README.md) for details.
+
 For detailed deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ---
