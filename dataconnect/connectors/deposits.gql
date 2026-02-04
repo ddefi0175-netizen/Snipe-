@@ -1,0 +1,124 @@
+# Firebase Data Connect - Deposits Connector
+# Provides type-safe queries and mutations for deposit tracking
+
+query GetDeposit($depositId: String!) {
+  deposits(where: { id: { eq: $depositId } }) {
+    docs {
+      id
+      userId
+      amount
+      currency
+      network
+      transactionHash
+      status
+      adminNotes
+      createdAt
+      updatedAt
+      approvedAt
+    }
+  }
+}
+
+query ListUserDeposits($userId: String!, $limit: Int!) {
+  deposits(
+    where: { userId: { eq: $userId } }
+    limit: $limit
+    orderBy: [{ createdAt: DESC }]
+  ) {
+    docs {
+      id
+      amount
+      currency
+      network
+      status
+      transactionHash
+      createdAt
+    }
+  }
+}
+
+query GetPendingDeposits($limit: Int!) {
+  deposits(
+    where: { status: { eq: "pending" } }
+    limit: $limit
+    orderBy: [{ createdAt: ASC }]
+  ) {
+    docs {
+      id
+      userId
+      amount
+      currency
+      network
+      transactionHash
+      createdAt
+    }
+  }
+}
+
+query GetApprovedDeposits($userId: String!) {
+  deposits(
+    where: {
+      and: [
+        { userId: { eq: $userId } }
+        { status: { eq: "approved" } }
+      ]
+    }
+    orderBy: [{ approvedAt: DESC }]
+  ) {
+    docs {
+      id
+      amount
+      currency
+      createdAt
+      approvedAt
+    }
+  }
+}
+
+mutation CreateDeposit(
+  $userId: String!
+  $amount: Float!
+  $currency: String!
+  $network: String!
+  $transactionHash: String!
+) {
+  deposits_insert(data: {
+    userId: $userId
+    amount: $amount
+    currency: $currency
+    network: $network
+    transactionHash: $transactionHash
+    status: "pending"
+    createdAt: now()
+    updatedAt: now()
+  }) {
+    key
+  }
+}
+
+mutation ApproveDeposit($depositId: String!, $adminId: String!) {
+  deposits_update(
+    where: { id: { eq: $depositId } }
+    data: {
+      status: "approved"
+      approvedBy: $adminId
+      approvedAt: now()
+      updatedAt: now()
+    }
+  ) {
+    modifiedCount
+  }
+}
+
+mutation RejectDeposit($depositId: String!, $adminNotes: String!) {
+  deposits_update(
+    where: { id: { eq: $depositId } }
+    data: {
+      status: "rejected"
+      adminNotes: $adminNotes
+      updatedAt: now()
+    }
+  ) {
+    modifiedCount
+  }
+}

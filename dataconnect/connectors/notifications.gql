@@ -1,0 +1,79 @@
+# Firebase Data Connect - Notifications Connector
+# Provides type-safe queries and mutations for user notifications
+
+query GetUserNotifications($userId: String!, $limit: Int!) {
+  notifications(
+    where: { userId: { eq: $userId } }
+    limit: $limit
+    orderBy: [{ createdAt: DESC }]
+  ) {
+    docs {
+      id
+      userId
+      title
+      message
+      type
+      read
+      createdAt
+      readAt
+      actionUrl
+    }
+  }
+}
+
+query GetUnreadNotifications($userId: String!) {
+  notifications(
+    where: {
+      and: [
+        { userId: { eq: $userId } }
+        { read: { eq: false } }
+      ]
+    }
+  ) {
+    docs {
+      id
+      title
+      message
+      type
+      createdAt
+    }
+  }
+}
+
+mutation CreateNotification(
+  $userId: String!
+  $title: String!
+  $message: String!
+  $type: String!
+  $actionUrl: String
+) {
+  notifications_insert(data: {
+    userId: $userId
+    title: $title
+    message: $message
+    type: $type
+    actionUrl: $actionUrl
+    read: false
+    createdAt: now()
+  }) {
+    key
+  }
+}
+
+mutation MarkNotificationRead($notificationId: String!) {
+  notifications_update(
+    where: { id: { eq: $notificationId } }
+    data: {
+      read: true
+      readAt: now()
+    }
+  ) {
+    modifiedCount
+  }
+}
+
+mutation DeleteNotification($notificationId: String!) {
+  notifications_delete(where: { id: { eq: $notificationId } }) {
+    deletedCount
+  }
+}

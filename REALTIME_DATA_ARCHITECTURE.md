@@ -72,7 +72,7 @@ This document describes how real-time data flows through the Snipe trading platf
 
 ### 1. Read Operations (Real-Time Data Retrieval)
 
-**Example: Get User List**
+#### Example: Get User List
 
 ```
 Frontend Dashboard → API Client → Backend API → MongoDB → Backend API → Frontend Dashboard
@@ -107,7 +107,7 @@ User.find().sort({ createdAt: -1 }).lean()
 
 ### 2. Write Operations (Real-Time Data Updates)
 
-**Example: Update User Balance**
+#### Example: Update User Balance
 
 ```
 Frontend → API → Backend → MongoDB → Backend → Frontend
@@ -171,27 +171,27 @@ The dashboards automatically refresh data at intervals:
 // Master Dashboard refresh
 useEffect(() => {
   if (!isAuthenticated) return
-  
+
   // Initial load
   loadAllData()
-  
+
   // Auto-refresh every 30 seconds
   const interval = setInterval(() => {
     loadAllData()
   }, 30000)
-  
+
   return () => clearInterval(interval)
 }, [isAuthenticated])
 
 // Active trades refresh (more frequent)
 useEffect(() => {
   if (!isAuthenticated) return
-  
+
   // Refresh every 3 seconds for active trades
   const interval = setInterval(() => {
     refreshActiveTrades()
   }, 3000)
-  
+
   return () => clearInterval(interval)
 }, [isAuthenticated])
 ```
@@ -223,7 +223,7 @@ All admin actions are logged in real-time:
 router.patch('/users/:id', verifyToken, async (req, res) => {
   // Update user
   const user = await User.findByIdAndUpdate(req.params.id, updates)
-  
+
   // Log activity
   await AdminActivity.create({
     adminUsername: req.user.username,
@@ -234,7 +234,7 @@ router.patch('/users/:id', verifyToken, async (req, res) => {
     details: updates,
     timestamp: new Date()
   })
-  
+
   res.json({ success: true, user })
 })
 ```
@@ -310,10 +310,10 @@ async function apiCall(endpoint, options = {}, retries = 2) {
     try {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 30000)
-      
+
       const response = await fetch(url, { ...config, signal: controller.signal })
       clearTimeout(timeoutId)
-      
+
       return await response.json()
     } catch (error) {
       if (attempt < retries) {

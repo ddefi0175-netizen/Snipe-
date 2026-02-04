@@ -1,0 +1,115 @@
+# Firebase Data Connect - Chat Connector
+# Provides type-safe queries and mutations for real-time chat messaging
+
+query GetChatMessages($sessionId: String!, $limit: Int!) {
+  chatMessages(
+    where: { sessionId: { eq: $sessionId } }
+    limit: $limit
+    orderBy: [{ createdAt: DESC }]
+  ) {
+    docs {
+      id
+      sessionId
+      message
+      senderName
+      senderWallet
+      sender
+      createdAt
+      delivered
+    }
+  }
+}
+
+query GetActiveChatSessions($limit: Int!) {
+  activeChats(
+    limit: $limit
+    orderBy: [{ updatedAt: DESC }]
+  ) {
+    docs {
+      sessionId
+      senderName
+      senderWallet
+      lastMessage
+      status
+      updatedAt
+      messageCount
+    }
+  }
+}
+
+query GetSessionMessages($sessionId: String!) {
+  chatMessages(where: { sessionId: { eq: $sessionId } }) {
+    docs {
+      id
+      message
+      senderName
+      sender
+      createdAt
+      delivered
+    }
+  }
+}
+
+mutation SendMessage(
+  $sessionId: String!
+  $message: String!
+  $senderName: String!
+  $senderWallet: String!
+  $sender: String!
+) {
+  chatMessages_insert(data: {
+    sessionId: $sessionId
+    message: $message
+    senderName: $senderName
+    senderWallet: $senderWallet
+    sender: $sender
+    createdAt: now()
+    delivered: false
+  }) {
+    key
+  }
+}
+
+mutation MarkChatMessageDelivered($messageId: String!) {
+  chatMessages_update(
+    where: { id: { eq: $messageId } }
+    data: { delivered: true }
+  ) {
+    modifiedCount
+  }
+}
+
+mutation UpdateActiveChat(
+  $sessionId: String!
+  $lastMessage: String!
+  $messageCount: Int!
+) {
+  activeChats_update(
+    where: { sessionId: { eq: $sessionId } }
+    data: {
+      lastMessage: $lastMessage
+      messageCount: $messageCount
+      updatedAt: now()
+    }
+  ) {
+    modifiedCount
+  }
+}
+
+mutation CreateActiveChat(
+  $sessionId: String!
+  $senderName: String!
+  $senderWallet: String!
+) {
+  activeChats_insert(data: {
+    sessionId: $sessionId
+    senderName: $senderName
+    senderWallet: $senderWallet
+    status: "open"
+    messageCount: 0
+    createdAt: now()
+    updatedAt: now()
+  }) {
+    key
+  }
+}

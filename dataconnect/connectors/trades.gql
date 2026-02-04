@@ -1,0 +1,128 @@
+# Firebase Data Connect - Trades Connector
+# Provides type-safe queries and mutations for trading data
+
+query GetTrade($tradeId: String!) {
+  trades(where: { id: { eq: $tradeId } }) {
+    docs {
+      id
+      userId
+      pair
+      direction
+      entryPrice
+      exitPrice
+      amount
+      profit
+      payout
+      status
+      result
+      timestamp
+      updatedAt
+    }
+  }
+}
+
+query ListUserTrades($userId: String!, $limit: Int!, $offset: Int!) {
+  trades(
+    where: { userId: { eq: $userId } }
+    limit: $limit
+    offset: $offset
+    orderBy: [{ timestamp: DESC }]
+  ) {
+    docs {
+      id
+      pair
+      direction
+      entryPrice
+      exitPrice
+      amount
+      profit
+      status
+      result
+      timestamp
+    }
+  }
+}
+
+query GetActiveTrades($limit: Int!) {
+  trades(
+    where: { status: { eq: "active" } }
+    limit: $limit
+    orderBy: [{ timestamp: DESC }]
+  ) {
+    docs {
+      id
+      userId
+      pair
+      direction
+      entryPrice
+      amount
+      status
+      timestamp
+    }
+  }
+}
+
+query GetTradeStats($userId: String!) {
+  trades(where: { userId: { eq: $userId } }) {
+    docs {
+      profit
+      status
+      result
+    }
+  }
+}
+
+mutation CreateTrade(
+  $userId: String!
+  $pair: String!
+  $direction: String!
+  $entryPrice: Float!
+  $amount: Float!
+) {
+  trades_insert(data: {
+    userId: $userId
+    pair: $pair
+    direction: $direction
+    entryPrice: $entryPrice
+    amount: $amount
+    status: "active"
+    timestamp: now()
+    updatedAt: now()
+  }) {
+    key
+  }
+}
+
+mutation CompleteTrade(
+  $tradeId: String!
+  $exitPrice: Float!
+  $profit: Float!
+  $payout: Float!
+  $result: String!
+) {
+  trades_update(
+    where: { id: { eq: $tradeId } }
+    data: {
+      exitPrice: $exitPrice
+      profit: $profit
+      payout: $payout
+      result: $result
+      status: "completed"
+      updatedAt: now()
+    }
+  ) {
+    modifiedCount
+  }
+}
+
+mutation CancelTrade($tradeId: String!) {
+  trades_update(
+    where: { id: { eq: $tradeId } }
+    data: {
+      status: "cancelled"
+      updatedAt: now()
+    }
+  ) {
+    modifiedCount
+  }
+}

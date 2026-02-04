@@ -1,0 +1,100 @@
+# Firebase Data Connect - Users Connector
+# Generated for Snipe DeFi Platform
+# Provides type-safe queries and mutations for user data
+
+query GetUser($userId: String!) {
+  users(where: { id: { eq: $userId } }) {
+    docs {
+      id
+      wallet
+      email
+      balance
+      vipLevel
+      status
+      points
+      createdAt
+      updatedAt
+      lastLogin
+    }
+  }
+}
+
+query ListUsers($limit: Int!, $offset: Int!) {
+  users(limit: $limit, offset: $offset) {
+    docs {
+      id
+      wallet
+      email
+      balance
+      vipLevel
+      status
+      points
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+query SearchUsers($searchTerm: String!) {
+  users(where: {
+    or: [
+      { wallet: { contains: $searchTerm } }
+      { email: { contains: $searchTerm } }
+    ]
+  }) {
+    docs {
+      id
+      wallet
+      email
+      balance
+      vipLevel
+      status
+      points
+    }
+  }
+}
+
+mutation CreateUser($wallet: String!, $email: String) {
+  users_insert(data: {
+    wallet: $wallet
+    email: $email
+    balance: 0
+    vipLevel: 1
+    status: "active"
+    points: 0
+    createdAt: now()
+    updatedAt: now()
+  }) {
+    key
+  }
+}
+
+mutation UpdateUserBalance($userId: String!, $newBalance: Float!) {
+  users_update(
+    where: { id: { eq: $userId } }
+    data: {
+      balance: $newBalance
+      updatedAt: now()
+    }
+  ) {
+    modifiedCount
+  }
+}
+
+mutation UpdateUserStatus($userId: String!, $newStatus: String!) {
+  users_update(
+    where: { id: { eq: $userId } }
+    data: {
+      status: $newStatus
+      updatedAt: now()
+    }
+  ) {
+    modifiedCount
+  }
+}
+
+mutation DeleteUser($userId: String!) {
+  users_delete(where: { id: { eq: $userId } }) {
+    deletedCount
+  }
+}
