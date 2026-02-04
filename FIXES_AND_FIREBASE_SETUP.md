@@ -25,8 +25,8 @@
 
 ## ✅ Firebase Configuration Updated
 
-**Project Configured**: `onchainweb-37d30`  
-**Project Number**: `766146811888`  
+**Project Configured**: `onchainweb-37d30`
+**Project Number**: `766146811888`
 **App ID**: `1:766146811888:web:883839b4a6987b0108ef35`
 
 ### Configuration Applied
@@ -172,18 +172,18 @@ export { db, isFirebaseEnabled };
    - Option B: Create new project and update config (see Option 2 above)
 
 ### After Firebase is Active
-2. **Deploy Firestore Rules**:
+1. **Deploy Firestore Rules**:
    ```bash
    firebase deploy --only firestore:rules
    firebase deploy --only firestore:indexes
    ```
 
-3. **Create Admin Users** (if not already done):
+2. **Create Admin Users** (if not already done):
    - Go to Firebase Console → Authentication → Add user
    - Email: `master@gmail.com`, Password: (strong password)
    - Email: `admin@gmail.com`, Password: (strong password)
 
-4. **Test Local Build**:
+3. **Test Local Build**:
    ```bash
    cd Onchainweb
    npm run dev
@@ -191,7 +191,7 @@ export { db, isFirebaseEnabled };
    # Login at /master-admin
    ```
 
-5. **Deploy to Production**:
+4. **Deploy to Production**:
    ```bash
    npm run build
    firebase deploy  # or deploy to Vercel
