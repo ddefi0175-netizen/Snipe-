@@ -35,7 +35,7 @@ cd /workspaces/Snipe-
 
 **3. Create 2 Admin Accounts**
 - Click: **Authentication** → **Users** → **Add User**
-- Create: 
+- Create:
   - `master@gmail.com` (password of your choice)
   - `admin@gmail.com` (password of your choice)
 
@@ -112,7 +112,7 @@ Functions that automatically handle common tasks:
 
 **NOW**: Choose during script (simplest)
 
-**LATER**: 
+**LATER**:
 ```bash
 # Open Firebase Extensions dashboard
 https://console.firebase.google.com/u/0/project/onchainweb-37d30/extensions

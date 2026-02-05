@@ -40,7 +40,7 @@ npm run build > /dev/null 2>&1 || npm run build
 
 if [ $? -eq 0 ]; then
     print_status "Build successful"
-    
+
     # Check build output
     if [ -d "dist" ] && [ -f "dist/index.html" ]; then
         BUILD_SIZE=$(du -sh dist | cut -f1)
@@ -103,7 +103,7 @@ sleep 5
 
 if ps -p $DEV_PID > /dev/null; then
     print_status "Dev server running (PID: $DEV_PID)"
-    
+
     echo ""
     print_warning "Manual testing required:"
     echo "   1. Open: http://localhost:5173"
@@ -115,15 +115,15 @@ if ps -p $DEV_PID > /dev/null; then
     echo ""
     read -p "   Did all tests pass? (y/n) " -n 1 -r
     echo
-    
+
     # Kill dev server
     kill $DEV_PID 2>/dev/null || true
-    
+
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         print_error "Local testing failed"
         exit 1
     fi
-    
+
     print_status "Local testing passed"
 else
     print_error "Dev server failed to start"
@@ -200,12 +200,12 @@ if [ ! -z "$PRODUCTION_URL" ]; then
     echo ""
     read -p "   Did production verification pass? (y/n) " -n 1 -r
     echo
-    
+
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         print_error "Production verification failed"
         exit 1
     fi
-    
+
     print_status "Production verification passed"
 else
     print_warning "Enter your production URL for verification:"
