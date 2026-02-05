@@ -1,0 +1,8 @@
+# Firebase Data Connect SDK configuration (placeholder)
+# Update values after running `firebase init dataconnect:sdk`.
+
+specVersion: v1
+language: typescript
+outputDir: ../Onchainweb/src/dataconnect-sdk
+packageName: snipe-dataconnect
+connectorId: default
