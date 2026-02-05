@@ -1,0 +1,8 @@
+{
+  "specVersion": "v1",
+  "projectId": "onchainweb-37d30",
+  "location": "us-central1",
+  "connector": "default",
+  "language": "typescript",
+  "generated": "2026-02-05T00:00:00Z"
+}
