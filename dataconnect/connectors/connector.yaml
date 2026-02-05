@@ -1,0 +1,6 @@
+specVersion: v1
+connectorId: default
+schema:
+  file: ../schema.gql
+operations:
+  - path: .

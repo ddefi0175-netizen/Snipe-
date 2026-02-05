@@ -225,8 +225,6 @@ npm run build
 ---
 
 ## 📈 Performance Metrics
-
-
 ### Bundle Analysis
 
 | Asset | Size | Gzipped |
@@ -235,7 +233,6 @@ npm run build
 | CSS | 168.51 KB | 27.07 KB |
 | JavaScript | ~2.3 MB | ~477 KB |
 | **Total** | **2.6 MB** | **566 KB** |
-
 
 ### Deployment Performance
 - **Build Time**: 8.43 seconds

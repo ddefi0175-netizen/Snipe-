@@ -1,0 +1,6 @@
+# Placeholder schema for Firebase Data Connect.
+# Replace with your real schema before deployment.
+
+type Placeholder @collection(name: "placeholders") {
+  id: ID!
+}
