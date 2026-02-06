@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "baseUrl": "src",
+    "baseUrl": "Onchainweb/src",
     "paths": {
       "@/*": ["./*"]
     },
@@ -8,6 +8,6 @@
     "module": "ESNext",
     "jsx": "react-jsx"
   },
-  "include": ["src"],
+  "include": ["Onchainweb/src"],
   "exclude": ["node_modules", "dist"]
 }
