@@ -1,357 +1,207 @@
-// Admin Service for Firestore
-// Handles admin account management, permissions, and user quotas
 
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  getDocs, 
-  query, 
-  where, 
-  updateDoc, 
-  deleteDoc,
-  onSnapshot,
-  serverTimestamp 
-} from 'firebase/firestore';
-import { db, isFirebaseAvailable, auth, firebaseSignUp } from '../lib/firebase.js';
-import { COLLECTIONS } from '../config/firebase.config.js';
+import { doc, updateDoc, runTransaction, getDoc, setDoc, serverTimestamp, collection, getDocs, query, where, limit, onSnapshot, deleteDoc, writeBatch } from 'firebase/firestore';
+import { db, isFirebaseAvailable, auth } from '../lib/firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+
 
 /**
- * Create a new admin account
- * @param {Object} adminData - Admin account details
- * @param {string} adminData.email - Admin email (must be unique)
- * @param {string} adminData.password - Admin password (min 8 characters)
- * @param {string} adminData.username - Admin username
- * @param {string} adminData.role - 'master' or 'admin'
- * @param {Array<string>} adminData.permissions - Array of permission strings
- * @param {string} adminData.userAccessMode - 'all' or 'assigned'
- * @param {Array<string>} adminData.assignedUserIds - User IDs this admin can manage (if mode is 'assigned')
- * @param {number} adminData.maxUsers - Maximum users this admin can manage (0 = unlimited)
- * @param {string} adminData.createdBy - Email of the creator (master account)
+ * Updates the KYC status for a given user.
+ * @param {string} userId - The ID of the user to update.
+ * @param {string} kycStatus - The new KYC status ('verified', 'rejected').
  */
-export const createAdminAccount = async (adminData) => {
-  if (!isFirebaseAvailable()) {
-    throw new Error('Firebase not available');
-  }
-
-  try {
-    // 1. Create Firebase Auth user
-    const userCredential = await firebaseSignUp(adminData.email, adminData.password);
-    const uid = userCredential.user.uid;
-
-    // 2. Create admin document in Firestore
-    const adminDoc = {
-      uid,
-      email: adminData.email.toLowerCase(),
-      username: adminData.username,
-      role: adminData.role || 'admin',
-      permissions: adminData.permissions || [],
-      userAccessMode: adminData.userAccessMode || 'all',
-      assignedUserIds: adminData.assignedUserIds || [],
-      maxUsers: adminData.maxUsers || 0, // 0 = unlimited
-      currentUserCount: 0,
-      status: 'active',
-      createdBy: adminData.createdBy,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      lastLoginAt: null
-    };
-
-    await setDoc(doc(db, COLLECTIONS.ADMINS, uid), adminDoc);
-
-    return {
-      success: true,
-      uid,
-      admin: adminDoc
-    };
-  } catch (error) {
-    console.error('[AdminService] Create admin error:', error);
-    throw error;
-  }
-};
-
-/**
- * Get admin account by UID
- */
-export const getAdminByUid = async (uid) => {
-  if (!isFirebaseAvailable()) {
-    throw new Error('Firebase not available');
-  }
-
-  try {
-    const adminRef = doc(db, COLLECTIONS.ADMINS, uid);
-    const adminSnap = await getDoc(adminRef);
-    
-    if (adminSnap.exists()) {
-      return {
-        uid: adminSnap.id,
-        ...adminSnap.data()
-      };
+export const updateUserKYC = async (userId, kycStatus) => {
+    if (!isFirebaseAvailable) {
+        // Fallback for localStorage
+        const users = JSON.parse(localStorage.getItem('users') || '{}');
+        if (users[userId]) {
+            users[userId].kycStatus = kycStatus;
+            localStorage.setItem('users', JSON.stringify(users));
+        }
+        return;
     }
-    
-    return null;
-  } catch (error) {
-    console.error('[AdminService] Get admin error:', error);
-    throw error;
-  }
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, { kycStatus });
 };
 
 /**
- * Get admin account by email
+ * Processes a deposit by approving or rejecting it.
+ * @param {string} depositId - The ID of the deposit.
+ * @param {string} userId - The ID of the user who made the deposit.
+ * @param {'approved' | 'rejected'} newStatus - The new status of the deposit.
+ * @param {number} [amount=0] - The amount of the deposit (only required for approval).
  */
+export const processDeposit = async (depositId, userId, newStatus, amount = 0) => {
+    if (!isFirebaseAvailable) {
+        // Fallback for localStorage
+        const deposits = JSON.parse(localStorage.getItem('deposits') || '[]');
+        const depositIndex = deposits.findIndex(d => d.id === depositId);
+        if (depositIndex > -1) {
+            deposits[depositIndex].status = newStatus;
+            localStorage.setItem('deposits', JSON.stringify(deposits));
+
+            if (newStatus === 'approved') {
+                const users = JSON.parse(localStorage.getItem('users') || '{}');
+                if (users[userId]) {
+                    users[userId].balance = (users[userId].balance || 0) + parseFloat(amount);
+                    localStorage.setItem('users', JSON.stringify(users));
+                }
+            }
+        }
+        return;
+    }
+
+    const depositRef = doc(db, 'deposits', depositId);
+    const userRef = doc(db, 'users', userId);
+
+    if (newStatus === 'approved') {
+        await runTransaction(db, async (transaction) => {
+            const userDoc = await transaction.get(userRef);
+            if (!userDoc.exists()) {
+                throw new Error("User document not found!");
+            }
+            const currentBalance = userDoc.data().balance || 0;
+            const newBalance = currentBalance + parseFloat(amount);
+
+            transaction.update(userRef, { balance: newBalance });
+            transaction.update(depositRef, { status: newStatus });
+        });
+    } else { // For 'rejected' status
+        await updateDoc(depositRef, { status: newStatus });
+    }
+};
+
 export const getAdminByEmail = async (email) => {
-  if (!isFirebaseAvailable()) {
-    throw new Error('Firebase not available');
-  }
-
-  try {
-    const q = query(
-      collection(db, COLLECTIONS.ADMINS),
-      where('email', '==', email.toLowerCase())
-    );
-    const snapshot = await getDocs(q);
-    
-    if (!snapshot.empty) {
-      const adminDoc = snapshot.docs[0];
-      return {
-        uid: adminDoc.id,
-        ...adminDoc.data()
-      };
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('[AdminService] Get admin by email error:', error);
-    throw error;
-  }
-};
-
-/**
- * Update admin account
- */
-export const updateAdminAccount = async (uid, updates) => {
-  if (!isFirebaseAvailable()) {
-    throw new Error('Firebase not available');
-  }
-
-  try {
-    const adminRef = doc(db, COLLECTIONS.ADMINS, uid);
-    await updateDoc(adminRef, {
-      ...updates,
-      updatedAt: serverTimestamp()
-    });
-
-    return { success: true };
-  } catch (error) {
-    console.error('[AdminService] Update admin error:', error);
-    throw error;
-  }
-};
-
-/**
- * Update admin last login timestamp
- */
-export const updateAdminLastLogin = async (uid) => {
-  if (!isFirebaseAvailable()) {
-    throw new Error('Firebase not available');
-  }
-
-  try {
-    const adminRef = doc(db, COLLECTIONS.ADMINS, uid);
-    await updateDoc(adminRef, {
-      lastLoginAt: serverTimestamp()
-    });
-  } catch (error) {
-    console.error('[AdminService] Update last login error:', error);
-    // Don't throw, this is not critical
-  }
-};
-
-/**
- * Delete admin account
- */
-export const deleteAdminAccount = async (uid) => {
-  if (!isFirebaseAvailable()) {
-    throw new Error('Firebase not available');
-  }
-
-  try {
-    // Delete from Firestore
-    const adminRef = doc(db, COLLECTIONS.ADMINS, uid);
-    await deleteDoc(adminRef);
-
-    // Note: Firebase Auth user deletion requires Admin SDK
-    // For now, we just mark as deleted in Firestore
-    // The actual Auth user can be deleted from Firebase Console
-
-    return { success: true };
-  } catch (error) {
-    console.error('[AdminService] Delete admin error:', error);
-    throw error;
-  }
-};
-
-/**
- * Subscribe to all admin accounts (real-time)
- */
-export const subscribeToAdmins = (callback) => {
-  if (!isFirebaseAvailable()) {
-    console.warn('Firebase not available, using empty array');
-    callback([]);
-    return () => {};
-  }
-
-  const q = query(collection(db, COLLECTIONS.ADMINS));
-
-  return onSnapshot(q, (snapshot) => {
-    const admins = snapshot.docs.map(doc => ({
-      uid: doc.id,
-      ...doc.data()
-    }));
-    callback(admins);
-  }, (error) => {
-    console.error('Subscribe to admins error:', error);
-    callback([]);
-  });
-};
-
-/**
- * Check if admin can manage a user
- */
-export const canManageUser = async (adminUid, userId) => {
-  if (!isFirebaseAvailable()) {
-    return false;
-  }
-
-  try {
-    const admin = await getAdminByUid(adminUid);
-    if (!admin) return false;
-
-    // Master can manage all users
-    if (admin.role === 'master') {
-      return true;
+    if (!isFirebaseAvailable) {
+        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+        return Object.values(admins).find(admin => admin.email === email);
     }
 
-    // Check access mode
-    if (admin.userAccessMode === 'all') {
-      // Check if within user limit
-      if (admin.maxUsers === 0) return true; // Unlimited
-      return admin.currentUserCount < admin.maxUsers;
+    const adminRef = doc(db, 'admins', email.replace(/[^a-zA-Z0-9]/g, '_'));
+    const adminDoc = await getDoc(adminRef);
+
+    return adminDoc.exists() ? adminDoc.data() : null;
+};
+
+export const initializeMasterAccount = async (email, password) => {
+    if (!isFirebaseAvailable) {
+        // Fallback for localStorage
+        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+        const adminId = email.replace(/[^a-zA-Z0-9]/g, '_');
+        admins[adminId] = {
+            email,
+            role: 'master',
+            permissions: ['all'],
+            createdAt: new Date().toISOString(),
+        };
+        localStorage.setItem('admins', JSON.stringify(admins));
+        return { success: true, message: 'Master account created locally.' };
     }
 
-    // Check if user is in assigned list
-    return admin.assignedUserIds.includes(userId);
-  } catch (error) {
-    console.error('[AdminService] Can manage user error:', error);
-    return false;
-  }
+    try {
+        // Step 1: Create Firebase Auth user
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const { user } = userCredential;
+
+        // Step 2: Create admin document in Firestore
+        const adminId = user.uid;
+        const adminRef = doc(db, 'admins', adminId);
+        
+        await setDoc(adminRef, {
+            email: user.email,
+            uid: user.uid,
+            role: 'master',
+            permissions: ['all'], // Or a comprehensive list of all permissions
+            createdAt: new Date().toISOString(),
+        });
+
+        return { success: true, message: 'Master account created successfully!' };
+    } catch (error) {
+        console.error("Error initializing master account:", error);
+        // More specific error handling
+        if (error.code === 'auth/email-already-in-use') {
+            return { success: false, message: 'This email is already in use.', error: error.message };
+        }
+        return { success: false, message: 'An unexpected error occurred.', error: error.message };
+    }
 };
 
-/**
- * Check if admin has permission
- */
-export const hasPermission = (admin, permission) => {
-  if (!admin) return false;
-  
-  // Master has all permissions
-  if (admin.role === 'master') {
-    return true;
-  }
+export const updateAdminLastLogin = async (adminId) => {
+    if (!isFirebaseAvailable) {
+        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+        const admin = Object.values(admins).find(a => a.uid === adminId);
+        if (admin) {
+            admin.lastLogin = new Date().toISOString();
+            localStorage.setItem('admins', JSON.stringify(admins));
+        }
+        return;
+    }
 
-  // Check if permission exists in admin's permissions array
-  return admin.permissions.includes(permission) || admin.permissions.includes('all');
+    const adminRef = doc(db, 'admins', adminId);
+    await updateDoc(adminRef, { lastLogin: serverTimestamp() });
 };
 
-/**
- * Check if a master account exists in the database
- * @returns {Promise<boolean>} True if master account exists, false otherwise
- */
 export const hasMasterAccount = async () => {
-  if (!isFirebaseAvailable()) {
-    console.warn('[AdminService] Firebase not available');
-    return false;
-  }
-
-  try {
-    const q = query(
-      collection(db, COLLECTIONS.ADMINS),
-      where('role', '==', 'master')
-    );
-    const snapshot = await getDocs(q);
-    return !snapshot.empty;
-  } catch (error) {
-    console.error('[AdminService] Check master account error:', error);
-    return false;
-  }
-};
-
-/**
- * Initialize master account if not exists
- * This should be called on app initialization
- */
-export const initializeMasterAccount = async (masterEmail, masterPassword) => {
-  if (!isFirebaseAvailable()) {
-    console.warn('[AdminService] Firebase not available, cannot initialize master');
-    return { success: false, message: 'Firebase not configured' };
-  }
-
-  try {
-    // Check if master already exists
-    const existingMaster = await getAdminByEmail(masterEmail);
-    if (existingMaster) {
-      return {
-        success: true,
-        message: 'Master account already exists',
-        uid: existingMaster.uid
-      };
+    if (!isFirebaseAvailable) {
+        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+        return Object.values(admins).some(admin => admin.role === 'master');
     }
 
-    // Create master account
-    const result = await createAdminAccount({
-      email: masterEmail,
-      password: masterPassword,
-      username: 'master',
-      role: 'master',
-      permissions: ['all'],
-      userAccessMode: 'all',
-      assignedUserIds: [],
-      maxUsers: 0,
-      createdBy: 'system'
+    const q = query(collection(db, 'admins'), where('role', '==', 'master'), limit(1));
+    const querySnapshot = await getDocs(q);
+    return !querySnapshot.empty;
+};
+
+export const createAdminAccount = async (adminData) => {
+    if (!isFirebaseAvailable) {
+        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+        const adminId = adminData.email.replace(/[^a-zA-Z0-9]/g, '_');
+        admins[adminId] = { ...adminData, uid: adminId, createdAt: new Date().toISOString() };
+        localStorage.setItem('admins', JSON.stringify(admins));
+        return admins[adminId];
+    }
+
+    // NOTE: This function *only* creates the Firestore record. Auth user must be created separately.
+    const adminRef = doc(collection(db, 'admins'));
+    await setDoc(adminRef, { ...adminData, uid: adminRef.id, createdAt: serverTimestamp() });
+    return { ...adminData, uid: adminRef.id };
+};
+
+export const subscribeToAdmins = (callback) => {
+    if (!isFirebaseAvailable) {
+        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+        callback(Object.values(admins));
+        return () => {}; // No-op for localStorage
+    }
+
+    const q = query(collection(db, 'admins'));
+    return onSnapshot(q, (snapshot) => {
+        const admins = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
+        callback(admins);
     });
-
-    return {
-      success: true,
-      message: 'Master account created successfully',
-      uid: result.uid
-    };
-  } catch (error) {
-    console.error('[AdminService] Initialize master error:', error);
-    
-    // If the error is that the user already exists in Auth but not in Firestore
-    if (error.code === 'auth/email-already-in-use') {
-      // TODO: Future enhancement - implement recovery logic to create Firestore doc for existing Auth user
-      return {
-        success: false,
-        message: 'Master email already exists in Firebase Auth. Please sign in to complete setup.',
-        error: error.message
-      };
-    }
-    
-    throw error;
-  }
 };
 
-export default {
-  createAdminAccount,
-  getAdminByUid,
-  getAdminByEmail,
-  updateAdminAccount,
-  updateAdminLastLogin,
-  deleteAdminAccount,
-  subscribeToAdmins,
-  canManageUser,
-  hasPermission,
-  hasMasterAccount,
-  initializeMasterAccount
+export const updateAdminAccount = async (adminId, data) => {
+    if (!isFirebaseAvailable) {
+        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+        if (admins[adminId]) {
+            admins[adminId] = { ...admins[adminId], ...data };
+            localStorage.setItem('admins', JSON.stringify(admins));
+        }
+        return;
+    }
+    const adminRef = doc(db, 'admins', adminId);
+    await updateDoc(adminRef, data);
+};
+
+export const deleteAdminAccount = async (adminId) => {
+    if (!isFirebaseAvailable) {
+        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+        delete admins[adminId];
+        localStorage.setItem('admins', JSON.stringify(admins));
+        return;
+    }
+
+    // This only deletes the Firestore record. The Auth user must be deleted separately.
+    const adminRef = doc(db, 'admins', adminId);
+    await deleteDoc(adminRef);
 };

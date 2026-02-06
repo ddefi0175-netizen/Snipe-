@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { firebaseSignIn, onAuthChange } from '../lib/firebase.js';
+import { firebaseSignIn, onAuthStateChanged } from '../lib/firebase.js';
 import { handleAdminLogin, formatFirebaseAuthError } from '../lib/adminAuth.js';
 import { getAdminByEmail, updateAdminLastLogin } from '../services/adminService.js';
 
@@ -26,7 +26,7 @@ export default function AdminLogin({ onLoginSuccess, allowedRoute = '/admin' }) 
   // Check if already authenticated
   // Note: Using ref pattern so callback stays updated without triggering re-renders
   useEffect(() => {
-    const unsubscribe = onAuthChange(async (user) => {
+    const unsubscribe = onAuthStateChanged(async (user) => {
       if (user) {
         // User is signed in, check if they're an admin
         try {

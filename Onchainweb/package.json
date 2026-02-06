@@ -38,7 +38,10 @@
   },
   "dependencies": {
     "@vercel/analytics": "^1.6.1",
+    "@wagmi/connectors": "^7.1.6",
+    "@wagmi/core": "^3.3.2",
     "@walletconnect/universal-provider": "^2.23.1",
+    "@web3modal/wagmi": "^5.1.11",
     "firebase": "^11.2.0",
     "qrcode-generator": "^2.0.4",
     "react": "^18.3.1",

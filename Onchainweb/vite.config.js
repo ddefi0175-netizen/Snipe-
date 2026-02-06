@@ -1,64 +1,47 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
+
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  plugins: [react()],
-  // Base path - use '/' for custom domain or Vercel/Netlify
-  base: '/',
-  esbuild: {
-    loader: 'jsx',
-    include: /src\/.*\.jsx?$/,
-    exclude: [],
-    // Remove console.log in production
-    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
-  },
-  optimizeDeps: {
-    esbuildOptions: {
-      loader: {
-        '.js': 'jsx',
-      },
+    plugins: [react()],
+    base: '/',
+    esbuild: {
+        loader: 'jsx',
+        include: /src\/.*\.jsx?$/,
+        exclude: [],
+        drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
     },
-  },
-  build: {
-    target: 'es2020',
-    minify: 'esbuild',
-    // Use esbuild instead of terser to avoid CSP issues with eval
-    // esbuild minification is CSP-safe and doesn't require 'unsafe-eval'
-    esbuildOptions: {
-      drop: ['console', 'debugger'],
-      legalComments: 'none',
-    },
-    rollupOptions: {
-      output: {
-        // Manual chunk splitting for better caching and smaller bundles
-        manualChunks: {
-          // React core libraries
-          'vendor-react': ['react', 'react-dom'],
-          // Firebase
-          'firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
-          // WalletConnect
-          'wallet': ['@walletconnect/universal-provider'],
+    optimizeDeps: {
+        exclude: ['@wagmi/core', '@wagmi/connectors', '@walletconnect/ethereum-provider'], // Add @walletconnect/ethereum-provider
+        include: ['@web3modal/ethers', 'ethers', 'ethers/lib/utils'],
+        esbuildOptions: {
+            loader: {
+                '.js': 'jsx',
+            },
         },
-        // Asset file names for better caching
-        assetFileNames: (assetInfo) => {
-          const info = assetInfo.name.split('.')
-          let extType = info[info.length - 1]
-          if (/png|jpe?g|svg|gif|tiff|bmp|ico|webp/i.test(extType)) {
-            extType = 'img'
-          } else if (/woff|woff2|ttf|otf|eot/i.test(extType)) {
-            extType = 'fonts'
-          }
-          return `assets/${extType}/[name]-[hash][extname]`
-        },
-        chunkFileNames: 'assets/js/[name]-[hash].js',
-        entryFileNames: 'assets/js/[name]-[hash].js',
-      },
     },
-    // Increase chunk size warning limit (default is 500kB)
-    chunkSizeWarningLimit: 1000,
-    sourcemap: false,
-  },
-  server: {
-    port: 5173,
-  },
-})
+    build: {
+        target: 'es2020',
+        minify: 'esbuild',
+        esbuildOptions: {
+            drop: ['console', 'debugger'],
+            legalComments: 'none',
+        },
+        rollupOptions: {
+            external: ['@wagmi/core', '@wagmi/connectors', '@walletconnect/ethereum-provider'], // Add @walletconnect/ethereum-provider
+            output: {
+                globals: {
+                    '@wagmi/core': 'WagmiCore',
+                    '@wagmi/connectors': 'WagmiConnectors',
+                    '@walletconnect/ethereum-provider': 'WalletConnectEthereumProvider', // Add this line
+                },
+                // ... manualChunks and other output options
+            },
+        },
+        chunkSizeWarningLimit: 1000,
+        sourcemap: false,
+    },
+    server: {
+        port: 5173,
+    },
+});

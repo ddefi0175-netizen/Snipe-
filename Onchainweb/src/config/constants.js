@@ -1,3 +1,4 @@
+
 // Application Constants
 // Central location for all app-wide constants
 
@@ -47,6 +48,18 @@ export const WALLET_CONFIG = {
     'imToken',
     'WalletConnect'
   ]
+};
+
+export const SUPPORTED_CHAINS = [
+    { id: 1, name: 'Ethereum' },
+    { id: 56, name: 'BNB Smart Chain' },
+    { id: 137, name: 'Polygon' },
+];
+
+export const WALLET_CONNECTORS = {
+    METAMASK: { name: 'MetaMask', icon: '/wallets/metamask.svg' },
+    TRUSTWALLET: { name: 'Trust Wallet', icon: '/wallets/trustwallet.svg' },
+    COINBASE: { name: 'Coinbase Wallet', icon: '/wallets/coinbase.svg' },
 };
 
 // Cloudflare TURN Server Configuration
@@ -123,6 +136,14 @@ export const TRADE_STATUS = {
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
   FAILED: 'failed'
+};
+
+// Storage Keys
+export const STORAGE_KEYS = {
+    WALLET_CONNECTED: 'wallet_connected',
+    WALLET_ADDRESS: 'wallet_address',
+    WALLET_CHAIN_ID: 'wallet_chainId',
+    WALLET_CONNECTOR_TYPE: 'wallet_connector_type',
 };
 
 // Admin guard configuration

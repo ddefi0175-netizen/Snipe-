@@ -1,232 +1,53 @@
-// User Service for Firestore
-// Handles user registration, management, and real-time updates
 
-import { 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc,
-  serverTimestamp 
-} from 'firebase/firestore';
-import { db, isFirebaseAvailable, saveUser } from '../lib/firebase.js';
-import { COLLECTIONS } from '../config/firebase.config.js';
+import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { db, auth, isFirebaseAvailable } from '../lib/firebase';
 
 /**
- * Auto-register user when they connect wallet
- * Creates or updates user document in Firestore
- * 
- * @param {string} walletAddress - User's wallet address
- * @param {Object} additionalData - Optional additional user data
- * @returns {Promise<Object>} User document
+ * Fetches the current user's profile data.
+ * @returns {object|null} The user's profile data or null if not found.
  */
-export const autoRegisterUser = async (walletAddress, additionalData = {}) => {
-  if (!isFirebaseAvailable()) {
-    console.warn('[UserService] Firebase not available, using localStorage fallback');
-    return autoRegisterUserLocalStorage(walletAddress, additionalData);
-  }
+export const getProfileData = async () => {
+    if (!auth.currentUser) return null;
+    const userId = auth.currentUser.uid;
 
-  try {
-    const normalizedWallet = walletAddress.toLowerCase();
-    const userRef = doc(db, COLLECTIONS.USERS, normalizedWallet);
-    
-    // Check if user already exists
+    if (!isFirebaseAvailable) {
+        const users = JSON.parse(localStorage.getItem('users') || '{}');
+        return users[userId] || null;
+    }
+
+    const userRef = doc(db, 'users', userId);
     const userSnap = await getDoc(userRef);
-    
-    if (userSnap.exists()) {
-      
-      // Update last connected timestamp
-      await setDoc(userRef, {
-        lastConnectedAt: serverTimestamp(),
-        ...additionalData
-      }, { merge: true });
-      
-      return {
-        id: userSnap.id,
-        ...userSnap.data(),
-        isNewUser: false
-      };
-    }
 
-    // Create new user document
-    const newUser = {
-      wallet: walletAddress,
-      walletNormalized: normalizedWallet,
-      username: additionalData.username || `User_${normalizedWallet.slice(0, 8)}`,
-      email: additionalData.email || null,
-      balance: 0,
-      points: 0,
-      vipLevel: 1,
-      status: 'active',
-      kycStatus: 'not_submitted',
-      referralCode: generateReferralCode(normalizedWallet),
-      createdAt: serverTimestamp(),
-      lastConnectedAt: serverTimestamp(),
-      ...additionalData
+    return userSnap.exists() ? userSnap.data() : null;
+};
+
+/**
+ * Submits KYC data for the current user.
+ * @param {object} kycData - The user's KYC data.
+ * @param {string} kycData.fullName - The user's full name.
+ * @param {string} kycData.docType - The type of document.
+ * @param {string} kycData.docNumber - The document number.
+ * @param {string} kycData.frontPhoto - The base64 encoded front photo.
+ * @param {string} kycData.backPhoto - The base64 encoded back photo.
+ */
+export const submitKycData = async (kycData) => {
+    if (!auth.currentUser) throw new Error('User not authenticated.');
+    const userId = auth.currentUser.uid;
+
+    const dataToSubmit = {
+        ...kycData,
+        kycStatus: 'pending',
+        submittedAt: new Date().toISOString(),
     };
 
-    await setDoc(userRef, newUser);
-
-
-    // Trigger notification event for admins
-    window.dispatchEvent(new CustomEvent('newUserRegistered', {
-      detail: { wallet: walletAddress, username: newUser.username }
-    }));
-
-    return {
-      id: normalizedWallet,
-      ...newUser,
-      isNewUser: true
-    };
-  } catch (error) {
-    console.error('[UserService] Auto-register error:', error);
-    // Fallback to localStorage on error
-    return autoRegisterUserLocalStorage(walletAddress, additionalData);
-  }
-};
-
-/**
- * Fallback: Register user in localStorage when Firebase is unavailable
- * This is used as a backup mechanism during development or Firebase outages
- * 
- * @param {string} walletAddress - User's wallet address
- * @param {Object} additionalData - Optional additional user data
- * @returns {Object} User document with isNewUser flag
- */
-const autoRegisterUserLocalStorage = (walletAddress, additionalData = {}) => {
-  try {
-    const normalizedWallet = walletAddress.toLowerCase();
-    const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    
-    // Check if user exists
-    const existingUser = users.find(u => u.wallet?.toLowerCase() === normalizedWallet);
-    if (existingUser) {
-      // Update last connected
-      existingUser.lastConnectedAt = new Date().toISOString();
-      localStorage.setItem('registeredUsers', JSON.stringify(users));
-      return { ...existingUser, isNewUser: false };
+    if (!isFirebaseAvailable) {
+        const users = JSON.parse(localStorage.getItem('users') || '{}');
+        users[userId] = { ...users[userId], ...dataToSubmit };
+        localStorage.setItem('users', JSON.stringify(users));
+        return;
     }
 
-    // Create new user
-    const newUser = {
-      id: normalizedWallet,
-      wallet: walletAddress,
-      walletNormalized: normalizedWallet,
-      username: additionalData.username || `User_${normalizedWallet.slice(0, 8)}`,
-      email: additionalData.email || null,
-      balance: 0,
-      points: 0,
-      vipLevel: 1,
-      status: 'active',
-      kycStatus: 'not_submitted',
-      referralCode: generateReferralCode(normalizedWallet),
-      createdAt: new Date().toISOString(),
-      lastConnectedAt: new Date().toISOString(),
-      ...additionalData
-    };
-
-    users.push(newUser);
-    localStorage.setItem('registeredUsers', JSON.stringify(users));
-
-    // Trigger notification event
-    window.dispatchEvent(new CustomEvent('newUserRegistered', {
-      detail: { wallet: walletAddress, username: newUser.username }
-    }));
-
-    return { ...newUser, isNewUser: true };
-  } catch (error) {
-    console.error('[UserService] localStorage fallback error:', error);
-    throw error;
-  }
-};
-
-/**
- * Generate a unique referral code
- * Uses cryptographically secure random values for production safety
- */
-const generateReferralCode = (walletAddress) => {
-  const normalized = walletAddress.toLowerCase();
-  
-  // Use wallet address for deterministic part
-  const walletPart = `${normalized.slice(2, 6)}${normalized.slice(-4)}`.toUpperCase();
-  
-  // Add cryptographically secure random component with fixed length
-  let randomPart = '';
-  
-  // Check if crypto is available (HTTPS context or modern browsers)
-  if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
-    const randomBytes = new Uint8Array(2);
-    crypto.getRandomValues(randomBytes);
-    // Convert to hex for predictable length (4 characters)
-    randomPart = Array.from(randomBytes)
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('')
-      .toUpperCase()
-      .slice(0, 4);
-  } else {
-    // Fallback for environments without crypto (should be rare)
-    console.warn('[UserService] crypto.getRandomValues not available, using fallback');
-    randomPart = Math.random().toString(36).substring(2, 6).toUpperCase().padEnd(4, '0');
-  }
-  
-  return `REF${walletPart}${randomPart}`;
-};
-
-/**
- * Get user by wallet address
- */
-export const getUserByWallet = async (walletAddress) => {
-  if (!isFirebaseAvailable()) {
-    const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    return users.find(u => u.wallet?.toLowerCase() === walletAddress.toLowerCase());
-  }
-
-  try {
-    const normalizedWallet = walletAddress.toLowerCase();
-    const userRef = doc(db, COLLECTIONS.USERS, normalizedWallet);
-    const userSnap = await getDoc(userRef);
-    
-    if (userSnap.exists()) {
-      return {
-        id: userSnap.id,
-        ...userSnap.data()
-      };
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('[UserService] Get user error:', error);
-    return null;
-  }
-};
-
-/**
- * Update user data
- */
-export const updateUser = async (walletAddress, updates) => {
-  if (!isFirebaseAvailable()) {
-    const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
-    const userIndex = users.findIndex(u => u.wallet?.toLowerCase() === walletAddress.toLowerCase());
-    if (userIndex >= 0) {
-      users[userIndex] = { ...users[userIndex], ...updates };
-      localStorage.setItem('registeredUsers', JSON.stringify(users));
-    }
-    return;
-  }
-
-  try {
-    const normalizedWallet = walletAddress.toLowerCase();
-    await saveUser({
-      wallet: walletAddress,
-      ...updates
-    });
-  } catch (error) {
-    console.error('[UserService] Update user error:', error);
-    throw error;
-  }
-};
-
-export default {
-  autoRegisterUser,
-  getUserByWallet,
-  updateUser
+    const userRef = doc(db, 'users', userId);
+    // Use setDoc with merge to create or update the user's KYC data
+    await setDoc(userRef, dataToSubmit, { merge: true });
 };
