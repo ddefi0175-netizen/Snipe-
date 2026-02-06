@@ -13,7 +13,7 @@ export * from './turn.service.js';
 
 // Re-export commonly used functions with cleaner names
 export {
-  isFirebaseEnabled,
+  isFirebaseAvailable,
   // Auth
   firebaseSignIn as signIn,
   firebaseSignUp as signUp,

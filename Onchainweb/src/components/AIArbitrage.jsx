@@ -1,6 +1,12 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { tradeAPI } from '../lib/api'
-import { formatApiError } from '../lib/errorHandling'
+import React, { useState, useEffect } from 'react';
+import { 
+  isFirebaseAvailable, 
+  saveAiArbitrageInvestment, 
+  subscribeToAiArbitrageInvestments,
+  getUser, 
+  saveUser 
+} from '../lib/firebase';
+import { formatApiError } from '../lib/errorHandling';
 
 // Default AI Arbitrage levels configuration
 const DEFAULT_ARBITRAGE_LEVELS = [
@@ -9,13 +15,7 @@ const DEFAULT_ARBITRAGE_LEVELS = [
   { level: 3, minCapital: 50001, maxCapital: 300000, profit: 3.5, cycleDays: 7 },
   { level: 4, minCapital: 300001, maxCapital: 500000, profit: 15, cycleDays: 15 },
   { level: 5, minCapital: 500001, maxCapital: 999999999, profit: 20, cycleDays: 30 },
-]
-
-// Get user's allowed arbitrage level (admin-controlled)
-const getUserAllowedArbitrageLevel = () => {
-  const profile = JSON.parse(localStorage.getItem('userProfile') || '{}')
-  return profile.allowedTradingLevel || 1
-}
+];
 
 // AI Strategy descriptions
 const AI_STRATEGIES = [
@@ -24,57 +24,62 @@ const AI_STRATEGIES = [
   { name: 'Statistical Arbitrage', icon: '📊', desc: 'ML-based pattern recognition' },
   { name: 'Flash Loan Arbitrage', icon: '⚡', desc: 'DeFi flash loan opportunities' },
   { name: 'MEV Extraction', icon: '🤖', desc: 'Blockchain mempool analysis' },
-]
+];
+
+// Helper to get current user ID
+const getCurrentUserId = () => {
+    const walletAddress = localStorage.getItem('wallet_address');
+    if (walletAddress) return walletAddress;
+    const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+    return userProfile.id;
+};
+
 
 // Cycle progress component
 function CycleProgress({ investment }) {
-  const [progress, setProgress] = useState(0)
-  const [timeLeft, setTimeLeft] = useState('')
+  const [progress, setProgress] = useState(0);
+  const [timeLeft, setTimeLeft] = useState('');
 
   useEffect(() => {
     const updateProgress = () => {
-      const now = Date.now()
-      const start = investment.startTime
-      const end = investment.endTime
-      const total = end - start
-      const elapsed = now - start
-      const pct = Math.min(100, (elapsed / total) * 100)
-      setProgress(pct)
+      const now = Date.now();
+      const start = investment.startTime;
+      const end = investment.endTime;
+      const total = end - start;
+      const elapsed = now - start;
+      const pct = Math.min(100, (elapsed / total) * 100);
+      setProgress(pct);
 
-      // Calculate time left
-      const remaining = Math.max(0, end - now)
-      const days = Math.floor(remaining / (1000 * 60 * 60 * 24))
-      const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
-      const mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60))
+      const remaining = Math.max(0, end - now);
+      const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const mins = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
 
       if (days > 0) {
-        setTimeLeft(`${days}d ${hours}h`)
+        setTimeLeft(`${days}d ${hours}h`);
       } else if (hours > 0) {
-        setTimeLeft(`${hours}h ${mins}m`)
+        setTimeLeft(`${hours}h ${mins}m`);
       } else {
-        setTimeLeft(`${mins}m`)
+        setTimeLeft(`${mins}m`);
       }
-    }
+    };
 
-    updateProgress()
-    const interval = setInterval(updateProgress, 60000) // Update every minute
-    return () => clearInterval(interval)
-  }, [investment])
+    updateProgress();
+    const interval = setInterval(updateProgress, 60000);
+    return () => clearInterval(interval);
+  }, [investment]);
 
   return (
     <div className="cycle-progress">
       <div className="cycle-progress-bar">
-        <div
-          className="cycle-progress-fill"
-          style={{ width: `${progress}%` }}
-        />
+        <div className="cycle-progress-fill" style={{ width: `${progress}%` }} />
       </div>
       <div className="cycle-progress-info">
         <span className="cycle-percent">{progress.toFixed(1)}%</span>
         <span className="cycle-time-left">{timeLeft} remaining</span>
       </div>
     </div>
-  )
+  );
 }
 
 // AI Animation component
@@ -95,209 +100,166 @@ function AIAnimation({ isActive }) {
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 export default function AIArbitrage({ isOpen, onClose }) {
-  // Investment state
-  const [investAmount, setInvestAmount] = useState('')
-  const [selectedLevel, setSelectedLevel] = useState(null)
-  const [isInvesting, setIsInvesting] = useState(false)
+  const [investAmount, setInvestAmount] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState(null);
+  const [isInvesting, setIsInvesting] = useState(false);
+  const [activeInvestments, setActiveInvestments] = useState([]);
+  const [userBalance, setUserBalance] = useState(0);
+  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [arbitrageLevels, setArbitrageLevels] = useState(DEFAULT_ARBITRAGE_LEVELS);
+  const [userMaxLevel, setUserMaxLevel] = useState(1);
+  const [userId, setUserId] = useState(null);
 
-  // Active investments
-  const [activeInvestments, setActiveInvestments] = useState(() => {
-    const saved = localStorage.getItem('aiArbitrageInvestments')
-    return saved ? JSON.parse(saved) : []
-  })
-
-  // User balance (simulated)
-  const [userBalance, setUserBalance] = useState(() => {
-    const saved = localStorage.getItem('aiArbitrageBalance')
-    return saved ? parseFloat(saved) : 10000
-  })
-
-  // Completed earnings
-  const [totalEarnings, setTotalEarnings] = useState(() => {
-    const saved = localStorage.getItem('aiArbitrageTotalEarnings')
-    return saved ? parseFloat(saved) : 0
-  })
-
-  // Arbitrage levels (admin adjustable via Master Admin Panel)
-  const [arbitrageLevels, setArbitrageLevels] = useState(() => {
-    const saved = localStorage.getItem('aiArbitrageLevels')
-    return saved ? JSON.parse(saved) : DEFAULT_ARBITRAGE_LEVELS
-  })
-
-  // Investment history
-  const [investmentHistory, setInvestmentHistory] = useState(() => {
-    const saved = localStorage.getItem('aiArbitrageHistory')
-    return saved ? JSON.parse(saved) : []
-  })
-
-  // Check for completed investments and auto-add profits
+  // Subscribe to investments and user data on mount
   useEffect(() => {
-    const checkCompletedInvestments = () => {
-      const now = Date.now()
-      let hasCompleted = false
-      let newBalance = userBalance
-      let newEarnings = totalEarnings
+    if (!isOpen) return;
+    
+    const currentUserId = getCurrentUserId();
+    if (!currentUserId) {
+        console.warn("User not identified. AI Arbitrage disabled.");
+        return;
+    }
+    setUserId(currentUserId);
 
-      const updatedInvestments = activeInvestments.filter(inv => {
-        if (now >= inv.endTime && !inv.completed) {
-          // Investment completed - add capital + profit to balance
-          const totalReturn = inv.amount + inv.expectedProfit
-          newBalance += totalReturn
-          newEarnings += inv.expectedProfit
-          hasCompleted = true
-
-          // Add to history
-          setInvestmentHistory(prev => {
-            const updated = [{
-              ...inv,
-              completed: true,
-              completedAt: now,
-              returnAmount: totalReturn
-            }, ...prev].slice(0, 100)
-            localStorage.setItem('aiArbitrageHistory', JSON.stringify(updated))
-            return updated
-          })
-
-          return false // Remove from active
+    // Fetch user data for balance and level
+    const fetchUserData = async () => {
+        if (isFirebaseAvailable()) {
+            const userDoc = await getUser(currentUserId);
+            if (userDoc) {
+                setUserBalance(userDoc.balance || 10000); // Default to 10k if no balance
+                setTotalEarnings(userDoc.aiTotalEarnings || 0);
+                setUserMaxLevel(userDoc.allowedTradingLevel || 1);
+            } else {
+                // Create a new user with default balance if they don't exist
+                await saveUser({ id: currentUserId, balance: 10000, aiTotalEarnings: 0, allowedTradingLevel: 1 });
+                setUserBalance(10000);
+            }
+        } else {
+             // Fallback to local storage if firebase is not available
+            const localBalance = parseFloat(localStorage.getItem('aiArbitrageBalance')) || 10000;
+            const localEarnings = parseFloat(localStorage.getItem('aiArbitrageTotalEarnings')) || 0;
+            const localLevel = JSON.parse(localStorage.getItem('userProfile') || '{}').allowedTradingLevel || 1;
+            setUserBalance(localBalance);
+            setTotalEarnings(localEarnings);
+            setUserMaxLevel(localLevel);
         }
-        return true
-      })
+    };
 
-      if (hasCompleted) {
-        setActiveInvestments(updatedInvestments)
-        setUserBalance(newBalance)
-        setTotalEarnings(newEarnings)
-        localStorage.setItem('aiArbitrageInvestments', JSON.stringify(updatedInvestments))
-        localStorage.setItem('aiArbitrageBalance', newBalance.toString())
-        localStorage.setItem('aiArbitrageTotalEarnings', newEarnings.toString())
-      }
-    }
+    fetchUserData();
 
-    checkCompletedInvestments()
-    const interval = setInterval(checkCompletedInvestments, 60000) // Check every minute
-    return () => clearInterval(interval)
-  }, [activeInvestments, userBalance, totalEarnings])
+    // Subscribe to real-time investment updates
+    const unsubscribe = subscribeToAiArbitrageInvestments(setActiveInvestments);
+    return () => unsubscribe();
 
-  // Determine level based on amount (respects admin-controlled max level)
+  }, [isOpen]);
+
+  // Process completed investments
   useEffect(() => {
-    const amount = parseFloat(investAmount) || 0
-    const userMaxLevel = getUserAllowedArbitrageLevel()
-    const availableLevels = arbitrageLevels.filter(l => l.level <= userMaxLevel)
-    const level = availableLevels.find(l => amount >= l.minCapital && amount <= l.maxCapital)
-    setSelectedLevel(level || null)
-  }, [investAmount, arbitrageLevels])
+    const processCompletions = async () => {
+      const now = Date.now();
+      const completed = activeInvestments.filter(inv => now >= inv.endTime && !inv.completed);
+      
+      if (completed.length === 0) return;
 
-  // Get current user info
-  const getCurrentUser = () => {
-    // Check for logged in user
-    const currentUser = localStorage.getItem('currentUser')
-    if (currentUser) {
-      const user = JSON.parse(currentUser)
-      return {
-        id: user.id || user.email || 'guest',
-        email: user.email || '',
-        name: user.username || user.name || user.email?.split('@')[0] || 'User'
+      let earningsThisCycle = 0;
+      let balanceUpdate = 0;
+
+      for (const inv of completed) {
+          const totalReturn = inv.amount + inv.expectedProfit;
+          earningsThisCycle += inv.expectedProfit;
+          balanceUpdate += totalReturn;
+          
+          // Mark as completed
+          await saveAiArbitrageInvestment({ ...inv, completed: true, completedAt: now });
       }
-    }
 
-    // Check registered users
-    const registeredUsers = JSON.parse(localStorage.getItem('registeredUsers') || '[]')
-    if (registeredUsers.length > 0) {
-      const user = registeredUsers[0]
-      return {
-        id: user.id || user.email || 'guest',
-        email: user.email || '',
-        name: user.username || user.name || user.email?.split('@')[0] || 'User'
+      // Update user balance and earnings in one go
+      const newBalance = userBalance + balanceUpdate;
+      const newEarnings = totalEarnings + earningsThisCycle;
+
+      if (isFirebaseAvailable()) {
+          await saveUser({ id: userId, balance: newBalance, aiTotalEarnings: newEarnings });
+      } else {
+          localStorage.setItem('aiArbitrageBalance', newBalance.toString());
+          localStorage.setItem('aiArbitrageTotalEarnings', newEarnings.toString());
       }
-    }
 
-    return { id: 'guest', email: '', name: 'Guest' }
-  }
+      setUserBalance(newBalance);
+      setTotalEarnings(newEarnings);
+    };
+
+    processCompletions();
+  }, [activeInvestments, userId, userBalance, totalEarnings]);
+
+
+  // Determine level based on amount
+  useEffect(() => {
+    const amount = parseFloat(investAmount) || 0;
+    const availableLevels = arbitrageLevels.filter(l => l.level <= userMaxLevel);
+    const level = availableLevels.find(l => amount >= l.minCapital && amount <= l.maxCapital);
+    setSelectedLevel(level || null);
+  }, [investAmount, arbitrageLevels, userMaxLevel]);
+
 
   // Start investment
   const startInvestment = async () => {
-    const amount = parseFloat(investAmount)
-    if (!selectedLevel || amount > userBalance) return
+    const amount = parseFloat(investAmount);
+    if (!selectedLevel || amount > userBalance || !userId) return;
 
-    setIsInvesting(true)
+    setIsInvesting(true);
 
-    setTimeout(async () => {
-      const now = Date.now()
-      const cycleDuration = selectedLevel.cycleDays * 24 * 60 * 60 * 1000
-      const expectedProfit = amount * (selectedLevel.profit / 100)
+    try {
+        const now = Date.now();
+        const cycleDuration = selectedLevel.cycleDays * 24 * 60 * 60 * 1000;
+        
+        const newInvestment = {
+            userId,
+            amount,
+            level: selectedLevel.level,
+            profit: selectedLevel.profit,
+            expectedProfit: amount * (selectedLevel.profit / 100),
+            cycleDays: selectedLevel.cycleDays,
+            startTime: now,
+            endTime: now + cycleDuration,
+            strategy: AI_STRATEGIES[Math.floor(Math.random() * AI_STRATEGIES.length)].name,
+            completed: false
+        };
 
-      // Get current user info
-      const user = getCurrentUser()
-      const wallet = localStorage.getItem('walletAddress') || ''
+        // Save investment to Firestore
+        await saveAiArbitrageInvestment(newInvestment);
 
-      const newInvestment = {
-        id: `inv_${now}`,
-        userId: user.id,
-        userEmail: user.email,
-        userName: user.name,
-        amount: amount,
-        level: selectedLevel.level,
-        profit: selectedLevel.profit,
-        expectedProfit: expectedProfit,
-        cycleDays: selectedLevel.cycleDays,
-        startTime: now,
-        endTime: now + cycleDuration,
-        strategy: AI_STRATEGIES[Math.floor(Math.random() * AI_STRATEGIES.length)].name,
-        completed: false
-      }
+        // Deduct from balance
+        const newBalance = userBalance - amount;
+        if (isFirebaseAvailable()) {
+            await saveUser({ id: userId, balance: newBalance });
+        } else {
+            localStorage.setItem('aiArbitrageBalance', newBalance.toString());
+        }
+        setUserBalance(newBalance);
+        
+        setInvestAmount('');
 
-      // Sync to backend
-      try {
-        const backendTrade = await tradeAPI.create({
-          userId: wallet || user.id,
-          username: user.name,
-          type: 'arbitrage',
-          level: selectedLevel.level,
-          levelName: `Level ${selectedLevel.level}`,
-          amount: amount,
-          expectedProfit: expectedProfit,
-          profitPercent: selectedLevel.profit,
-          duration: selectedLevel.cycleDays * 24 * 60 * 60 // in seconds
-        })
-        newInvestment.backendId = backendTrade._id
-        console.log('AI Arbitrage investment synced to backend:', backendTrade.tradeId)
-      } catch (error) {
-        const errorMessage = formatApiError(error, { isColdStartAware: true })
-        console.error('Failed to sync investment to backend:', errorMessage)
-      }
-
-      // Deduct from balance
-      const newBalance = userBalance - amount
-      setUserBalance(newBalance)
-      localStorage.setItem('aiArbitrageBalance', newBalance.toString())
-
-      // Add to active investments
-      setActiveInvestments(prev => {
-        const updated = [newInvestment, ...prev]
-        localStorage.setItem('aiArbitrageInvestments', JSON.stringify(updated))
-        return updated
-      })
-
-      setInvestAmount('')
-      setIsInvesting(false)
-    }, 2000)
-  }
+    } catch (error) {
+        console.error("Failed to start investment:", formatApiError(error));
+    } finally {
+        setIsInvesting(false);
+    }
+  };
 
   // Format currency
   const formatCurrency = (amount) => {
-    return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-  }
+    return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="ai-arbitrage-overlay" onClick={onClose}>
       <div className="ai-arbitrage-modal" onClick={e => e.stopPropagation()}>
-        {/* Header */}
         <div className="ai-arbitrage-header">
           <div className="ai-header-title">
             <span className="ai-header-icon">🤖</span>
@@ -306,7 +268,6 @@ export default function AIArbitrage({ isOpen, onClose }) {
           <button className="ai-close-btn" onClick={onClose}>×</button>
         </div>
 
-        {/* Balance Display */}
         <div className="ai-balance-section">
           <div className="ai-balance-card">
             <span className="balance-label">Available Balance</span>
@@ -318,10 +279,8 @@ export default function AIArbitrage({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* AI Animation */}
-        <AIAnimation isActive={activeInvestments.length > 0} />
+        <AIAnimation isActive={activeInvestments.some(inv => !inv.completed)} />
 
-        {/* Strategy Info */}
         <div className="ai-strategies">
           <h3>AI Trading Strategies</h3>
           <div className="strategies-grid">
@@ -334,15 +293,11 @@ export default function AIArbitrage({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* Investment Levels */}
         <div className="ai-levels-section">
           <h3>Investment Levels</h3>
           <div className="ai-levels-grid">
-            {arbitrageLevels.filter(level => level.level <= getUserAllowedArbitrageLevel()).map((level) => (
-              <div
-                key={level.level}
-                className={`ai-level-card ${selectedLevel?.level === level.level ? 'active' : ''}`}
-              >
+            {arbitrageLevels.filter(level => level.level <= userMaxLevel).map((level) => (
+              <div key={level.level} className={`ai-level-card ${selectedLevel?.level === level.level ? 'active' : ''}`}>
                 <div className="ai-level-header">
                   <span className="ai-level-badge">Level {level.level}</span>
                 </div>
@@ -364,7 +319,6 @@ export default function AIArbitrage({ isOpen, onClose }) {
           </div>
         </div>
 
-        {/* Investment Input */}
         <div className="ai-invest-section">
           <div className="ai-invest-input">
             <label>Investment Amount (USDT)</label>
@@ -395,26 +349,15 @@ export default function AIArbitrage({ isOpen, onClose }) {
             onClick={startInvestment}
             disabled={!selectedLevel || parseFloat(investAmount) > userBalance || isInvesting}
           >
-            {isInvesting ? (
-              <>
-                <span className="btn-spinner"></span>
-                Initializing AI...
-              </>
-            ) : (
-              <>
-                <span>🚀</span>
-                Start AI Arbitrage
-              </>
-            )}
+            {isInvesting ? 'Initializing AI...' : 'Start AI Arbitrage'}
           </button>
         </div>
 
-        {/* Active Investments */}
         {activeInvestments.length > 0 && (
           <div className="ai-active-investments">
-            <h3>Active Investments ({activeInvestments.length})</h3>
+            <h3>Active Investments ({activeInvestments.filter(inv => !inv.completed).length})</h3>
             <div className="active-investments-list">
-              {activeInvestments.map((inv) => (
+              {activeInvestments.filter(inv => !inv.completed).map((inv) => (
                 <div key={inv.id} className="active-investment-card">
                   <div className="investment-header">
                     <span className="investment-level">Level {inv.level}</span>
@@ -429,10 +372,6 @@ export default function AIArbitrage({ isOpen, onClose }) {
                       <span className="amount-label">Expected Profit</span>
                       <span className="amount-value positive">+${formatCurrency(inv.expectedProfit)}</span>
                     </div>
-                    <div className="investment-total">
-                      <span className="amount-label">Total Return</span>
-                      <span className="amount-value">${formatCurrency(inv.amount + inv.expectedProfit)}</span>
-                    </div>
                   </div>
                   <CycleProgress investment={inv} />
                 </div>
@@ -442,5 +381,5 @@ export default function AIArbitrage({ isOpen, onClose }) {
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -364,7 +364,7 @@ export const subscribeToUsers = (callback) => {
 // UTILITY FUNCTIONS
 // ==========================================
 
-export const isFirebaseEnabled = () => isFirebaseAvailable;
+export const isFirebaseAvailable = () => isFirebaseAvailable;
 
 export const cleanupChatPolling = () => {
   // No polling needed with Firebase real-time listeners

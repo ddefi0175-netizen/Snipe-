@@ -8,7 +8,7 @@ import {
   getDoc,
   serverTimestamp 
 } from 'firebase/firestore';
-import { db, isFirebaseEnabled, saveUser } from '../lib/firebase.js';
+import { db, isFirebaseAvailable, saveUser } from '../lib/firebase.js';
 import { COLLECTIONS } from '../config/firebase.config.js';
 
 /**
@@ -20,7 +20,7 @@ import { COLLECTIONS } from '../config/firebase.config.js';
  * @returns {Promise<Object>} User document
  */
 export const autoRegisterUser = async (walletAddress, additionalData = {}) => {
-  if (!isFirebaseEnabled()) {
+  if (!isFirebaseAvailable()) {
     console.warn('[UserService] Firebase not available, using localStorage fallback');
     return autoRegisterUserLocalStorage(walletAddress, additionalData);
   }
@@ -175,7 +175,7 @@ const generateReferralCode = (walletAddress) => {
  * Get user by wallet address
  */
 export const getUserByWallet = async (walletAddress) => {
-  if (!isFirebaseEnabled()) {
+  if (!isFirebaseAvailable()) {
     const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
     return users.find(u => u.wallet?.toLowerCase() === walletAddress.toLowerCase());
   }
@@ -203,7 +203,7 @@ export const getUserByWallet = async (walletAddress) => {
  * Update user data
  */
 export const updateUser = async (walletAddress, updates) => {
-  if (!isFirebaseEnabled()) {
+  if (!isFirebaseAvailable()) {
     const users = JSON.parse(localStorage.getItem('registeredUsers') || '[]');
     const userIndex = users.findIndex(u => u.wallet?.toLowerCase() === walletAddress.toLowerCase());
     if (userIndex >= 0) {

@@ -332,7 +332,7 @@ export const subscribeToAllAdminReplies = (callback) => {
 };
 
 // Check if Firebase/Backend is available
-export const isFirebaseEnabled = () => isFirebaseAvailable;
+export const isFirebaseAvailable = () => isFirebaseAvailable;
 
 // Clean up all polling intervals
 export const cleanupChatPolling = () => {

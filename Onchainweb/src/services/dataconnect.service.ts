@@ -4,7 +4,7 @@
  * Provides type-safe queries and mutations with automatic caching
  */
 
-import { db, isFirebaseEnabled } from '../lib/firebase'
+import { db, isFirebaseAvailable } from '../lib/firebase'
 import type {
   User,
   Trade,
@@ -42,7 +42,7 @@ export const usersService = {
    * @returns User data with all fields
    */
   async getUser(userId: string): Promise<User | null> {
-    if (!isFirebaseEnabled()) {
+    if (!isFirebaseAvailable()) {
       const cached = localStorage.getItem(`user_${userId}`)
       return cached ? JSON.parse(cached) : null
     }
@@ -73,7 +73,7 @@ export const usersService = {
    * @returns List of users
    */
   async listUsers(limit: number = 50, offset: number = 0): Promise<User[]> {
-    if (!isFirebaseEnabled()) return []
+    if (!isFirebaseAvailable()) return []
 
     const cacheKey = `users_list_${limit}_${offset}`
     const cached = getFromCache(cacheKey)
@@ -103,7 +103,7 @@ export const usersService = {
    * @returns Matching users
    */
   async searchUsers(searchTerm: string): Promise<User[]> {
-    if (!isFirebaseEnabled()) return []
+    if (!isFirebaseAvailable()) return []
 
     try {
       const { collection, query, where, getDocs } = await import('firebase/firestore')
@@ -128,7 +128,7 @@ export const usersService = {
    * @returns User ID
    */
   async createUser(wallet: string, email?: string): Promise<string | null> {
-    if (!isFirebaseEnabled()) {
+    if (!isFirebaseAvailable()) {
       const id = `user_${Date.now()}`
       const user = {
         id,
@@ -173,7 +173,7 @@ export const usersService = {
    * @returns Success indicator
    */
   async updateUserBalance(userId: string, newBalance: number): Promise<boolean> {
-    if (!isFirebaseEnabled()) {
+    if (!isFirebaseAvailable()) {
       const user = localStorage.getItem(`user_${userId}`)
       if (user) {
         const userData = JSON.parse(user)
@@ -211,7 +211,7 @@ export const tradesService = {
    * @returns Trade data
    */
   async getTrade(tradeId: string): Promise<Trade | null> {
-    if (!isFirebaseEnabled()) return null
+    if (!isFirebaseAvailable()) return null
 
     try {
       const { doc, getDoc } = await import('firebase/firestore')
@@ -233,7 +233,7 @@ export const tradesService = {
    * @returns User's trades
    */
   async listUserTrades(userId: string, limit: number = 50, offset: number = 0): Promise<Trade[]> {
-    if (!isFirebaseEnabled()) return []
+    if (!isFirebaseAvailable()) return []
 
     try {
       const { collection, query, where, orderBy, limit: fbLimit, getDocs } = await import('firebase/firestore')
@@ -258,7 +258,7 @@ export const tradesService = {
    * @returns Active trades across all users
    */
   async getActiveTrades(limit: number = 100): Promise<Trade[]> {
-    if (!isFirebaseEnabled()) return []
+    if (!isFirebaseAvailable()) return []
 
     const cacheKey = `active_trades_${limit}`
     const cached = getFromCache(cacheKey)
@@ -288,7 +288,7 @@ export const tradesService = {
    * @returns Trade ID
    */
   async createTrade(input: CreateTradeInput): Promise<string | null> {
-    if (!isFirebaseEnabled()) return null
+    if (!isFirebaseAvailable()) return null
 
     try {
       const { collection, addDoc, serverTimestamp } = await import('firebase/firestore')
@@ -317,7 +317,7 @@ export const tradesService = {
    * @returns Success indicator
    */
   async completeTrade(input: CompleteTradeInput): Promise<boolean> {
-    if (!isFirebaseEnabled()) return false
+    if (!isFirebaseAvailable()) return false
 
     try {
       const { doc, updateDoc, serverTimestamp } = await import('firebase/firestore')
@@ -351,7 +351,7 @@ export const chatService = {
    * @returns Chat messages
    */
   async getChatMessages(sessionId: string, limit: number = 50): Promise<ChatMessage[]> {
-    if (!isFirebaseEnabled()) {
+    if (!isFirebaseAvailable()) {
       const cached = localStorage.getItem(`chat_${sessionId}`)
       return cached ? JSON.parse(cached) : []
     }
@@ -389,7 +389,7 @@ export const chatService = {
     senderWallet: string,
     sender: 'user' | 'admin' = 'user'
   ): Promise<string | null> {
-    if (!isFirebaseEnabled()) {
+    if (!isFirebaseAvailable()) {
       const id = `msg_${Date.now()}`
       const msg = {
         id,
@@ -440,7 +440,7 @@ export const notificationsService = {
    * @returns User notifications
    */
   async getUserNotifications(userId: string, limit: number = 50): Promise<Notification[]> {
-    if (!isFirebaseEnabled()) return []
+    if (!isFirebaseAvailable()) return []
 
     try {
       const { collection, query, where, orderBy, limit: fbLimit, getDocs } = await import('firebase/firestore')
@@ -465,7 +465,7 @@ export const notificationsService = {
    * @returns Number of unread notifications
    */
   async getUnreadCount(userId: string): Promise<number> {
-    if (!isFirebaseEnabled()) return 0
+    if (!isFirebaseAvailable()) return 0
 
     try {
       const { collection, query, where, getDocs } = await import('firebase/firestore')
@@ -499,7 +499,7 @@ export const notificationsService = {
     type: 'trade' | 'deposit' | 'system' | 'alert',
     actionUrl?: string
   ): Promise<string | null> {
-    if (!isFirebaseEnabled()) return null
+    if (!isFirebaseAvailable()) return null
 
     try {
       const { collection, addDoc, serverTimestamp } = await import('firebase/firestore')
@@ -526,7 +526,7 @@ export const notificationsService = {
    * @returns Success indicator
    */
   async markAsRead(notificationId: string): Promise<boolean> {
-    if (!isFirebaseEnabled()) return false
+    if (!isFirebaseAvailable()) return false
 
     try {
       const { doc, updateDoc, serverTimestamp } = await import('firebase/firestore')

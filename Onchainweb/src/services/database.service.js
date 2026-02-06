@@ -2,7 +2,7 @@
 import {
   db,
   auth,
-  isFirebaseEnabled,
+  isFirebaseAvailable,
   firebaseSignIn,
   firebaseSignUp,
   firebaseSignOut,
@@ -36,12 +36,12 @@ import {
 // ==========================================
 
 export const createUser = async (userData) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   return await saveUser(userData);
 };
 
 export const updateUser = async (userId, updates) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const userRef = doc(db, COLLECTIONS.USERS, userId);
@@ -57,7 +57,7 @@ export const updateUser = async (userId, updates) => {
 };
 
 export const deleteUser = async (userId) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const userRef = doc(db, COLLECTIONS.USERS, userId);
@@ -74,7 +74,7 @@ export const getUserById = async (userId) => {
 };
 
 export const getAllUsers = async () => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const usersSnapshot = await getDocs(collection(db, COLLECTIONS.USERS));
@@ -93,7 +93,7 @@ export const getAllUsers = async () => {
 // ==========================================
 
 export const createTrade = async (tradeData) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const docRef = await addDoc(collection(db, COLLECTIONS.TRADES), {
@@ -109,7 +109,7 @@ export const createTrade = async (tradeData) => {
 };
 
 export const updateTrade = async (tradeId, updates) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const tradeRef = doc(db, 'trades', tradeId);
@@ -125,7 +125,7 @@ export const updateTrade = async (tradeId, updates) => {
 };
 
 export const getTrade = async (tradeId) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const tradeRef = doc(db, 'trades', tradeId);
@@ -138,7 +138,7 @@ export const getTrade = async (tradeId) => {
 };
 
 export const getUserTrades = async (userId) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const q = query(
@@ -158,7 +158,7 @@ export const getUserTrades = async (userId) => {
 };
 
 export const subscribeToTrades = (userId, callback) => {
-  if (!isFirebaseEnabled()) {
+  if (!isFirebaseAvailable()) {
     callback([]);
     return () => {};
   }
@@ -184,7 +184,7 @@ export const subscribeToTrades = (userId, callback) => {
 // ==========================================
 
 export const createDeposit = async (depositData) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const docRef = await addDoc(collection(db, COLLECTIONS.DEPOSITS), {
@@ -200,7 +200,7 @@ export const createDeposit = async (depositData) => {
 };
 
 export const createWithdrawal = async (withdrawalData) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const docRef = await addDoc(collection(db, 'withdrawals'), {
@@ -216,7 +216,7 @@ export const createWithdrawal = async (withdrawalData) => {
 };
 
 export const updateDeposit = async (depositId, updates) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const depositRef = doc(db, 'deposits', depositId);
@@ -232,7 +232,7 @@ export const updateDeposit = async (depositId, updates) => {
 };
 
 export const updateWithdrawal = async (withdrawalId, updates) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const withdrawalRef = doc(db, COLLECTIONS.WITHDRAWALS, withdrawalId);
@@ -248,7 +248,7 @@ export const updateWithdrawal = async (withdrawalId, updates) => {
 };
 
 export const getUserDeposits = async (userId) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const q = query(
@@ -268,7 +268,7 @@ export const getUserDeposits = async (userId) => {
 };
 
 export const getUserWithdrawals = async (userId) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const q = query(
@@ -292,7 +292,7 @@ export const getUserWithdrawals = async (userId) => {
 // ==========================================
 
 export const createAdmin = async (adminData) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const adminRef = doc(db, COLLECTIONS.ADMINS, adminData.username);
@@ -309,7 +309,7 @@ export const createAdmin = async (adminData) => {
 };
 
 export const updateAdmin = async (adminId, updates) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const adminRef = doc(db, COLLECTIONS.ADMINS, adminId);
@@ -325,7 +325,7 @@ export const updateAdmin = async (adminId, updates) => {
 };
 
 export const getAdmin = async (adminId) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const adminRef = doc(db, COLLECTIONS.ADMINS, adminId);
@@ -338,7 +338,7 @@ export const getAdmin = async (adminId) => {
 };
 
 export const getAllAdmins = async () => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const adminsSnapshot = await getDocs(collection(db, COLLECTIONS.ADMINS));
@@ -357,7 +357,7 @@ export const getAllAdmins = async () => {
 // ==========================================
 
 export const createNotification = async (notificationData) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const docRef = await addDoc(collection(db, COLLECTIONS.NOTIFICATIONS), {
@@ -373,7 +373,7 @@ export const createNotification = async (notificationData) => {
 };
 
 export const markNotificationAsRead = async (notificationId) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const notificationRef = doc(db, COLLECTIONS.NOTIFICATIONS, notificationId);
@@ -389,7 +389,7 @@ export const markNotificationAsRead = async (notificationId) => {
 };
 
 export const getUserNotifications = async (userId) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const q = query(
@@ -410,7 +410,7 @@ export const getUserNotifications = async (userId) => {
 };
 
 export const subscribeToNotifications = (userId, callback) => {
-  if (!isFirebaseEnabled()) {
+  if (!isFirebaseAvailable()) {
     callback([]);
     return () => {};
   }
@@ -439,7 +439,7 @@ export const subscribeToNotifications = (userId, callback) => {
 // ==========================================
 
 export const getSettings = async () => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const settingsRef = doc(db, COLLECTIONS.SETTINGS, 'global');
@@ -452,7 +452,7 @@ export const getSettings = async () => {
 };
 
 export const updateSettings = async (updates) => {
-  if (!isFirebaseEnabled()) throw new Error('Firebase not available');
+  if (!isFirebaseAvailable()) throw new Error('Firebase not available');
   
   try {
     const settingsRef = doc(db, COLLECTIONS.SETTINGS, 'global');
@@ -473,5 +473,5 @@ export {
   firebaseSignUp as signUp,
   firebaseSignOut as signOut,
   onAuthChange,
-  isFirebaseEnabled
+  isFirebaseAvailable
 };

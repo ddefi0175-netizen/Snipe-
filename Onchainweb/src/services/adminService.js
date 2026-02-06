@@ -14,7 +14,7 @@ import {
   onSnapshot,
   serverTimestamp 
 } from 'firebase/firestore';
-import { db, isFirebaseEnabled, auth, firebaseSignUp } from '../lib/firebase.js';
+import { db, isFirebaseAvailable, auth, firebaseSignUp } from '../lib/firebase.js';
 import { COLLECTIONS } from '../config/firebase.config.js';
 
 /**
@@ -31,7 +31,7 @@ import { COLLECTIONS } from '../config/firebase.config.js';
  * @param {string} adminData.createdBy - Email of the creator (master account)
  */
 export const createAdminAccount = async (adminData) => {
-  if (!isFirebaseEnabled()) {
+  if (!isFirebaseAvailable()) {
     throw new Error('Firebase not available');
   }
 
@@ -75,7 +75,7 @@ export const createAdminAccount = async (adminData) => {
  * Get admin account by UID
  */
 export const getAdminByUid = async (uid) => {
-  if (!isFirebaseEnabled()) {
+  if (!isFirebaseAvailable()) {
     throw new Error('Firebase not available');
   }
 
@@ -101,7 +101,7 @@ export const getAdminByUid = async (uid) => {
  * Get admin account by email
  */
 export const getAdminByEmail = async (email) => {
-  if (!isFirebaseEnabled()) {
+  if (!isFirebaseAvailable()) {
     throw new Error('Firebase not available');
   }
 
@@ -131,7 +131,7 @@ export const getAdminByEmail = async (email) => {
  * Update admin account
  */
 export const updateAdminAccount = async (uid, updates) => {
-  if (!isFirebaseEnabled()) {
+  if (!isFirebaseAvailable()) {
     throw new Error('Firebase not available');
   }
 
@@ -153,7 +153,7 @@ export const updateAdminAccount = async (uid, updates) => {
  * Update admin last login timestamp
  */
 export const updateAdminLastLogin = async (uid) => {
-  if (!isFirebaseEnabled()) {
+  if (!isFirebaseAvailable()) {
     throw new Error('Firebase not available');
   }
 
@@ -172,7 +172,7 @@ export const updateAdminLastLogin = async (uid) => {
  * Delete admin account
  */
 export const deleteAdminAccount = async (uid) => {
-  if (!isFirebaseEnabled()) {
+  if (!isFirebaseAvailable()) {
     throw new Error('Firebase not available');
   }
 
@@ -196,7 +196,7 @@ export const deleteAdminAccount = async (uid) => {
  * Subscribe to all admin accounts (real-time)
  */
 export const subscribeToAdmins = (callback) => {
-  if (!isFirebaseEnabled()) {
+  if (!isFirebaseAvailable()) {
     console.warn('Firebase not available, using empty array');
     callback([]);
     return () => {};
@@ -220,7 +220,7 @@ export const subscribeToAdmins = (callback) => {
  * Check if admin can manage a user
  */
 export const canManageUser = async (adminUid, userId) => {
-  if (!isFirebaseEnabled()) {
+  if (!isFirebaseAvailable()) {
     return false;
   }
 
@@ -268,7 +268,7 @@ export const hasPermission = (admin, permission) => {
  * @returns {Promise<boolean>} True if master account exists, false otherwise
  */
 export const hasMasterAccount = async () => {
-  if (!isFirebaseEnabled()) {
+  if (!isFirebaseAvailable()) {
     console.warn('[AdminService] Firebase not available');
     return false;
   }
@@ -291,7 +291,7 @@ export const hasMasterAccount = async () => {
  * This should be called on app initialization
  */
 export const initializeMasterAccount = async (masterEmail, masterPassword) => {
-  if (!isFirebaseEnabled()) {
+  if (!isFirebaseAvailable()) {
     console.warn('[AdminService] Firebase not available, cannot initialize master');
     return { success: false, message: 'Firebase not configured' };
   }
