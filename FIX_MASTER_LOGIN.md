@@ -118,7 +118,7 @@
 
 ### Issue 5: "Firebase not initialized" or blank form
 
-**Error Message**: 
+**Error Message**:
 - `Firebase not initialized`
 - `Firebase authentication is not configured`
 - Login form doesn't appear
@@ -263,15 +263,15 @@ Run this diagnostic command:
 
 ```bash
 cd /workspaces/Snipe-
-echo "=== Firebase Config ===" 
+echo "=== Firebase Config ==="
 cat Onchainweb/.env | grep VITE_FIREBASE | head -1
-echo "=== Admin Enabled ===" 
+echo "=== Admin Enabled ==="
 cat Onchainweb/.env | grep VITE_ENABLE_ADMIN
-echo "=== Allowlist ===" 
+echo "=== Allowlist ==="
 cat Onchainweb/.env | grep VITE_ADMIN_ALLOWLIST
-echo "=== Route Check ===" 
+echo "=== Route Check ==="
 grep -c "master-admin" Onchainweb/src/main.jsx
-echo "=== Component Check ===" 
+echo "=== Component Check ==="
 test -f Onchainweb/src/components/MasterAdminDashboard.jsx && echo "✓ Component exists" || echo "❌ Component missing"
 ```
 
