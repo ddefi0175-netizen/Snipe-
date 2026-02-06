@@ -82,7 +82,7 @@ firebase deploy --only firestore:rules,firestore:indexes --project onchainweb-37
 
 #### Step 2: Choose Your Platform
 
-**Option B1: Vercel (Recommended)**
+##### Option B1: Vercel (Recommended)
 ```bash
 # Install Vercel CLI (if you don't have it)
 npm install -g vercel
@@ -98,7 +98,7 @@ cd /workspaces/Snipe-
 firebase deploy --only hosting --project onchainweb-37d30
 ```
 
-**Option B3: Netlify**
+##### Option B3: Netlify
 ```bash
 npm install -g netlify-cli
 cd Onchainweb
@@ -337,4 +337,4 @@ All code is committed and pushed. App builds successfully.
 
 **Questions?** Check the documentation files or review the deployment script comments.
 
-**Good luck! 🚀**
+#### Good luck! 🚀

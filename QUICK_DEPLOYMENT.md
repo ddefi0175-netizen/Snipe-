@@ -23,17 +23,17 @@ cd /workspaces/Snipe-
 
 ### ✅ Required (5 minutes in Firebase Console)
 
-**1. Enable Firestore Database**
+### 1. Enable Firestore Database
 - URL: https://console.firebase.google.com/u/0/project/onchainweb-37d30
 - Click: **Build** → **Firestore Database** → **Create Database**
 - Mode: **Production**
 - Location: **us-central1**
 
-**2. Enable Authentication**
+### 2. Enable Authentication
 - Click: **Build** → **Authentication** → **Get Started**
 - Click: **Email/Password** → **Enable** → **Save**
 
-**3. Create 2 Admin Accounts**
+### 3. Create 2 Admin Accounts
 - Click: **Authentication** → **Users** → **Add User**
 - Create:
   - `master@gmail.com` (password of your choice)
