@@ -1,7 +1,7 @@
 # 🚀 LocalStack Setup & Firebase Emulation Guide
 
-**LocalStack Auth Token**: ✅ **ACTIVATED**  
-**Token**: `ls-nIMOYoBO-veTa-zOTe-9009-daJa07294c5e`  
+**LocalStack Auth Token**: ✅ **ACTIVATED**
+**Token**: `ls-nIMOYoBO-veTa-zOTe-9009-daJa07294c5e`
 **Status**: Ready to use
 
 ---
@@ -316,20 +316,20 @@ In Emulator Dashboard (http://localhost:4000):
 ## 🎯 Use Cases
 
 ### Use LocalStack When:
-✅ Developing features without Firebase  
-✅ Testing authentication flows  
-✅ Building admin features  
-✅ Adding new database collections  
-✅ Working offline (no internet)  
-✅ Debugging issues in isolation  
-✅ Running tests  
+✅ Developing features without Firebase
+✅ Testing authentication flows
+✅ Building admin features
+✅ Adding new database collections
+✅ Working offline (no internet)
+✅ Debugging issues in isolation
+✅ Running tests
 
 ### Use Production Firebase When:
-✅ Deploying to production  
-✅ Testing with real users  
-✅ Using real wallet connections  
-✅ Monitoring production metrics  
-✅ Accessing real data  
+✅ Deploying to production
+✅ Testing with real users
+✅ Using real wallet connections
+✅ Monitoring production metrics
+✅ Accessing real data
 
 ---
 
@@ -390,8 +390,8 @@ localstack logs -f
 ls-nIMOYoBO-veTa-zOTe-9009-daJa07294c5e
 ```
 
-**Token Status**: ✅ Active  
-**Expiration**: Check in LocalStack dashboard  
+**Token Status**: ✅ Active
+**Expiration**: Check in LocalStack dashboard
 **How to renew**: Contact LocalStack support
 
 **To update token**:
