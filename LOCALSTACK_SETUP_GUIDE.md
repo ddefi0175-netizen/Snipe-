@@ -32,7 +32,7 @@ localstack start -e SERVICES=firestore,dynamodb -d
 - Enables Firestore service (`-e SERVICES=firestore`)
 - Enables DynamoDB (for data storage)
 
-**Wait 10-20 seconds for startup**
+#### Wait 10-20 seconds for startup
 
 ### Option 2: Start with Full Firebase Services
 
@@ -450,4 +450,4 @@ cd Onchainweb && npm run dev
 
 ---
 
-**Happy local development! 🎉**
+### Happy local development! 🎉

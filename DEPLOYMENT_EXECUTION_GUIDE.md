@@ -402,4 +402,4 @@ Production URLs:
 
 ---
 
-**You did it! Your Snipe app is now live in production! 🚀**
+### You did it! Your Snipe app is now live in production! 🚀

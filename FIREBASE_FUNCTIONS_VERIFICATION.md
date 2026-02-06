@@ -77,6 +77,7 @@
 ## 📊 Data Functions (firebase.js)
 
 ### Chat Functions
+
 | Function | Status | Purpose |
 |----------|--------|---------|
 | `saveChatMessage` | ✅ WORKING | Save chat message to Firestore |
@@ -89,6 +90,7 @@
 **Status**: ✅ **ALL CHAT FUNCTIONS WORKING**
 
 ### User Functions
+
 | Function | Status | Purpose |
 |----------|--------|---------|
 | `saveUser` | ✅ WORKING | Save/update user document |
@@ -106,6 +108,7 @@
 **Status**: ✅ **ALL USER FUNCTIONS WORKING**
 
 ### Trade Functions
+
 | Function | Status | Purpose |
 |----------|--------|---------|
 | `saveTrade` | ✅ WORKING | Save trade record |
@@ -120,6 +123,7 @@
 **Status**: ✅ **ALL TRADE FUNCTIONS WORKING**
 
 ### Notification Functions
+
 | Function | Status | Purpose |
 |----------|--------|---------|
 | `sendNotification` | ✅ WORKING | Send notification to user |
@@ -131,6 +135,7 @@
 **Status**: ✅ **ALL NOTIFICATION FUNCTIONS WORKING**
 
 ### Deposit Functions
+
 | Function | Status | Purpose |
 |----------|--------|---------|
 | `saveDeposit` | ✅ WORKING | Save deposit record |

@@ -330,7 +330,7 @@ Value: {
   html: "<h1>Test Email</h1><p>From Snipe App</p>"
 }
 ```
-7. Click **Save**
+1. Click **Save**
 
 Wait 10-30 seconds. Check your email for the test message.
 
