@@ -1,0 +1,27 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "onchainweb",
+    "Onchainweb",
+    "Firestore",
+    "firestore",
+    "FIRESTORE",
+    "Vercel",
+    "vercel",
+    "localstack",
+    "firebaseapp",
+    "firebasestorage",
+    "checkmarks",
+    "Mailjet",
+    "vite",
+    "pkill",
+    "cSpell"
+  ],
+  "ignorePaths": [
+    "node_modules",
+    "dist",
+    ".git",
+    ".deprecated"
+  ]
+}
