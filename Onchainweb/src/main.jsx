@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import React, { lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { UniversalWalletProvider } from './lib/walletConnect.jsx'
