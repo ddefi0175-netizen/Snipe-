@@ -1,15 +1,15 @@
-
 import React, { useState, useEffect } from 'react';
 import { formatApiError } from '../lib/errorHandling';
-import { firebaseSignIn, firebaseSignOut, subscribeToUsers, subscribeToDeposits, isFirebaseEnabled } from '../lib/firebase';
+import { firebaseSignIn, firebaseSignOut, subscribeToUsers, subscribeToDeposits, isFirebaseEnabled, onAuthStateChanged, auth } from '../lib/firebase';
 import { updateUserKYC, processDeposit } from '../services/adminService';
-import { handleAdminLogin, hasPermission } from '../lib/adminAuth'; // Import hasPermission
+import { handleAdminLogin, hasPermission, getAdminPermissions } from '../lib/adminAuth'; // Import hasPermission and getAdminPermissions
 import Toast from './Toast.jsx';
 
 export default function AdminPanel({ isOpen = true, onClose }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [userPermissions, setUserPermissions] = useState([]); // Store user permissions
+    const [userPermissions, setUserPermissions] = useState([]);
     const [isLoggingIn, setIsLoggingIn] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [loginUsername, setLoginUsername] = useState('');
     const [loginPassword, setLoginPassword] = useState('');
     const [activeTab, setActiveTab] = useState('users');
@@ -25,13 +25,48 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         setToast({ message, type });
     };
 
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const permissions = await getAdminPermissions(user.uid);
+                    setUserPermissions(permissions);
+                    setIsAuthenticated(true);
+                } catch (error) {
+                    showToast(formatApiError(error), 'error');
+                    setIsAuthenticated(false);
+                }
+            } else {
+                setIsAuthenticated(false);
+                setUserPermissions([]);
+            }
+            setIsLoading(false);
+        });
+        return () => unsubscribe();
+    }, []);
+
+    useEffect(() => {
+        if (!isAuthenticated || !isFirebaseEnabled()) {
+            setAllUsers([]);
+            setAllDeposits([]);
+            return;
+        }
+
+        const unsubscribeUsers = subscribeToUsers(setAllUsers);
+        const unsubscribeDeposits = subscribeToDeposits(setAllDeposits);
+
+        return () => {
+            unsubscribeUsers();
+            unsubscribeDeposits();
+        };
+    }, [isAuthenticated]);
+
     const onLogin = async (e) => {
         e.preventDefault();
         setIsLoggingIn(true);
         try {
-            const { permissions } = await handleAdminLogin(loginUsername, loginPassword, firebaseSignIn);
-            setIsAuthenticated(true);
-            setUserPermissions(permissions); // Set permissions on login
+            // handleAdminLogin will sign in and the onAuthStateChanged listener will handle the rest.
+            await handleAdminLogin(loginUsername, loginPassword, firebaseSignIn);
         } catch (error) {
             showToast(formatApiError(error), 'error');
         } finally {
@@ -39,34 +74,36 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         }
     };
 
-    // ... (useEffect and other functions)
+    const onLogout = async () => {
+        try {
+            await firebaseSignOut();
+            // onAuthStateChanged will handle setting isAuthenticated to false
+        } catch (error) {
+            showToast(formatApiError(error), 'error');
+        }
+    };
+
+    const handleKycAction = async (userId, status) => {
+        try {
+            await updateUserKYC(userId, status);
+            showToast(`User KYC has been ${status}.`, 'success');
+        } catch (error) {
+            showToast(formatApiError(error), 'error');
+        }
+    };
+
+    const handleDepositAction = async (deposit, status) => {
+        try {
+            await processDeposit(deposit.id, deposit.userId, status, deposit.amount);
+            showToast(`Deposit has been ${status}.`, 'success');
+        } catch (error) {
+            showToast(formatApiError(error), 'error');
+        }
+    };
+    
+    if (!isOpen) return null;
+    if (isLoading) return <div>Loading Admin Panel...</div>
 
     return (
-        <div className={`admin-modal-overlay ...`}>
-            {/* ... */}
-            <div className="admin-modal master-admin" onClick={e => e.stopPropagation()}>
-                {!isAuthenticated ? (
-                     <div className="admin-login">{/* ... */}</div>
-                ) : (
-                    <div className="admin-dashboard">
-                        {/* ... */}
-                        <div className="admin-content">
-                            {activeTab === 'users' && (
-                                <div className="users-section">
-                                    {hasPermission(userPermissions, 'manageKYC') && (
-                                        <div className="pending-kyc">
-                                            <h3>Pending KYC ({pendingKYC.length})</h3>
-                                            {/* ... KYC mapping ... */}
-                                        </div>
-                                    )}
-                                    {/* ... Deposits section ... */}
-                                </div>
-                            )}
-                             {/* Other Tabs */}
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
+        <div className="admin-modal-overlay" onClick={onClose}>
+             <Toast message={toast.message} type={toast.type} onClos

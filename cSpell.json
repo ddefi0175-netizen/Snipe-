@@ -1,0 +1,31 @@
+
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "Firestore",
+    "firestore",
+    "Millis",
+    "coingecko",
+    "dataconnect",
+    "KYC",
+    "onchain",
+    "VITE",
+    "arbitrage",
+    "payout",
+    "pnl",
+    "signup",
+    "signin",
+    "signout",
+    "uid",
+    "unarchived"
+  ],
+  "ignorePaths": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    ".next",
+    "*.log"
+  ]
+}

@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-    onAuthStateChanged, // Import onAuthStateChanged
+    onAuthStateChanged,
     subscribeToChatMessages,
     subscribeToActiveChats,
     saveAdminReply,
     updateActiveChat,
-    saveChatMessage,
     isFirebaseEnabled,
     subscribeToUsers,
     subscribeToDeposits,
@@ -13,10 +12,10 @@ import {
     subscribeToTrades,
     subscribeToAiArbitrageInvestments,
     firebaseSignIn,
-    firebaseSignOut
+    firebaseSignOut,
+    auth // Ensure auth is imported for onAuthStateChanged
 } from '../lib/firebase.js';
-import { userAPI, uploadAPI, authAPI, tradeAPI, stakingAPI, settingsAPI, tradingLevelsAPI, bonusesAPI, currenciesAPI, networksAPI, ratesAPI, depositWalletsAPI } from '../lib/api.js';
-import { formatApiError, validatePassword, isLocalStorageAvailable } from '../lib/errorHandling.js';
+import { formatApiError, validatePassword } from '../lib/errorHandling.js';
 import { handleAdminLogin, formatFirebaseAuthError } from '../lib/adminAuth.js';
 import { createAdminAccount, subscribeToAdmins, updateAdminAccount, deleteAdminAccount } from '../services/adminService.js';
 import Toast from './Toast.jsx';
@@ -30,14 +29,25 @@ export default function MasterAdminDashboard() {
     const [isMasterAccount, setIsMasterAccount] = useState(false);
     const [toast, setToast] = useState({ message: '', type: '' });
 
-    // ... other state variables
+    // State for real-time data
+    const [users, setUsers] = useState([]);
+    const [admins, setAdmins] = useState([]);
+    const [deposits, setDeposits] = useState([]);
+    const [withdrawals, setWithdrawals] = useState([]);
+    const [trades, setTrades] = useState([]);
+    const [aiInvestments, setAiInvestments] = useState([]);
+    const [activeChats, setActiveChats] = useState([]);
+    const [chatMessages, setChatMessages] = useState({}); // Keyed by chatId
 
+    const showToast = (message, type = 'info') => {
+        setToast({ message, type });
+    };
+
+    // Authentication state listener
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 setIsAuthenticated(true);
-                // You might want to fetch user role here and set isMasterAccount
-                // For now, we'll assume the role is stored in a claim or another session object
                 const session = JSON.parse(localStorage.getItem('masterAdminSession'));
                 if (session) {
                     setIsMasterAccount(session.role === 'master');
@@ -51,28 +61,66 @@ export default function MasterAdminDashboard() {
         return () => unsubscribe();
     }, []);
 
-    // ... data subscriptions useEffect ...
+    // Real-time data subscriptions
+    useEffect(() => {
+        if (!isAuthenticated || !isFirebaseEnabled()) {
+            return; // Don't subscribe if not authenticated or Firebase is unavailable
+        }
 
-    const showToast = (message, type = 'info') => {
-        setToast({ message, type });
-    };
+        // Setup all subscriptions and store their unsubscribe functions
+        const subscriptions = [
+            subscribeToUsers(setUsers),
+            subscribeToAdmins(setAdmins, (error) => showToast(error, 'error')),
+            subscribeToDeposits(setDeposits),
+            subscribeToWithdrawals(setWithdrawals),
+            subscribeToTrades(setTrades),
+            subscribeToAiArbitrageInvestments(setAiInvestments),
+            subscribeToActiveChats(setActiveChats)
+        ];
+
+        // Return a cleanup function that unsubscribes from all listeners
+        return () => {
+            subscriptions.forEach(unsubscribe => {
+                if (typeof unsubscribe === 'function') {
+                    unsubscribe();
+                }
+            });
+        };
+    }, [isAuthenticated]); // Rerun subscriptions if authentication state changes
+
+    // Subscription to chat messages, dependent on active chats
+    useEffect(() => {
+        if (!activeChats.length) return;
+
+        const messageSubscriptions = activeChats.map(chat => 
+            subscribeToChatMessages(chat.id, (messages) => {
+                setChatMessages(prev => ({ ...prev, [chat.id]: messages }));
+            })
+        );
+
+        return () => {
+            messageSubscriptions.forEach(unsubscribe => {
+                if (typeof unsubscribe === 'function') {
+                    unsubscribe();
+                }
+            });
+        };
+    }, [activeChats]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
         if (!loginData.username || !loginData.password) {
-            showToast('Please enter username and password', 'error');
-            return;
+            return showToast('Please enter username and password', 'error');
         }
         const passwordValidation = validatePassword(loginData.password, 8);
         if (!passwordValidation.valid) {
-            showToast(passwordValidation.error, 'error');
-            return;
+            return showToast(passwordValidation.error, 'error');
         }
         setIsLoggingIn(true);
         try {
             const result = await handleAdminLogin(loginData.username, loginData.password, firebaseSignIn);
             localStorage.setItem('masterAdminSession', JSON.stringify({ ...result, timestamp: Date.now() }));
-            setIsAuthenticated(true); // This will be handled by onAuthStateChanged, but good for immediate feedback
+            setIsAuthenticated(true);
             setIsMasterAccount(result.role === 'master');
             showToast('Login successful!', 'success');
         } catch (error) {
@@ -91,19 +139,15 @@ export default function MasterAdminDashboard() {
         }
     };
 
-    const handleCreateAdmin = async () => {
+    const handleCreateAdmin = async (newAdminData) => {
         try {
-            // ... validation ...
             const createdBy = JSON.parse(localStorage.getItem('masterAdminSession') || '{}').email || 'master';
-            await createAdminAccount({ ...newAdmin, createdBy });
+            await createAdminAccount({ ...newAdminData, createdBy });
             showToast('Admin account created successfully!', 'success');
-            // ... reset form
         } catch (error) {
             showToast(formatApiError(error), 'error');
-        } 
+        }
     };
-
-    // ... other handlers using showToast ...
 
     if (isLoading) {
         return <div>Loading...</div>;
@@ -113,13 +157,24 @@ export default function MasterAdminDashboard() {
         return (
             <div className="master-admin-login">
                 <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '', type: '' })} />
-                {/* Login Form */}
-                 <form onSubmit={handleLogin}>
-                    {/* ... form inputs ... */}
-                     <button type="submit" disabled={isLoggingIn}>
-                         {isLoggingIn ? 'Logging in...' : 'Login'}
-                     </button>
-                 </form>
+                <form onSubmit={handleLogin}>
+                    <h2>Master Admin Login</h2>
+                    <input
+                        type="text"
+                        placeholder="Username"
+                        value={loginData.username}
+                        onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+                    />
+                    <input
+                        type="password"
+                        placeholder="Password"
+                        value={loginData.password}
+                        onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                    />
+                    <button type="submit" disabled={isLoggingIn}>
+                        {isLoggingIn ? 'Logging in...' : 'Login'}
+                    </button>
+                </form>
             </div>
         );
     }
@@ -127,7 +182,11 @@ export default function MasterAdminDashboard() {
     return (
         <div className="master-admin-dashboard">
             <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '', type: '' })} />
-            {/* Dashboard Content */}
+            <header>
+                <h1>Master Admin Dashboard</h1>
+                <button onClick={handleLogout}>Logout</button>
+            </header>
+            {/* The rest of the dashboard UI will use the real-time state variables (users, admins, etc.) */}
         </div>
     );
 }

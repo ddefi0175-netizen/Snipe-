@@ -2,8 +2,7 @@
 // This provides a clean interface for importing services throughout the app
 
 // Firebase Services
-export * from './firebase.service.js';
-export * from './database.service.js';
+export * from '../lib/firebase.js';
 
 // Legacy API Service (for backward compatibility)
 export * from './api.service.js';
@@ -16,42 +15,31 @@ export {
   isFirebaseAvailable,
   // Auth
   firebaseSignIn as signIn,
-  firebaseSignUp as signUp,
   firebaseSignOut as signOut,
-  onAuthChange,
+  onAuthStateChanged,
   // Users
-  createUser,
-  updateUser,
-  getUserById,
-  getAllUsers,
-  deleteUser,
+  saveUser as createUser,
+  saveUser as updateUser,
+  getUser as getUserById,
   subscribeToUsers,
   // Trades
-  createTrade,
-  updateTrade,
-  getTrade,
-  getUserTrades,
-  subscribeToTrades,
+  subscribeToTradeUpdates as subscribeToTrades,
   // Deposits & Withdrawals
-  createDeposit,
-  createWithdrawal,
-  updateDeposit,
-  updateWithdrawal,
-  getUserDeposits,
-  getUserWithdrawals,
+  subscribeToDeposits,
+  subscribeToWithdrawals,
   // Admin
-  createAdmin,
-  updateAdmin,
-  getAdmin,
-  getAllAdmins,
+  // createAdmin,
+  // updateAdmin,
+  // getAdmin,
+  // getAllAdmins,
   // Notifications
-  createNotification,
-  markNotificationAsRead,
-  getUserNotifications,
-  subscribeToNotifications,
+  // createNotification,
+  // markNotificationAsRead,
+  // getUserNotifications,
+  // subscribeToNotifications,
   // Settings
-  getSettings,
-  updateSettings,
+  // getSettings,
+  // updateSettings,
   // Chat
   saveChatMessage,
   subscribeToChatMessages,
@@ -59,8 +47,8 @@ export {
   updateActiveChat,
   subscribeToActiveChats,
   saveAdminReply,
-  subscribeToAdminReplies,
-  markReplyDelivered,
-  subscribeToAllAdminReplies,
-  cleanupChatPolling
-} from './database.service.js';
+  // subscribeToAdminReplies,
+  // markReplyDelivered,
+  // subscribeToAllAdminReplies,
+  // cleanupChatPolling
+} from '../lib/firebase.js';

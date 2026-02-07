@@ -2,6 +2,7 @@
 import { doc, updateDoc, runTransaction, getDoc, setDoc, serverTimestamp, collection, getDocs, query, where, limit, onSnapshot, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db, isFirebaseAvailable, auth } from '../lib/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { formatApiError } from '../lib/errorHandling';
 
 
 /**
@@ -12,15 +13,24 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 export const updateUserKYC = async (userId, kycStatus) => {
     if (!isFirebaseAvailable) {
         // Fallback for localStorage
-        const users = JSON.parse(localStorage.getItem('users') || '{}');
-        if (users[userId]) {
-            users[userId].kycStatus = kycStatus;
-            localStorage.setItem('users', JSON.stringify(users));
+        try {
+            const users = JSON.parse(localStorage.getItem('users') || '{}');
+            if (users[userId]) {
+                users[userId].kycStatus = kycStatus;
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+        } catch (error) {
+            console.error("Error updating KYC in localStorage:", error);
         }
         return;
     }
-    const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, { kycStatus });
+    try {
+        const userRef = doc(db, 'users', userId);
+        await updateDoc(userRef, { kycStatus });
+    } catch (error) {
+        console.error(`Error updating KYC for user ${userId}:`, error);
+        throw new Error(formatApiError(error));
+    }
 };
 
 /**
@@ -33,68 +43,90 @@ export const updateUserKYC = async (userId, kycStatus) => {
 export const processDeposit = async (depositId, userId, newStatus, amount = 0) => {
     if (!isFirebaseAvailable) {
         // Fallback for localStorage
-        const deposits = JSON.parse(localStorage.getItem('deposits') || '[]');
-        const depositIndex = deposits.findIndex(d => d.id === depositId);
-        if (depositIndex > -1) {
-            deposits[depositIndex].status = newStatus;
-            localStorage.setItem('deposits', JSON.stringify(deposits));
+        try {
+            const deposits = JSON.parse(localStorage.getItem('deposits') || '[]');
+            const depositIndex = deposits.findIndex(d => d.id === depositId);
+            if (depositIndex > -1) {
+                deposits[depositIndex].status = newStatus;
+                localStorage.setItem('deposits', JSON.stringify(deposits));
 
-            if (newStatus === 'approved') {
-                const users = JSON.parse(localStorage.getItem('users') || '{}');
-                if (users[userId]) {
-                    users[userId].balance = (users[userId].balance || 0) + parseFloat(amount);
-                    localStorage.setItem('users', JSON.stringify(users));
+                if (newStatus === 'approved') {
+                    const users = JSON.parse(localStorage.getItem('users') || '{}');
+                    if (users[userId]) {
+                        users[userId].balance = (users[userId].balance || 0) + parseFloat(amount);
+                        localStorage.setItem('users', JSON.stringify(users));
+                    }
                 }
             }
+        } catch (error) {
+            console.error("Error processing deposit in localStorage:", error);
         }
         return;
     }
 
-    const depositRef = doc(db, 'deposits', depositId);
-    const userRef = doc(db, 'users', userId);
+    try {
+        const depositRef = doc(db, 'deposits', depositId);
+        const userRef = doc(db, 'users', userId);
 
-    if (newStatus === 'approved') {
-        await runTransaction(db, async (transaction) => {
-            const userDoc = await transaction.get(userRef);
-            if (!userDoc.exists()) {
-                throw new Error("User document not found!");
-            }
-            const currentBalance = userDoc.data().balance || 0;
-            const newBalance = currentBalance + parseFloat(amount);
+        if (newStatus === 'approved') {
+            await runTransaction(db, async (transaction) => {
+                const userDoc = await transaction.get(userRef);
+                if (!userDoc.exists()) {
+                    throw new Error("User document not found!");
+                }
+                const currentBalance = userDoc.data().balance || 0;
+                const newBalance = currentBalance + parseFloat(amount);
 
-            transaction.update(userRef, { balance: newBalance });
-            transaction.update(depositRef, { status: newStatus });
-        });
-    } else { // For 'rejected' status
-        await updateDoc(depositRef, { status: newStatus });
+                transaction.update(userRef, { balance: newBalance });
+                transaction.update(depositRef, { status: newStatus });
+            });
+        } else { // For 'rejected' status
+            await updateDoc(depositRef, { status: newStatus });
+        }
+    } catch (error) {
+        console.error(`Error processing deposit ${depositId}:`, error);
+        throw new Error(formatApiError(error));
     }
 };
 
 export const getAdminByEmail = async (email) => {
     if (!isFirebaseAvailable) {
-        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
-        return Object.values(admins).find(admin => admin.email === email);
+        try {
+            const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+            return Object.values(admins).find(admin => admin.email === email);
+        } catch (error) {
+            console.error("Error getting admin by email from localStorage:", error);
+            return null;
+        }
     }
-
-    const adminRef = doc(db, 'admins', email.replace(/[^a-zA-Z0-9]/g, '_'));
-    const adminDoc = await getDoc(adminRef);
-
-    return adminDoc.exists() ? adminDoc.data() : null;
+    
+    try {
+        const adminRef = doc(db, 'admins', email.replace(/[^a-zA-Z0-9]/g, '_'));
+        const adminDoc = await getDoc(adminRef);
+        return adminDoc.exists() ? adminDoc.data() : null;
+    } catch (error) {
+        console.error(`Error getting admin by email ${email}:`, error);
+        throw new Error(formatApiError(error));
+    }
 };
 
 export const initializeMasterAccount = async (email, password) => {
     if (!isFirebaseAvailable) {
         // Fallback for localStorage
-        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
-        const adminId = email.replace(/[^a-zA-Z0-9]/g, '_');
-        admins[adminId] = {
-            email,
-            role: 'master',
-            permissions: ['all'],
-            createdAt: new Date().toISOString(),
-        };
-        localStorage.setItem('admins', JSON.stringify(admins));
-        return { success: true, message: 'Master account created locally.' };
+        try {
+            const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+            const adminId = email.replace(/[^a-zA-Z0-9]/g, '_');
+            admins[adminId] = {
+                email,
+                role: 'master',
+                permissions: ['all'],
+                createdAt: new Date().toISOString(),
+            };
+            localStorage.setItem('admins', JSON.stringify(admins));
+            return { success: true, message: 'Master account created locally.' };
+        } catch (error) {
+            return { success: false, message: 'Failed to create master account in local storage.' };
+        }
     }
 
     try {
@@ -117,59 +149,88 @@ export const initializeMasterAccount = async (email, password) => {
         return { success: true, message: 'Master account created successfully!' };
     } catch (error) {
         console.error("Error initializing master account:", error);
-        // More specific error handling
-        if (error.code === 'auth/email-already-in-use') {
-            return { success: false, message: 'This email is already in use.', error: error.message };
-        }
-        return { success: false, message: 'An unexpected error occurred.', error: error.message };
+        return { success: false, message: formatApiError(error) };
     }
 };
 
 export const updateAdminLastLogin = async (adminId) => {
     if (!isFirebaseAvailable) {
-        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
-        const admin = Object.values(admins).find(a => a.uid === adminId);
-        if (admin) {
-            admin.lastLogin = new Date().toISOString();
-            localStorage.setItem('admins', JSON.stringify(admins));
+        try {
+            const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+            const admin = Object.values(admins).find(a => a.uid === adminId);
+            if (admin) {
+                admin.lastLogin = new Date().toISOString();
+                localStorage.setItem('admins', JSON.stringify(admins));
+            }
+        } catch (error) {
+            console.error("Error updating admin last login in localStorage:", error);
         }
         return;
     }
-
-    const adminRef = doc(db, 'admins', adminId);
-    await updateDoc(adminRef, { lastLogin: serverTimestamp() });
+    
+    try {
+        const adminRef = doc(db, 'admins', adminId);
+        await updateDoc(adminRef, { lastLogin: serverTimestamp() });
+    } catch (error) {
+        console.error(`Error updating admin last login for ${adminId}:`, error);
+        throw new Error(formatApiError(error));
+    }
 };
 
 export const hasMasterAccount = async () => {
     if (!isFirebaseAvailable) {
-        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
-        return Object.values(admins).some(admin => admin.role === 'master');
+        try {
+            const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+            return Object.values(admins).some(admin => admin.role === 'master');
+        } catch (error) {
+            console.error("Error checking for master account in localStorage:", error);
+            return false;
+        }
     }
-
-    const q = query(collection(db, 'admins'), where('role', '==', 'master'), limit(1));
-    const querySnapshot = await getDocs(q);
-    return !querySnapshot.empty;
+    
+    try {
+        const q = query(collection(db, 'admins'), where('role', '==', 'master'), limit(1));
+        const querySnapshot = await getDocs(q);
+        return !querySnapshot.empty;
+    } catch (error) {
+        console.error("Error checking for master account:", error);
+        throw new Error(formatApiError(error));
+    }
 };
 
 export const createAdminAccount = async (adminData) => {
     if (!isFirebaseAvailable) {
-        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
-        const adminId = adminData.email.replace(/[^a-zA-Z0-9]/g, '_');
-        admins[adminId] = { ...adminData, uid: adminId, createdAt: new Date().toISOString() };
-        localStorage.setItem('admins', JSON.stringify(admins));
-        return admins[adminId];
+        try {
+            const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+            const adminId = adminData.email.replace(/[^a-zA-Z0-9]/g, '_');
+            admins[adminId] = { ...adminData, uid: adminId, createdAt: new Date().toISOString() };
+            localStorage.setItem('admins', JSON.stringify(admins));
+            return admins[adminId];
+        } catch (error) {
+            console.error("Error creating admin account in localStorage:", error);
+            return null;
+        }
     }
 
-    // NOTE: This function *only* creates the Firestore record. Auth user must be created separately.
-    const adminRef = doc(collection(db, 'admins'));
-    await setDoc(adminRef, { ...adminData, uid: adminRef.id, createdAt: serverTimestamp() });
-    return { ...adminData, uid: adminRef.id };
+    try {
+        // NOTE: This function *only* creates the Firestore record. Auth user must be created separately.
+        const adminRef = doc(collection(db, 'admins'));
+        await setDoc(adminRef, { ...adminData, uid: adminRef.id, createdAt: serverTimestamp() });
+        return { ...adminData, uid: adminRef.id };
+    } catch (error) {
+        console.error("Error creating admin account:", error);
+        throw new Error(formatApiError(error));
+    }
 };
 
-export const subscribeToAdmins = (callback) => {
+export const subscribeToAdmins = (callback, onError) => {
     if (!isFirebaseAvailable) {
-        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
-        callback(Object.values(admins));
+        try {
+            const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+            callback(Object.values(admins));
+        } catch (error) {
+            if(onError) onError("Failed to retrieve admins from local storage.");
+        }
         return () => {}; // No-op for localStorage
     }
 
@@ -177,31 +238,53 @@ export const subscribeToAdmins = (callback) => {
     return onSnapshot(q, (snapshot) => {
         const admins = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
         callback(admins);
+    }, (error) => {
+        console.error("Error subscribing to admins:", error);
+        if(onError) onError(formatApiError(error));
     });
 };
 
 export const updateAdminAccount = async (adminId, data) => {
     if (!isFirebaseAvailable) {
-        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
-        if (admins[adminId]) {
-            admins[adminId] = { ...admins[adminId], ...data };
-            localStorage.setItem('admins', JSON.stringify(admins));
+        try {
+            const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+            if (admins[adminId]) {
+                admins[adminId] = { ...admins[adminId], ...data };
+                localStorage.setItem('admins', JSON.stringify(admins));
+            }
+        } catch (error) {
+            console.error("Error updating admin account in localStorage:", error);
         }
         return;
     }
-    const adminRef = doc(db, 'admins', adminId);
-    await updateDoc(adminRef, data);
+    
+    try {
+        const adminRef = doc(db, 'admins', adminId);
+        await updateDoc(adminRef, data);
+    } catch (error) {
+        console.error(`Error updating admin account ${adminId}:`, error);
+        throw new Error(formatApiError(error));
+    }
 };
 
 export const deleteAdminAccount = async (adminId) => {
     if (!isFirebaseAvailable) {
-        const admins = JSON.parse(localStorage.getItem('admins') || '{}');
-        delete admins[adminId];
-        localStorage.setItem('admins', JSON.stringify(admins));
+        try {
+            const admins = JSON.parse(localStorage.getItem('admins') || '{}');
+            delete admins[adminId];
+            localStorage.setItem('admins', JSON.stringify(admins));
+        } catch (error) {
+            console.error("Error deleting admin account from localStorage:", error);
+        }
         return;
     }
 
-    // This only deletes the Firestore record. The Auth user must be deleted separately.
-    const adminRef = doc(db, 'admins', adminId);
-    await deleteDoc(adminRef);
+    try {
+        // This only deletes the Firestore record. The Auth user must be deleted separately.
+        const adminRef = doc(db, 'admins', adminId);
+        await deleteDoc(adminRef);
+    } catch (error) {
+        console.error(`Error deleting admin account ${adminId}:`, error);
+        throw new Error(formatApiError(error));
+    }
 };
