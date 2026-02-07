@@ -35,3 +35,6 @@ jobs:
 
       - name: Run ESLint (legacy)
         run: npx --yes eslint@8 --config .eslintrc.json "Onchainweb/src/**/*.{js,jsx}" --ext .js,.jsx --max-warnings=0 || true
+
+      - name: Smoke test (build + preview)
+        run: npm run smoke
