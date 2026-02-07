@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { formatApiError } from '../lib/errorHandling';
 import { firebaseSignIn, firebaseSignOut, subscribeToUsers, subscribeToDeposits, isFirebaseEnabled, onAuthStateChanged, auth } from '../lib/firebase';
 import { updateUserKYC, processDeposit } from '../services/adminService';
-import { handleAdminLogin, hasPermission, getAdminPermissions } from '../lib/adminAuth'; // Import hasPermission and getAdminPermissions
+import { handleAdminLogin, hasPermission } from '../lib/adminAuth'; // Import hasPermission
+import { getAdminByEmail } from '../services/adminService';
 import Toast from './Toast.jsx';
 
 export default function AdminPanel({ isOpen = true, onClose }) {
@@ -29,7 +30,8 @@ export default function AdminPanel({ isOpen = true, onClose }) {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
                 try {
-                    const permissions = await getAdminPermissions(user.uid);
+                    const adminData = await getAdminByEmail(user.email);
+                    const permissions = adminData?.permissions || [];
                     setUserPermissions(permissions);
                     setIsAuthenticated(true);
                 } catch (error) {
@@ -100,10 +102,70 @@ export default function AdminPanel({ isOpen = true, onClose }) {
             showToast(formatApiError(error), 'error');
         }
     };
-    
+
     if (!isOpen) return null;
     if (isLoading) return <div>Loading Admin Panel...</div>
 
     return (
         <div className="admin-modal-overlay" onClick={onClose}>
-             <Toast message={toast.message} type={toast.type} onClos
+            <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+                <button className="admin-close" onClick={onClose}>Close</button>
+                {toast.message && (
+                    <Toast
+                        message={toast.message}
+                        type={toast.type}
+                        onClose={() => setToast({ message: '', type: '' })}
+                    />
+                )}
+                {isAuthenticated ? (
+                    <div className="admin-content">
+                        <div className="admin-tabs">
+                            <button onClick={() => setActiveTab('users')} className={activeTab === 'users' ? 'active' : ''}>
+                                Users ({pendingKYC.length})
+                            </button>
+                            <button onClick={() => setActiveTab('deposits')} className={activeTab === 'deposits' ? 'active' : ''}>
+                                Deposits ({pendingDeposits.length})
+                            </button>
+                        </div>
+
+                        {activeTab === 'users' && (
+                            <div className="admin-list">
+                                <h3>Pending KYC</h3>
+                                {pendingKYC.map(u => (
+                                    <div key={u.id} className="admin-row">
+                                        <span>{u.email}</span>
+                                        <button onClick={() => handleKycAction(u.id, 'approved')}>Approve</button>
+                                        <button onClick={() => handleKycAction(u.id, 'rejected')}>Reject</button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        {activeTab === 'deposits' && (
+                            <div className="admin-list">
+                                <h3>Pending Deposits</h3>
+                                {pendingDeposits.map(d => (
+                                    <div key={d.id} className="admin-row">
+                                        <span>{d.userId} - {d.amount}</span>
+                                        <button onClick={() => handleDepositAction(d, 'processed')}>Process</button>
+                                        <button onClick={() => handleDepositAction(d, 'rejected')}>Reject</button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
+                        <div className="admin-actions">
+                            <button onClick={onLogout}>Logout</button>
+                        </div>
+                    </div>
+                ) : (
+                    <form className="admin-login" onSubmit={onLogin}>
+                        <input value={loginUsername} onChange={(e) => setLoginUsername(e.target.value)} placeholder="Username" />
+                        <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="Password" />
+                        <button type="submit" disabled={isLoggingIn}>Login</button>
+                    </form>
+                )}
+            </div>
+        </div>
+    );
+}
