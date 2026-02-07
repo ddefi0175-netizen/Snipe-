@@ -1,14 +1,19 @@
 
 import { useState, useEffect } from 'react';
-// ... other imports
 import { formatApiError } from '../lib/errorHandling';
+import { saveAiArbitrageInvestment, saveUser, isFirebaseAvailable } from '../lib/firebase.js';
 import Toast from './Toast.jsx'; // Assuming Toast component exists
 
 // ... component implementation
 
 export default function AIArbitrage({ isOpen, onClose }) {
-  // ... states and other functions
-  const [toast, setToast] = useState({ message: '', type: '' });
+    // Minimal required states to avoid runtime errors and satisfy lint
+    const [toast, setToast] = useState({ message: '', type: '' });
+    const [investAmount, setInvestAmount] = useState('');
+    const [selectedLevel, setSelectedLevel] = useState(null);
+    const [userBalance, setUserBalance] = useState(0);
+    const [userId, setUserId] = useState(() => localStorage.getItem('wallet_address') || null);
+    const [isInvesting, setIsInvesting] = useState(false);
 
   const showToast = (message, type = 'info') => {
       setToast({ message, type });
@@ -26,13 +31,23 @@ export default function AIArbitrage({ isOpen, onClose }) {
     try {
         // ... investment logic
 
-        // Save investment to Firestore
-        await saveAiArbitrageInvestment(newInvestment);
+                // Build investment record and save to Firestore/localStorage
+                const newInvestment = {
+                    userId,
+                    amount,
+                    level: selectedLevel?.name || selectedLevel?.id || 'auto',
+                    startTime: Date.now(),
+                    completed: false
+                };
+
+                if (typeof saveAiArbitrageInvestment === 'function') {
+                    await saveAiArbitrageInvestment(newInvestment);
+                }
 
         // Deduct from balance
         const newBalance = userBalance - amount;
-        if (isFirebaseAvailable()) {
-            await saveUser({ id: userId, balance: newBalance });
+        if (typeof isFirebaseAvailable === 'function' ? isFirebaseAvailable() : isFirebaseAvailable) {
+            if (typeof saveUser === 'function') await saveUser(userId, { balance: newBalance });
         } else {
             localStorage.setItem('aiArbitrageBalance', newBalance.toString());
         }

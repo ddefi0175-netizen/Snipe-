@@ -59,7 +59,6 @@ const WalletProvider = ({ children }) => {
         };
         autoConnect();
         // We only want this to run once on mount, connectors might change but initial check is enough.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [connectors, isConnected]);
 
     // Persist or clear connection state

@@ -35,6 +35,13 @@ export default function CustomerService() {
     const saveMessageToAdmin = async (message, type, agentName = null) => {
         try {
             // ... message saving logic
+            const newMessage = {
+                id: Date.now(),
+                type,
+                text: message,
+                agentName,
+                time: new Date().toISOString()
+            };
             await sendChatMessage(newMessage);
         } catch (error) {
             showToast(formatApiError(error), 'error');

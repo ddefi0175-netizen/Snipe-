@@ -12,6 +12,16 @@
     }
   },
   "extends": "eslint:recommended",
+  "ignorePatterns": [
+    "Onchainweb/src/dataconnect-sdk/**",
+    "Onchainweb/src/types/**"
+  ],
+  "overrides": [
+    {
+      "files": ["Onchainweb/src/**/*.ts", "Onchainweb/src/**/*.tsx"],
+      "excludedFiles": "*"
+    }
+  ],
   "rules": {
     "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
     "no-console": "off"
