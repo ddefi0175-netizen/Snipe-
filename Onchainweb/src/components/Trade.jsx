@@ -63,7 +63,7 @@ export default function Trade({ isOpen, onClose }) {
             }
 
             const profit = result ? (selectedLevel.profit / 100) * parseFloat(tradeAmount) : -parseFloat(tradeAmount);
-            
+
             const tradeRecord = {
                 userId: currentUser.id,
                 tradeId: activeTradeId,

@@ -92,7 +92,7 @@ export default function MasterAdminDashboard() {
     useEffect(() => {
         if (!activeChats.length) return;
 
-        const messageSubscriptions = activeChats.map(chat => 
+        const messageSubscriptions = activeChats.map(chat =>
             subscribeToChatMessages(chat.id, (messages) => {
                 setChatMessages(prev => ({ ...prev, [chat.id]: messages }));
             })

@@ -14,10 +14,10 @@ export default function NewsModal({ news, onClose }) {
   const formatDate = (timestamp) => {
     if (!timestamp) return ''
     const date = new Date(timestamp * 1000)
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString('en-US', {
       weekday: 'long',
-      year: 'numeric', 
-      month: 'long', 
+      year: 'numeric',
+      month: 'long',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
@@ -68,7 +68,7 @@ export default function NewsModal({ news, onClose }) {
                 ) : (
                   <div className="news-modal-summary">
                     <p>{news.summary || news.description || 'Click the link below to read the full article.'}</p>
-                    
+
                     {/* Categories/Tags */}
                     {news.categories && (
                       <div className="news-modal-tags">
@@ -83,9 +83,9 @@ export default function NewsModal({ news, onClose }) {
 
               {/* Read Full Article Link */}
               <div className="news-modal-actions">
-                <a 
-                  href={news.url || news.guid} 
-                  target="_blank" 
+                <a
+                  href={news.url || news.guid}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="news-modal-link"
                 >
