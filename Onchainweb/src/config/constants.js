@@ -154,12 +154,3 @@ export const ADMIN_GUARD = {
   ALLOWLIST: ADMIN_ALLOWLIST
 };
 
-// LocalStorage keys used across wallet and session persistence
-export const STORAGE_KEYS = {
-  CONNECTED: 'wallet_connected',
-  ADDRESS: 'wallet_address',
-  CHAIN_ID: 'wallet_chainId',
-  CONNECTOR_TYPE: 'wallet_connector_type',
-  SESSION: 'wallet_session',
-  LAST_CONNECTED: 'wallet_last_connected'
-};
