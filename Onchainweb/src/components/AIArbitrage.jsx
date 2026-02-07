@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 // ... other imports
 import { formatApiError } from '../lib/errorHandling';
 import Toast from './Toast.jsx'; // Assuming Toast component exists
@@ -37,7 +37,7 @@ export default function AIArbitrage({ isOpen, onClose }) {
             localStorage.setItem('aiArbitrageBalance', newBalance.toString());
         }
         setUserBalance(newBalance);
-        
+
         setInvestAmount('');
         showToast('Investment started successfully!', 'success'); // Success toast
 

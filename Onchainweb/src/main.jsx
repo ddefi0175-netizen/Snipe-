@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react'
+import { lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { UniversalWalletProvider } from './lib/walletConnect.jsx'
@@ -66,8 +66,8 @@ createRoot(document.getElementById('root')).render(
               <Routes>
                 <Route path={ROUTES.HOME} element={<MainApp />} />
                 {/* Admin route - always registered, but shows disabled message if feature not enabled */}
-                <Route 
-                  path={ROUTES.ADMIN} 
+                <Route
+                  path={ROUTES.ADMIN}
                   element={
                     ADMIN_GUARD.ENABLED ? (
                       <AdminRouteGuard requireMaster={false}>
@@ -76,11 +76,11 @@ createRoot(document.getElementById('root')).render(
                     ) : (
                       <AdminFeatureDisabled isMasterRoute={false} />
                     )
-                  } 
+                  }
                 />
                 {/* Master Admin route - always registered, but shows disabled message if feature not enabled */}
-                <Route 
-                  path={ROUTES.MASTER_ADMIN} 
+                <Route
+                  path={ROUTES.MASTER_ADMIN}
                   element={
                     ADMIN_GUARD.ENABLED ? (
                       <AdminRouteGuard requireMaster={true}>
@@ -89,7 +89,7 @@ createRoot(document.getElementById('root')).render(
                     ) : (
                       <AdminFeatureDisabled isMasterRoute={true} />
                     )
-                  } 
+                  }
                 />
                 {/* Catch-all route for 404 - must be last */}
                 <Route path="*" element={<NotFound />} />

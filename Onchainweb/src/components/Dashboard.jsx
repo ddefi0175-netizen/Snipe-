@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import NewsModal from './NewsModal.jsx';
 import { useMarketData } from '../hooks/useMarketData';
 import { getStockData, getStockNews } from '../utils/fallbackData';

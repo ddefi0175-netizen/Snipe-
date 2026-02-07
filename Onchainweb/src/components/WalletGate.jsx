@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { createUser, getUserById } from '../services/database.service'
 
 // Web3 Wallet Gate - User MUST connect wallet to see any content

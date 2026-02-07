@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import CandlestickChart from './CandlestickChart';
 import { formatApiError } from '../lib/errorHandling';
 import { subscribeToTradeUpdates, saveTradeHistory } from '../lib/firebase';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 
 // Wallet Actions - Handles approve, deposit, signMessage for DeFi simulation
 // This is a simulated "smart contract" interface - admin controls all outcomes

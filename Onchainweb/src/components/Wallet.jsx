@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getProfileData, submitKycData } from '../services/userService';
 import { getDepositAddresses } from '../services/depositService';
 import { formatApiError } from '../lib/errorHandling';

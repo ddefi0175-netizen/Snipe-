@@ -1,4 +1,4 @@
-import React from 'react';
+// React automatic JSX runtime in use — default import not required
 import { useNavigate, useLocation } from 'react-router-dom';
 
 /**
@@ -9,7 +9,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 export default function NotFound() {
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   // Check if this is an admin route attempt
   const isAdminRoute = location.pathname === '/admin' || location.pathname === '/master-admin';
   const isMasterRoute = location.pathname === '/master-admin';
@@ -43,14 +43,14 @@ export default function NotFound() {
           justifyContent: 'center',
           border: '2px solid rgba(239, 68, 68, 0.3)'
         }}>
-          <svg 
-            width="40" 
-            height="40" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="#ef4444" 
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#ef4444"
             strokeWidth="2"
-            strokeLinecap="round" 
+            strokeLinecap="round"
             strokeLinejoin="round"
           >
             <circle cx="12" cy="12" r="10"></circle>
@@ -136,9 +136,9 @@ export default function NotFound() {
               margin: 0,
               paddingLeft: '20px'
             }}>
-              <li>Set <code style={{ 
-                background: 'rgba(0, 0, 0, 0.3)', 
-                padding: '2px 6px', 
+              <li>Set <code style={{
+                background: 'rgba(0, 0, 0, 0.3)',
+                padding: '2px 6px',
                 borderRadius: '4px',
                 color: '#fbbf24'
               }} aria-label="Environment variable VITE_ENABLE_ADMIN equals true">VITE_ENABLE_ADMIN=true</code> in your environment</li>

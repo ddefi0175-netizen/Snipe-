@@ -3,7 +3,7 @@
  * Copy this pattern to integrate into your components
  */
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { usersService, tradesService, notificationsService } from '@/services/dataconnect.service'
 import type { User, Trade, Notification } from '@/types/dataconnect.types'
 

@@ -1,5 +1,5 @@
 
-import React from 'react';
+// React automatic JSX runtime in use — default import not required
 import { useUniversalWallet } from '../lib/walletConnect';
 
 export default function UniversalWalletModal({ isOpen, onClose }) {

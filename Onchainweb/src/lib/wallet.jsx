@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react'
+import { createContext, useContext } from 'react'
 
 // Simplified wallet context - no ethers.js dependency
 // Uses localStorage-based wallet system from Wallet.jsx component
@@ -19,7 +19,7 @@ export function WalletProvider({ children }) {
       console.log('Wallet disconnection handled in Wallet component')
     }
   }
-  
+
   return <WalletContext.Provider value={wallet}>{children}</WalletContext.Provider>
 }
 

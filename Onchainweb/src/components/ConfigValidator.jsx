@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 /**
  * Configuration Validator Component
@@ -98,7 +98,7 @@ export default function ConfigValidator() {
       <div className="config-validator-header">
         <span className="config-validator-icon">⚙️</span>
         <h3>Configuration Issues Detected</h3>
-        <button 
+        <button
           className="config-validator-close"
           onClick={() => setIsVisible(false)}
           title="Dismiss"
@@ -121,9 +121,9 @@ export default function ConfigValidator() {
               <strong>Solution:</strong> {issue.solution}
             </p>
             {issue.docs && (
-              <a 
-                href={issue.docs} 
-                target="_blank" 
+              <a
+                href={issue.docs}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="config-issue-docs"
                 aria-label={`Open documentation in new tab: ${issue.docs}`}

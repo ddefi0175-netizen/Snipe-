@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { firebaseSignIn, onAuthStateChanged } from '../lib/firebase.js';
 import { handleAdminLogin, formatFirebaseAuthError } from '../lib/adminAuth.js';
 import { getAdminByEmail, updateAdminLastLogin } from '../services/adminService.js';

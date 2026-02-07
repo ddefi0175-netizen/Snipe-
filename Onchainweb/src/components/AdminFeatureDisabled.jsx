@@ -1,4 +1,4 @@
-import React from 'react';
+// React automatic JSX runtime in use — default import not required
 import { useNavigate } from 'react-router-dom';
 
 /**
@@ -38,14 +38,14 @@ export default function AdminFeatureDisabled({ isMasterRoute = false }) {
           justifyContent: 'center',
           border: '2px solid rgba(251, 191, 36, 0.3)'
         }}>
-          <svg 
-            width="40" 
-            height="40" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="#fbbf24" 
+          <svg
+            width="40"
+            height="40"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#fbbf24"
             strokeWidth="2"
-            strokeLinecap="round" 
+            strokeLinecap="round"
             strokeLinejoin="round"
           >
             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
@@ -103,7 +103,7 @@ export default function AdminFeatureDisabled({ isMasterRoute = false }) {
             </svg>
             Setup Instructions
           </h3>
-          
+
           <ol style={{
             fontSize: '14px',
             color: '#d1d5db',
@@ -113,9 +113,9 @@ export default function AdminFeatureDisabled({ isMasterRoute = false }) {
             listStyle: 'decimal'
           }}>
             <li style={{ marginBottom: '8px' }}>
-              Create or edit <code style={{ 
-                background: 'rgba(0, 0, 0, 0.3)', 
-                padding: '2px 8px', 
+              Create or edit <code style={{
+                background: 'rgba(0, 0, 0, 0.3)',
+                padding: '2px 8px',
                 borderRadius: '4px',
                 color: '#fbbf24',
                 fontFamily: 'monospace',
@@ -123,9 +123,9 @@ export default function AdminFeatureDisabled({ isMasterRoute = false }) {
               }}>Onchainweb/.env</code> file
             </li>
             <li style={{ marginBottom: '8px' }}>
-              Add <code style={{ 
-                background: 'rgba(0, 0, 0, 0.3)', 
-                padding: '2px 8px', 
+              Add <code style={{
+                background: 'rgba(0, 0, 0, 0.3)',
+                padding: '2px 8px',
                 borderRadius: '4px',
                 color: '#fbbf24',
                 fontFamily: 'monospace',
@@ -136,9 +136,9 @@ export default function AdminFeatureDisabled({ isMasterRoute = false }) {
               Configure Firebase Authentication credentials
             </li>
             <li style={{ marginBottom: '8px' }}>
-              Set admin email allowlist: <code style={{ 
-                background: 'rgba(0, 0, 0, 0.3)', 
-                padding: '2px 8px', 
+              Set admin email allowlist: <code style={{
+                background: 'rgba(0, 0, 0, 0.3)',
+                padding: '2px 8px',
                 borderRadius: '4px',
                 color: '#fbbf24',
                 fontFamily: 'monospace',
@@ -146,9 +146,9 @@ export default function AdminFeatureDisabled({ isMasterRoute = false }) {
               }}>VITE_ADMIN_ALLOWLIST=your@email.com</code>
             </li>
             <li>
-              Restart the development server: <code style={{ 
-                background: 'rgba(0, 0, 0, 0.3)', 
-                padding: '2px 8px', 
+              Restart the development server: <code style={{
+                background: 'rgba(0, 0, 0, 0.3)',
+                padding: '2px 8px',
                 borderRadius: '4px',
                 color: '#fbbf24',
                 fontFamily: 'monospace',

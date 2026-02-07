@@ -1,7 +1,7 @@
 
-import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
-import { WagmiProvider, useAccount, useConnect, useDisconnect } from 'wagmi'; 
+import { WagmiProvider, useAccount, useConnect, useDisconnect } from 'wagmi';
 import { mainnet, bsc, polygon, arbitrum, optimism, avalanche, fantom } from 'wagmi/chains';
 import { WALLET_CONNECTORS, SUPPORTED_CHAINS } from '../config/constants';
 import { formatApiError } from './errorHandling';
@@ -26,7 +26,7 @@ const UniversalWalletContext = createContext();
 
 const WalletProvider = ({ children }) => {
     // Get chain directly from useAccount
-    const { address, isConnected, connector, isReconnecting, chain } = useAccount(); 
+    const { address, isConnected, connector, isReconnecting, chain } = useAccount();
     const [toast, setToast] = useState({ message: '', type: '' });
 
     const showToast = (message, type = 'info') => setToast({ message, type });
