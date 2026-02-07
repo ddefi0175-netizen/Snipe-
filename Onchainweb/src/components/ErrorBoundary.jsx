@@ -1,4 +1,5 @@
 // React automatic JSX runtime in use — default import not required
+import React from 'react';
 
 /**
  * Error Boundary Component
@@ -12,6 +13,9 @@ class ErrorBoundary extends React.Component {
             error: null,
             errorInfo: null
         };
+        this.handleRetry = this.handleRetry.bind(this);
+        this.handleRefresh = this.handleRefresh.bind(this);
+        this.handleClearAndRefresh = this.handleClearAndRefresh.bind(this);
     }
 
     static getDerivedStateFromError(error) {
@@ -28,20 +32,20 @@ class ErrorBoundary extends React.Component {
         // errorTrackingService.log({ error, errorInfo });
     }
 
-    handleRetry = () => {
+    handleRetry() {
         this.setState({ hasError: false, error: null, errorInfo: null });
-    };
+    }
 
-    handleRefresh = () => {
+    handleRefresh() {
         window.location.reload();
-    };
+    }
 
-    handleClearAndRefresh = () => {
+    handleClearAndRefresh() {
         // Clear local storage and session storage
         localStorage.clear();
         sessionStorage.clear();
         window.location.reload();
-    };
+    }
 
     render() {
         if (this.state.hasError) {
