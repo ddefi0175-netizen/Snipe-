@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { firebaseSignIn, onAuthStateChanged } from '../lib/firebase.js';
 import { handleAdminLogin, formatFirebaseAuthError } from '../lib/adminAuth.js';
 import { getAdminByEmail, updateAdminLastLogin } from '../services/adminService.js';
@@ -14,10 +14,10 @@ export default function AdminLogin({ onLoginSuccess, allowedRoute = '/admin' }) 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  
+
   // Use ref to store stable callback reference
   const onLoginSuccessRef = useRef(onLoginSuccess);
-  
+
   // Update ref when callback changes, but don't trigger re-render
   useEffect(() => {
     onLoginSuccessRef.current = onLoginSuccess;
@@ -107,7 +107,7 @@ export default function AdminLogin({ onLoginSuccess, allowedRoute = '/admin' }) 
   return (
     <div className="admin-login-container">
       <div className="admin-login-bg"></div>
-      
+
       <div className="admin-login-box">
         <div className="admin-login-header">
           <div className="admin-login-icon">🔐</div>
@@ -203,7 +203,7 @@ export default function AdminLogin({ onLoginSuccess, allowedRoute = '/admin' }) 
           left: 0;
           right: 0;
           bottom: 0;
-          background-image: 
+          background-image:
             radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
             radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
           animation: bgMove 20s ease-in-out infinite;

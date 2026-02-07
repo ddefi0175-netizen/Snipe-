@@ -1,4 +1,4 @@
-import React from 'react'
+// React automatic JSX runtime in use — default import not required
 
 export default function Footer() {
   return (

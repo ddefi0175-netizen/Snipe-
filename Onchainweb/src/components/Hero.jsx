@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { fetchPrices } from '../lib/coingecko.jsx'
 import { useWallet } from '../lib/walletConnect.jsx'
 

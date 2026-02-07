@@ -9,7 +9,7 @@
  * - Cross-platform session consistency
  */
 
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useUniversalWallet, WALLET_CONNECTORS, detectEnvironment, detectAvailableWallets } from '../lib/walletConnect.jsx'
 import { userAPI } from '../lib/api'
 import { autoRegisterUser } from '../services/userService.js'

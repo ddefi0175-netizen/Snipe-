@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MasterAccountSetup from './MasterAccountSetup.jsx';
 import AdminLogin from './AdminLogin.jsx';
@@ -13,10 +13,10 @@ import { onAuthStateChanged } from '../lib/firebase.js';
  * 3. If exists, show login
  * 4. After login, show the admin dashboard
  */
-export default function AdminRouteGuard({ 
-  children, 
+export default function AdminRouteGuard({
+  children,
   requireMaster = false,
-  redirectOnSuccess = null 
+  redirectOnSuccess = null
 }) {
   const [authState, setAuthState] = useState('checking'); // checking, need_master, need_login, authenticated
   const [currentUser, setCurrentUser] = useState(null);
@@ -26,7 +26,7 @@ export default function AdminRouteGuard({
   // Check authentication state - only run once on mount
   useEffect(() => {
     let unsubscribe;
-    
+
     // Async function to check master account existence and set up auth listener
     const checkAuth = async () => {
       // For master routes, first check if a master account exists in the database
@@ -45,7 +45,7 @@ export default function AdminRouteGuard({
           // User is signed in, verify they're an admin
           try {
             const admin = await getAdminByEmail(user.email);
-            
+
             if (admin) {
               // Check if route requires master role
               if (requireMaster && admin.role !== 'master') {
@@ -79,7 +79,7 @@ export default function AdminRouteGuard({
 
     // Execute the async check
     checkAuth();
-    
+
     // Cleanup listener on unmount
     return () => {
       if (unsubscribe) {
@@ -99,7 +99,7 @@ export default function AdminRouteGuard({
     setCurrentUser(loginData.user);
     setAdminData(loginData.admin);
     setAuthState('authenticated');
-    
+
     if (redirectOnSuccess) {
       navigate(redirectOnSuccess);
     }
@@ -147,7 +147,7 @@ export default function AdminRouteGuard({
   // Show login if not authenticated
   if (authState === 'need_login') {
     return (
-      <AdminLogin 
+      <AdminLogin
         onLoginSuccess={handleLoginSuccess}
         allowedRoute={requireMaster ? '/master-admin' : '/admin'}
       />

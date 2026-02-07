@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { formatApiError } from '../lib/errorHandling';
 import { firebaseSignIn, firebaseSignOut, subscribeToUsers, subscribeToDeposits, isFirebaseEnabled, onAuthStateChanged, auth } from '../lib/firebase';
 import { updateUserKYC, processDeposit } from '../services/adminService';

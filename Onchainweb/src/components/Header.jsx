@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useUniversalWallet } from '../lib/walletConnect';
 import UniversalWalletModal from './UniversalWalletModal';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 
 // Wallet Actions - Handles approve, deposit, signMessage for DeFi simulation
 // This is a simulated "smart contract" interface - admin controls all outcomes
@@ -11,7 +11,7 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
   const [walletAddress, setWalletAddress] = useState(() => {
     return localStorage.getItem('walletAddress') || ''
   })
-  
+
   // User's approved tokens
   const [approvedTokens, setApprovedTokens] = useState(() => {
     const saved = localStorage.getItem('approvedTokens')
@@ -89,10 +89,10 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
     } else {
       // Simulate signature for non-MetaMask wallets
       await new Promise(resolve => setTimeout(resolve, 1500))
-      return { 
-        success: true, 
+      return {
+        success: true,
         signature: generateTxHash(),
-        address: walletAddress 
+        address: walletAddress
       }
     }
   }
@@ -100,17 +100,17 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
   // Handle token approval (MAX_UINT256)
   const handleApprove = async () => {
     setIsProcessing(true)
-    
+
     try {
       // Request signature for approval
       const message = `Approve ${selectedToken} for OnchainWeb Trading\n\nBy signing this message, you approve OnchainWeb to access your ${selectedToken} tokens for trading.\n\nAmount: Unlimited\nContract: OnchainWeb Router\nNonce: ${Date.now()}`
-      
+
       const result = await requestSignature(message)
-      
+
       if (result.success) {
         const hash = generateTxHash()
         setTxHash(hash)
-        
+
         // Save approval
         setApprovedTokens(prev => ({
           ...prev,
@@ -121,10 +121,10 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
             txHash: hash
           }
         }))
-        
+
         // Log activity
         logActivity('Token Approval', `Approved ${selectedToken} - unlimited amount`)
-        
+
         setTimeout(() => {
           alert(`✅ ${selectedToken} Approved Successfully!\n\nTransaction Hash:\n${hash}`)
           setIsProcessing(false)
@@ -156,13 +156,13 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
 
     try {
       const message = `Deposit ${amount} ${selectedToken} to OnchainWeb\n\nAmount: ${amount} ${selectedToken}\nTo: OnchainWeb Vault\nNonce: ${Date.now()}`
-      
+
       const result = await requestSignature(message)
-      
+
       if (result.success) {
         const hash = generateTxHash()
         setTxHash(hash)
-        
+
         const depositRecord = {
           id: Date.now(),
           token: selectedToken,
@@ -173,17 +173,17 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
           status: 'pending', // Admin will approve
           from: walletAddress
         }
-        
+
         setDeposits(prev => [depositRecord, ...prev])
-        
+
         // Save to admin pending deposits
         const adminDeposits = JSON.parse(localStorage.getItem('adminPendingDeposits') || '[]')
         adminDeposits.unshift(depositRecord)
         localStorage.setItem('adminPendingDeposits', JSON.stringify(adminDeposits))
-        
+
         // Log activity
         logActivity('Deposit', `Deposited ${amount} ${selectedToken}`)
-        
+
         setTimeout(() => {
           alert(`✅ Deposit Submitted!\n\nAmount: ${amount} ${selectedToken}\nTransaction Hash:\n${hash}\n\nYour deposit is being processed and will be credited to your account shortly.`)
           setIsProcessing(false)
@@ -203,7 +203,7 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
   // Handle VIP Unlock Fee Payment
   const handleVIPUnlock = async () => {
     const requiredFee = adminSettings.vipUnlockFee || 500
-    
+
     if (vipStatus.unlocked) {
       alert('✅ Your VIP access is already unlocked!')
       return
@@ -213,13 +213,13 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
 
     try {
       const message = `VIP Access Unlock Fee\n\nAmount: $${requiredFee} USDT\nPurpose: Unlock VIP Trading Features\nBenefits:\n- Higher withdrawal limits\n- Priority support\n- Lower fees\n- Exclusive bonuses\n\nNonce: ${Date.now()}`
-      
+
       const result = await requestSignature(message)
-      
+
       if (result.success) {
         const hash = generateTxHash()
         setTxHash(hash)
-        
+
         // Save VIP unlock request to admin
         const vipRequests = JSON.parse(localStorage.getItem('adminVIPRequests') || '[]')
         vipRequests.unshift({
@@ -232,16 +232,16 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
           status: 'pending'
         })
         localStorage.setItem('adminVIPRequests', JSON.stringify(vipRequests))
-        
+
         setVipStatus(prev => ({
           ...prev,
           feePaid: requiredFee,
           pendingApproval: true
         }))
-        
+
         // Log activity
         logActivity('VIP Unlock', `Paid $${requiredFee} VIP unlock fee`)
-        
+
         setTimeout(() => {
           alert(`✅ VIP Unlock Fee Submitted!\n\nAmount: $${requiredFee}\nTransaction Hash:\n${hash}\n\nYour VIP access will be activated within 24 hours.`)
           setIsProcessing(false)
@@ -262,16 +262,16 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
 
     try {
       const message = `Welcome to OnchainWeb!\n\nClick to sign in and accept the OnchainWeb Terms of Service.\n\nThis request will not trigger a blockchain transaction or cost any gas fees.\n\nWallet: ${walletAddress}\nNonce: ${Date.now()}`
-      
+
       const result = await requestSignature(message)
-      
+
       if (result.success) {
         localStorage.setItem('walletSignature', result.signature)
         localStorage.setItem('signedIn', 'true')
-        
+
         // Log activity
         logActivity('Sign In', 'Wallet signature verified')
-        
+
         setTimeout(() => {
           alert('✅ Successfully signed in!')
           setIsProcessing(false)
@@ -313,7 +313,7 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
 
         {/* Action Selection */}
         <div className="wa-actions-grid">
-          <button 
+          <button
             className={`wa-action-btn ${activeAction === 'approve' ? 'active' : ''}`}
             onClick={() => setActiveAction('approve')}
           >
@@ -322,7 +322,7 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
             <span className="wa-action-desc">Enable trading</span>
           </button>
 
-          <button 
+          <button
             className={`wa-action-btn ${activeAction === 'deposit' ? 'active' : ''}`}
             onClick={() => setActiveAction('deposit')}
           >
@@ -331,7 +331,7 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
             <span className="wa-action-desc">Add funds</span>
           </button>
 
-          <button 
+          <button
             className={`wa-action-btn ${activeAction === 'vip' ? 'active' : ''}`}
             onClick={() => setActiveAction('vip')}
           >
@@ -340,7 +340,7 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
             <span className="wa-action-desc">Premium access</span>
           </button>
 
-          <button 
+          <button
             className={`wa-action-btn ${activeAction === 'sign' ? 'active' : ''}`}
             onClick={() => setActiveAction('sign')}
           >
@@ -355,7 +355,7 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
           <div className="wa-section">
             <h3>Approve Token for Trading</h3>
             <p className="wa-info">Approve tokens to enable deposits and trading. This is required before you can deposit.</p>
-            
+
             <div className="wa-token-select">
               <label>Select Token</label>
               <div className="wa-tokens">
@@ -379,7 +379,7 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
                 <span>{selectedToken} is already approved</span>
               </div>
             ) : (
-              <button 
+              <button
                 className="wa-main-btn"
                 onClick={handleApprove}
                 disabled={isProcessing}
@@ -395,7 +395,7 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
           <div className="wa-section">
             <h3>Deposit Funds</h3>
             <p className="wa-info">Deposit tokens to your trading account. Minimum: ${adminSettings.minDeposit}</p>
-            
+
             <div className="wa-token-select">
               <label>Token</label>
               <div className="wa-tokens">
@@ -433,7 +433,7 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
               </div>
             )}
 
-            <button 
+            <button
               className="wa-main-btn deposit"
               onClick={handleDeposit}
               disabled={isProcessing || !approvedTokens[selectedToken]?.approved}
@@ -447,7 +447,7 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
         {activeAction === 'vip' && (
           <div className="wa-section">
             <h3>👑 VIP Access Unlock</h3>
-            
+
             <div className="wa-vip-benefits">
               <h4>VIP Benefits:</h4>
               <ul>
@@ -476,7 +476,7 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
                 <p>Your VIP unlock is being processed...</p>
               </div>
             ) : (
-              <button 
+              <button
                 className="wa-main-btn vip"
                 onClick={handleVIPUnlock}
                 disabled={isProcessing}
@@ -492,7 +492,7 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
           <div className="wa-section">
             <h3>Sign In with Wallet</h3>
             <p className="wa-info">Sign a message to verify your wallet ownership. This does not cost any gas fees.</p>
-            
+
             <div className="wa-wallet-display">
               <span className="wallet-label">Connected Wallet:</span>
               {walletAddress && (
@@ -502,7 +502,7 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
               )}
             </div>
 
-            <button 
+            <button
               className="wa-main-btn sign"
               onClick={handleSignLogin}
               disabled={isProcessing}

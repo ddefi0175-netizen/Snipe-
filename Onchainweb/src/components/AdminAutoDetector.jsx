@@ -2,7 +2,7 @@
 // Automatically redirects to admin dashboard when admin wallet connects
 // Handles user auto-provisioning on first wallet connection
 
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUniversalWallet } from '../lib/walletConnect.jsx'
 import { checkWalletForAdminAccess, autoProvisionUser } from '../lib/adminProvisioning.js'
@@ -18,7 +18,7 @@ export default function AdminAutoDetector({ children }) {
     const checkAdminAccess = async () => {
       // Skip if no wallet connected or already checked
       if (!wallet?.address || hasChecked) return
-      
+
       // Prevent redirect loop - don't check if already on admin route
       const currentPath = window.location.pathname
       if (currentPath === ROUTES.MASTER_ADMIN || currentPath === ROUTES.ADMIN) {

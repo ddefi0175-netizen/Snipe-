@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { initializeMasterAccount, getAdminByEmail } from '../services/adminService.js';
 import { isFirebaseEnabled } from '../lib/firebase.js';
 
@@ -31,7 +31,7 @@ export default function MasterAccountSetup({ onComplete }) {
       // Check environment for default master email
       const allowlistEmails = import.meta.env.VITE_ADMIN_ALLOWLIST || '';
       const emails = allowlistEmails.split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
-      
+
       if (emails.length === 0) {
         setStatus('error');
         setMessage('No admin emails configured in VITE_ADMIN_ALLOWLIST environment variable.');
@@ -45,7 +45,7 @@ export default function MasterAccountSetup({ onComplete }) {
 
       // Check if master already exists
       const existingMaster = await getAdminByEmail(defaultMasterEmail);
-      
+
       if (existingMaster) {
         setStatus('complete');
         setMessage(`Master account already exists: ${defaultMasterEmail}`);
@@ -89,10 +89,10 @@ export default function MasterAccountSetup({ onComplete }) {
       if (result.success) {
         setStatus('complete');
         setMessage(result.message);
-        
+
         // Save credentials hint to localStorage (NOT the actual password, just a reminder)
         localStorage.setItem('masterAccountEmail', masterEmail);
-        
+
         setTimeout(() => {
           if (onComplete) onComplete({ email: masterEmail });
         }, 2000);
@@ -145,7 +145,7 @@ export default function MasterAccountSetup({ onComplete }) {
   return (
     <div className="master-setup-container">
       <div className="master-setup-bg"></div>
-      
+
       <div className="master-setup-box">
         <div className="master-setup-header">
           <div className="master-setup-icon" style={{ color: getStatusColor() }}>
@@ -269,7 +269,7 @@ export default function MasterAccountSetup({ onComplete }) {
           left: 0;
           right: 0;
           bottom: 0;
-          background-image: 
+          background-image:
             radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
             radial-gradient(circle at 80% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
           animation: bgMove 20s ease-in-out infinite;

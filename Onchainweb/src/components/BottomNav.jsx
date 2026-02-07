@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 
 export default function BottomNav({ onTradeClick, onAIClick, onWalletClick }) {
   const [activeTab, setActiveTab] = useState('home')
@@ -63,7 +63,7 @@ export default function BottomNav({ onTradeClick, onAIClick, onWalletClick }) {
 
   const handleNavClick = (id) => {
     setActiveTab(id)
-    
+
     // Scroll to section or handle navigation
     switch(id) {
       case 'home':

@@ -1,5 +1,5 @@
 
-import React from 'react';
+// React automatic JSX runtime in use — default React import not required
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { UniversalWalletProvider } from './lib/walletConnect';
 import Header from './components/Header';

@@ -1,8 +1,8 @@
-import React, { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState } from 'react'
 
 // Professional Candlestick Chart Component
-export default function CandlestickChart({ 
-  symbol = 'BTC/USDT', 
+export default function CandlestickChart({
+  symbol = 'BTC/USDT',
   currentPrice = 0,
   height = 300,
   showToolbar = true,
@@ -51,7 +51,7 @@ export default function CandlestickChart({
       setCandles(prev => {
         const updated = [...prev]
         const last = { ...updated[updated.length - 1] }
-        
+
         // Random price movement
         const change = (Math.random() - 0.5) * (last.close * 0.001)
         last.close = last.close + change
@@ -166,7 +166,7 @@ export default function CandlestickChart({
     ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
     ctx.font = '10px monospace'
     ctx.textAlign = 'right'
-    
+
     for (let i = 0; i <= 5; i++) {
       const price = max - ((max - min) / 5) * i
       const y = (chartHeight / 5) * i + 4
@@ -265,7 +265,7 @@ export default function CandlestickChart({
     // Draw volume if enabled
     if (indicators.volume) {
       const maxVolume = Math.max(...candles.map(c => c.volume))
-      
+
       ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'
       ctx.font = '10px monospace'
       ctx.fillText('Volume', 5, volumeTop + 12)
@@ -313,7 +313,7 @@ export default function CandlestickChart({
     const lastCandle = candles[candles.length - 1]
     if (lastCandle) {
       const priceY = chartHeight - ((lastCandle.close - min) / (max - min)) * chartHeight
-      
+
       ctx.strokeStyle = lastCandle.close >= candles[candles.length - 2]?.close ? '#00ff88' : '#ff4d4d'
       ctx.setLineDash([3, 3])
       ctx.lineWidth = 1
@@ -374,7 +374,7 @@ export default function CandlestickChart({
               </button>
             ))}
           </div>
-          
+
           <div className="chart-type-buttons">
             <button
               className={chartType === 'candle' ? 'active' : ''}
