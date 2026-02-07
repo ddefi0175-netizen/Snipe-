@@ -250,7 +250,7 @@ netlify deploy --prod
 - **Firebase Setup**: 15 minutes
 - **Build & Deploy**: 10-15 minutes
 - **Verification**: 10 minutes
-- **Total**: ~40 minutes
+- **Total**: ~40-50 minutes
 
 ---
 
