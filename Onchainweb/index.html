@@ -34,7 +34,8 @@
       var saved = localStorage.getItem('user_consent_preferences');
       if (saved) {
         var parsed = JSON.parse(saved);
-        var thirteenMonths = 13 * 30 * 24 * 60 * 60 * 1000;
+        // 13 months using average month length: 13 * 30.44 days = 395.72 days
+        var thirteenMonths = 13 * 30.44 * 24 * 60 * 60 * 1000;
         if (Date.now() - parsed.timestamp <= thirteenMonths) {
           gtag('consent', 'update', parsed.consent);
         }

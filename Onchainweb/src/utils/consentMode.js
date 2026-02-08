@@ -113,7 +113,8 @@ export const getSavedConsent = () => {
     const parsed = JSON.parse(saved);
     
     // Check if consent is older than 13 months (GDPR requirement)
-    const thirteenMonths = 13 * 30 * 24 * 60 * 60 * 1000;
+    // Using average month length: 13 * 30.44 days = 395.72 days
+    const thirteenMonths = 13 * 30.44 * 24 * 60 * 60 * 1000;
     if (Date.now() - parsed.timestamp > thirteenMonths) {
       // Consent expired, clear it
       clearConsent();
