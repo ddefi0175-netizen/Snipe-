@@ -54,7 +54,7 @@ export const handleAdminLogin = async (email, password, firebaseSignIn) => {
     throw new Error('Invalid credentials or unauthorized user.');
   }
 
-  if (!isFirebaseAvailable()) {
+  if (!isFirebaseAvailable) {
     // Fallback to localStorage for development or offline mode
     const admins = JSON.parse(localStorage.getItem('admins') || '{}');
     const admin = Object.values(admins).find(a => a.email.toLowerCase() === email.toLowerCase());
