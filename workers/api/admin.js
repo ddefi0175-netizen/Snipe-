@@ -1,44 +1,5 @@
 import { corsHeaders } from '../lib/cors.js'
-
-// Verify Firebase ID token
-async function verifyAdminToken(token) {
-  try {
-    // Note: In production, use Firebase Admin SDK
-    // For Workers environment, validate JWT signature against Firebase public keys
-    const response = await fetch(
-      'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com'
-    );
-    const publicKeys = await response.json();
-    
-    // Decode and verify JWT (implementation needed)
-    // For now, validate basic structure and length
-    // WARNING: This is a placeholder implementation and should not be used in production
-    // TODO: Implement full JWT verification with public keys before production deployment
-    if (!token || token.length < 50) {
-      return { valid: false, error: 'Invalid token format' };
-    }
-    
-    // Split JWT into parts
-    const parts = token.split('.');
-    if (parts.length !== 3) {
-      return { valid: false, error: 'Invalid JWT format' };
-    }
-    
-    // TODO: Implement full JWT verification:
-    // 1. Decode header and payload
-    // 2. Verify signature with public key
-    // 3. Check expiration time
-    // 4. Verify issuer and audience
-    // For now, return basic validation with warning
-    return { valid: true, warning: 'Using placeholder verification - implement full JWT validation for production' };
-  } catch (error) {
-    // Only log in development/staging environments
-    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
-      console.error('Token verification error:', error);
-    }
-    return { valid: false, error: error.message };
-  }
-}
+import { verifyFirebaseToken, isAdmin, isMasterAdmin } from '../lib/firebaseAdmin.js'
 
 // Secure Admin Operations - No credentials in frontend
 export async function handleAdmin(request, env) {
@@ -53,8 +14,8 @@ export async function handleAdmin(request, env) {
   
   const token = authHeader.replace('Bearer ', '')
   
-  // Verify Firebase ID token
-  const verificationResult = await verifyAdminToken(token)
+  // Verify Firebase ID token using Firebase Admin
+  const verificationResult = await verifyFirebaseToken(token, env)
   if (!verificationResult.valid) {
     return new Response(JSON.stringify({ error: verificationResult.error || 'Invalid token' }), { 
       status: 401,
@@ -65,17 +26,29 @@ export async function handleAdmin(request, env) {
     })
   }
   
+  // Verify user has admin privileges
+  if (!isAdmin(verificationResult.claims)) {
+    return new Response(JSON.stringify({ error: 'Insufficient permissions - Admin access required' }), { 
+      status: 403,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
+    })
+  }
+  
   try {
     const { action, data } = await request.json()
     
-    // Handle admin operations securely
-    // IMPORTANT: Implement Firebase Admin SDK verification before production use
+    // Handle admin operations securely with verified authentication
     switch (action) {
       case 'createUser':
-        // TODO: Use Firebase Admin SDK in Worker
+        // Create user via Firestore REST API
+        // In production, this would create a user document in Firestore
         return new Response(JSON.stringify({ 
           success: true,
-          message: 'User creation would be handled here'
+          message: 'User creation endpoint - integrate with Firestore REST API',
+          userId: verificationResult.uid
         }), {
           headers: {
             ...corsHeaders,
@@ -84,9 +57,34 @@ export async function handleAdmin(request, env) {
         })
       
       case 'updateBalance':
+        // Update balance via Firestore REST API
+        // In production, this would update user balance in Firestore
         return new Response(JSON.stringify({ 
           success: true,
-          message: 'Balance update would be handled here'
+          message: 'Balance update endpoint - integrate with Firestore REST API',
+          adminId: verificationResult.uid
+        }), {
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
+        })
+      
+      case 'listUsers':
+        // List users (master admin only)
+        if (!isMasterAdmin(verificationResult.claims)) {
+          return new Response(JSON.stringify({ error: 'Master admin access required' }), { 
+            status: 403,
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json'
+            }
+          })
+        }
+        
+        return new Response(JSON.stringify({ 
+          success: true,
+          message: 'List users endpoint - integrate with Firestore REST API'
         }), {
           headers: {
             ...corsHeaders,
@@ -95,9 +93,12 @@ export async function handleAdmin(request, env) {
         })
       
       default:
-        return new Response('Invalid action', { 
+        return new Response(JSON.stringify({ error: 'Invalid action' }), { 
           status: 400,
-          headers: corsHeaders
+          headers: {
+            ...corsHeaders,
+            'Content-Type': 'application/json'
+          }
         })
     }
   } catch (error) {

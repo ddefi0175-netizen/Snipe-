@@ -1,35 +1,53 @@
 import { corsHeaders } from '../lib/cors.js'
-
-// Helper function to verify authentication
-async function isAuthenticated(request) {
-  const authHeader = request.headers.get('Authorization')
-  if (!authHeader?.startsWith('Bearer ')) {
-    return false
-  }
-  
-  // TODO: Implement Firebase Admin SDK token verification
-  // For now, basic check - REPLACE WITH PROPER AUTH
-  const token = authHeader.replace('Bearer ', '')
-  return token && token.length > 20
-}
+import { verifyFirebaseToken, isAdmin } from '../lib/firebaseAdmin.js'
 
 // R2 Storage Handler - Zero egress fees
-// SECURITY: Add authentication before production use
+// PRODUCTION: Authentication required for all storage operations
 export async function handleStorage(request, env) {
   const { STORAGE, R2_PUBLIC_URL } = env
   const url = new URL(request.url)
   const key = url.pathname.replace('/api/storage/', '')
   
-  // PRODUCTION: Authentication required for all storage operations
-  if (!await isAuthenticated(request)) {
-    return new Response('Unauthorized', { 
-      status: 401,
-      headers: corsHeaders
-    })
-  }
+  // Extract token from Authorization header
+  const authHeader = request.headers.get('Authorization')
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.replace('Bearer ', '') : null
   
-  // GET: Download file
+  // GET: Download file - Public read OR authenticated users
   if (request.method === 'GET') {
+    // Allow public access for files in public/ directory
+    if (key.startsWith('public/')) {
+      const object = await STORAGE.get(key)
+      if (!object) {
+        return new Response('Not Found', { 
+          status: 404,
+          headers: corsHeaders
+        })
+      }
+      return new Response(object.body, {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': object.httpMetadata?.contentType || 'application/octet-stream',
+          'ETag': object.httpEtag
+        }
+      })
+    }
+    
+    // For non-public files, require authentication
+    if (!token) {
+      return new Response('Unauthorized - Authentication required', { 
+        status: 401,
+        headers: corsHeaders
+      })
+    }
+    
+    const authResult = await verifyFirebaseToken(token, env)
+    if (!authResult.valid) {
+      return new Response('Unauthorized - Invalid token', { 
+        status: 401,
+        headers: corsHeaders
+      })
+    }
+    
     const object = await STORAGE.get(key)
     if (!object) {
       return new Response('Not Found', { 
@@ -46,16 +64,42 @@ export async function handleStorage(request, env) {
     })
   }
   
-  // PUT: Upload file - REQUIRES AUTH
+  // PUT: Upload file - REQUIRES AUTHENTICATION + ADMIN ROLE
   if (request.method === 'PUT') {
-    if (!await isAuthenticated(request)) {
-      return new Response('Unauthorized', { 
+    if (!token) {
+      return new Response('Unauthorized - Authentication required', { 
         status: 401,
         headers: corsHeaders
       })
     }
     
+    const authResult = await verifyFirebaseToken(token, env)
+    if (!authResult.valid) {
+      return new Response('Unauthorized - Invalid token', { 
+        status: 401,
+        headers: corsHeaders
+      })
+    }
+    
+    // Verify admin role for uploads
+    if (!isAdmin(authResult.claims)) {
+      return new Response('Forbidden - Admin access required for uploads', { 
+        status: 403,
+        headers: corsHeaders
+      })
+    }
+    
     const contentType = request.headers.get('Content-Type')
+    
+    // Validate file size (limit to 10MB)
+    const contentLength = request.headers.get('Content-Length')
+    if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) {
+      return new Response('File too large - Maximum 10MB allowed', { 
+        status: 413,
+        headers: corsHeaders
+      })
+    }
+    
     await STORAGE.put(key, request.body, {
       httpMetadata: { contentType }
     })
@@ -74,11 +118,27 @@ export async function handleStorage(request, env) {
     })
   }
   
-  // DELETE: Delete file - REQUIRES AUTH
+  // DELETE: Delete file - REQUIRES AUTHENTICATION + ADMIN ROLE
   if (request.method === 'DELETE') {
-    if (!await isAuthenticated(request)) {
-      return new Response('Unauthorized', { 
+    if (!token) {
+      return new Response('Unauthorized - Authentication required', { 
         status: 401,
+        headers: corsHeaders
+      })
+    }
+    
+    const authResult = await verifyFirebaseToken(token, env)
+    if (!authResult.valid) {
+      return new Response('Unauthorized - Invalid token', { 
+        status: 401,
+        headers: corsHeaders
+      })
+    }
+    
+    // Verify admin role for deletions
+    if (!isAdmin(authResult.claims)) {
+      return new Response('Forbidden - Admin access required for deletions', { 
+        status: 403,
         headers: corsHeaders
       })
     }

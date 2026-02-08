@@ -1,33 +1,38 @@
 /*
- * ========================================
- * ⚠️ DEPRECATED BACKEND - Phase 3 Status
- * ========================================
+ * ⚠️⚠️⚠️ DEPRECATED - DO NOT USE ⚠️⚠️⚠️
  * 
- * This backend is DEPRECATED and maintained for legacy compatibility only.
+ * This backend is DEPRECATED and NOT maintained.
+ * Use Firebase instead (see main README.md).
  * 
- * PRIMARY DATABASE: Firebase Firestore
- * - User authentication: Firebase Auth
- * - Real-time data: Firestore collections with onSnapshot listeners
- * - Trades, deposits, withdrawals: Firestore collections
+ * This file is kept only for historical reference.
  * 
- * THIS BACKEND SHOULD NOT BE USED FOR:
- * ❌ User registration (→ Use Firebase Auth)
- * ❌ User authentication (→ Use Firebase Auth)
- * ❌ Real-time data sync (→ Use Firestore onSnapshot)
- * ❌ New features or deployments
+ * For current backend implementation, see:
+ * - Firebase Firestore (database)
+ * - Firebase Auth (authentication)
+ * - Firebase Functions (serverless APIs)
+ * - Cloudflare Workers (/workers directory)
  * 
- * KEPT FOR LEGACY SUPPORT:
- * ✓ Admin authentication (JWT + master credentials)
- * ✓ Existing MongoDB data access (migration in progress)
- * ✓ Backward compatibility with older clients
- * 
- * MIGRATION STATUS:
- * - Frontend: Uses Firebase as primary (src/lib/firebase.js)
- * - Real-time updates: Firestore listeners (no polling)
- * - New deployments: Firebase only (Vercel + Firebase)
- * 
- * DO NOT ADD NEW FEATURES TO THIS BACKEND.
- * See BACKEND_REPLACEMENT.md for migration details.
+ * Migration guide: /docs/BACKEND_REPLACEMENT.md
+ */
+
+// Display deprecation warning
+console.error('');
+console.error('═══════════════════════════════════════════════════════════');
+console.error('⚠️  WARNING: DEPRECATED BACKEND - DO NOT USE');
+console.error('═══════════════════════════════════════════════════════════');
+console.error('');
+console.error('This backend is DEPRECATED and NOT maintained.');
+console.error('Use Firebase services instead.');
+console.error('');
+console.error('See:');
+console.error('  - Main README.md for current architecture');
+console.error('  - /docs/BACKEND_REPLACEMENT.md for migration guide');
+console.error('  - /.deprecated/backend/README.md for deprecation details');
+console.error('');
+console.error('═══════════════════════════════════════════════════════════');
+console.error('');
+
+
  * 
  * Last Updated: 2026-01-23 (Code Quality Audit)
  * ========================================

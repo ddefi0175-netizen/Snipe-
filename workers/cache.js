@@ -153,30 +153,81 @@ export async function handleKVCacheRequest(request, env) {
 }
 
 /**
- * Rate limiting helper using KV
+ * Rate limiting helper using KV with proper window-based tracking
+ * 
+ * @param {object} env - Environment variables with KV bindings
+ * @param {string} identifier - Unique identifier (IP, user ID, etc.)
+ * @param {number} limit - Maximum requests allowed (default: 100)
+ * @param {number} window - Time window in seconds (default: 60)
+ * @returns {Promise<object>} - Rate limit status
  */
-export async function checkRateLimit(env, identifier, limit = 100, window = 3600) {
-  const key = `ratelimit:${identifier}`;
-  const count = await env.RATE_LIMIT_KV?.get(key);
-
-  if (count && parseInt(count) >= limit) {
+export async function checkRateLimit(env, identifier, limit = 100, window = 60) {
+  try {
+    const key = `ratelimit:${identifier}`;
+    const now = Math.floor(Date.now() / 1000);
+    
+    // Get current counter from KV
+    const counterStr = await env.CACHE?.get(key);
+    let counter;
+    
+    if (counterStr) {
+      counter = JSON.parse(counterStr);
+      
+      // Check if window has expired
+      if (now - counter.windowStart > window) {
+        // Reset counter for new window
+        counter = {
+          count: 1,
+          windowStart: now
+        };
+      } else {
+        // Increment counter in existing window
+        counter.count++;
+      }
+    } else {
+      // First request in new window
+      counter = {
+        count: 1,
+        windowStart: now
+      };
+    }
+    
+    // Check if rate limit exceeded
+    if (counter.count > limit) {
+      const resetIn = window - (now - counter.windowStart);
+      return {
+        allowed: false,
+        current: counter.count,
+        limit,
+        remaining: 0,
+        reset: resetIn > 0 ? resetIn : 0
+      };
+    }
+    
+    // Save updated counter to KV
+    await env.CACHE?.put(key, JSON.stringify(counter), {
+      expirationTtl: window
+    });
+    
+    const resetIn = window - (now - counter.windowStart);
     return {
-      allowed: false,
-      current: parseInt(count),
+      allowed: true,
+      current: counter.count,
       limit,
+      remaining: limit - counter.count,
+      reset: resetIn > 0 ? resetIn : 0
+    };
+    
+  } catch (error) {
+    console.error('Rate limit check error:', error);
+    // On error, allow the request (fail open)
+    return {
+      allowed: true,
+      current: 0,
+      limit,
+      remaining: limit,
       reset: window,
+      error: error.message
     };
   }
-
-  const newCount = (parseInt(count || '0') + 1).toString();
-  await env.RATE_LIMIT_KV?.put(key, newCount, {
-    expirationTtl: window,
-  });
-
-  return {
-    allowed: true,
-    current: parseInt(newCount),
-    limit,
-    remaining: limit - parseInt(newCount),
-  };
 }
