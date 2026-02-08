@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, cloneElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 import MasterAccountSetup from './MasterAccountSetup.jsx';
 import AdminLogin from './AdminLogin.jsx';
@@ -157,7 +157,7 @@ export default function AdminRouteGuard({
   // Show the protected content if authenticated
   if (authState === 'authenticated') {
     // Clone children and pass admin data as props
-    return React.cloneElement(children, {
+    return cloneElement(children, {
       currentUser,
       adminData,
       isMaster: adminData?.role === 'master'
