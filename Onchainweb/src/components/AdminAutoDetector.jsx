@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUniversalWallet } from '../lib/walletConnect.jsx'
 import { checkWalletForAdminAccess, autoProvisionUser } from '../lib/adminProvisioning.js'
-import { ADMIN_GUARD, ROUTES } from '../config/constants.js'
+import { ROUTES } from '../config/constants.js'
 
 export default function AdminAutoDetector({ children }) {
   // Enable wallet auto-detection only when explicitly allowed via env
