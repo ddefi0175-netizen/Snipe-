@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react'
+import { lazy, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { UniversalWalletProvider } from './lib/walletConnect.jsx'
@@ -6,8 +6,6 @@ import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { ROUTES, ADMIN_GUARD } from './config/constants.js'
 import './index.css'
 import './styles/master-admin.css'
-
-// Import main app directly for fast initial load
 import MainApp from './App.jsx'
 
 // Lazy load Admin panels for code splitting
