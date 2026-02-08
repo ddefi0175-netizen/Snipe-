@@ -4,12 +4,12 @@ import { formatApiError } from '../lib/errorHandling';
 import Toast from './Toast.jsx';
 
 export default function BorrowLending({ isOpen, _onClose }) {
-    const [activeTab, setActiveTab] = useState('borrow');
-    const [collateralBalance, setCollateralBalance] = useState({});
-    const [borrowForm, setBorrowForm] = useState({ collateralCoin: 'BTC', collateralAmount: '', borrowCoin: 'USDT', duration: 7 });
-    const [lendForm, setLendForm] = useState({ coin: 'USDT', amount: '', duration: 7 });
-    const [myLoans, setMyLoans] = useState([]);
-    const [myLending, setMyLending] = useState([]);
+    const [_activeTab, _setActiveTab] = useState('borrow');
+    const [_collateralBalance, _setCollateralBalance] = useState({});
+    const [_borrowForm, _setBorrowForm] = useState({ collateralCoin: 'BTC', collateralAmount: '', borrowCoin: 'USDT', duration: 7 });
+    const [_lendForm, _setLendForm] = useState({ coin: 'USDT', amount: '', duration: 7 });
+    const [_myLoans, _setMyLoans] = useState([]);
+    const [_myLending, _setMyLending] = useState([]);
     const [toast, setToast] = useState({ message: '', type: '' });
 
     const showToast = (message, type = 'info') => {
@@ -20,7 +20,7 @@ export default function BorrowLending({ isOpen, _onClose }) {
 
     const createBorrow = () => {
         try {
-            if (!borrowForm.collateralAmount) {
+            if (!_borrowForm.collateralAmount) {
                 showToast('Please enter collateral amount', 'error');
                 return;
             }
@@ -33,7 +33,7 @@ export default function BorrowLending({ isOpen, _onClose }) {
 
     const createLend = () => {
         try {
-            if (!lendForm.amount || parseFloat(lendForm.amount) <= 0) {
+            if (!_lendForm.amount || parseFloat(_lendForm.amount) <= 0) {
                 showToast('Please enter amount to lend', 'error');
                 return;
             }
@@ -44,19 +44,19 @@ export default function BorrowLending({ isOpen, _onClose }) {
         }
     };
 
-    const repayLoan = (loanId) => {
+    const repayLoan = (_loanId) => {
         // ... repay logic
         showToast('Loan Repaid!', 'success');
     };
 
-    const withdrawLending = (lendingId) => {
+    const withdrawLending = (_lendingId) => {
         // ... withdraw logic
         showToast('Withdrawn Successfully!', 'success');
     };
 
     // Debug reference to avoid linter noise for scaffolded state/handlers
     const _debugUnused_Borrow = (ctx) => { if (typeof console !== 'undefined') console.debug('borrow-unused', ctx); };
-    _debugUnused_Borrow({ activeTab, collateralBalance, borrowForm, lendForm, myLoans, myLending, createBorrow, createLend, repayLoan, withdrawLending, _onClose, Toast });
+    _debugUnused_Borrow({ _activeTab, _collateralBalance, _borrowForm, _lendForm, _myLoans, _myLending, createBorrow, createLend, repayLoan, withdrawLending, _onClose, Toast });
 
     if (!isOpen) return null;
 

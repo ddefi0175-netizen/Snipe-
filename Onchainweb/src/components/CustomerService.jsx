@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { sendChatMessage, subscribeToChatMessages } from '../lib/cloudflareApi.js';
 import { formatApiError } from '../lib/errorHandling';
 import { notifyCustomerServiceOpened, sendUserMessage } from '../services/telegram.service.js';
@@ -20,9 +20,7 @@ export default function CustomerService() {
         setToast({ message, type });
     };
 
-    // Quiet linter for scaffolded helpers/handlers
-    const _debugUnused_Customer = (ctx) => { if (typeof console !== 'undefined') console.debug('customer-unused', ctx); };
-    _debugUnused_Customer({ useRef, subscribeToChatMessages, notifyCustomerServiceOpened, sendUserMessage, handleSendMessage, connectToLiveAgent });
+    // Quiet linter for scaffolded helpers/handlers — moved below after functions are defined
 
     useEffect(() => {
         if (isOpen) {
@@ -76,6 +74,10 @@ export default function CustomerService() {
             showToast(formatApiError(error), 'error');
         }
     };
+
+    // Debug refs after functions to avoid referencing before declaration
+    const _debugUnused_Customer = (ctx) => { if (typeof console !== 'undefined') console.debug('customer-unused', ctx); };
+    _debugUnused_Customer({ subscribeToChatMessages, notifyCustomerServiceOpened, sendUserMessage, connectToLiveAgent, handleSendMessage, Toast });
 
     return (
         <>

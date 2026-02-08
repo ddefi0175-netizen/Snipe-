@@ -12,16 +12,16 @@ export default function Trade({ isOpen, onClose }) {
     const [toast, setToast] = useState({ message: '', type: '' });
 
     // Minimal state placeholders to satisfy usage in this component
-    const [tradeAmount, setTradeAmount] = useState('');
-    const [selectedLevel, setSelectedLevel] = useState({ profit: 80 });
+    const [tradeAmount, _setTradeAmount] = useState('');
+    const [selectedLevel, _setSelectedLevel] = useState({ profit: 80 });
     const [activeTradeId, setActiveTradeId] = useState(null);
     const [isTrading, setIsTrading] = useState(false);
     const [tradeDirection, setTradeDirection] = useState(null);
     const [entryPrice, setEntryPrice] = useState(null);
-    const [currentPrice, setCurrentPrice] = useState(null);
-    const [tradeResult, setTradeResult] = useState(null);
+    const [currentPrice, _setCurrentPrice] = useState(null);
+    const [tradeResult, _setTradeResult] = useState(null);
     const [forcedOutcome, setForcedOutcome] = useState(null);
-    const [selectedPair, setSelectedPair] = useState({ symbol: 'BTC/USD' });
+    const [selectedPair, _setSelectedPair] = useState({ symbol: 'BTC/USD' });
 
     const showToast = (message, type = 'info') => {
         setToast({ message, type });
@@ -52,7 +52,7 @@ export default function Trade({ isOpen, onClose }) {
             setIsTrading(true);
             setTradeDirection(direction);
             setEntryPrice(currentPrice);
-            setTradeResult(null); // Clear previous result
+            _setTradeResult(null);
             showToast('Trade started! Good luck!', 'success');
 
         } catch (error) {
@@ -93,7 +93,7 @@ export default function Trade({ isOpen, onClose }) {
 
             await saveTradeHistory(tradeRecord);
 
-            setTradeResult({ won: result, profit });
+                _setTradeResult({ won: result, profit });
             showToast(result ? `You won $${profit.toFixed(2)}!` : 'Trade lost.', result ? 'success' : 'error');
 
         } catch (error) {
