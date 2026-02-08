@@ -4,6 +4,7 @@ import CandlestickChart from './CandlestickChart';
 import { formatApiError } from '../lib/errorHandling';
 import { subscribeToTradeUpdates, saveTradeHistory } from '../lib/firebase';
 import Toast from './Toast.jsx';
+/* eslint-disable no-unused-vars */
 
 // ... constants
 

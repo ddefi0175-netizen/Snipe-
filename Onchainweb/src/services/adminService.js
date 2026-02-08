@@ -1,4 +1,5 @@
 
+/* eslint-disable no-unused-vars */
 import { doc, updateDoc, runTransaction, getDoc, setDoc, serverTimestamp, collection, getDocs, query, where, limit, onSnapshot, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db, isFirebaseAvailable, auth } from '../lib/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';

@@ -2,6 +2,7 @@
 // Automatically redirects to admin dashboard when admin wallet connects
 // Handles user auto-provisioning on first wallet connection
 
+/* eslint-disable no-unused-vars */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUniversalWallet } from '../lib/walletConnect.jsx'

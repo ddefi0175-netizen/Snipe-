@@ -3,6 +3,7 @@
  * Copy this pattern to integrate into your components
  */
 
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from 'react'
 import { usersService, tradesService, notificationsService } from '@/services/dataconnect.service'
 // Type references: User, Trade, Notification (kept as comments for example file)
