@@ -12,13 +12,25 @@ async function verifyAdminToken(token) {
     
     // Decode and verify JWT (implementation needed)
     // For now, validate basic structure and length
+    // WARNING: This is a placeholder implementation and should not be used in production
+    // TODO: Implement full JWT verification with public keys before production deployment
     if (!token || token.length < 50) {
       return { valid: false, error: 'Invalid token format' };
     }
     
-    // TODO: Implement full JWT verification with public keys
-    // For now, return basic validation
-    return { valid: true };
+    // Split JWT into parts
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return { valid: false, error: 'Invalid JWT format' };
+    }
+    
+    // TODO: Implement full JWT verification:
+    // 1. Decode header and payload
+    // 2. Verify signature with public key
+    // 3. Check expiration time
+    // 4. Verify issuer and audience
+    // For now, return basic validation with warning
+    return { valid: true, warning: 'Using placeholder verification - implement full JWT validation for production' };
   } catch (error) {
     // Only log in development/staging environments
     if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {

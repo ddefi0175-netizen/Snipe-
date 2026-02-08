@@ -33,7 +33,9 @@ service cloud.firestore {
       // For now, implement basic throttling
       // NOTE: This is basic rate limiting. Production should use Cloudflare Workers KV
       // for distributed rate limiting across multiple requests and better accuracy.
-      return request.time > request.resource.data.lastRequestTime + duration.value(1, 's');
+      // Check if lastRequestTime exists and enforce 1-second delay
+      return !('lastRequestTime' in request.resource.data) || 
+             request.time > request.resource.data.lastRequestTime + duration.value(1, 's');
     }
 
     // Validate data structure for user creation/update

@@ -62,6 +62,8 @@ const LoadingSpinner = () => (
 // Validate environment variables before rendering
 const envCheck = validateEnvironment();
 if (!envCheck.valid && import.meta.env.PROD) {
+  // Using console.error directly here since this is a startup check
+  // and occurs before the app/logger is initialized
   console.error('Application cannot start: Missing environment variables', envCheck.missing);
   // Show user-friendly error in production
   const rootElement = document.getElementById('root');

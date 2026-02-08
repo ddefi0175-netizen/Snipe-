@@ -20,11 +20,13 @@ export async function handleUsers(request, env) {
   }
   
   // Fetch from Firestore using REST API
+  // Note: This uses Firebase REST API with API key for read-only operations
+  // For production, consider using Firebase Admin SDK with service account
   const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${userId}`;
   try {
     const response = await fetch(firestoreUrl, {
       headers: {
-        'Authorization': `Bearer ${env.FIREBASE_API_KEY}`
+        'X-Firebase-Api-Key': env.FIREBASE_API_KEY
       }
     });
 

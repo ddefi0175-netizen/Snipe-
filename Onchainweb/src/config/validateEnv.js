@@ -5,6 +5,9 @@
  * Used during application startup to catch configuration errors early.
  */
 
+// Note: Using console.error here is intentional for startup validation
+// This runs before the app initializes, so the logger may not be available
+
 const requiredEnvVars = [
   'VITE_FIREBASE_API_KEY',
   'VITE_FIREBASE_AUTH_DOMAIN',
@@ -25,6 +28,8 @@ export function validateEnvironment() {
   );
   
   if (missing.length > 0) {
+    // Using console.error directly here since this is a startup check
+    // and occurs before the app/logger is initialized
     console.error('Missing required environment variables:', missing);
     return {
       valid: false,
