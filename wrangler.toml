@@ -26,7 +26,7 @@
 # For detailed setup guide, see: /docs/CLOUDFLARE_WORKERS_SETUP.md
 # ============================================
 
-name = "snipe-onchainweb"
+name = "wrangler1createsnipe-chat-db"
 main = "workers/index.js"
 compatibility_date = "2026-01-30"
 # Account ID is public metadata and can be set via:
