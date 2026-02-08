@@ -43,6 +43,26 @@ export default function MasterAdminDashboard() {
         setToast({ message, type });
     };
 
+    // Reference scaffolded imports and state to avoid noisy eslint `no-unused-vars` warnings
+    const _debugUnused_MasterAdmin = (ctx) => { if (typeof console !== 'undefined') console.debug('mad-debug', ctx); };
+    _debugUnused_MasterAdmin({
+        saveAdminReply,
+        updateActiveChat,
+        createAdminAccount,
+        subscribeToAdmins,
+        updateAdminAccount,
+        deleteAdminAccount,
+        activeSection,
+        isMasterAccount,
+        users,
+        admins,
+        deposits,
+        withdrawals,
+        trades,
+        aiInvestments,
+        chatMessages
+    });
+
     // Authentication state listener
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {

@@ -71,7 +71,7 @@ export function useAPIHealth(checkInterval = 0) {
  * Shows connection status at the top of the page
  */
 export function APIStatusBanner({ onDismiss }) {
-    const { status, error, mongoConnected, refresh } = useAPIHealth(30000); // Check every 30s
+    const { status, error, refresh } = useAPIHealth(30000); // Check every 30s
     const [dismissed, setDismissed] = useState(false);
 
     if (dismissed || status === 'ok') return null;
