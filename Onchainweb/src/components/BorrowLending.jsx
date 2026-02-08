@@ -20,7 +20,7 @@ export default function BorrowLending({ isOpen, _onClose }) {
 
     const createBorrow = () => {
         try {
-            if (!borrowForm.collateralAmount) {
+            if (!_borrowForm.collateralAmount) {
                 showToast('Please enter collateral amount', 'error');
                 return;
             }
@@ -33,7 +33,7 @@ export default function BorrowLending({ isOpen, _onClose }) {
 
     const createLend = () => {
         try {
-            if (!lendForm.amount || parseFloat(lendForm.amount) <= 0) {
+            if (!_lendForm.amount || parseFloat(_lendForm.amount) <= 0) {
                 showToast('Please enter amount to lend', 'error');
                 return;
             }
@@ -56,7 +56,7 @@ export default function BorrowLending({ isOpen, _onClose }) {
 
     // Debug reference to avoid linter noise for scaffolded state/handlers
     const _debugUnused_Borrow = (ctx) => { if (typeof console !== 'undefined') console.debug('borrow-unused', ctx); };
-    _debugUnused_Borrow({ activeTab, collateralBalance, borrowForm, lendForm, myLoans, myLending, createBorrow, createLend, repayLoan, withdrawLending, _onClose, Toast });
+    _debugUnused_Borrow({ _activeTab, _collateralBalance, _borrowForm, _lendForm, _myLoans, _myLending, createBorrow, createLend, repayLoan, withdrawLending, _onClose, Toast });
 
     if (!isOpen) return null;
 
