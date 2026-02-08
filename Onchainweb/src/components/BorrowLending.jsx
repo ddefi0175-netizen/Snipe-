@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { formatApiError } from '../lib/errorHandling';
 import Toast from './Toast.jsx';
 
-export default function BorrowLending({ isOpen, _onClose }) {
+export default function BorrowLending({ isOpen }) {
     const [_activeTab, _setActiveTab] = useState('borrow');
     const [_collateralBalance, _setCollateralBalance] = useState({});
     const [_borrowForm, _setBorrowForm] = useState({ collateralCoin: 'BTC', collateralAmount: '', borrowCoin: 'USDT', duration: 7 });
@@ -56,7 +56,7 @@ export default function BorrowLending({ isOpen, _onClose }) {
 
     // Debug reference to avoid linter noise for scaffolded state/handlers
     const _debugUnused_Borrow = (ctx) => { if (typeof console !== 'undefined') console.debug('borrow-unused', ctx); };
-    _debugUnused_Borrow({ _activeTab, _collateralBalance, _borrowForm, _lendForm, _myLoans, _myLending, createBorrow, createLend, repayLoan, withdrawLending, _onClose, Toast });
+    _debugUnused_Borrow({ _activeTab, _collateralBalance, _borrowForm, _lendForm, _myLoans, _myLending, createBorrow, createLend, repayLoan, withdrawLending });
 
     if (!isOpen) return null;
 

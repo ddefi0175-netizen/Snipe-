@@ -1,10 +1,9 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { formatApiError } from '../lib/errorHandling';
-import Toast from './Toast.jsx';
 
 // C2C/P2P Trading - Buy/Sell Crypto Directly with Other Users
-export default function C2CTrading({ isOpen, onClose }) {
+export default function C2CTrading({ isOpen }) {
     const [activeTab, setActiveTab] = useState('buy');
     // ... other state variables
     const [toast, setToast] = useState({ message: '', type: '' });

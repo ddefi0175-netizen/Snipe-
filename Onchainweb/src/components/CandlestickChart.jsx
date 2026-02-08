@@ -12,7 +12,7 @@ export default function CandlestickChart({
   const [timeframe, setTimeframe] = useState('1m')
   const [chartType, setChartType] = useState('candle') // 'candle' or 'line'
   const [candles, setCandles] = useState([])
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 0 })
+  const [_priceRange, setPriceRange] = useState({ min: 0, max: 0 })
   const [crosshair, setCrosshair] = useState(null)
   const [indicators, setIndicators] = useState({ ma: true, volume: true })
 
