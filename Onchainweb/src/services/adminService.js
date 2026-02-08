@@ -101,9 +101,17 @@ export const getAdminByEmail = async (email) => {
     }
 
     try {
-        const adminRef = doc(db, 'admins', email.replace(/[^a-zA-Z0-9]/g, '_'));
-        const adminDoc = await getDoc(adminRef);
-        return adminDoc.exists() ? adminDoc.data() : null;
+        // Query the admins collection by email field (not document ID)
+        // This matches how initializeMasterAccount creates documents (using UID as doc ID)
+        const q = query(collection(db, 'admins'), where('email', '==', email), limit(1));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+            const adminDoc = querySnapshot.docs[0];
+            return { ...adminDoc.data(), id: adminDoc.id };
+        }
+        
+        return null;
     } catch (error) {
         console.error(`Error getting admin by email ${email}:`, error);
         throw new Error(formatApiError(error));
