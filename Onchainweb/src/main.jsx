@@ -27,11 +27,18 @@ import AdminAutoDetector from './components/AdminAutoDetector.jsx'
 // Configuration validator (development only)
 import ConfigValidator from './components/ConfigValidator.jsx'
 
+// Consent banner for GDPR compliance
+import ConsentBanner from './components/ConsentBanner.jsx'
+
 // 404 Not Found page
 import NotFound from './components/NotFound.jsx'
 
 // Admin feature disabled page
 import AdminFeatureDisabled from './components/AdminFeatureDisabled.jsx'
+
+// Analytics initialization
+import { initializeAnalytics } from './utils/analytics.js'
+import { FIREBASE_CONFIG } from './config/firebase.config.js'
 
 // Loading spinner for lazy loaded routes
 const LoadingSpinner = () => (
@@ -79,6 +86,11 @@ if (!envCheck.valid && import.meta.env.PROD) {
     `;
   }
 } else {
+  // Initialize Google Analytics if measurement ID is configured
+  if (import.meta.env.VITE_ENABLE_ANALYTICS === 'true' && FIREBASE_CONFIG.measurementId) {
+    initializeAnalytics(FIREBASE_CONFIG.measurementId);
+  }
+
   createRoot(document.getElementById('root')).render(
     <StrictMode>
       <ErrorBoundary>
@@ -86,6 +98,7 @@ if (!envCheck.valid && import.meta.env.PROD) {
           <UniversalWalletProvider>
             <AdminAutoDetector>
               <ConfigValidator />
+              <ConsentBanner />
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
                   <Route path={ROUTES.HOME} element={<MainApp />} />
@@ -128,4 +141,4 @@ if (!envCheck.valid && import.meta.env.PROD) {
 }
 
 // Reference items to avoid ESLint false positives
-_debugUnused_Main({ Suspense, StrictMode, BrowserRouter, Routes, Route, UniversalWalletProvider, ErrorBoundary, MainApp, MasterAdminDashboard, AdminPanel, AdminRouteGuard, AdminAutoDetector, ConfigValidator, NotFound, AdminFeatureDisabled, LoadingSpinner });
+_debugUnused_Main({ Suspense, StrictMode, BrowserRouter, Routes, Route, UniversalWalletProvider, ErrorBoundary, MainApp, MasterAdminDashboard, AdminPanel, AdminRouteGuard, AdminAutoDetector, ConfigValidator, ConsentBanner, NotFound, AdminFeatureDisabled, LoadingSpinner });
