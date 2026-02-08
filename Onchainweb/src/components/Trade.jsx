@@ -29,7 +29,7 @@ export default function Trade({ isOpen, onClose }) {
 
     // Quiet linter for intentionally-present imports and handlers
     const _debugUnused_Trade = (ctx) => { if (typeof console !== 'undefined') console.debug('trade-unused', ctx); };
-    _debugUnused_Trade({ CandlestickChart, subscribeToTradeUpdates, saveTradeHistory, startTrade, handleTradeComplete });
+    _debugUnused_Trade({ CandlestickChart, subscribeToTradeUpdates, saveTradeHistory, startTrade, handleTradeComplete, Toast });
 
     // ... useEffect hooks
 

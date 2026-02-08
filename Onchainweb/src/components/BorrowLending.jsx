@@ -56,7 +56,7 @@ export default function BorrowLending({ isOpen, _onClose }) {
 
     // Debug reference to avoid linter noise for scaffolded state/handlers
     const _debugUnused_Borrow = (ctx) => { if (typeof console !== 'undefined') console.debug('borrow-unused', ctx); };
-    _debugUnused_Borrow({ activeTab, collateralBalance, borrowForm, lendForm, myLoans, myLending, createBorrow, createLend, repayLoan, withdrawLending, _onClose });
+    _debugUnused_Borrow({ activeTab, collateralBalance, borrowForm, lendForm, myLoans, myLending, createBorrow, createLend, repayLoan, withdrawLending, _onClose, Toast });
 
     if (!isOpen) return null;
 

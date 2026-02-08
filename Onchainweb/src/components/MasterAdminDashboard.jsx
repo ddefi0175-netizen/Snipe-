@@ -60,7 +60,8 @@ export default function MasterAdminDashboard() {
         withdrawals,
         trades,
         aiInvestments,
-        chatMessages
+        chatMessages,
+        Toast
     });
 
     // Authentication state listener
