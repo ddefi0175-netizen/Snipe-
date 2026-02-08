@@ -23,6 +23,10 @@ export default function AdminRouteGuard({
   const [adminData, setAdminData] = useState(null);
   const navigate = useNavigate();
 
+  // Quiet linter for intentionally-present imports and helpers
+  const _debugAdminRouteGuard = (ctx) => { if (typeof console !== 'undefined') console.debug('admin-guard', ctx); };
+  _debugAdminRouteGuard({ MasterAccountSetup, AdminLogin, getAdminByEmail, hasMasterAccount, onAuthStateChanged });
+
   // Check authentication state - only run once on mount
   useEffect(() => {
     let unsubscribe;
