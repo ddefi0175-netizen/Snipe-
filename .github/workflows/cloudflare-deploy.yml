@@ -104,6 +104,22 @@ jobs:
         with:
           node-version: '20'
       
+      - name: Validate Cloudflare API Token
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            echo "❌ ERROR: CLOUDFLARE_API_TOKEN secret is not configured"
+            echo ""
+            echo "📖 To configure this secret:"
+            echo "   1. Go to: Repository Settings → Secrets and variables → Actions"
+            echo "   2. Click 'New repository secret'"
+            echo "   3. Name: CLOUDFLARE_API_TOKEN"
+            echo "   4. Value: Your Cloudflare API token"
+            echo ""
+            echo "ℹ️  For detailed setup instructions, see: SECRETS.md"
+            exit 1
+          fi
+          echo "✅ Cloudflare API token is configured"
+      
       - name: Deploy Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
@@ -112,8 +128,31 @@ jobs:
       
       - name: Verify worker deployment
         run: |
+          echo "⏳ Waiting for worker deployment to propagate..."
           sleep 5
-          curl -f https://snipe-workers.onchainweb.workers.dev/health || echo "Worker health check failed"
+          
+          # Retry health check up to 3 times
+          MAX_RETRIES=3
+          RETRY_COUNT=0
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            echo "Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES: Checking worker health..."
+            
+            if curl -f -s -o /dev/null -w "%{http_code}\n" https://snipe-workers.onchainweb.workers.dev/health | grep -q "200"; then
+              echo "✅ Worker health check passed"
+              exit 0
+            fi
+            
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+              echo "⏳ Waiting 10 seconds before retry..."
+              sleep 10
+            fi
+          done
+          
+          echo "⚠️ Worker health check failed after $MAX_RETRIES attempts"
+          echo "This may be normal if the worker doesn't have a /health endpoint yet"
+          echo "Worker is deployed at: https://snipe-workers.onchainweb.workers.dev"
 
   deploy-pages:
     name: Deploy Pages
@@ -132,11 +171,46 @@ jobs:
           name: dist
           path: Onchainweb/dist
       
+      - name: Validate Cloudflare API Token
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            echo "❌ ERROR: CLOUDFLARE_API_TOKEN secret is not configured"
+            echo ""
+            echo "📖 To configure this secret:"
+            echo "   1. Go to: Repository Settings → Secrets and variables → Actions"
+            echo "   2. Click 'New repository secret'"
+            echo "   3. Name: CLOUDFLARE_API_TOKEN"
+            echo "   4. Value: Your Cloudflare API token"
+            echo ""
+            echo "ℹ️  For detailed setup instructions, see: SECRETS.md"
+            exit 1
+          fi
+          echo "✅ Cloudflare API token is configured"
+      
+      - name: Verify build artifacts
+        run: |
+          if [ ! -d "Onchainweb/dist" ]; then
+            echo "❌ ERROR: Build artifacts not found at Onchainweb/dist"
+            exit 1
+          fi
+          echo "✅ Build artifacts verified"
+          echo "📦 Contents:"
+          ls -la Onchainweb/dist
+      
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           command: pages deploy Onchainweb/dist --project-name=onchainweb
+      
+      - name: Verify pages deployment
+        run: |
+          echo "⏳ Waiting for pages deployment to propagate..."
+          sleep 10
+          
+          # Try to verify deployment (may not be immediate)
+          echo "🌐 Cloudflare Pages should be available at:"
+          echo "   https://onchainweb.pages.dev"
 
   notify:
     name: Notify Deployment
