@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import CandlestickChart from './CandlestickChart';
 import { isFirebaseEnabled, getUser, saveUser, subscribeToBinaryTrades, saveBinaryTrade, closeBinaryTrade, subscribeToBinaryHistory } from '../lib/firebase';
 import { formatApiError } from '../lib/errorHandling';

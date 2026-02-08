@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { formatApiError } from '../lib/errorHandling';
 import Toast from './Toast.jsx';
 
