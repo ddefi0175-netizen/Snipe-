@@ -12,16 +12,16 @@ export default function Trade({ isOpen, onClose }) {
     const [toast, setToast] = useState({ message: '', type: '' });
 
     // Minimal state placeholders to satisfy usage in this component
-    const [tradeAmount, setTradeAmount] = useState('');
-    const [selectedLevel, setSelectedLevel] = useState({ profit: 80 });
+    const [tradeAmount, _setTradeAmount] = useState('');
+    const [selectedLevel, _setSelectedLevel] = useState({ profit: 80 });
     const [activeTradeId, setActiveTradeId] = useState(null);
     const [isTrading, setIsTrading] = useState(false);
     const [tradeDirection, setTradeDirection] = useState(null);
     const [entryPrice, setEntryPrice] = useState(null);
-    const [currentPrice, setCurrentPrice] = useState(null);
-    const [tradeResult, setTradeResult] = useState(null);
+    const [currentPrice, _setCurrentPrice] = useState(null);
+    const [tradeResult, _setTradeResult] = useState(null);
     const [forcedOutcome, setForcedOutcome] = useState(null);
-    const [selectedPair, setSelectedPair] = useState({ symbol: 'BTC/USD' });
+    const [selectedPair, _setSelectedPair] = useState({ symbol: 'BTC/USD' });
 
     const showToast = (message, type = 'info') => {
         setToast({ message, type });

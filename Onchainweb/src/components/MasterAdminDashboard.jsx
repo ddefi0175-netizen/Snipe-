@@ -25,7 +25,7 @@ export default function MasterAdminDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [isLoggingIn, setIsLoggingIn] = useState(false);
     const [loginData, setLoginData] = useState({ username: '', password: '' });
-    const [activeSection, setActiveSection] = useState('user-agents');
+    const [activeSection, _setActiveSection] = useState('user-agents');
     const [isMasterAccount, setIsMasterAccount] = useState(false);
     const [toast, setToast] = useState({ message: '', type: '' });
 
@@ -160,7 +160,7 @@ export default function MasterAdminDashboard() {
         }
     };
 
-    const handleCreateAdmin = async (newAdminData) => {
+    const _handleCreateAdmin = async (newAdminData) => {
         try {
             const createdBy = JSON.parse(localStorage.getItem('masterAdminSession') || '{}').email || 'master';
             await createAdminAccount({ ...newAdminData, createdBy });
