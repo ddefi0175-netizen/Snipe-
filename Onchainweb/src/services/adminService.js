@@ -221,9 +221,22 @@ export const createAdminAccount = async (adminData) => {
     }
 
     try {
-        // NOTE: This function *only* creates the Firestore record. Auth user must be created separately.
-        const adminRef = doc(collection(db, 'admins'));
-        await setDoc(adminRef, { ...adminData, uid: adminRef.id, createdAt: serverTimestamp() });
+        // NOTE: This function creates a Firestore document with auto-generated ID.
+        // For proper admin authentication, you should:
+        // 1. First create Firebase Auth user
+        // 2. Then call this with uid: authUser.uid to ensure document ID matches Auth UID
+        // Otherwise, getAdminByEmail() will find the document but other lookups by UID may fail.
+        
+        // If uid is provided in adminData, use it as document ID
+        const adminRef = adminData.uid 
+            ? doc(db, 'admins', adminData.uid)
+            : doc(collection(db, 'admins'));
+        
+        await setDoc(adminRef, { 
+            ...adminData, 
+            uid: adminRef.id, 
+            createdAt: serverTimestamp() 
+        });
         return { ...adminData, uid: adminRef.id };
     } catch (error) {
         console.error("Error creating admin account:", error);
