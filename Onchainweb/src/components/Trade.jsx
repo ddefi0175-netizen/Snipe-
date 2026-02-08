@@ -53,6 +53,7 @@ export default function Trade({ isOpen, onClose }) {
             setTradeDirection(direction);
             setEntryPrice(currentPrice);
             setTradeResult(null); // Clear previous result
+                _setTradeResult(null);
             showToast('Trade started! Good luck!', 'success');
 
         } catch (error) {
@@ -93,7 +94,7 @@ export default function Trade({ isOpen, onClose }) {
 
             await saveTradeHistory(tradeRecord);
 
-            setTradeResult({ won: result, profit });
+                _setTradeResult({ won: result, profit });
             showToast(result ? `You won $${profit.toFixed(2)}!` : 'Trade lost.', result ? 'success' : 'error');
 
         } catch (error) {

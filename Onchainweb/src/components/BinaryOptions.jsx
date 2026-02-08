@@ -58,7 +58,7 @@ const _ChartAndControls = ({ userId, balance, setBalance, prices, showToast }) =
         const newBalance = balance - tradeAmount;
         await saveUser(userId, { balance: newBalance });
         setBalance(newBalance);
-        setAmount('');
+        _setAmount('');
         showToast('Trade placed successfully!', 'success');
     } catch (error) {
         showToast(formatApiError(error), 'error');
