@@ -97,5 +97,5 @@ createRoot(document.getElementById('root')).render(
         </UniversalWalletProvider>
       </BrowserRouter>
     </ErrorBoundary>
-  </React.StrictMode>
+  </StrictMode>
 )
