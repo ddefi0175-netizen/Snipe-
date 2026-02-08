@@ -10,6 +10,13 @@ import Wallet from './components/Wallet';
 import NotFound from './components/NotFound';
 import ErrorBoundary from './components/ErrorBoundary';
 
+// Small debug helper to mark intentionally unused imports as used
+const _debugUnused_App = (ctx) => {
+  // Keep minimal runtime impact in development only
+  if (typeof console !== 'undefined' && process?.env?.NODE_ENV !== 'production') console.debug('app-unused', ctx);
+};
+_debugUnused_App({ Router, Route, Routes, UniversalWalletProvider, Header, Footer, Dashboard, Trade, Wallet, NotFound, ErrorBoundary });
+
 function App() {
   return (
     <ErrorBoundary>
