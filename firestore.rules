@@ -25,17 +25,33 @@ service cloud.firestore {
              get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'master';
     }
 
-    // Rate limiting helper (basic - production should use Cloudflare Workers)
-    function isNotRateLimited() {
-      // Basic rate limiting using request.time
-      // Check if user hasn't made more than 100 requests in the last minute
-      // This requires a subcollection for tracking, or use server-side rate limiting
-      // For now, implement basic throttling
-      // NOTE: This is basic rate limiting. Production should use Cloudflare Workers KV
-      // for distributed rate limiting across multiple requests and better accuracy.
-      // Check if lastRequestTime exists and enforce 1-second delay
-      return !('lastRequestTime' in request.resource.data) || 
-             request.time > request.resource.data.lastRequestTime + duration.value(1, 's');
+    // Rate limiting helper
+    // IMPORTANT: This is a simplified rate limiting implementation for Firestore.
+    // For production-grade distributed rate limiting, use Cloudflare Workers KV
+    // with the implementation in workers/cache.js
+    function isNotRateLimited(userId, action) {
+      // Check if rate limit document exists for this user and action
+      let rateLimitPath = /databases/$(database)/documents/users/$(userId)/rateLimits/$(action);
+      
+      // If rate limit document doesn't exist, allow the request
+      if (!exists(rateLimitPath)) {
+        return true;
+      }
+      
+      let rateLimitDoc = get(rateLimitPath);
+      let currentTime = request.time.toMillis();
+      let oneMinuteAgo = currentTime - 60000;
+      
+      // If the window has expired (older than 1 minute), allow the request
+      if (rateLimitDoc.data.windowStart < oneMinuteAgo) {
+        return true;
+      }
+      
+      // Check if request count is within limits
+      // Read operations: 100 per minute
+      // Write operations: 50 per minute
+      let maxRequests = (action == 'read') ? 100 : 50;
+      return rateLimitDoc.data.count < maxRequests;
     }
 
     // Validate data structure for user creation/update
@@ -56,13 +72,23 @@ service cloud.firestore {
       allow create: if isAuthenticated() && 
                        request.auth.uid == userId && 
                        isValidUserData() &&
-                       isNotRateLimited();
+                       isNotRateLimited(userId, 'write');
       
       // Update: Users can update their own data OR admins can update with permissions
       allow update: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
       
       // Delete: Only admins can delete users
       allow delete: if isAdmin();
+      
+      // Rate Limits Subcollection - System managed
+      match /rateLimits/{action} {
+        // Users can read their own rate limit status
+        allow read: if isAuthenticated() && request.auth.uid == userId;
+        
+        // System can create/update rate limits (via Admin SDK)
+        // Users can also update their own rate limits to track requests
+        allow write: if (isAuthenticated() && request.auth.uid == userId) || isAdmin();
+      }
     }
 
     // ============================================
@@ -94,7 +120,7 @@ service cloud.firestore {
       // Users can create trades for themselves
       allow create: if isAuthenticated() && 
                        request.resource.data.userId == request.auth.uid &&
-                       isNotRateLimited();
+                       isNotRateLimited(request.auth.uid, 'write');
       
       // Users can update their own trades, admins can update any
       allow update: if isAuthenticated() && 
@@ -115,7 +141,7 @@ service cloud.firestore {
       // Users can create deposits for themselves
       allow create: if isAuthenticated() && 
                        request.resource.data.userId == request.auth.uid &&
-                       isNotRateLimited();
+                       isNotRateLimited(request.auth.uid, 'write');
       
       // Admins can update deposits (to mark as processed)
       allow update: if isAdmin();
@@ -135,7 +161,7 @@ service cloud.firestore {
       // Users can create withdrawals for themselves
       allow create: if isAuthenticated() && 
                        request.resource.data.userId == request.auth.uid &&
-                       isNotRateLimited();
+                       isNotRateLimited(request.auth.uid, 'write');
       
       // Admins can update withdrawals (to mark as processed)
       allow update: if isAdmin();
@@ -155,7 +181,7 @@ service cloud.firestore {
       // Users can create messages for their own sessions
       allow create: if isAuthenticated() && 
                        request.resource.data.userId == request.auth.uid &&
-                       isNotRateLimited();
+                       isNotRateLimited(request.auth.uid, 'write');
       
       // No updates to messages (immutable)
       allow update: if false;
