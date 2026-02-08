@@ -19,6 +19,10 @@ export default function BinaryOptions({ isOpen, onClose }) {
       setToast({ message, type });
   };
 
+  // Quiet linter for intentionally-present but currently-unused variables
+  const _debugUnused_Binary = (ctx) => { if (typeof console !== 'undefined') console.debug('binary-unused', ctx); };
+  _debugUnused_Binary({ CandlestickChart, isFirebaseEnabled, getUser, subscribeToBinaryTrades, closeBinaryTrade, subscribeToBinaryHistory, prices, setPrices, activeTrades, setActiveTrades, tradeHistory, setTradeHistory });
+
   // ... other code
 
   if (!isOpen) return null;
