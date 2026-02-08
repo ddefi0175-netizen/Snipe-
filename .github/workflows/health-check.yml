@@ -40,6 +40,8 @@ jobs:
             echo "   2. Click 'New repository secret'"
             echo "   3. Add BACKEND_URL and FRONTEND_URL with your deployment URLs"
             echo ""
+            echo "📚 For detailed setup instructions, see: SECRETS.md in the repository"
+            echo ""
             echo "✅ Skipping health checks (secrets not configured)"
             exit 0
           fi

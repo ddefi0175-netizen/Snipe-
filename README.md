@@ -14,6 +14,34 @@ To get started with the project, follow these steps:
 
 For more detailed instructions, please refer to the `QUICK_START_GUIDE.md` document.
 
+## CI/CD & Deployment
+
+### GitHub Actions Secrets
+
+This repository uses GitHub Actions for continuous integration and deployment. To enable CI/CD workflows, you need to configure several secrets:
+
+- **Required for Cloudflare Deployment**: See `SECRETS.md` for detailed setup instructions
+- **Required for Firebase Build**: All Firebase configuration variables
+- **Optional for Health Monitoring**: BACKEND_URL and FRONTEND_URL
+
+📚 **Complete Setup Guide**: See [SECRETS.md](SECRETS.md) for step-by-step instructions on configuring all required GitHub secrets.
+
+### Available Workflows
+
+- **CI** (`.github/workflows/ci.yml`): Runs on every push and PR to main
+  - Builds frontend
+  - Runs tests and linting
+  - Executes smoke tests
+
+- **Cloudflare Deploy** (`.github/workflows/cloudflare-deploy.yml`): Deploys to production
+  - Deploys Cloudflare Workers
+  - Deploys Cloudflare Pages
+  - Requires: CLOUDFLARE_API_TOKEN and all Firebase secrets
+
+- **Health Check** (`.github/workflows/health-check.yml`): Monitors production
+  - Runs every 6 hours
+  - Optional: Configure BACKEND_URL and FRONTEND_URL
+
 ## AI Development Assistant
 
 This project is supported by a new AI guidance system, designed to streamline development and ensure adherence to best practices. The AI assistant is programmed with our project's specific architectural patterns, including:
@@ -30,8 +58,10 @@ To learn more about the AI's capabilities and how to interact with it, please re
 ## Key Resources
 
 - **Quick Start**: `QUICK_START_GUIDE.md`
+- **CI/CD Secrets Setup**: `SECRETS.md`
 - **Backend Architecture**: `BACKEND_REPLACEMENT.md`
 - **Real-time Data**: `REALTIME_DATA_ARCHITECTURE.md`
 - **Deployment**: `VERCEL_DEPLOYMENT_GUIDE.md`
+- **Environment Variables**: `docs/ENVIRONMENT_VARIABLES.md`
 
 By following these guidelines and leveraging the new AI assistant, we can ensure a consistent and high-quality development process.

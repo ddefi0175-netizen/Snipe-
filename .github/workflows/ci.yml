@@ -38,3 +38,17 @@ jobs:
 
       - name: Smoke test (build + preview)
         run: npm run smoke
+
+      - name: Cleanup preview server
+        if: always()
+        run: |
+          echo "🧹 Ensuring all preview servers are stopped..."
+          pkill -f 'vite preview' || true
+          # Wait a moment to ensure processes are killed
+          sleep 2
+          # Verify no processes remain
+          if pgrep -f 'vite preview' >/dev/null; then
+            echo "⚠️ Warning: Some vite preview processes may still be running"
+          else
+            echo "✅ All preview servers stopped"
+          fi
