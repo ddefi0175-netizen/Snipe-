@@ -48,6 +48,45 @@ ALLOWED_ORIGINS = "https://onchainweb.pages.dev,https://www.onchainweb.app"
 command = "npm install && npm run build"
 
 # ============================================
+# SETUP INSTRUCTIONS
+# ============================================
+# Follow these steps to set up your Cloudflare Workers environment:
+#
+# 1. Create KV namespaces:
+#    wrangler kv:namespace create "CACHE"
+#    wrangler kv:namespace create "CACHE" --preview
+#    Copy the IDs from the output and replace the placeholders above
+#
+# 2. Create R2 buckets:
+#    wrangler r2 bucket create onchainweb-dev
+#    wrangler r2 bucket create onchainweb-production
+#    Update bucket_name values above if using different names
+#
+# 3. Set secrets (NEVER commit these to version control):
+#    wrangler secret put TELEGRAM_BOT_TOKEN
+#    wrangler secret put FIREBASE_PRIVATE_KEY
+#    wrangler secret put FIREBASE_API_KEY
+#
+# 4. Replace placeholder IDs in this file:
+#    - DEV_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER (line 23)
+#    - STAGING_KV_NAMESPACE_ID_PLACEHOLDER (line 63)
+#    - STAGING_KV_PREVIEW_ID_PLACEHOLDER (line 64)
+#    - PRODUCTION_KV_NAMESPACE_ID_PLACEHOLDER (line 85)
+#    - PRODUCTION_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER (line 88)
+#
+# 5. Deploy to development:
+#    wrangler deploy
+#
+# 6. Deploy to staging:
+#    wrangler deploy --env staging
+#
+# 7. Deploy to production:
+#    wrangler deploy --env production
+#
+# For more information, see: https://developers.cloudflare.com/workers/
+# ============================================
+
+# ============================================
 # Staging Environment
 # ============================================
 [env.staging]
