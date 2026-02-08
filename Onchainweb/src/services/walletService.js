@@ -13,7 +13,7 @@ import { logger } from '../utils/logger.js'
  * @param {string} walletAddress - Connected wallet address
  */
 export const autoRegisterUser = async (walletAddress) => {
-  if (!isFirebaseAvailable()) {
+  if (!isFirebaseAvailable) {
     logger.log('[WalletService] Firebase not available, skipping auto-registration')
     return
   }
@@ -95,7 +95,7 @@ export const connectWalletWithRegistration = async (walletType, connectFunction)
  * @param {string} walletAddress - User's wallet address
  */
 export const updateUserActivity = async (walletAddress) => {
-  if (!isFirebaseAvailable() || !walletAddress) return
+  if (!isFirebaseAvailable || !walletAddress) return
 
   try {
     const userRef = doc(db, 'users', walletAddress)
@@ -113,7 +113,7 @@ export const updateUserActivity = async (walletAddress) => {
  * @returns {Promise<Object|null>}
  */
 export const getUserData = async (walletAddress) => {
-  if (!isFirebaseAvailable() || !walletAddress) return null
+  if (!isFirebaseAvailable || !walletAddress) return null
 
   try {
     const userRef = doc(db, 'users', walletAddress)
