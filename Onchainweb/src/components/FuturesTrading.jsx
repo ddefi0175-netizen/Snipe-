@@ -1,23 +1,22 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import CandlestickChart from './CandlestickChart';
 import { isFirebaseAvailable, getUser, saveUser, subscribeToFuturesPositions, saveFuturesPosition, closeFuturesPosition, subscribeToFuturesHistory } from '../lib/firebase';
 import { formatApiError } from '../lib/errorHandling';
-import Toast from './Toast.jsx';
 
 // ...
 
-export default function FuturesTrading({ isOpen, onClose }) {
+export default function FuturesTrading({ isOpen }) {
     // ...
     const [toast, setToast] = useState({ message: '', type: '' });
 
-    const showToast = (message, type = 'info') => {
+    const _showToast = (message, type = 'info') => {
         setToast({ message, type });
     };
 
     // Debug refs to quiet eslint for scaffolded imports/handlers
     const _debugUnused_Futures = (ctx) => { if (typeof console !== 'undefined') console.debug('futures-unused', ctx); };
-    _debugUnused_Futures({ CandlestickChart, isFirebaseAvailable, getUser, subscribeToFuturesPositions, saveFuturesPosition, closeFuturesPosition, subscribeToFuturesHistory, Toast });
+    _debugUnused_Futures({ CandlestickChart, isFirebaseAvailable, getUser, subscribeToFuturesPositions, saveFuturesPosition, closeFuturesPosition, subscribeToFuturesHistory, _showToast });
 
     // ...
 
@@ -31,11 +30,11 @@ export default function FuturesTrading({ isOpen, onClose }) {
     );
 }
 
-const OpenPositionForm = ({ userId, balance, prices, setBalance, showToast }) => {
+const _OpenPositionForm = ({ userId, balance, _prices, setBalance, showToast }) => {
     // Minimal state for open position form
     const [amount, setAmount] = useState('');
 
-    const handleOpenPosition = async () => {
+    const _handleOpenPosition = async () => {
         try {
             const margin = parseFloat(amount);
             if (!margin || margin <= 0 || margin > balance) {
@@ -66,7 +65,7 @@ const OpenPositionForm = ({ userId, balance, prices, setBalance, showToast }) =>
     // ...
 };
 
-const PositionsList = ({ positions, prices, userId, showToast }) => {
+const _PositionsList = ({ positions, prices, userId, showToast }) => {
     // ...
         const calculatePnL = (pos) => {
             if (!pos) return 0;

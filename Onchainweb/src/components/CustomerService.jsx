@@ -7,7 +7,7 @@ import Toast from './Toast.jsx';
 
 export default function CustomerService() {
     const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState([{
+    const [_messages, setMessages] = useState([{
         id: 1,
         type: 'system',
         text: 'Welcome to Customer Support! How can we help you today?',
@@ -24,11 +24,11 @@ export default function CustomerService() {
 
     useEffect(() => {
         if (isOpen) {
-            const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
-            const walletAddress = localStorage.getItem('walletAddress') || 'Not connected';
+            const _userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
+            const _walletAddress = localStorage.getItem('walletAddress') || 'Not connected';
             notifyCustomerServiceOpened({
                 // ... data
-            }).catch(err => {
+            }).catch(() => {
                 console.log('[Telegram] Background notification sent');
             });
         }
@@ -58,7 +58,7 @@ export default function CustomerService() {
 
         sendUserMessage(inputMessage, {
             // ... data
-        }).catch(err => {
+        }).catch(() => {
             console.log('[Telegram] Message forwarded');
         });
 

@@ -101,9 +101,17 @@ export const getAdminByEmail = async (email) => {
     }
 
     try {
-        const adminRef = doc(db, 'admins', email.replace(/[^a-zA-Z0-9]/g, '_'));
-        const adminDoc = await getDoc(adminRef);
-        return adminDoc.exists() ? adminDoc.data() : null;
+        // Query the admins collection by email field (not document ID)
+        // This matches how initializeMasterAccount creates documents (using UID as doc ID)
+        const q = query(collection(db, 'admins'), where('email', '==', email), limit(1));
+        const querySnapshot = await getDocs(q);
+        
+        if (!querySnapshot.empty) {
+            const adminDoc = querySnapshot.docs[0];
+            return { ...adminDoc.data(), id: adminDoc.id };
+        }
+        
+        return null;
     } catch (error) {
         console.error(`Error getting admin by email ${email}:`, error);
         throw new Error(formatApiError(error));
@@ -213,9 +221,22 @@ export const createAdminAccount = async (adminData) => {
     }
 
     try {
-        // NOTE: This function *only* creates the Firestore record. Auth user must be created separately.
-        const adminRef = doc(collection(db, 'admins'));
-        await setDoc(adminRef, { ...adminData, uid: adminRef.id, createdAt: serverTimestamp() });
+        // NOTE: This function creates a Firestore document with auto-generated ID.
+        // For proper admin authentication, you should:
+        // 1. First create Firebase Auth user
+        // 2. Then call this with uid: authUser.uid to ensure document ID matches Auth UID
+        // Otherwise, getAdminByEmail() will find the document but other lookups by UID may fail.
+        
+        // If uid is provided in adminData, use it as document ID
+        const adminRef = adminData.uid 
+            ? doc(db, 'admins', adminData.uid)
+            : doc(collection(db, 'admins'));
+        
+        await setDoc(adminRef, { 
+            ...adminData, 
+            uid: adminRef.id, 
+            createdAt: serverTimestamp() 
+        });
         return { ...adminData, uid: adminRef.id };
     } catch (error) {
         console.error("Error creating admin account:", error);

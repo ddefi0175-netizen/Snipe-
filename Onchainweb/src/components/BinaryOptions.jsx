@@ -42,7 +42,7 @@ const _ChartAndControls = ({ userId, balance, setBalance, _prices, showToast }) 
   const [_duration, _setDuration] = useState(60);
   const [_amount, _setAmount] = useState('');
 
-  const _handlePlaceTrade = async (_direction) => {
+  const _handlePlaceTrade = async (direction) => {
     const tradeAmount = parseFloat(_amount);
     if (!tradeAmount || tradeAmount <= 0 || tradeAmount > balance) {
         showToast('Invalid trade amount', 'error');

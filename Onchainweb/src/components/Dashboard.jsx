@@ -1,6 +1,5 @@
 
 import { useState, useMemo } from 'react';
-import NewsModal from './NewsModal.jsx';
 import { useMarketData } from '../hooks/useMarketData';
 import { getStockData, getStockNews } from '../utils/fallbackData';
 
@@ -11,7 +10,7 @@ const _debugUnused = (ctx) => console.debug('dashboard-unused-vars', ctx);
 
 export default function Dashboard() {
   // Use the custom hook to fetch and manage crypto data
-  const { cryptoData, cryptoNews, loading: cryptoLoading, isLiveData } = useMarketData();
+  const { cryptoData, _cryptoNews, loading: cryptoLoading, isLiveData } = useMarketData();
 
   // Stock data remains static for now
   const [stockData] = useState(() => getStockData());

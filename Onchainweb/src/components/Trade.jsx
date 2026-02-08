@@ -19,7 +19,7 @@ export default function Trade({ isOpen, onClose }) {
     const [tradeDirection, setTradeDirection] = useState(null);
     const [entryPrice, setEntryPrice] = useState(null);
     const [currentPrice, _setCurrentPrice] = useState(null);
-    const [tradeResult, _setTradeResult] = useState(null);
+    const [_tradeResult, _setTradeResult] = useState(null);
     const [forcedOutcome, setForcedOutcome] = useState(null);
     const [selectedPair, _setSelectedPair] = useState({ symbol: 'BTC/USD' });
 
