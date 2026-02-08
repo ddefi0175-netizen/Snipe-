@@ -1,6 +1,5 @@
 
-/* eslint-disable no-unused-vars */
-import { doc, updateDoc, runTransaction, getDoc, setDoc, serverTimestamp, collection, getDocs, query, where, limit, onSnapshot, deleteDoc, writeBatch } from 'firebase/firestore';
+import { doc, updateDoc, runTransaction, getDoc, setDoc, serverTimestamp, collection, getDocs, query, where, limit, onSnapshot, deleteDoc } from 'firebase/firestore';
 import { db, isFirebaseAvailable, auth } from '../lib/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { formatApiError } from '../lib/errorHandling';
@@ -100,7 +99,7 @@ export const getAdminByEmail = async (email) => {
             return null;
         }
     }
-    
+
     try {
         const adminRef = doc(db, 'admins', email.replace(/[^a-zA-Z0-9]/g, '_'));
         const adminDoc = await getDoc(adminRef);
@@ -138,7 +137,7 @@ export const initializeMasterAccount = async (email, password) => {
         // Step 2: Create admin document in Firestore
         const adminId = user.uid;
         const adminRef = doc(db, 'admins', adminId);
-        
+
         await setDoc(adminRef, {
             email: user.email,
             uid: user.uid,
@@ -168,7 +167,7 @@ export const updateAdminLastLogin = async (adminId) => {
         }
         return;
     }
-    
+
     try {
         const adminRef = doc(db, 'admins', adminId);
         await updateDoc(adminRef, { lastLogin: serverTimestamp() });
@@ -188,7 +187,7 @@ export const hasMasterAccount = async () => {
             return false;
         }
     }
-    
+
     try {
         const q = query(collection(db, 'admins'), where('role', '==', 'master'), limit(1));
         const querySnapshot = await getDocs(q);
@@ -258,7 +257,7 @@ export const updateAdminAccount = async (adminId, data) => {
         }
         return;
     }
-    
+
     try {
         const adminRef = doc(db, 'admins', adminId);
         await updateDoc(adminRef, data);

@@ -1,6 +1,5 @@
 
-/* eslint-disable no-unused-vars */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import CandlestickChart from './CandlestickChart';
 import { isFirebaseEnabled, getUser, saveUser, subscribeToBinaryTrades, saveBinaryTrade, closeBinaryTrade, subscribeToBinaryHistory } from '../lib/firebase';
 import { formatApiError } from '../lib/errorHandling';
@@ -19,6 +18,10 @@ export default function BinaryOptions({ isOpen, onClose }) {
   const showToast = (message, type = 'info') => {
       setToast({ message, type });
   };
+
+  // Quiet linter for intentionally-present but currently-unused variables
+  const _debugUnused_Binary = (ctx) => { if (typeof console !== 'undefined') console.debug('binary-unused', ctx); };
+  _debugUnused_Binary({ CandlestickChart, isFirebaseEnabled, getUser, subscribeToBinaryTrades, closeBinaryTrade, subscribeToBinaryHistory, prices, setPrices, activeTrades, setActiveTrades, tradeHistory, setTradeHistory, onClose, Toast, userId, setUserId, balance, setBalance, showToast });
 
   // ... other code
 

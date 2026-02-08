@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-/* eslint-disable no-unused-vars */
 import CandlestickChart from './CandlestickChart';
 import { isFirebaseAvailable, getUser, saveUser, subscribeToFuturesPositions, saveFuturesPosition, closeFuturesPosition, subscribeToFuturesHistory } from '../lib/firebase';
 import { formatApiError } from '../lib/errorHandling';

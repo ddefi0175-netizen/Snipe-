@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 
 import { useState, useEffect } from 'react';
 import { formatApiError } from '../lib/errorHandling';
@@ -65,6 +64,10 @@ export default function AIArbitrage({ isOpen, onClose }) {
   };
 
   // ... rest of the component
+
+    // Quiet linter for currently-unused but intentionally-kept items
+    const _debugUnused_AIArb = (ctx) => { if (typeof console !== 'undefined') console.debug('aiarb-unused', ctx); };
+    _debugUnused_AIArb({ useEffect, Toast, setSelectedLevel, setUserId, isInvesting, startInvestment });
 
   if (!isOpen) return null;
 

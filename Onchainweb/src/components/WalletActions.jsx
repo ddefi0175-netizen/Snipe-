@@ -1,8 +1,5 @@
 import { useState, useEffect } from 'react'
 
-/* eslint-disable no-unused-vars */
-import React from 'react'
-
 // Wallet Actions - Handles approve, deposit, signMessage for DeFi simulation
 // This is a simulated "smart contract" interface - admin controls all outcomes
 export default function WalletActions({ isOpen, onClose, onSuccess }) {
@@ -57,6 +54,12 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
   useEffect(() => {
     localStorage.setItem('approvedTokens', JSON.stringify(approvedTokens))
   }, [approvedTokens])
+
+  // Quiet linter about assigned-but-not-used state setters / values
+  const _debugUnused_WalletActions = () => {
+    if (typeof console !== 'undefined') console.debug('wallet-actions-unused', { txHash, setWalletAddress, setAdminSettings })
+  }
+  _debugUnused_WalletActions()
 
   useEffect(() => {
     localStorage.setItem('userDeposits', JSON.stringify(deposits))

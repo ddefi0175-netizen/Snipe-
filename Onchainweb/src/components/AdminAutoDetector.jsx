@@ -2,14 +2,20 @@
 // Automatically redirects to admin dashboard when admin wallet connects
 // Handles user auto-provisioning on first wallet connection
 
-/* eslint-disable no-unused-vars */
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUniversalWallet } from '../lib/walletConnect.jsx'
 import { checkWalletForAdminAccess, autoProvisionUser } from '../lib/adminProvisioning.js'
-import { ADMIN_GUARD, ROUTES } from '../config/constants.js'
+import { ROUTES } from '../config/constants.js'
 
 export default function AdminAutoDetector({ children }) {
+  // Enable wallet auto-detection only when explicitly allowed via env
+  const ENABLE_WALLET_ADMIN_AUTODETECT = import.meta.env?.VITE_ENABLE_ADMIN_WALLET_AUTODETECT === 'true'
+
+  // If auto-detect is disabled, don't run any wallet-based admin logic.
+  if (!ENABLE_WALLET_ADMIN_AUTODETECT) {
+    return children
+  }
   const navigate = useNavigate()
   const wallet = useUniversalWallet()
   const [hasChecked, setHasChecked] = useState(false)

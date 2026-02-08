@@ -1,6 +1,5 @@
 
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
-/* eslint-disable no-unused-vars */
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, auth, isFirebaseAvailable } from '../lib/firebase';
 
 /**

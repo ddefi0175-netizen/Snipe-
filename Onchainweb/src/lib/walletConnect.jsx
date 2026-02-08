@@ -1,7 +1,4 @@
-
-import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
-/* eslint-disable no-unused-vars */
-import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
 import { WagmiProvider, useAccount, useConnect, useDisconnect } from 'wagmi';
 import { mainnet, bsc, polygon, arbitrum, optimism, avalanche, fantom } from 'wagmi/chains';
@@ -105,4 +102,4 @@ export const UniversalWalletProvider = ({ children }) => (
     </WagmiProvider>
 );
 
-export const useUniversalWallet = () => React.useContext(UniversalWalletContext);
+export const useUniversalWallet = () => useContext(UniversalWalletContext);

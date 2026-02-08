@@ -1,11 +1,11 @@
 /**
  * Wallet Service with Auto User Registration
- * 
+ *
  * Automatically registers users in Firestore when they connect their wallet
  */
 
 import { db, isFirebaseAvailable } from '../lib/firebase.js'
-import { collection, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
 
 /**
  * Auto-register user when wallet connects
@@ -20,8 +20,6 @@ export const autoRegisterUser = async (walletAddress) => {
   try {
     const userRef = doc(db, 'users', walletAddress)
     const userSnap = await getDoc(userRef)
-    /* eslint-disable no-unused-vars */
-    
     if (!userSnap.exists()) {
       // Create new user document
       await setDoc(userRef, {
@@ -41,9 +39,9 @@ export const autoRegisterUser = async (walletAddress) => {
           language: navigator.language
         }
       })
-      
+
       console.log('[WalletService] New user registered:', walletAddress)
-      
+
       // Dispatch event for admin dashboard
       window.dispatchEvent(new CustomEvent('newUserRegistered', {
         detail: { wallet: walletAddress, timestamp: Date.now() }
@@ -57,7 +55,7 @@ export const autoRegisterUser = async (walletAddress) => {
           lastPlatform: navigator.platform
         }
       }, { merge: true })
-      
+
       console.log('[WalletService] User login updated:', walletAddress)
     }
   } catch (error) {
@@ -76,14 +74,14 @@ export const connectWalletWithRegistration = async (walletType, connectFunction)
   try {
     // Execute the wallet connection
     const result = await connectFunction()
-    
+
     if (result && result.address) {
       // Auto-register user in Firestore
       await autoRegisterUser(result.address)
-      
+
       return { success: true, address: result.address, walletType }
     }
-    
+
     return { success: false }
   } catch (error) {
     console.error('[WalletService] Wallet connection error:', error)
@@ -119,11 +117,11 @@ export const getUserData = async (walletAddress) => {
   try {
     const userRef = doc(db, 'users', walletAddress)
     const userSnap = await getDoc(userRef)
-    
+
     if (userSnap.exists()) {
       return { id: userSnap.id, ...userSnap.data() }
     }
-    
+
     return null
   } catch (error) {
     console.error('[WalletService] Error getting user data:', error)

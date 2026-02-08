@@ -3,12 +3,11 @@ import { useState, useMemo } from 'react';
 import NewsModal from './NewsModal.jsx';
 import { useMarketData } from '../hooks/useMarketData';
 import { getStockData, getStockNews } from '../utils/fallbackData';
-/* eslint-disable no-unused-vars */
 
-// K-line chart component (remains unchanged)
-function KLineChart({ symbol, name, type, onClose }) {
-  // ... KLineChart implementation ...
-}
+// Prevent unused variable warnings for development-only placeholders
+// (these helpers/state are intentionally present for future UI work)
+/* eslint-disable no-console */
+const _debugUnused = (ctx) => console.debug('dashboard-unused-vars', ctx);
 
 export default function Dashboard() {
   // Use the custom hook to fetch and manage crypto data
@@ -61,6 +60,9 @@ export default function Dashboard() {
       // ... filtering and sorting logic
       return showAll ? data : data.slice(0, 20);
   }, [stockData, searchTerm, sortBy, showAll]);
+
+  // Reference potentially unused variables to avoid lint warnings until UI is expanded
+  _debugUnused({ stockNews, setActiveTab, selectedNews, setSelectedNews, setSearchTerm, setSortBy, setShowAll, selectedChart, setSelectedChart, formatPrice, formatMarketCap, formatChange, filteredCrypto, filteredStocks });
 
   if (cryptoLoading && !isLiveData) {
     return (

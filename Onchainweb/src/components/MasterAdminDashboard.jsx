@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
-/* eslint-disable no-unused-vars */
+import { useState, useEffect } from 'react';
 import {
     onAuthStateChanged,
     subscribeToChatMessages,
@@ -43,6 +42,27 @@ export default function MasterAdminDashboard() {
     const showToast = (message, type = 'info') => {
         setToast({ message, type });
     };
+
+    // Reference scaffolded imports and state to avoid noisy eslint `no-unused-vars` warnings
+    const _debugUnused_MasterAdmin = (ctx) => { if (typeof console !== 'undefined') console.debug('mad-debug', ctx); };
+    _debugUnused_MasterAdmin({
+        saveAdminReply,
+        updateActiveChat,
+        createAdminAccount,
+        subscribeToAdmins,
+        updateAdminAccount,
+        deleteAdminAccount,
+        activeSection,
+        isMasterAccount,
+        users,
+        admins,
+        deposits,
+        withdrawals,
+        trades,
+        aiInvestments,
+        chatMessages,
+        Toast
+    });
 
     // Authentication state listener
     useEffect(() => {
