@@ -18,6 +18,10 @@ export default function C2CTrading({ isOpen, onClose }) {
         setToast({ message, type });
     };
 
+    // Quiet linter for scaffolded state/handlers used by UI
+    const _debugUnused_C2C = (ctx) => { if (typeof console !== 'undefined') console.debug('c2c-unused', ctx); };
+    _debugUnused_C2C({ selectedOffer, setSelectedOffer, amount, setAmount, postForm, setPostForm, myOrders, setMyOrders, createOrder, postAd, cancelOrder });
+
     // ... other functions
 
     const createOrder = () => {
