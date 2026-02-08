@@ -19,11 +19,16 @@
 #    wrangler secret put FIREBASE_CLIENT_EMAIL
 #    wrangler secret put TELEGRAM_BOT_TOKEN
 #
-# 4. Deploy:
+# 4. GitHub Actions Deployment:
+#    - Configure CLOUDFLARE_API_TOKEN secret in repository
+#    - See SECRETS.md for detailed setup instructions
+#
+# 5. Deploy:
 #    Development: wrangler deploy
 #    Production:  wrangler deploy --env production
 #
 # For detailed setup guide, see: /docs/CLOUDFLARE_WORKERS_SETUP.md
+# For GitHub Actions setup, see: /SECRETS.md
 # ============================================
 
 name = "wrangler1createsnipe-chat-db"
