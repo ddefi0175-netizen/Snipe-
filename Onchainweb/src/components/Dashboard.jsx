@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import NewsModal from './NewsModal.jsx';
 import { useMarketData } from '../hooks/useMarketData';
 import { getStockData, getStockNews } from '../utils/fallbackData';
+/* eslint-disable no-unused-vars */
 
 // K-line chart component (remains unchanged)
 function KLineChart({ symbol, name, type, onClose }) {

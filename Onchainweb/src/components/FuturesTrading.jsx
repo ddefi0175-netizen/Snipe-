@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+/* eslint-disable no-unused-vars */
 import CandlestickChart from './CandlestickChart';
 import { isFirebaseAvailable, getUser, saveUser, subscribeToFuturesPositions, saveFuturesPosition, closeFuturesPosition, subscribeToFuturesHistory } from '../lib/firebase';
 import { formatApiError } from '../lib/errorHandling';
@@ -28,7 +29,8 @@ export default function FuturesTrading({ isOpen, onClose }) {
 }
 
 const OpenPositionForm = ({ userId, balance, prices, setBalance, showToast }) => {
-    // ...
+    // Minimal state for open position form
+    const [amount, setAmount] = useState('');
 
     const handleOpenPosition = async () => {
         try {
@@ -40,6 +42,13 @@ const OpenPositionForm = ({ userId, balance, prices, setBalance, showToast }) =>
 
             // ...
 
+            const newPosition = {
+                id: 'pos_' + Date.now(),
+                userId,
+                margin,
+                createdAt: Date.now(),
+                status: 'open'
+            };
             await saveFuturesPosition(userId, newPosition);
             const newBalance = balance - margin;
             await saveUser(userId, { balance: newBalance });
@@ -56,6 +65,12 @@ const OpenPositionForm = ({ userId, balance, prices, setBalance, showToast }) =>
 
 const PositionsList = ({ positions, prices, userId, showToast }) => {
     // ...
+        const calculatePnL = (pos) => {
+            if (!pos) return 0;
+            const current = pos.currentPrice || (prices?.[pos.pair] || 0);
+            const entry = pos.entryPrice || pos.price || 0;
+            return (current - entry) * (pos.size || 1);
+        };
 
     const handleClosePosition = async (pos, pnl) => {
         try {

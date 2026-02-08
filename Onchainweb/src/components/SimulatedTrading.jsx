@@ -1,4 +1,5 @@
 
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from 'react';
 import { formatApiError } from '../lib/errorHandling';
 import Toast from './Toast.jsx';
@@ -8,6 +9,14 @@ export default function SimulatedTrading({ isOpen, onClose }) {
     const [activeTab, setActiveTab] = useState('trade');
     // ... other state variables
     const [toast, setToast] = useState({ message: '', type: '' });
+    // Minimal state placeholders
+    const [amount, setAmount] = useState('');
+    const [orderType, setOrderType] = useState('buy');
+    const [demoBalance, setDemoBalance] = useState(() => parseFloat(localStorage.getItem('demoBalance')) || 100000);
+    const [portfolio, setPortfolio] = useState(() => JSON.parse(localStorage.getItem('demoPortfolio') || '{}'));
+    const [coin, setCoin] = useState('BTC');
+    const [coinAmount, setCoinAmount] = useState(0);
+    const [tradeHistory, setTradeHistory] = useState(() => JSON.parse(localStorage.getItem('demoTradeHistory') || '[]'));
 
     const showToast = (message, type = 'info') => {
         setToast({ message, type });

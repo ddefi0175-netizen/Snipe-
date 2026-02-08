@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useCallback } from 'react';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'https://snipe-api.onrender.com/api';

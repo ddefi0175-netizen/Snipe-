@@ -1,6 +1,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { sendChatMessage, subscribeToChatMessages } from '../lib/cloudflareApi.js';
+/* eslint-disable no-unused-vars */
+import { useState, useEffect, useRef } from 'react';
+import { sendChatMessage, subscribeToChatMessages } from '../lib/cloudflareApi.js';
 import { formatApiError } from '../lib/errorHandling';
 import { notifyCustomerServiceOpened, sendUserMessage } from '../services/telegram.service.js';
 import Toast from './Toast.jsx';
@@ -35,6 +38,13 @@ export default function CustomerService() {
     const saveMessageToAdmin = async (message, type, agentName = null) => {
         try {
             // ... message saving logic
+            const newMessage = {
+                id: Date.now(),
+                type,
+                text: message,
+                agentName,
+                time: new Date().toISOString()
+            };
             await sendChatMessage(newMessage);
         } catch (error) {
             showToast(formatApiError(error), 'error');

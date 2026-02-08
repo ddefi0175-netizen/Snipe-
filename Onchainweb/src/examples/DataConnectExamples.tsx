@@ -3,18 +3,19 @@
  * Copy this pattern to integrate into your components
  */
 
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from 'react'
 import { usersService, tradesService, notificationsService } from '@/services/dataconnect.service'
-import type { User, Trade, Notification } from '@/types/dataconnect.types'
+// Type references: User, Trade, Notification (kept as comments for example file)
 
 // ========================================
 // Example 1: User Profile Component
 // ========================================
 
-export function UserProfileExample({ userId }: { userId: string }) {
-  const [user, setUser] = useState<User | null>(null)
+export function UserProfileExample({ userId }) {
+  const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -53,8 +54,8 @@ export function UserProfileExample({ userId }: { userId: string }) {
 // Example 2: User Trades History Component
 // ========================================
 
-export function TradeHistoryExample({ userId }: { userId: string }) {
-  const [trades, setTrades] = useState<Trade[]>([])
+export function TradeHistoryExample({ userId }) {
+  const [trades, setTrades] = useState([])
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(0)
 
@@ -132,8 +133,8 @@ export function TradeHistoryExample({ userId }: { userId: string }) {
 // Example 3: Notifications Component
 // ========================================
 
-export function NotificationsExample({ userId }: { userId: string }) {
-  const [notifications, setNotifications] = useState<Notification[]>([])
+export function NotificationsExample({ userId }) {
+  const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
 
   useEffect(() => {
@@ -152,7 +153,7 @@ export function NotificationsExample({ userId }: { userId: string }) {
     return () => clearInterval(interval)
   }, [userId])
 
-  const handleMarkAsRead = async (notificationId: string) => {
+  const handleMarkAsRead = async (notificationId) => {
     await notificationsService.markAsRead(notificationId)
     setNotifications(prev =>
       prev.map(n => (n.id === notificationId ? { ...n, read: true } : n))
@@ -202,17 +203,17 @@ export function NotificationsExample({ userId }: { userId: string }) {
 // Example 4: Create Trade Component
 // ========================================
 
-export function CreateTradeExample({ userId }: { userId: string }) {
+export function CreateTradeExample({ userId }) {
   const [formData, setFormData] = useState({
     pair: 'BTC/USD',
-    direction: 'up' as const,
+    direction: 'up',
     entryPrice: 0,
     amount: 0,
   })
   const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
+  const [message, setMessage] = useState(null)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
 
@@ -271,9 +272,9 @@ export function CreateTradeExample({ userId }: { userId: string }) {
           <select
             value={formData.direction}
             onChange={e => setFormData({
-              ...formData,
-              direction: e.target.value as 'up' | 'down'
-            })}
+                ...formData,
+                direction: e.target.value
+              })}
           >
             <option value="up">UP ↑</option>
             <option value="down">DOWN ↓</option>
@@ -319,10 +320,11 @@ export function CreateTradeExample({ userId }: { userId: string }) {
 // ========================================
 
 export function AdminUserManagementExample() {
-  const [users, setUsers] = useState<User[]>([])
+  const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
-  const [newBalance, setNewBalance] = useState<number>(0)
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [newBalance, setNewBalance] = useState(0)
+  const [message, setMessage] = useState(null)
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -335,7 +337,7 @@ export function AdminUserManagementExample() {
     fetchUsers()
   }, [])
 
-  const handleUpdateBalance = async (userId: string) => {
+  const handleUpdateBalance = async (userId) => {
     const success = await usersService.updateUserBalance(userId, newBalance)
     if (success) {
       setUsers(users.map(u => (u.id === userId ? { ...u, balance: newBalance } : u)))

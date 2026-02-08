@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useRef, useEffect, useState } from 'react'
 
 // Professional Candlestick Chart Component

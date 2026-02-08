@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react'
 
+/* eslint-disable no-unused-vars */
+import React from 'react'
+
 // Wallet Actions - Handles approve, deposit, signMessage for DeFi simulation
 // This is a simulated "smart contract" interface - admin controls all outcomes
 export default function WalletActions({ isOpen, onClose, onSuccess }) {

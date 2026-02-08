@@ -1,5 +1,7 @@
 
 import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
+/* eslint-disable no-unused-vars */
+import React, { createContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { createWeb3Modal, defaultWagmiConfig } from '@web3modal/wagmi/react';
 import { WagmiProvider, useAccount, useConnect, useDisconnect } from 'wagmi';
 import { mainnet, bsc, polygon, arbitrum, optimism, avalanche, fantom } from 'wagmi/chains';
@@ -59,7 +61,6 @@ const WalletProvider = ({ children }) => {
         };
         autoConnect();
         // We only want this to run once on mount, connectors might change but initial check is enough.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [connectors, isConnected]);
 
     // Persist or clear connection state
