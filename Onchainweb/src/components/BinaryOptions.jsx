@@ -1,5 +1,4 @@
 
-/* eslint-disable no-unused-vars */
 import { useState, useEffect } from 'react';
 import CandlestickChart from './CandlestickChart';
 import { isFirebaseEnabled, getUser, saveUser, subscribeToBinaryTrades, saveBinaryTrade, closeBinaryTrade, subscribeToBinaryHistory } from '../lib/firebase';

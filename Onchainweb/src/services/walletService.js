@@ -20,8 +20,6 @@ export const autoRegisterUser = async (walletAddress) => {
   try {
     const userRef = doc(db, 'users', walletAddress)
     const userSnap = await getDoc(userRef)
-    /* eslint-disable no-unused-vars */
-
     if (!userSnap.exists()) {
       // Create new user document
       await setDoc(userRef, {

@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-/* eslint-disable no-unused-vars */
 import {
     onAuthStateChanged,
     subscribeToChatMessages,

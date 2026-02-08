@@ -9,7 +9,6 @@
  * - Cross-platform session consistency
  */
 
-/* eslint-disable no-unused-vars */
 import { useState, useEffect } from 'react'
 import { useUniversalWallet, WALLET_CONNECTORS, detectEnvironment, detectAvailableWallets } from '../lib/walletConnect.jsx'
 import { userAPI } from '../lib/api'

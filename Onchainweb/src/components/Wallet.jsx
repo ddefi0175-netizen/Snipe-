@@ -1,5 +1,4 @@
 
-/* eslint-disable no-unused-vars */
 import { useState, useEffect, useCallback } from 'react';
 import { getProfileData, submitKycData } from '../services/userService';
 import { getDepositAddresses } from '../services/depositService';

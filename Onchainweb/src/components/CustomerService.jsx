@@ -1,9 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { sendChatMessage, subscribeToChatMessages } from '../lib/cloudflareApi.js';
-/* eslint-disable no-unused-vars */
-import { useState, useEffect, useRef } from 'react';
-import { sendChatMessage, subscribeToChatMessages } from '../lib/cloudflareApi.js';
 import { formatApiError } from '../lib/errorHandling';
 import { notifyCustomerServiceOpened, sendUserMessage } from '../services/telegram.service.js';
 import Toast from './Toast.jsx';

@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 import { getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { isFirebaseAvailable, auth } from './firebase'; // Assuming auth is exported from firebase.js
 
