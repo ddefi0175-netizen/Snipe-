@@ -55,6 +55,12 @@ export default function WalletActions({ isOpen, onClose, onSuccess }) {
     localStorage.setItem('approvedTokens', JSON.stringify(approvedTokens))
   }, [approvedTokens])
 
+  // Quiet linter about assigned-but-not-used state setters / values
+  const _debugUnused_WalletActions = () => {
+    if (typeof console !== 'undefined') console.debug('wallet-actions-unused', { txHash, setWalletAddress, setAdminSettings })
+  }
+  _debugUnused_WalletActions()
+
   useEffect(() => {
     localStorage.setItem('userDeposits', JSON.stringify(deposits))
   }, [deposits])

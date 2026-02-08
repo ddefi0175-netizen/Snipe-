@@ -1,5 +1,4 @@
-import { getAuth, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { isFirebaseAvailable, auth } from './firebase'; // Assuming auth is exported from firebase.js
+import { isFirebaseAvailable, auth } from './firebase'; // auth used by other flows; removed unused firebase/auth imports
 
 // Admin roles and permissions
 export const ROLES = {

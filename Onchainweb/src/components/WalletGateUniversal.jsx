@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useUniversalWallet, WALLET_CONNECTORS, detectEnvironment, detectAvailableWallets } from '../lib/walletConnect.jsx'
+import { useUniversalWallet, detectEnvironment, detectAvailableWallets } from '../lib/walletConnect.jsx'
 import { userAPI } from '../lib/api'
 import { autoRegisterUser } from '../services/userService.js'
 

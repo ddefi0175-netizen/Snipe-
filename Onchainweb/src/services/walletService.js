@@ -5,7 +5,7 @@
  */
 
 import { db, isFirebaseAvailable } from '../lib/firebase.js'
-import { collection, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
 
 /**
  * Auto-register user when wallet connects

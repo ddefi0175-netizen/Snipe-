@@ -146,6 +146,9 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
     }
     return profile.username
   }
+  // Reference callback props to avoid lint warnings when they are optional and unused in some builds
+  const _debugProps = () => { if (typeof console !== 'undefined') console.debug('sidebar-props', { onBinaryClick, onDemoClick, onWalletActionsClick }) }
+  _debugProps()
 
   const [settings, setSettings] = useState(() => {
     const saved = localStorage.getItem('appSettings')

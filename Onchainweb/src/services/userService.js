@@ -1,5 +1,5 @@
 
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, auth, isFirebaseAvailable } from '../lib/firebase';
 
 /**

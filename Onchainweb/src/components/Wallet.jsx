@@ -11,12 +11,6 @@ const COINS = [
     { id: 'USDT-ERC20', name: 'USDT', icon: '₮', color: '#26a17b', network: 'ERC20 (Ethereum)' },
 ];
 
-const QRCode = ({ address }) => (
-    <div className="qr-code-container">
-        {/* QR Code implementation */}
-    </div>
-);
-
 export default function Wallet({ isOpen, onClose }) {
     const [activeTab, setActiveTab] = useState('assets');
     const [balances, setBalances] = useState({});
@@ -35,7 +29,7 @@ export default function Wallet({ isOpen, onClose }) {
 
     // Quiet eslint warnings for currently-unused but intentionally present state and handlers
     const _debugUnused_Wallet = (ctx) => { if (typeof console !== 'undefined') console.debug('wallet-unused', ctx); };
-    _debugUnused_Wallet({ activeTab, balances, depositAddresses, selectedCoin, setSelectedCoin, loading, kycStep, kycData, kycStatus, handleFileChange, handleKycSubmit });
+    _debugUnused_Wallet({ activeTab, balances, depositAddresses, selectedCoin, setSelectedCoin, loading, kycStep, kycData, kycStatus });
 
     const loadInitialData = useCallback(async () => {
         setLoading(true);

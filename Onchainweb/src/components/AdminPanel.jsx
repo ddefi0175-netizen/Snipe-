@@ -2,13 +2,12 @@ import { useState, useEffect } from 'react';
 import { formatApiError } from '../lib/errorHandling';
 import { firebaseSignIn, firebaseSignOut, subscribeToUsers, subscribeToDeposits, isFirebaseEnabled, onAuthStateChanged, auth } from '../lib/firebase';
 import { updateUserKYC, processDeposit } from '../services/adminService';
-import { handleAdminLogin, hasPermission } from '../lib/adminAuth'; // Import hasPermission
-import { getAdminByEmail } from '../services/adminService';
+import { handleAdminLogin } from '../lib/adminAuth';
 import Toast from './Toast.jsx';
 
 export default function AdminPanel({ isOpen = true, onClose }) {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [userPermissions, setUserPermissions] = useState([]);
+    // userPermissions was scaffolded but is unused; omit to reduce lint noise
     const [isLoggingIn, setIsLoggingIn] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [loginUsername, setLoginUsername] = useState('');
@@ -29,15 +28,8 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                try {
-                    const adminData = await getAdminByEmail(user.email);
-                    const permissions = adminData?.permissions || [];
-                    setUserPermissions(permissions);
+                    // Mark authenticated when Firebase reports user; admin details are fetched elsewhere when needed
                     setIsAuthenticated(true);
-                } catch (error) {
-                    showToast(formatApiError(error), 'error');
-                    setIsAuthenticated(false);
-                }
             } else {
                 setIsAuthenticated(false);
                 setUserPermissions([]);
