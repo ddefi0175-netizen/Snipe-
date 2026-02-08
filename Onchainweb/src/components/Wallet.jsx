@@ -12,14 +12,14 @@ const COINS = [
 ];
 
 export default function Wallet({ isOpen, onClose }) {
-    const [activeTab, setActiveTab] = useState('assets');
+    const [activeTab, _setActiveTab] = useState('assets');
     const [balances, setBalances] = useState({});
     const [depositAddresses, setDepositAddresses] = useState({});
     const [selectedCoin, setSelectedCoin] = useState(COINS[0]);
     const [toast, setToast] = useState({ message: '', type: '' });
     const [loading, setLoading] = useState(false);
 
-    const [kycStep, setKycStep] = useState('personal');
+    const [kycStep, _setKycStep] = useState('personal');
     const [kycData, setKycData] = useState({ fullName: '', docType: 'passport', docNumber: '', frontPhoto: null, backPhoto: null });
     const [kycStatus, setKycStatus] = useState('not_submitted');
 

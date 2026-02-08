@@ -21,7 +21,7 @@ export default function BinaryOptions({ isOpen, onClose }) {
 
   // Quiet linter for intentionally-present but currently-unused variables
   const _debugUnused_Binary = (ctx) => { if (typeof console !== 'undefined') console.debug('binary-unused', ctx); };
-  _debugUnused_Binary({ CandlestickChart, isFirebaseEnabled, getUser, subscribeToBinaryTrades, closeBinaryTrade, subscribeToBinaryHistory, _prices, _setPrices, _activeTrades, _setActiveTrades, _tradeHistory, _setTradeHistory, onClose, Toast, _userId, _setUserId, _balance, _setBalance, _showToast });
+  _debugUnused_Binary({ CandlestickChart, isFirebaseEnabled, getUser, subscribeToBinaryTrades, closeBinaryTrade, subscribeToBinaryHistory, _prices, _setPrices, _activeTrades, _setActiveTrades, _tradeHistory, _setTradeHistory, onClose, Toast, _userId, _setUserId, _balance, _setBalance, _showToast, _ChartAndControls });
 
   // ... other code
 
@@ -37,12 +37,12 @@ export default function BinaryOptions({ isOpen, onClose }) {
 
 // ... other components
 
-const _ChartAndControls = ({ userId, balance, setBalance, prices, showToast }) => {
+const _ChartAndControls = ({ userId, balance, setBalance, _prices, showToast }) => {
   const [_pair, _setPair] = useState('BTC/USDT');
   const [_duration, _setDuration] = useState(60);
   const [_amount, _setAmount] = useState('');
 
-  const _handlePlaceTrade = async (direction) => {
+  const _handlePlaceTrade = async (_direction) => {
     const tradeAmount = parseFloat(_amount);
     if (!tradeAmount || tradeAmount <= 0 || tradeAmount > balance) {
         showToast('Invalid trade amount', 'error');
