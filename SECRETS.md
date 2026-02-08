@@ -56,7 +56,9 @@ GitHub Actions secrets are encrypted environment variables used during CI/CD wor
 
 **Security Note**: This token grants deployment access. Keep it secure and never commit it to version control.
 
-**Value Provided**: `HRXKacqxoQDINiRK-EwbN7nEBK6qx_1jeVMJMe1j`
+**Value Provided**: `<your-cloudflare-api-token-here>`
+
+**Note**: The user should provide their actual Cloudflare API token. This is a placeholder.
 
 ---
 
@@ -177,8 +179,10 @@ Repository → Settings → Secrets and variables → Actions → New repository
 1. **Add Cloudflare API Token**
    ```
    Name: CLOUDFLARE_API_TOKEN
-   Value: HRXKacqxoQDINiRK-EwbN7nEBK6qx_1jeVMJMe1j
+   Value: <your-cloudflare-api-token-here>
    ```
+   
+   **Note**: Replace `<your-cloudflare-api-token-here>` with the actual API token obtained from Cloudflare Dashboard.
 
 2. **Verify wrangler.toml Configuration**
    - Check that `account_id` is set in `wrangler.toml`

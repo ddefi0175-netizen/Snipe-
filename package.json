@@ -6,7 +6,7 @@
   "scripts": {
     "install:frontend": "cd Onchainweb && npm install",
     "build": "cd Onchainweb && npm install && npm run build",
-    "smoke": "cd Onchainweb && npm install && npm run build && echo '🚀 Starting preview server...' && (npx vite preview --port 5173 >../vite-preview.log 2>&1 &) && VITE_PID=$! && echo \"Preview server started with PID: $VITE_PID\" && sleep 3 && echo '🔍 Running smoke test...' && SUCCESS=false && for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15; do echo \"Attempt $i/15: Testing http://localhost:5173...\"; if curl -fsS http://localhost:5173 >/dev/null 2>&1; then echo '✅ Smoke test passed!'; SUCCESS=true; break; fi; sleep 2; done; if [ \"$SUCCESS\" = \"false\" ]; then echo '❌ Smoke test failed after 15 attempts'; echo '📋 Preview server logs:'; tail -n 50 ../vite-preview.log || true; pkill -f 'vite preview' || true; exit 1; fi; echo '🧹 Cleaning up preview server...'; pkill -f 'vite preview' || true; exit 0",
+    "smoke": "bash scripts/smoke-test.sh",
     "dev": "cd Onchainweb && npm run dev",
     "preview": "cd Onchainweb && npm run preview"
   },

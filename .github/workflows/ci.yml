@@ -43,9 +43,13 @@ jobs:
         if: always()
         run: |
           echo "🧹 Ensuring all preview servers are stopped..."
-          pkill -f 'vite preview' || true
-          # Wait a moment to ensure processes are killed
-          sleep 2
+          # Find and kill any vite preview processes
+          if pgrep -f 'vite preview' >/dev/null; then
+            echo "Found vite preview processes, stopping them..."
+            pkill -f 'vite preview' || true
+            # Wait a moment to ensure processes are killed
+            sleep 2
+          fi
           # Verify no processes remain
           if pgrep -f 'vite preview' >/dev/null; then
             echo "⚠️ Warning: Some vite preview processes may still be running"
