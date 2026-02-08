@@ -29,7 +29,6 @@ export default function Wallet({ isOpen, onClose }) {
 
     // Quiet eslint warnings for currently-unused but intentionally present state and handlers
     const _debugUnused_Wallet = (ctx) => { if (typeof console !== 'undefined') console.debug('wallet-unused', ctx); };
-    _debugUnused_Wallet({ activeTab, balances, depositAddresses, selectedCoin, setSelectedCoin, loading, kycStep, kycData, kycStatus });
 
     const loadInitialData = useCallback(async () => {
         setLoading(true);
@@ -77,6 +76,9 @@ export default function Wallet({ isOpen, onClose }) {
             setLoading(false);
         }
     };
+
+    // Reference handlers and other vars to avoid assigned-but-unused warnings
+    _debugUnused_Wallet({ activeTab, balances, depositAddresses, selectedCoin, setSelectedCoin, loading, kycStep, kycData, kycStatus, handleFileChange, handleKycSubmit });
 
     if (!isOpen) return null;
 

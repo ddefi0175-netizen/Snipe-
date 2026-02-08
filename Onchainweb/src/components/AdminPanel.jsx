@@ -31,9 +31,8 @@ export default function AdminPanel({ isOpen = true, onClose }) {
                     // Mark authenticated when Firebase reports user; admin details are fetched elsewhere when needed
                     setIsAuthenticated(true);
             } else {
-                setIsAuthenticated(false);
-                setUserPermissions([]);
-            }
+                    setIsAuthenticated(false);
+                }
             setIsLoading(false);
         });
         return () => unsubscribe();
