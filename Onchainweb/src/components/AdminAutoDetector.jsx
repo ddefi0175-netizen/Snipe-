@@ -9,6 +9,13 @@ import { checkWalletForAdminAccess, autoProvisionUser } from '../lib/adminProvis
 import { ADMIN_GUARD, ROUTES } from '../config/constants.js'
 
 export default function AdminAutoDetector({ children }) {
+  // Enable wallet auto-detection only when explicitly allowed via env
+  const ENABLE_WALLET_ADMIN_AUTODETECT = import.meta.env?.VITE_ENABLE_ADMIN_WALLET_AUTODETECT === 'true'
+
+  // If auto-detect is disabled, don't run any wallet-based admin logic.
+  if (!ENABLE_WALLET_ADMIN_AUTODETECT) {
+    return children
+  }
   const navigate = useNavigate()
   const wallet = useUniversalWallet()
   const [hasChecked, setHasChecked] = useState(false)
