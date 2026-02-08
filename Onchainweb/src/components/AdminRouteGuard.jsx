@@ -4,6 +4,7 @@ import MasterAccountSetup from './MasterAccountSetup.jsx';
 import AdminLogin from './AdminLogin.jsx';
 import { getAdminByEmail, hasMasterAccount } from '../services/adminService.js';
 import { onAuthStateChanged } from '../lib/firebase.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Admin Route Guard
@@ -37,7 +38,7 @@ export default function AdminRouteGuard({
       if (requireMaster) {
         const masterExists = await hasMasterAccount();
         if (!masterExists) {
-          console.log('[AdminRouteGuard] No master account found, showing setup');
+          logger.log('[AdminRouteGuard] No master account found, showing setup');
           setAuthState('need_master');
           return; // Don't set up auth listener if no master exists
         }
@@ -53,29 +54,29 @@ export default function AdminRouteGuard({
             if (admin) {
               // Check if route requires master role
               if (requireMaster && admin.role !== 'master') {
-                console.warn('[AdminRouteGuard] User is not a master admin');
+                logger.warn('[AdminRouteGuard] User is not a master admin');
                 setAuthState('need_login');
                 setCurrentUser(null);
                 setAdminData(null);
                 return;
               }
 
-              console.log('[AdminRouteGuard] User authenticated:', user.email);
+              logger.log('[AdminRouteGuard] User authenticated:', user.email);
               setCurrentUser(user);
               setAdminData(admin);
               setAuthState('authenticated');
               return;
             } else {
-              console.warn('[AdminRouteGuard] User not found in admin collection');
+              logger.warn('[AdminRouteGuard] User not found in admin collection');
               setAuthState('need_login');
             }
           } catch (err) {
-            console.error('[AdminRouteGuard] Error checking admin status:', err);
+            logger.error('[AdminRouteGuard] Error checking admin status:', err);
             setAuthState('need_login');
           }
         } else {
           // Not signed in
-          console.log('[AdminRouteGuard] No user signed in');
+          logger.log('[AdminRouteGuard] No user signed in');
           setAuthState('need_login');
         }
       });
@@ -93,13 +94,13 @@ export default function AdminRouteGuard({
   }, [requireMaster]); // Only depend on requireMaster which is stable
 
   const handleMasterSetupComplete = (masterInfo) => {
-    console.log('[AdminRouteGuard] Master setup complete:', masterInfo);
+    logger.log('[AdminRouteGuard] Master setup complete:', masterInfo);
     // After master setup, show login
     setAuthState('need_login');
   };
 
   const handleLoginSuccess = (loginData) => {
-    console.log('[AdminRouteGuard] Login successful:', loginData.user.email);
+    logger.log('[AdminRouteGuard] Login successful:', loginData.user.email);
     setCurrentUser(loginData.user);
     setAdminData(loginData.admin);
     setAuthState('authenticated');

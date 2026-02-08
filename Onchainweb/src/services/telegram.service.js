@@ -5,6 +5,8 @@
  * User never sees this integration - it happens in the background
  */
 
+import { logger } from '../utils/logger.js';
+
 // Telegram configuration from environment variables
 const TELEGRAM_BOT_TOKEN = import.meta.env.VITE_TELEGRAM_BOT_TOKEN || ''
 const TELEGRAM_CHAT_ID = import.meta.env.VITE_TELEGRAM_CHAT_ID || ''
@@ -24,7 +26,7 @@ export const isTelegramConfigured = () => {
 export const sendToTelegram = async (message, metadata = {}) => {
   // Skip if not configured
   if (!isTelegramConfigured()) {
-    console.log('[Telegram] Not configured, skipping message')
+    logger.log('[Telegram] Not configured, skipping message')
     return false
   }
 
@@ -54,10 +56,10 @@ export const sendToTelegram = async (message, metadata = {}) => {
     }
 
     const result = await response.json()
-    console.log('[Telegram] Message sent successfully:', result.message_id)
+    logger.log('[Telegram] Message sent successfully:', result.message_id)
     return true
   } catch (error) {
-    console.error('[Telegram] Failed to send message:', error)
+    logger.error('[Telegram] Failed to send message:', error)
     return false
   }
 }

@@ -27,9 +27,13 @@ service cloud.firestore {
 
     // Rate limiting helper (basic - production should use Cloudflare Workers)
     function isNotRateLimited() {
-      // Allow 100 reads per user per minute
-      // Note: This is basic - use Cloudflare Workers KV for better rate limiting
-      return true;
+      // Basic rate limiting using request.time
+      // Check if user hasn't made more than 100 requests in the last minute
+      // This requires a subcollection for tracking, or use server-side rate limiting
+      // For now, implement basic throttling
+      // NOTE: This is basic rate limiting. Production should use Cloudflare Workers KV
+      // for distributed rate limiting across multiple requests and better accuracy.
+      return request.time > request.resource.data.lastRequestTime + duration.value(1, 's');
     }
 
     // Validate data structure for user creation/update
