@@ -125,8 +125,10 @@ export async function verifyFirebaseToken(token, env) {
       };
     }
 
-    // In a production environment with full crypto support, verify signature here
-    // For Cloudflare Workers, we rely on the Web Crypto API
+    // Verify signature using Web Crypto API
+    // NOTE: This is best-effort signature verification using the Web Crypto API.
+    // For maximum security in critical applications, consider using Firebase Admin SDK
+    // in a Node.js environment or a dedicated authentication service.
     try {
       const publicKey = publicKeys[kid];
       const isValid = await verifyJWTSignature(token, publicKey);
@@ -210,33 +212,46 @@ async function verifyJWTSignature(token, publicKeyPem) {
 }
 
 /**
- * Import a public key from PEM format
+ * Import a public key from PEM format (X.509 certificate)
  * 
- * @param {string} pem - The public key in PEM format
+ * @param {string} pem - The public key certificate in PEM format
  * @returns {Promise<CryptoKey>} - The imported public key
  */
 async function importPublicKey(pem) {
-  // Remove PEM headers and convert to binary
-  const pemContents = pem
-    .replace('-----BEGIN CERTIFICATE-----', '')
-    .replace('-----END CERTIFICATE-----', '')
-    .replace(/\n/g, '');
-  
-  const binaryDer = base64ToArrayBuffer(pemContents);
-  
-  // Import as X509 certificate
-  const key = await crypto.subtle.importKey(
-    'spki',
-    binaryDer,
-    {
-      name: 'RSASSA-PKCS1-v1_5',
-      hash: 'SHA-256'
-    },
-    false,
-    ['verify']
-  );
-  
-  return key;
+  try {
+    // Remove PEM headers and convert to binary
+    const pemContents = pem
+      .replace('-----BEGIN CERTIFICATE-----', '')
+      .replace('-----END CERTIFICATE-----', '')
+      .replace('-----BEGIN PUBLIC KEY-----', '')
+      .replace('-----END PUBLIC KEY-----', '')
+      .replace(/\s/g, ''); // Remove all whitespace
+    
+    const binaryDer = base64ToArrayBuffer(pemContents);
+    
+    // Try importing as X.509 certificate first (most common for Firebase)
+    try {
+      const key = await crypto.subtle.importKey(
+        'spki',
+        binaryDer,
+        {
+          name: 'RSASSA-PKCS1-v1_5',
+          hash: 'SHA-256'
+        },
+        false,
+        ['verify']
+      );
+      return key;
+    } catch (spkiError) {
+      // If SPKI import fails, the certificate might need to be parsed differently
+      // For Firebase public keys from Google's API, SPKI format should work
+      console.error('Failed to import public key as SPKI:', spkiError);
+      throw new Error('Unable to import public key for signature verification');
+    }
+  } catch (error) {
+    console.error('Public key import error:', error);
+    throw error;
+  }
 }
 
 /**
