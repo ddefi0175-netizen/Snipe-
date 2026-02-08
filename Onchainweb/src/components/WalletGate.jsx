@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createUser, getUserById } from '../services/database.service'
+import { logger } from '../utils/logger'
 
 // Web3 Wallet Gate - User MUST connect wallet to see any content
 export default function WalletGate({ onConnect, children }) {
@@ -14,13 +15,13 @@ export default function WalletGate({ onConnect, children }) {
   // Register user in Firebase when wallet connects
   const registerUserInFirebase = async (address, walletType) => {
     try {
-      console.log('[Firebase] Starting user registration:', address, walletType)
+      logger.log('[Firebase] Starting user registration:', address, walletType)
 
       // Check if user already exists
       try {
         const existingUser = await getUserById(address)
         if (existingUser) {
-          console.log('[Firebase] User already exists, updating login time')
+          logger.log('[Firebase] User already exists, updating login time')
           // Update last login
           await createUser({
             ...existingUser,
@@ -30,7 +31,7 @@ export default function WalletGate({ onConnect, children }) {
           return existingUser
         }
       } catch (checkError) {
-        console.log('[Firebase] User does not exist, creating new user')
+        logger.log('[Firebase] User does not exist, creating new user')
       }
 
       // Get existing profile data if any
@@ -59,9 +60,9 @@ export default function WalletGate({ onConnect, children }) {
       }
 
       // Save to Firebase Firestore
-      console.log('[Firebase] Saving user data to Firestore...')
+      logger.log('[Firebase] Saving user data to Firestore...')
       await createUser(userData)
-      console.log('[Firebase] ✅ User saved successfully to Firestore!')
+      logger.log('[Firebase] ✅ User saved successfully to Firestore!')
 
       // Store user data locally
       localStorage.setItem('backendUserId', address)
@@ -69,7 +70,7 @@ export default function WalletGate({ onConnect, children }) {
       localStorage.setItem('realAccountId', userId)
       localStorage.setItem('userProfile', JSON.stringify(userData))
 
-      console.log('[Firebase] ✅ User registered and saved:', {
+      logger.log('[Firebase] ✅ User registered and saved:', {
         wallet: address,
         userId: userId,
         username: username
@@ -77,8 +78,8 @@ export default function WalletGate({ onConnect, children }) {
 
       return userData
     } catch (error) {
-      console.error('[Firebase] ❌ Failed to register user:', error)
-      console.error('[Firebase] Error details:', error.message)
+      logger.error('[Firebase] ❌ Failed to register user:', error)
+      logger.error('[Firebase] Error details:', error.message)
       // Still allow local usage
       return null
     }
@@ -140,7 +141,7 @@ export default function WalletGate({ onConnect, children }) {
 
         // Register user in Firebase immediately
         const user = await registerUserInFirebase(address, walletId)
-        console.log('[Firebase] Wallet connected and user registered:', user ? user.userId : 'failed')
+        logger.log('[Firebase] Wallet connected and user registered:', user ? user.userId : 'failed')
 
         // Notify parent component
         if (onConnect) {
@@ -151,7 +152,7 @@ export default function WalletGate({ onConnect, children }) {
         setIsConnecting(false)
       }
     } catch (err) {
-      console.error('[Wallet] Connection error:', err)
+      logger.error('[Wallet] Connection error:', err)
       setError('Connection failed. Please try again or use a different wallet.')
       setIsConnecting(false)
       setSelectedWallet(null)

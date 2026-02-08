@@ -3,10 +3,11 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db, isFirebaseAvailable } from '../lib/firebase';
 
 // Pre-defined, secure deposit addresses for supported networks
+// These can be overridden via environment variables
 const STATIC_DEPOSIT_ADDRESSES = {
-    'BTC': 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-    'USDT-TRC20': 'TXrvyV2A4sA41Z2V1Z2v4Z1v2Z2V1Z2v4Z',
-    'USDT-ERC20': '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
+    'BTC': import.meta.env.VITE_DEPOSIT_BTC || 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
+    'USDT-TRC20': import.meta.env.VITE_DEPOSIT_USDT_TRC20 || 'TXrvyV2A4sA41Z2V1Z2v4Z1v2Z2V1Z2v4Z',
+    'USDT-ERC20': import.meta.env.VITE_DEPOSIT_USDT_ERC20 || '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
 };
 
 /**

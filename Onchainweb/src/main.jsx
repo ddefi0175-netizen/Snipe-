@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { UniversalWalletProvider } from './lib/walletConnect.jsx'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import { ROUTES, ADMIN_GUARD } from './config/constants.js'
+import { validateEnvironment } from './config/validateEnv.js'
 import './index.css'
 import './styles/master-admin.css'
 import MainApp from './App.jsx'
@@ -58,52 +59,73 @@ const LoadingSpinner = () => (
   </div>
 )
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <BrowserRouter>
-        <UniversalWalletProvider>
-          <AdminAutoDetector>
-            <ConfigValidator />
-            <Suspense fallback={<LoadingSpinner />}>
-              <Routes>
-                <Route path={ROUTES.HOME} element={<MainApp />} />
-                {/* Admin route - always registered, but shows disabled message if feature not enabled */}
-                <Route
-                  path={ROUTES.ADMIN}
-                  element={
-                    ADMIN_GUARD.ENABLED ? (
-                      <AdminRouteGuard requireMaster={false}>
-                        <AdminPanel isOpen={true} onClose={() => window.location.href = '/'} />
-                      </AdminRouteGuard>
-                    ) : (
-                      <AdminFeatureDisabled isMasterRoute={false} />
-                    )
-                  }
-                />
-                {/* Master Admin route - always registered, but shows disabled message if feature not enabled */}
-                <Route
-                  path={ROUTES.MASTER_ADMIN}
-                  element={
-                    ADMIN_GUARD.ENABLED ? (
-                      <AdminRouteGuard requireMaster={true}>
-                        <MasterAdminDashboard />
-                      </AdminRouteGuard>
-                    ) : (
-                      <AdminFeatureDisabled isMasterRoute={true} />
-                    )
-                  }
-                />
-                {/* Catch-all route for 404 - must be last */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </AdminAutoDetector>
-        </UniversalWalletProvider>
-      </BrowserRouter>
-    </ErrorBoundary>
-  </StrictMode>
-)
+// Validate environment variables before rendering
+const envCheck = validateEnvironment();
+if (!envCheck.valid && import.meta.env.PROD) {
+  // Using console.error directly here since this is a startup check
+  // and occurs before the app/logger is initialized
+  console.error('Application cannot start: Missing environment variables', envCheck.missing);
+  // Show user-friendly error in production
+  const rootElement = document.getElementById('root');
+  if (rootElement) {
+    rootElement.innerHTML = `
+      <div style="display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f0f1a; color: #fff; font-family: sans-serif;">
+        <div style="text-align: center; max-width: 600px; padding: 20px;">
+          <h1 style="color: #ef4444; margin-bottom: 20px;">⚠️ Configuration Error</h1>
+          <p style="margin-bottom: 10px;">The application is missing required environment variables.</p>
+          <p style="color: #9ca3af;">Please contact the administrator.</p>
+        </div>
+      </div>
+    `;
+  }
+} else {
+  createRoot(document.getElementById('root')).render(
+    <StrictMode>
+      <ErrorBoundary>
+        <BrowserRouter>
+          <UniversalWalletProvider>
+            <AdminAutoDetector>
+              <ConfigValidator />
+              <Suspense fallback={<LoadingSpinner />}>
+                <Routes>
+                  <Route path={ROUTES.HOME} element={<MainApp />} />
+                  {/* Admin route - always registered, but shows disabled message if feature not enabled */}
+                  <Route
+                    path={ROUTES.ADMIN}
+                    element={
+                      ADMIN_GUARD.ENABLED ? (
+                        <AdminRouteGuard requireMaster={false}>
+                          <AdminPanel isOpen={true} onClose={() => window.location.href = '/'} />
+                        </AdminRouteGuard>
+                      ) : (
+                        <AdminFeatureDisabled isMasterRoute={false} />
+                      )
+                    }
+                  />
+                  {/* Master Admin route - always registered, but shows disabled message if feature not enabled */}
+                  <Route
+                    path={ROUTES.MASTER_ADMIN}
+                    element={
+                      ADMIN_GUARD.ENABLED ? (
+                        <AdminRouteGuard requireMaster={true}>
+                          <MasterAdminDashboard />
+                        </AdminRouteGuard>
+                      ) : (
+                        <AdminFeatureDisabled isMasterRoute={true} />
+                      )
+                    }
+                  />
+                  {/* Catch-all route for 404 - must be last */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </AdminAutoDetector>
+          </UniversalWalletProvider>
+        </BrowserRouter>
+      </ErrorBoundary>
+    </StrictMode>
+  )
+}
 
 // Reference items to avoid ESLint false positives
 _debugUnused_Main({ Suspense, StrictMode, BrowserRouter, Routes, Route, UniversalWalletProvider, ErrorBoundary, MainApp, MasterAdminDashboard, AdminPanel, AdminRouteGuard, AdminAutoDetector, ConfigValidator, NotFound, AdminFeatureDisabled, LoadingSpinner });

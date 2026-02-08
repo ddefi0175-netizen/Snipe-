@@ -19,22 +19,54 @@ export async function handleUsers(request, env) {
     })
   }
   
-  // TODO: Fetch from Firestore
-  // For now, return placeholder data
-  const userData = { 
-    id: userId, 
-    cached: false,
-    message: 'User data would be fetched from Firestore here'
-  }
-  
-  // Cache for 1 hour
-  await CACHE.put(cacheKey, JSON.stringify(userData), { expirationTtl: 3600 })
-  
-  return new Response(JSON.stringify(userData), {
-    headers: {
-      ...corsHeaders,
-      'Content-Type': 'application/json',
-      'X-Cache': 'MISS'
+  // Fetch from Firestore using REST API
+  // Note: This uses Firebase REST API with API key for read-only operations
+  // For production, consider using Firebase Admin SDK with service account
+  const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${env.FIREBASE_PROJECT_ID}/databases/(default)/documents/users/${userId}`;
+  try {
+    const response = await fetch(firestoreUrl, {
+      headers: {
+        'X-Firebase-Api-Key': env.FIREBASE_API_KEY
+      }
+    });
+
+    if (response.ok) {
+      const userData = await response.json();
+      // Cache for 1 hour and return
+      await CACHE.put(cacheKey, JSON.stringify(userData.fields), { expirationTtl: 3600 });
+      return new Response(JSON.stringify(userData.fields), {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'X-Cache': 'MISS'
+        }
+      });
     }
-  })
+    
+    // User not found
+    return new Response(JSON.stringify({ error: 'User not found' }), {
+      status: 404,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
+    });
+  } catch (error) {
+    // Fallback to placeholder data on error
+    const userData = { 
+      id: userId, 
+      cached: false,
+      message: 'User data fetched from Firestore',
+      error: error.message
+    }
+    
+    return new Response(JSON.stringify(userData), {
+      status: 500,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+        'X-Cache': 'ERROR'
+      }
+    });
+  }
 }

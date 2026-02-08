@@ -20,13 +20,13 @@ export async function handleStorage(request, env) {
   const url = new URL(request.url)
   const key = url.pathname.replace('/api/storage/', '')
   
-  // IMPORTANT: Uncomment this for production to require authentication
-  // if (!await isAuthenticated(request)) {
-  //   return new Response('Unauthorized', { 
-  //     status: 401,
-  //     headers: corsHeaders
-  //   })
-  // }
+  // PRODUCTION: Authentication required for all storage operations
+  if (!await isAuthenticated(request)) {
+    return new Response('Unauthorized', { 
+      status: 401,
+      headers: corsHeaders
+    })
+  }
   
   // GET: Download file
   if (request.method === 'GET') {

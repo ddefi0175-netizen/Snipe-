@@ -6,6 +6,7 @@
 
 import { db, isFirebaseAvailable } from '../lib/firebase.js'
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
+import { logger } from '../utils/logger.js'
 
 /**
  * Auto-register user when wallet connects
@@ -13,7 +14,7 @@ import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
  */
 export const autoRegisterUser = async (walletAddress) => {
   if (!isFirebaseAvailable()) {
-    console.log('[WalletService] Firebase not available, skipping auto-registration')
+    logger.log('[WalletService] Firebase not available, skipping auto-registration')
     return
   }
 
@@ -40,7 +41,7 @@ export const autoRegisterUser = async (walletAddress) => {
         }
       })
 
-      console.log('[WalletService] New user registered:', walletAddress)
+      logger.log('[WalletService] New user registered:', walletAddress)
 
       // Dispatch event for admin dashboard
       window.dispatchEvent(new CustomEvent('newUserRegistered', {
@@ -56,10 +57,10 @@ export const autoRegisterUser = async (walletAddress) => {
         }
       }, { merge: true })
 
-      console.log('[WalletService] User login updated:', walletAddress)
+      logger.log('[WalletService] User login updated:', walletAddress)
     }
   } catch (error) {
-    console.error('[WalletService] Auto-registration error:', error)
+    logger.error('[WalletService] Auto-registration error:', error)
     // Don't throw - allow wallet connection to succeed even if registration fails
   }
 }
@@ -84,7 +85,7 @@ export const connectWalletWithRegistration = async (walletType, connectFunction)
 
     return { success: false }
   } catch (error) {
-    console.error('[WalletService] Wallet connection error:', error)
+    logger.error('[WalletService] Wallet connection error:', error)
     throw error
   }
 }
@@ -102,7 +103,7 @@ export const updateUserActivity = async (walletAddress) => {
       lastSeen: serverTimestamp()
     }, { merge: true })
   } catch (error) {
-    console.error('[WalletService] Error updating user activity:', error)
+    logger.error('[WalletService] Error updating user activity:', error)
   }
 }
 
@@ -124,7 +125,7 @@ export const getUserData = async (walletAddress) => {
 
     return null
   } catch (error) {
-    console.error('[WalletService] Error getting user data:', error)
+    logger.error('[WalletService] Error getting user data:', error)
     return null
   }
 }

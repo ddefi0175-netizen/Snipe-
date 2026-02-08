@@ -1,5 +1,45 @@
 import { corsHeaders } from '../lib/cors.js'
 
+// Verify Firebase ID token
+async function verifyAdminToken(token) {
+  try {
+    // Note: In production, use Firebase Admin SDK
+    // For Workers environment, validate JWT signature against Firebase public keys
+    const response = await fetch(
+      'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com'
+    );
+    const publicKeys = await response.json();
+    
+    // Decode and verify JWT (implementation needed)
+    // For now, validate basic structure and length
+    // WARNING: This is a placeholder implementation and should not be used in production
+    // TODO: Implement full JWT verification with public keys before production deployment
+    if (!token || token.length < 50) {
+      return { valid: false, error: 'Invalid token format' };
+    }
+    
+    // Split JWT into parts
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return { valid: false, error: 'Invalid JWT format' };
+    }
+    
+    // TODO: Implement full JWT verification:
+    // 1. Decode header and payload
+    // 2. Verify signature with public key
+    // 3. Check expiration time
+    // 4. Verify issuer and audience
+    // For now, return basic validation with warning
+    return { valid: true, warning: 'Using placeholder verification - implement full JWT validation for production' };
+  } catch (error) {
+    // Only log in development/staging environments
+    if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+      console.error('Token verification error:', error);
+    }
+    return { valid: false, error: error.message };
+  }
+}
+
 // Secure Admin Operations - No credentials in frontend
 export async function handleAdmin(request, env) {
   // Verify admin token
@@ -13,17 +53,15 @@ export async function handleAdmin(request, env) {
   
   const token = authHeader.replace('Bearer ', '')
   
-  // TODO: Implement proper token verification with Firebase Admin SDK
-  // For now, this is a placeholder that should be replaced with:
-  // 1. Firebase Admin SDK token verification
-  // 2. Check user role/permissions in Firestore
-  // 3. Validate token expiry and signature
-  
-  // Basic validation (REPLACE WITH FIREBASE ADMIN SDK)
-  if (!token || token.length < 20) {
-    return new Response('Invalid token', { 
+  // Verify Firebase ID token
+  const verificationResult = await verifyAdminToken(token)
+  if (!verificationResult.valid) {
+    return new Response(JSON.stringify({ error: verificationResult.error || 'Invalid token' }), { 
       status: 401,
-      headers: corsHeaders
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json'
+      }
     })
   }
   

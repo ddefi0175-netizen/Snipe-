@@ -3,6 +3,7 @@
 
 import { isFirebaseEnabled } from './firebase.js'
 import { getAllowedAdminEmails } from './adminAuth.js'
+import { logger } from '../utils/logger.js'
 
 /**
  * Initialize master account on first app load
@@ -11,21 +12,21 @@ import { getAllowedAdminEmails } from './adminAuth.js'
  */
 export const initializeMasterAccount = async () => {
   if (!isFirebaseEnabled()) {
-    console.warn('[PROVISIONING] Firebase not available, skipping master account init')
+    logger.warn('[PROVISIONING] Firebase not available, skipping master account init')
     return false
   }
 
   try {
     const allowedEmails = getAllowedAdminEmails()
     if (!allowedEmails.length) {
-      console.warn('[PROVISIONING] No admin emails in VITE_ADMIN_ALLOWLIST')
+      logger.warn('[PROVISIONING] No admin emails in VITE_ADMIN_ALLOWLIST')
       return false
     }
 
     // Master email is typically the first in the list and starts with 'master'
     const masterEmail = allowedEmails.find(email => email.startsWith('master@')) || allowedEmails[0]
 
-    console.log('[PROVISIONING] Master account email:', masterEmail)
+    logger.log('[PROVISIONING] Master account email:', masterEmail)
     return {
       email: masterEmail,
       role: 'master',
@@ -39,7 +40,7 @@ export const initializeMasterAccount = async () => {
       `
     }
   } catch (error) {
-    console.error('[PROVISIONING] Error:', error)
+    logger.error('[PROVISIONING] Error:', error)
     return false
   }
 }
@@ -70,7 +71,7 @@ export const checkWalletForAdminAccess = async (walletAddress) => {
 
     return { isAdmin: false }
   } catch (error) {
-    console.error('[PROVISIONING] Error checking wallet:', error)
+    logger.error('[PROVISIONING] Error checking wallet:', error)
     return { isAdmin: false }
   }
 }
@@ -94,12 +95,12 @@ export const registerAdminWallet = (email, role = 'admin', walletAddress = null)
         createdAt: new Date().toISOString()
       }
       localStorage.setItem('adminWalletMappings', JSON.stringify(adminMappings))
-      console.log('[PROVISIONING] Registered admin wallet:', normalizedWallet)
+      logger.log('[PROVISIONING] Registered admin wallet:', normalizedWallet)
     }
 
     return true
   } catch (error) {
-    console.error('[PROVISIONING] Error registering wallet:', error)
+    logger.error('[PROVISIONING] Error registering wallet:', error)
     return false
   }
 }
@@ -112,7 +113,7 @@ export const getAdminWallets = () => {
   try {
     return JSON.parse(localStorage.getItem('adminWalletMappings') || '{}')
   } catch (error) {
-    console.error('[PROVISIONING] Error getting admin wallets:', error)
+    logger.error('[PROVISIONING] Error getting admin wallets:', error)
     return {}
   }
 }
@@ -129,13 +130,13 @@ export const revokeAdminWallet = (walletAddress) => {
     if (adminMappings[normalizedWallet]) {
       delete adminMappings[normalizedWallet]
       localStorage.setItem('adminWalletMappings', JSON.stringify(adminMappings))
-      console.log('[PROVISIONING] Revoked admin wallet:', normalizedWallet)
+      logger.log('[PROVISIONING] Revoked admin wallet:', normalizedWallet)
       return true
     }
 
     return false
   } catch (error) {
-    console.error('[PROVISIONING] Error revoking wallet:', error)
+    logger.error('[PROVISIONING] Error revoking wallet:', error)
     return false
   }
 }
@@ -154,7 +155,7 @@ export const autoProvisionUser = (walletAddress, userInfo = {}) => {
     // Check if user already exists
     const exists = users.some(u => u.wallet?.toLowerCase() === normalizedWallet)
     if (exists) {
-      console.log('[PROVISIONING] User already registered:', normalizedWallet)
+      logger.log('[PROVISIONING] User already registered:', normalizedWallet)
       return false
     }
 
@@ -187,11 +188,11 @@ export const autoProvisionUser = (walletAddress, userInfo = {}) => {
     })
     localStorage.setItem('adminNotifications', JSON.stringify(notifications))
 
-    console.log('[PROVISIONING] New user auto-provisioned:', newUser.id)
+    logger.log('[PROVISIONING] New user auto-provisioned:', newUser.id)
     window.dispatchEvent(new CustomEvent('userProvisioned', { detail: newUser }))
     return newUser
   } catch (error) {
-    console.error('[PROVISIONING] Error provisioning user:', error)
+    logger.error('[PROVISIONING] Error provisioning user:', error)
     return null
   }
 }
