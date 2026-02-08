@@ -29,20 +29,24 @@ jobs:
           # Validate that secrets are configured
           if [ -z "$BACKEND_URL" ] || [ -z "$FRONTEND_URL" ]; then
             echo ""
-            echo "⚠️ WARNING: Health check secrets are not configured"
+            echo "⚠️ =================================================="
+            echo "⚠️  OPTIONAL HEALTH CHECK SECRETS NOT CONFIGURED"
+            echo "⚠️ =================================================="
             echo ""
-            echo "ℹ️ To enable production monitoring, please configure the following secrets in your repository:"
+            echo "ℹ️  These secrets are OPTIONAL and only needed for production monitoring:"
+            echo ""
             echo "   - BACKEND_URL: The URL of your backend server (e.g., https://api.example.com)"
             echo "   - FRONTEND_URL: The URL of your frontend application (e.g., https://example.com)"
             echo ""
-            echo "📖 To add secrets:"
+            echo "📖 To enable production monitoring:"
             echo "   1. Go to: Settings → Secrets and variables → Actions"
             echo "   2. Click 'New repository secret'"
             echo "   3. Add BACKEND_URL and FRONTEND_URL with your deployment URLs"
             echo ""
             echo "📚 For detailed setup instructions, see: SECRETS.md in the repository"
             echo ""
-            echo "✅ Skipping health checks (secrets not configured)"
+            echo "✅ Skipping health checks (optional secrets not configured)"
+            echo ""
             exit 0
           fi
           

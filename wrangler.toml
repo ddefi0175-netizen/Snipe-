@@ -31,7 +31,7 @@
 # For GitHub Actions setup, see: /SECRETS.md
 # ============================================
 
-name = "wrangler1createsnipe-chat-db"
+name = "snipe-onchainweb"
 main = "workers/index.js"
 compatibility_date = "2026-01-30"
 # Account ID is public metadata and can be set via:
@@ -52,14 +52,18 @@ workers_dev = true
 binding = "CACHE"
 # KV Namespace ID - should be created via wrangler kv:namespace create
 id = "488840361a874877b2b54506b15f746a"
-# Create separate preview namespace: wrangler kv:namespace create "CACHE" --preview
+# ⚠️ TODO: Create preview namespace with:
+#    wrangler kv:namespace create "CACHE" --preview
+# Then replace the placeholder below with the returned ID
 preview_id = "DEV_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER"  # Separate preview namespace for dev isolation
 
 [[r2_buckets]]
 binding = "STORAGE"
 # R2 Bucket - should be created via wrangler r2 bucket create
 bucket_name = "onchainweb"
-# Create separate preview bucket: wrangler r2 bucket create onchainweb-dev-preview
+# ⚠️ TODO: Create preview bucket with:
+#    wrangler r2 bucket create onchainweb-dev-preview
+# Then uncomment the line below
 preview_bucket_name = "onchainweb-dev-preview"  # Separate preview bucket for dev isolation
 
 [vars]
@@ -91,8 +95,8 @@ command = "npm install && npm run build"
 #    Copy the IDs from the output and replace the placeholders above
 #
 # 2. Create R2 buckets:
-#    wrangler r2 bucket create onchainweb-dev
-#    wrangler r2 bucket create onchainweb-production
+#    wrangler r2 bucket create onchainweb
+#    wrangler r2 bucket create onchainweb-dev-preview
 #    Update bucket_name values above if using different names
 #
 # 3. Set secrets (NEVER commit these to version control):
@@ -101,11 +105,11 @@ command = "npm install && npm run build"
 #    wrangler secret put FIREBASE_API_KEY
 #
 # 4. Replace placeholder IDs in this file:
-#    - DEV_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER (line 23)
-#    - STAGING_KV_NAMESPACE_ID_PLACEHOLDER (line 63)
-#    - STAGING_KV_PREVIEW_ID_PLACEHOLDER (line 64)
-#    - PRODUCTION_KV_NAMESPACE_ID_PLACEHOLDER (line 85)
-#    - PRODUCTION_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER (line 88)
+#    - DEV_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER (line 58)
+#    - STAGING_KV_NAMESPACE_ID_PLACEHOLDER (line 135)
+#    - STAGING_KV_PREVIEW_ID_PLACEHOLDER (line 136)
+#    - PRODUCTION_KV_NAMESPACE_ID_PLACEHOLDER (line 157)
+#    - PRODUCTION_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER (line 160)
 #
 # 5. Deploy to development:
 #    wrangler deploy
@@ -115,6 +119,13 @@ command = "npm install && npm run build"
 #
 # 7. Deploy to production:
 #    wrangler deploy --env production
+#
+# IMPORTANT NOTES FOR PREVIEW ENVIRONMENTS:
+# ========================================
+# - Preview environments are ONLY needed for local development with 'wrangler dev'
+# - GitHub Actions deployment uses PRODUCTION values, NOT preview values
+# - If you're only deploying via GitHub Actions, you can leave preview placeholders as-is
+# - Only create preview resources if you plan to use 'wrangler dev' locally
 #
 # For more information, see: https://developers.cloudflare.com/workers/
 # ============================================

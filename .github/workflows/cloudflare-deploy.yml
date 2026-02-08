@@ -14,7 +14,63 @@ permissions:
   contents: read
 
 jobs:
+  validate-secrets:
+    name: Validate Required Secrets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Check CLOUDFLARE_API_TOKEN
+        run: |
+          if [ -z "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            echo "❌ ERROR: CLOUDFLARE_API_TOKEN secret is not configured"
+            echo ""
+            echo "Please add this secret:"
+            echo "1. Go to: Settings → Secrets and variables → Actions"
+            echo "2. Click 'New repository secret'"
+            echo "3. Name: CLOUDFLARE_API_TOKEN"
+            echo "4. Value: Your Cloudflare API token"
+            echo ""
+            exit 1
+          fi
+          echo "✅ CLOUDFLARE_API_TOKEN is configured"
+      
+      - name: Check Firebase Secrets
+        run: |
+          MISSING_SECRETS=""
+          
+          if [ -z "${{ secrets.VITE_FIREBASE_API_KEY }}" ]; then
+            MISSING_SECRETS="- VITE_FIREBASE_API_KEY"
+          fi
+          
+          if [ -z "${{ secrets.VITE_FIREBASE_AUTH_DOMAIN }}" ]; then
+            if [ -n "$MISSING_SECRETS" ]; then
+              MISSING_SECRETS="${MISSING_SECRETS}\n- VITE_FIREBASE_AUTH_DOMAIN"
+            else
+              MISSING_SECRETS="- VITE_FIREBASE_AUTH_DOMAIN"
+            fi
+          fi
+          
+          if [ -z "${{ secrets.VITE_FIREBASE_PROJECT_ID }}" ]; then
+            if [ -n "$MISSING_SECRETS" ]; then
+              MISSING_SECRETS="${MISSING_SECRETS}\n- VITE_FIREBASE_PROJECT_ID"
+            else
+              MISSING_SECRETS="- VITE_FIREBASE_PROJECT_ID"
+            fi
+          fi
+          
+          if [ -n "$MISSING_SECRETS" ]; then
+            echo "❌ ERROR: Missing Firebase secrets:"
+            echo -e "$MISSING_SECRETS"
+            echo ""
+            echo "See SECRETS.md for setup instructions"
+            exit 1
+          fi
+          echo "✅ All required Firebase secrets are configured"
+
   test:
+    needs: validate-secrets
     name: Run Tests
     runs-on: ubuntu-latest
     permissions:
@@ -49,7 +105,7 @@ jobs:
   build:
     name: Build Production
     runs-on: ubuntu-latest
-    needs: test
+    needs: [validate-secrets, test]
     permissions:
       contents: read
     
