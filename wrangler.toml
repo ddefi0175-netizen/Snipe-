@@ -105,7 +105,7 @@ command = "npm install && npm run build"
 #    wrangler secret put FIREBASE_API_KEY
 #
 # 4. Replace placeholder IDs in this file:
-#    - DEV_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER (line 56)
+#    - DEV_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER (line 58)
 #    - STAGING_KV_NAMESPACE_ID_PLACEHOLDER (line 135)
 #    - STAGING_KV_PREVIEW_ID_PLACEHOLDER (line 136)
 #    - PRODUCTION_KV_NAMESPACE_ID_PLACEHOLDER (line 157)
