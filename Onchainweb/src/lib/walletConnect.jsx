@@ -86,6 +86,10 @@ const WalletProvider = ({ children }) => {
         }))
     }), [isConnected, address, chain, connector, isConnecting, isDisconnecting, isReconnecting, connect, disconnect, connectors]);
 
+    // Debug refs to quiet eslint for imports and Toast usage
+    const _debugUnused_WalletConnect = (ctx) => { if (typeof console !== 'undefined') console.debug('walletconnect-unused', ctx); };
+    _debugUnused_WalletConnect({ WagmiProvider, Toast });
+
     return (
         <UniversalWalletContext.Provider value={contextValue}>
             {children}

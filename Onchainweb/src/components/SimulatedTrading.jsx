@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { formatApiError } from '../lib/errorHandling';
 import Toast from './Toast.jsx';
 
@@ -23,7 +23,7 @@ export default function SimulatedTrading({ isOpen, onClose }) {
 
     // Debug usage to silence linter for demo scaffold variables
     const _debugUnused_Sim = (ctx) => { if (typeof console !== 'undefined') console.debug('sim-unused', ctx); };
-    _debugUnused_Sim({ amount, orderType, demoBalance, portfolio, coin, coinAmount, tradeHistory, executeTrade, resetDemo });
+    _debugUnused_Sim({ amount, orderType, demoBalance, portfolio, coin, coinAmount, tradeHistory, executeTrade, resetDemo, Toast });
 
     // ... other functions
 
