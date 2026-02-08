@@ -55,8 +55,9 @@ trap cleanup EXIT
 echo "🔍 Running smoke test..."
 SUCCESS=false
 MAX_RETRIES=15
+i=1
 
-for i in $(seq 1 $MAX_RETRIES); do
+while [ $i -le $MAX_RETRIES ]; do
   echo "Attempt $i/$MAX_RETRIES: Testing http://localhost:5173..."
   
   if curl -fsS http://localhost:5173 >/dev/null 2>&1; then
@@ -73,6 +74,7 @@ for i in $(seq 1 $MAX_RETRIES); do
     exit 1
   fi
   
+  i=$((i + 1))
   sleep 2
 done
 
