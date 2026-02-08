@@ -1,3 +1,31 @@
+# ============================================
+# CLOUDFLARE WORKERS CONFIGURATION
+# ============================================
+# 
+# SETUP INSTRUCTIONS:
+# 
+# 1. Create KV Namespaces (REQUIRED):
+#    wrangler kv:namespace create "CACHE"
+#    wrangler kv:namespace create "CACHE" --preview
+#    
+#    Copy the IDs and replace placeholders below
+#
+# 2. Create R2 Buckets (REQUIRED):
+#    wrangler r2 bucket create onchainweb
+#    wrangler r2 bucket create onchainweb-dev-preview
+#
+# 3. Set Secrets (REQUIRED for production):
+#    wrangler secret put FIREBASE_PRIVATE_KEY
+#    wrangler secret put FIREBASE_CLIENT_EMAIL
+#    wrangler secret put TELEGRAM_BOT_TOKEN
+#
+# 4. Deploy:
+#    Development: wrangler deploy
+#    Production:  wrangler deploy --env production
+#
+# For detailed setup guide, see: /docs/CLOUDFLARE_WORKERS_SETUP.md
+# ============================================
+
 name = "wrangler1createsnipe-chat-db"
 main = "workers/index.js"
 compatibility_date = "2026-01-30"
