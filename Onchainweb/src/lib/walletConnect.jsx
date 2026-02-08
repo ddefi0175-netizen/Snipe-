@@ -102,4 +102,4 @@ export const UniversalWalletProvider = ({ children }) => (
     </WagmiProvider>
 );
 
-export const useUniversalWallet = () => React.useContext(UniversalWalletContext);
+export const useUniversalWallet = () => useContext(UniversalWalletContext);

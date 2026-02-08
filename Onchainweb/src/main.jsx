@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { UniversalWalletProvider } from './lib/walletConnect.jsx'
@@ -54,7 +54,7 @@ const LoadingSpinner = () => (
 )
 
 createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
+  <StrictMode>
     <ErrorBoundary>
       <BrowserRouter>
         <UniversalWalletProvider>
