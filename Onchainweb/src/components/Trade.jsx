@@ -52,8 +52,7 @@ export default function Trade({ isOpen, onClose }) {
             setIsTrading(true);
             setTradeDirection(direction);
             setEntryPrice(currentPrice);
-            setTradeResult(null); // Clear previous result
-                _setTradeResult(null);
+            _setTradeResult(null);
             showToast('Trade started! Good luck!', 'success');
 
         } catch (error) {
