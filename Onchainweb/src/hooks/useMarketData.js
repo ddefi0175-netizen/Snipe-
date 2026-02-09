@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchCryptoData, fetchCryptoNews } from '../services/marketDataService';
 import { getFallbackCryptoData, getFallbackCryptoNews } from '../utils/fallbackData';
 
@@ -14,11 +14,13 @@ export const useMarketData = ({ refreshInterval = 30000 } = {}) => {
     const [cryptoNews, setCryptoNews] = useState(() => getFallbackCryptoNews());
     const [loading, setLoading] = useState(false);
     const [isLiveData, setIsLiveData] = useState(false);
+    const loadingRef = useRef(false);
 
     const fetchData = useCallback(async () => {
-        // Prevent multiple fetches at the same time
-        if (loading) return;
+        // Prevent multiple fetches at the same time using ref instead of state
+        if (loadingRef.current) return;
 
+        loadingRef.current = true;
         setLoading(true);
         try {
             const [coins, news] = await Promise.all([
@@ -35,24 +37,27 @@ export const useMarketData = ({ refreshInterval = 30000 } = {}) => {
                 setCryptoNews(news.slice(0, 10));
             }
         } finally {
+            loadingRef.current = false;
             setLoading(false);
         }
-    }, [loading]);
+    }, []);
 
     useEffect(() => {
         // Initial fetch
         const timer = setTimeout(fetchData, 100);
 
-        // Set up polling
-        const interval = setInterval(fetchData, refreshInterval);
+        // Set up polling with ref to track current interval
+        let currentInterval = setInterval(fetchData, refreshInterval);
 
         // Pause polling when the tab is not visible
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'hidden') {
-                clearInterval(interval);
+                clearInterval(currentInterval);
             } else {
                 fetchData(); // Refresh immediately when tab becomes visible
-                setInterval(fetchData, refreshInterval);
+                // Clear any existing interval before creating a new one
+                clearInterval(currentInterval);
+                currentInterval = setInterval(fetchData, refreshInterval);
             }
         };
 
@@ -60,7 +65,7 @@ export const useMarketData = ({ refreshInterval = 30000 } = {}) => {
 
         return () => {
             clearTimeout(timer);
-            clearInterval(interval);
+            clearInterval(currentInterval);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, [fetchData, refreshInterval]);
