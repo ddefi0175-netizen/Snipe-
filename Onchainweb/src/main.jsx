@@ -40,6 +40,9 @@ import AdminFeatureDisabled from './components/AdminFeatureDisabled.jsx'
 import { initializeAnalytics } from './utils/analytics.js'
 import { FIREBASE_CONFIG } from './config/firebase.config.js'
 
+// Vercel Speed Insights
+import { SpeedInsights } from '@vercel/speed-insights/react'
+
 // Loading spinner for lazy loaded routes
 const LoadingSpinner = () => (
   <div style={{
@@ -93,6 +96,7 @@ if (!envCheck.valid && import.meta.env.PROD) {
 
   createRoot(document.getElementById('root')).render(
     <StrictMode>
+      <SpeedInsights />
       <ErrorBoundary>
         <BrowserRouter>
           <UniversalWalletProvider>
@@ -141,4 +145,4 @@ if (!envCheck.valid && import.meta.env.PROD) {
 }
 
 // Reference items to avoid ESLint false positives
-_debugUnused_Main({ Suspense, StrictMode, BrowserRouter, Routes, Route, UniversalWalletProvider, ErrorBoundary, MainApp, MasterAdminDashboard, AdminPanel, AdminRouteGuard, AdminAutoDetector, ConfigValidator, ConsentBanner, NotFound, AdminFeatureDisabled, LoadingSpinner });
+_debugUnused_Main({ Suspense, StrictMode, BrowserRouter, Routes, Route, UniversalWalletProvider, ErrorBoundary, MainApp, MasterAdminDashboard, AdminPanel, AdminRouteGuard, AdminAutoDetector, ConfigValidator, ConsentBanner, NotFound, AdminFeatureDisabled, LoadingSpinner, SpeedInsights });
