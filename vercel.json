@@ -4,11 +4,6 @@
   "buildCommand": "cd Onchainweb && npm install && npm run build",
   "outputDirectory": "Onchainweb/dist",
   "installCommand": "cd Onchainweb && npm install",
-  "git": {
-    "deploymentEnabled": {
-      "main": true
-    }
-  },
   "rewrites": [
     {
       "source": "/(.*)",
