@@ -1,10 +1,17 @@
 
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
     plugins: [react()],
     base: '/',
+    resolve: {
+        alias: {
+            '@wagmi/core': path.resolve(__dirname, 'node_modules/@wagmi/core'),
+            '@wagmi/connectors': path.resolve(__dirname, 'node_modules/@wagmi/connectors'),
+        },
+    },
     esbuild: {
         loader: 'jsx',
         include: /src\/.*\.jsx?$/,
@@ -12,8 +19,7 @@ export default defineConfig({
         drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
     },
     optimizeDeps: {
-        exclude: ['@wagmi/core', '@wagmi/connectors'],
-        include: ['@web3modal/ethers', 'ethers', 'ethers/lib/utils'],
+        include: ['@web3modal/ethers', 'ethers', 'ethers/lib/utils', '@wagmi/core', '@wagmi/connectors'],
         esbuildOptions: {
             loader: {
                 '.js': 'jsx',
@@ -28,16 +34,9 @@ export default defineConfig({
             legalComments: 'none',
         },
         rollupOptions: {
-            external: ['@wagmi/core', '@wagmi/connectors'],
-            output: {
-                globals: {
-                    '@wagmi/core': 'WagmiCore',
-                    '@wagmi/connectors': 'WagmiConnectors',
-                },
-                // ... manualChunks and other output options
-            },
+            // No externals - bundle everything for browser
         },
-        chunkSizeWarningLimit: 2500,
+        chunkSizeWarningLimit: 3000,
         sourcemap: false,
     },
     server: {
