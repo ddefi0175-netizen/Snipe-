@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
-import { submitKycData } from '../services/userService.js'
-import { doc, setDoc } from 'firebase/firestore'
+import { doc, setDoc, collection } from 'firebase/firestore'
 import { db, isFirebaseAvailable } from '../lib/firebase.js'
 
 export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick, onDemoClick, onC2CClick, onBorrowClick, onWalletActionsClick }) {
@@ -300,6 +299,8 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
       const wallet = localStorage.getItem('walletAddress')
       if (wallet && isFirebaseAvailable) {
         // Submit KYC to Firebase
+        // NOTE: Server-side validation should be added via Firebase Security Rules
+        // or Cloud Functions to verify data format and prevent malicious submissions
         const userRef = doc(db, 'users', wallet)
         await setDoc(userRef, {
           kycFullName,
@@ -373,7 +374,10 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
     try {
       // Submit to Firebase
       if (wallet && isFirebaseAvailable) {
-        const depositRef = doc(db, 'deposits', `${wallet}_${Date.now()}`)
+        // NOTE: Server-side validation should be added via Cloud Functions to
+        // verify transaction on-chain before accepting deposit proof
+        // Generate unique document ID using Firestore auto-ID
+        const depositRef = doc(collection(db, 'deposits'))
         await setDoc(depositRef, {
           userId: wallet,
           imageUrl: uploadScreenshotPreview,
