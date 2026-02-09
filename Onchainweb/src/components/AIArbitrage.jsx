@@ -46,7 +46,7 @@ export default function AIArbitrage({ isOpen, onClose }) {
 
         // Deduct from balance
         const newBalance = userBalance - amount;
-        if (typeof isFirebaseAvailable === 'function' ? isFirebaseAvailable() : isFirebaseAvailable) {
+        if (isFirebaseAvailable) {
             if (typeof saveUser === 'function') await saveUser(userId, { balance: newBalance });
         } else {
             localStorage.setItem('aiArbitrageBalance', newBalance.toString());
