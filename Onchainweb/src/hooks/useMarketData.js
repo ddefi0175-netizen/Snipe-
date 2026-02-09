@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { fetchCryptoData, fetchCryptoNews } from '../services/marketDataService';
 import { getFallbackCryptoData, getFallbackCryptoNews } from '../utils/fallbackData';
 
@@ -14,11 +14,14 @@ export const useMarketData = ({ refreshInterval = 30000 } = {}) => {
     const [cryptoNews, setCryptoNews] = useState(() => getFallbackCryptoNews());
     const [loading, setLoading] = useState(false);
     const [isLiveData, setIsLiveData] = useState(false);
+    const loadingRef = useRef(false);
+    const intervalRef = useRef(null);
 
     const fetchData = useCallback(async () => {
-        // Prevent multiple fetches at the same time
-        if (loading) return;
+        // Prevent multiple fetches at the same time using ref instead of state
+        if (loadingRef.current) return;
 
+        loadingRef.current = true;
         setLoading(true);
         try {
             const [coins, news] = await Promise.all([
@@ -35,9 +38,10 @@ export const useMarketData = ({ refreshInterval = 30000 } = {}) => {
                 setCryptoNews(news.slice(0, 10));
             }
         } finally {
+            loadingRef.current = false;
             setLoading(false);
         }
-    }, [loading]);
+    }, []);
 
     useEffect(() => {
         // Initial fetch
