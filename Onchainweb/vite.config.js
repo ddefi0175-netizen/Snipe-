@@ -12,7 +12,7 @@ export default defineConfig({
         drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
     },
     optimizeDeps: {
-        exclude: ['@wagmi/core', '@wagmi/connectors', '@walletconnect/ethereum-provider'], // Add @walletconnect/ethereum-provider
+        exclude: ['@wagmi/core', '@wagmi/connectors'],
         include: ['@web3modal/ethers', 'ethers', 'ethers/lib/utils'],
         esbuildOptions: {
             loader: {
@@ -28,12 +28,11 @@ export default defineConfig({
             legalComments: 'none',
         },
         rollupOptions: {
-            external: ['@wagmi/core', '@wagmi/connectors', '@walletconnect/ethereum-provider'], // Add @walletconnect/ethereum-provider
+            external: ['@wagmi/core', '@wagmi/connectors'],
             output: {
                 globals: {
                     '@wagmi/core': 'WagmiCore',
                     '@wagmi/connectors': 'WagmiConnectors',
-                    '@walletconnect/ethereum-provider': 'WalletConnectEthereumProvider', // Add this line
                 },
                 // ... manualChunks and other output options
             },
