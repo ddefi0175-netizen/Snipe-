@@ -37,7 +37,7 @@
         "headers": [
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.gstatic.com https://vercel.live https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://*.firebaseio.com https://*.firebaseapp.com https://*.googleapis.com https://vercel.live wss://*.walletconnect.com https://*.walletconnect.com; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';"
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.gstatic.com https://vercel.live https://*.firebaseapp.com https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://*.firebaseio.com https://*.firebaseapp.com https://*.googleapis.com https://vercel.live wss://*.walletconnect.com https://*.walletconnect.com https://api.web3modal.org https://pulse.walletconnect.org; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self';"
           },
           {
             "key": "X-Content-Type-Options",
