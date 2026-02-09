@@ -9,7 +9,7 @@
  * - Cross-platform session consistency
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useUniversalWallet, detectEnvironment, detectAvailableWallets } from '../lib/walletConnect.jsx'
 import { autoRegisterUser } from '../services/walletService.js'
 
@@ -99,8 +99,9 @@ export default function WalletGate({ onConnect, children, allowOpenAccess = fals
         setSkipGate(true)
     }
 
-    const popularWallets = availableWallets.filter(w => w.popular)
-    const otherWallets = availableWallets.filter(w => !w.popular)
+    // Memoize wallet filtering to prevent recalculation on every render
+    const popularWallets = useMemo(() => availableWallets.filter(w => w.popular), [availableWallets])
+    const otherWallets = useMemo(() => availableWallets.filter(w => !w.popular), [availableWallets])
 
     // If connected or in open access mode, show app
     if (wallet.isConnected || skipGate) {
