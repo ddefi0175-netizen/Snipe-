@@ -1,6 +1,7 @@
 
 // React automatic JSX runtime in use — default React import not required
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { UniversalWalletProvider } from './lib/walletConnect';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -15,7 +16,7 @@ const _debugUnused_App = (ctx) => {
   // Keep minimal runtime impact in development only
   if (typeof console !== 'undefined' && process?.env?.NODE_ENV !== 'production') console.debug('app-unused', ctx);
 };
-_debugUnused_App({ Router, Route, Routes, UniversalWalletProvider, Header, Footer, Dashboard, Trade, Wallet, NotFound, ErrorBoundary });
+_debugUnused_App({ Router, Route, Routes, SpeedInsights, UniversalWalletProvider, Header, Footer, Dashboard, Trade, Wallet, NotFound, ErrorBoundary });
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
           </div>
         </Router>
       </UniversalWalletProvider>
+      <SpeedInsights />
     </ErrorBoundary>
   );
 }
