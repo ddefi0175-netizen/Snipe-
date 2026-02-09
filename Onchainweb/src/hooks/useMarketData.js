@@ -15,6 +15,7 @@ export const useMarketData = ({ refreshInterval = 30000 } = {}) => {
     const [loading, setLoading] = useState(false);
     const [isLiveData, setIsLiveData] = useState(false);
     const loadingRef = useRef(false);
+    const intervalRef = useRef(null);
 
     const fetchData = useCallback(async () => {
         // Prevent multiple fetches at the same time using ref instead of state
@@ -47,17 +48,22 @@ export const useMarketData = ({ refreshInterval = 30000 } = {}) => {
         const timer = setTimeout(fetchData, 100);
 
         // Set up polling with ref to track current interval
-        let currentInterval = setInterval(fetchData, refreshInterval);
+        intervalRef.current = setInterval(fetchData, refreshInterval);
 
         // Pause polling when the tab is not visible
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'hidden') {
-                clearInterval(currentInterval);
+                if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                    intervalRef.current = null;
+                }
             } else {
                 fetchData(); // Refresh immediately when tab becomes visible
                 // Clear any existing interval before creating a new one
-                clearInterval(currentInterval);
-                currentInterval = setInterval(fetchData, refreshInterval);
+                if (intervalRef.current) {
+                    clearInterval(intervalRef.current);
+                }
+                intervalRef.current = setInterval(fetchData, refreshInterval);
             }
         };
 
@@ -65,7 +71,9 @@ export const useMarketData = ({ refreshInterval = 30000 } = {}) => {
 
         return () => {
             clearTimeout(timer);
-            clearInterval(currentInterval);
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+            }
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, [fetchData, refreshInterval]);
