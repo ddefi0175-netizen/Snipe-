@@ -221,7 +221,7 @@ jobs:
           while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
             echo "Attempt $((RETRY_COUNT + 1))/$MAX_RETRIES: Checking worker health..."
             
-            if curl -f -s -o /dev/null -w "%{http_code}\n" https://snipe-workers.onchainweb.workers.dev/health | grep -q "200"; then
+            if curl -f -s -o /dev/null -w "%{http_code}\n" https://snipe-onchainweb.workers.dev/health | grep -q "200"; then
               echo "✅ Worker health check passed"
               exit 0
             fi
@@ -235,7 +235,7 @@ jobs:
           
           echo "⚠️ Worker health check failed after $MAX_RETRIES attempts"
           echo "This may be normal if the worker doesn't have a /health endpoint yet"
-          echo "Worker is deployed at: https://snipe-workers.onchainweb.workers.dev"
+          echo "Worker is deployed at: https://snipe-onchainweb.workers.dev"
 
   deploy-pages:
     name: Deploy Pages
@@ -323,7 +323,7 @@ jobs:
             echo ""
             echo "🌐 Your application is live at:"
             echo "   Frontend: https://onchainweb.pages.dev"
-            echo "   Workers:  https://snipe-onchainweb.onchainweb.workers.dev"
+            echo "   Workers:  https://snipe-onchainweb.workers.dev"
             echo ""
           else
             echo "❌ DEPLOYMENT FAILED"
