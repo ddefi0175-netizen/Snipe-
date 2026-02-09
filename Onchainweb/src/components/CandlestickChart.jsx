@@ -95,14 +95,24 @@ export default function CandlestickChart({
     return map[tf] || 60000
   }
 
-  // Calculate MA (Moving Average)
+  // Calculate MA (Moving Average) with optimized sliding window algorithm
   const calculateMA = (data, period = 20) => {
     const ma = []
+    let sum = 0
+    
     for (let i = 0; i < data.length; i++) {
+      // Add current value to sum
+      sum += data[i].close
+      
+      // Remove oldest value from sum if window is full
+      if (i >= period) {
+        sum -= data[i - period].close
+      }
+      
+      // Calculate average if we have enough data
       if (i < period - 1) {
         ma.push(null)
       } else {
-        const sum = data.slice(i - period + 1, i + 1).reduce((a, b) => a + b.close, 0)
         ma.push(sum / period)
       }
     }
