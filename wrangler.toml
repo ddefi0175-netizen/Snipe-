@@ -52,19 +52,19 @@ workers_dev = true
 binding = "CACHE"
 # KV Namespace ID - should be created via wrangler kv:namespace create
 id = "488840361a874877b2b54506b15f746a"
-# ⚠️ TODO: Create preview namespace with:
-#    wrangler kv:namespace create "CACHE" --preview
-# Then replace the placeholder below with the returned ID
-preview_id = "DEV_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER"  # Separate preview namespace for dev isolation
+# OPTIONAL: Preview namespace (only needed for local 'wrangler dev')
+# Create with: wrangler kv:namespace create "CACHE" --preview
+# Then uncomment and set the preview_id below
+# preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID"
 
 [[r2_buckets]]
 binding = "STORAGE"
 # R2 Bucket - should be created via wrangler r2 bucket create
 bucket_name = "onchainweb"
-# ⚠️ TODO: Create preview bucket with:
-#    wrangler r2 bucket create onchainweb-dev-preview
+# OPTIONAL: Preview bucket (only needed for local 'wrangler dev')
+# Create with: wrangler r2 bucket create onchainweb-dev-preview
 # Then uncomment the line below
-preview_bucket_name = "onchainweb-dev-preview"  # Separate preview bucket for dev isolation
+# preview_bucket_name = "onchainweb-dev-preview"
 
 [vars]
 # Non-sensitive configuration variables
@@ -81,8 +81,9 @@ R2_PUBLIC_URL = "https://storage.onchainweb.app"
 # Allowed CORS origins (comma-separated)
 ALLOWED_ORIGINS = "https://onchainweb.pages.dev,https://www.onchainweb.app"
 
-[build]
-command = "npm install && npm run build"
+# Build is handled by GitHub Actions workflow
+# [build]
+# command = "npm install && npm run build"
 
 # ============================================
 # SETUP INSTRUCTIONS
@@ -104,20 +105,20 @@ command = "npm install && npm run build"
 #    wrangler secret put FIREBASE_PRIVATE_KEY
 #    wrangler secret put FIREBASE_API_KEY
 #
-# 4. Replace placeholder IDs in this file:
-#    - DEV_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER (line 58)
-#    - STAGING_KV_NAMESPACE_ID_PLACEHOLDER (line 135)
-#    - STAGING_KV_PREVIEW_ID_PLACEHOLDER (line 136)
-#    - PRODUCTION_KV_NAMESPACE_ID_PLACEHOLDER (line 157)
-#    - PRODUCTION_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER (line 160)
+# 4. (OPTIONAL) Set up preview environments for local development:
+#    - Uncomment preview_id in [[kv_namespaces]] section
+#    - Uncomment preview_bucket_name in [[r2_buckets]] section
+#    - Create preview resources with 'wrangler kv:namespace create "CACHE" --preview'
 #
 # 5. Deploy to development:
 #    wrangler deploy
 #
-# 6. Deploy to staging:
+# 6. (OPTIONAL) Deploy to staging (if configured):
+#    Uncomment [env.staging] section first
 #    wrangler deploy --env staging
 #
-# 7. Deploy to production:
+# 7. (OPTIONAL) Deploy to production (if configured):
+#    Uncomment [env.production] section first
 #    wrangler deploy --env production
 #
 # IMPORTANT NOTES FOR PREVIEW ENVIRONMENTS:
@@ -131,55 +132,51 @@ command = "npm install && npm run build"
 # ============================================
 
 # ============================================
-# Staging Environment
+# Staging Environment (OPTIONAL - Currently Disabled)
 # ============================================
-[env.staging]
-name = "snipe-onchainweb-staging"
-workers_dev = true
-vars = { ENVIRONMENT = "staging", DEBUG = "true" }
-
-# Staging-specific KV namespace
-[[env.staging.kv_namespaces]]
-binding = "CACHE"
-# TODO: Create staging KV namespace with: wrangler kv:namespace create "CACHE" --env staging
-# Then replace this placeholder with the actual namespace ID
-id = "STAGING_KV_NAMESPACE_ID_PLACEHOLDER"
-preview_id = "STAGING_KV_PREVIEW_ID_PLACEHOLDER"  # Separate preview namespace recommended
-
-# Staging-specific R2 bucket
-[[env.staging.r2_buckets]]
-binding = "STORAGE"
-bucket_name = "onchainweb-staging"
-preview_bucket_name = "onchainweb-staging-preview"  # Separate preview bucket for isolation
+# Uncomment and configure when ready to set up staging environment
+#
+# [env.staging]
+# name = "snipe-onchainweb-staging"
+# workers_dev = true
+# vars = { ENVIRONMENT = "staging", DEBUG = "true" }
+#
+# # Staging-specific KV namespace
+# [[env.staging.kv_namespaces]]
+# binding = "CACHE"
+# # Create with: wrangler kv:namespace create "CACHE" --env staging
+# id = "YOUR_STAGING_KV_NAMESPACE_ID"
+#
+# # Staging-specific R2 bucket
+# [[env.staging.r2_buckets]]
+# binding = "STORAGE"
+# bucket_name = "onchainweb-staging"
 
 # ============================================
-# Production Environment
+# Production Environment (OPTIONAL - Currently Disabled)
 # ============================================
-[env.production]
-name = "snipe-onchainweb-production"
-workers_dev = false  # Disable *.workers.dev in production
-vars = { ENVIRONMENT = "production", DEBUG = "false" }
-
-# Production-specific KV namespace
-[[env.production.kv_namespaces]]
-binding = "CACHE"
-# IMPORTANT: Create production KV namespace with: wrangler kv:namespace create "CACHE" --env production
-# Then replace this placeholder with the actual namespace ID from the output
-id = "PRODUCTION_KV_NAMESPACE_ID_PLACEHOLDER"
-# IMPORTANT: Create separate preview namespace with: wrangler kv:namespace create "CACHE" --env production --preview
-# This isolates preview deployments from production data
-preview_id = "PRODUCTION_PREVIEW_KV_NAMESPACE_ID_PLACEHOLDER"
-
-# Production-specific R2 bucket
-[[env.production.r2_buckets]]
-binding = "STORAGE"
-bucket_name = "onchainweb-production"
-preview_bucket_name = "onchainweb-production-preview"  # Separate preview bucket to protect production data
-
-# Production routes - uncomment and configure for custom domain
-# routes = [
-#   { pattern = "api.onchainweb.app/*", custom_domain = true }
-# ]
+# Uncomment and configure when ready to set up production environment
+#
+# [env.production]
+# name = "snipe-onchainweb-production"
+# workers_dev = false  # Disable *.workers.dev in production
+# vars = { ENVIRONMENT = "production", DEBUG = "false" }
+#
+# # Production-specific KV namespace
+# [[env.production.kv_namespaces]]
+# binding = "CACHE"
+# # Create with: wrangler kv:namespace create "CACHE" --env production
+# id = "YOUR_PRODUCTION_KV_NAMESPACE_ID"
+#
+# # Production-specific R2 bucket
+# [[env.production.r2_buckets]]
+# binding = "STORAGE"
+# bucket_name = "onchainweb-production"
+#
+# # Production routes - configure for custom domain
+# # routes = [
+# #   { pattern = "api.onchainweb.app/*", custom_domain = true }
+# # ]
 
 # Cloudflare Pages configuration
 pages_build_output_dir = "Onchainweb/dist"

@@ -176,11 +176,38 @@ jobs:
           fi
           echo "✅ Cloudflare API token is configured"
       
+      - name: Validate wrangler.toml
+        run: |
+          echo "🔍 Validating wrangler.toml configuration..."
+          
+          # Check if wrangler.toml exists
+          if [ ! -f "wrangler.toml" ]; then
+            echo "❌ ERROR: wrangler.toml not found"
+            exit 1
+          fi
+          
+          # Check for placeholder values that would cause deployment failure
+          if grep -q "_PLACEHOLDER" wrangler.toml; then
+            echo "❌ ERROR: Found placeholder values in wrangler.toml"
+            echo ""
+            echo "Placeholder values found:"
+            grep -n "_PLACEHOLDER" wrangler.toml || true
+            echo ""
+            echo "Please replace all placeholder values with actual IDs"
+            echo "See wrangler.toml comments for setup instructions"
+            exit 1
+          fi
+          
+          echo "✅ wrangler.toml validation passed"
+      
       - name: Deploy Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           command: deploy
+        env:
+          # Enable verbose output for better error diagnostics
+          WRANGLER_LOG: info
       
       - name: Verify worker deployment
         run: |
@@ -279,11 +306,47 @@ jobs:
     steps:
       - name: Deployment Status
         run: |
-          if [ "${{ needs.deploy-workers.result }}" == "success" ] && [ "${{ needs.deploy-pages.result }}" == "success" ]; then
-            echo "✅ Deployment successful!"
-            echo "Frontend: https://onchainweb.pages.dev"
-            echo "Workers: https://snipe-workers.onchainweb.workers.dev"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "            DEPLOYMENT SUMMARY"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo ""
+          
+          WORKERS_STATUS="${{ needs.deploy-workers.result }}"
+          PAGES_STATUS="${{ needs.deploy-pages.result }}"
+          
+          echo "Workers Deployment: $WORKERS_STATUS"
+          echo "Pages Deployment:   $PAGES_STATUS"
+          echo ""
+          
+          if [ "$WORKERS_STATUS" == "success" ] && [ "$PAGES_STATUS" == "success" ]; then
+            echo "✅ DEPLOYMENT SUCCESSFUL!"
+            echo ""
+            echo "🌐 Your application is live at:"
+            echo "   Frontend: https://onchainweb.pages.dev"
+            echo "   Workers:  https://snipe-onchainweb.onchainweb.workers.dev"
+            echo ""
           else
-            echo "❌ Deployment failed"
+            echo "❌ DEPLOYMENT FAILED"
+            echo ""
+            echo "📋 Troubleshooting:"
+            
+            if [ "$WORKERS_STATUS" != "success" ]; then
+              echo "   • Check Workers deployment logs above"
+              echo "   • Verify wrangler.toml has no placeholder values"
+              echo "   • Ensure KV namespace and R2 bucket exist"
+              echo "   • Verify CLOUDFLARE_API_TOKEN has correct permissions"
+            fi
+            
+            if [ "$PAGES_STATUS" != "success" ]; then
+              echo "   • Check Pages deployment logs above"
+              echo "   • Verify build artifacts were created"
+              echo "   • Ensure Cloudflare Pages project exists"
+            fi
+            
+            echo ""
+            echo "📖 For detailed setup instructions, see:"
+            echo "   • SECRETS.md for secret configuration"
+            echo "   • wrangler.toml comments for resource setup"
+            echo ""
             exit 1
           fi
