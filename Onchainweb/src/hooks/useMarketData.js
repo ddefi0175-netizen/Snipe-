@@ -48,22 +48,17 @@ export const useMarketData = ({ refreshInterval = 30000 } = {}) => {
         const timer = setTimeout(fetchData, 100);
 
         // Set up polling with ref to track current interval
-        intervalRef.current = setInterval(fetchData, refreshInterval);
+        let currentInterval = setInterval(fetchData, refreshInterval);
 
         // Pause polling when the tab is not visible
         const handleVisibilityChange = () => {
             if (document.visibilityState === 'hidden') {
-                if (intervalRef.current) {
-                    clearInterval(intervalRef.current);
-                    intervalRef.current = null;
-                }
+                clearInterval(currentInterval);
             } else {
                 fetchData(); // Refresh immediately when tab becomes visible
                 // Clear any existing interval before creating a new one
-                if (intervalRef.current) {
-                    clearInterval(intervalRef.current);
-                }
-                intervalRef.current = setInterval(fetchData, refreshInterval);
+                clearInterval(currentInterval);
+                currentInterval = setInterval(fetchData, refreshInterval);
             }
         };
 
@@ -71,9 +66,7 @@ export const useMarketData = ({ refreshInterval = 30000 } = {}) => {
 
         return () => {
             clearTimeout(timer);
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current);
-            }
+            clearInterval(currentInterval);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
         };
     }, [fetchData, refreshInterval]);

@@ -1,5 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { userAPI, uploadAPI } from '../lib/api'
+
+// Helper functions defined outside component for better performance
+const generateUserId = () => {
+  return Math.floor(10000 + Math.random() * 90000).toString()
+}
+
+const generateVerificationCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
 
 export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick, onDemoClick, onC2CClick, onBorrowClick, onWalletActionsClick }) {
   const [activeModal, setActiveModal] = useState(null)
@@ -35,18 +44,8 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
     return saved ? JSON.parse(saved) : []
   })
 
-  // Generate random 5-digit UserID (numbers only)
-  const generateUserId = () => {
-    return Math.floor(10000 + Math.random() * 90000).toString()
-  }
-
-  // Generate 6-digit verification code
-  const generateVerificationCode = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString()
-  }
-
-  // Profile & Settings state
-  const [profile, setProfile] = useState(() => {
+  // Memoize profile initialization to prevent repeated JSON.parse on re-renders
+  const initialProfile = useMemo(() => {
     const saved = localStorage.getItem('userProfile')
     if (saved) {
       const parsed = JSON.parse(saved)
@@ -95,7 +94,10 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
       totalTrades: 0,
       totalProfit: 0
     }
-  })
+  }, []); // Empty deps - only compute once
+
+  // Profile & Settings state
+  const [profile, setProfile] = useState(initialProfile)
 
   // Also sync userId with realAccountId in localStorage
   useEffect(() => {
@@ -108,36 +110,6 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
       localStorage.setItem('realAccountId', profile.userId)
     }
   }, [profile.userId])
-
-  // Sync with backend when wallet is connected
-  useEffect(() => {
-    const syncWithBackend = async () => {
-      const wallet = localStorage.getItem('walletAddress')
-      if (!wallet) return
-
-      try {
-        const user = await userAPI.getByWallet(wallet)
-        if (user && user.userId) {
-          console.log('Synced with backend user:', user.userId)
-          localStorage.setItem('realAccountId', user.userId)
-          localStorage.setItem('backendUserId', user._id)
-          localStorage.setItem('backendUser', JSON.stringify(user))
-
-          // Update profile with backend userId
-          setProfile(prev => ({
-            ...prev,
-            userId: user.userId,
-            kycStatus: user.kycStatus || prev.kycStatus,
-            balance: user.balance || prev.balance
-          }))
-        }
-      } catch (error) {
-        console.log('Backend sync skipped:', error.message)
-      }
-    }
-
-    syncWithBackend()
-  }, []) // Run once on mount
 
   // Get display name (KYC name if available, otherwise username)
   const getDisplayName = () => {
@@ -326,31 +298,25 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
     try {
       // Get wallet address for user identification
       const wallet = localStorage.getItem('walletAddress')
-      if (wallet) {
-        // First try to get existing user, if not found create one
-        let user = await userAPI.getByWallet(wallet).catch(() => null)
-
-        if (!user) {
-          // User doesn't exist in backend, create them first
-          console.log('User not found in backend, creating...')
-          user = await userAPI.loginByWallet(wallet, profile.username, profile.email)
-        }
-
-        if (user && user._id) {
-          // Submit KYC to backend
-          await userAPI.submitKYC(user._id, {
-            fullName: kycFullName,
-            docType: kycDocType,
-            docNumber: kycDocNumber,
-            frontPhoto: kycFrontPreview,
-            backPhoto: kycBackPreview
-          })
-          backendSuccess = true
-          console.log('KYC submitted to backend successfully')
-        }
+      if (wallet && isFirebaseAvailable) {
+        // Submit KYC to Firebase
+        // NOTE: Server-side validation should be added via Firebase Security Rules
+        // or Cloud Functions to verify data format and prevent malicious submissions
+        const userRef = doc(db, 'users', wallet)
+        await setDoc(userRef, {
+          kycFullName,
+          kycDocType,
+          kycDocNumber,
+          kycFrontPhoto: kycFrontPreview,
+          kycBackPhoto: kycBackPreview,
+          kycStatus: 'pending',
+          kycSubmittedAt: new Date().toISOString()
+        }, { merge: true })
+        backendSuccess = true
+        console.log('KYC submitted to Firebase successfully')
       }
     } catch (error) {
-      console.error('Failed to submit KYC to backend:', error)
+      console.error('Failed to submit KYC to Firebase:', error)
     }
 
     // Also save locally for immediate UI update
@@ -407,16 +373,25 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
     const wallet = localStorage.getItem('walletAddress')
 
     try {
-      // Submit to backend
-      await uploadAPI.create({
-        userId: wallet || profile.userId,
-        imageUrl: uploadScreenshotPreview,
-        amount: parseFloat(uploadAmount),
-        network: uploadNetwork,
-        txHash: uploadTxHash || ''
-      })
+      // Submit to Firebase
+      if (wallet && isFirebaseAvailable) {
+        // NOTE: Server-side validation should be added via Cloud Functions to
+        // verify transaction on-chain before accepting deposit proof
+        // Generate unique document ID using Firestore auto-ID
+        const depositRef = doc(collection(db, 'deposits'))
+        await setDoc(depositRef, {
+          userId: wallet,
+          imageUrl: uploadScreenshotPreview,
+          amount: parseFloat(uploadAmount),
+          network: uploadNetwork,
+          txHash: uploadTxHash || '',
+          status: 'pending',
+          submittedAt: new Date().toISOString()
+        })
+        console.log('Deposit proof submitted to Firebase successfully')
+      }
     } catch (error) {
-      console.error('Failed to submit upload to backend:', error)
+      console.error('Failed to submit deposit proof to Firebase:', error)
     }
 
     const newUpload = {

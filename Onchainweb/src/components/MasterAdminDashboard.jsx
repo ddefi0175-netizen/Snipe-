@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     onAuthStateChanged,
     subscribeToChatMessages,
@@ -109,14 +109,17 @@ export default function MasterAdminDashboard() {
         };
     }, [isAuthenticated]); // Rerun subscriptions if authentication state changes
 
+    // Memoize callback to prevent unnecessary subscription recreation
+    const handleChatMessages = useCallback((chatId) => (messages) => {
+        setChatMessages(prev => ({ ...prev, [chatId]: messages }));
+    }, []);
+
     // Subscription to chat messages, dependent on active chats
     useEffect(() => {
         if (!activeChats.length) return;
 
         const messageSubscriptions = activeChats.map(chat =>
-            subscribeToChatMessages(chat.id, (messages) => {
-                setChatMessages(prev => ({ ...prev, [chat.id]: messages }));
-            })
+            subscribeToChatMessages(chat.id, handleChatMessages(chat.id))
         );
 
         return () => {
@@ -126,7 +129,7 @@ export default function MasterAdminDashboard() {
                 }
             });
         };
-    }, [activeChats]);
+    }, [activeChats, handleChatMessages]);
 
     const handleLogin = async (e) => {
         e.preventDefault();
