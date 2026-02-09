@@ -64,4 +64,10 @@ To learn more about the AI's capabilities and how to interact with it, please re
 - **Deployment**: `VERCEL_DEPLOYMENT_GUIDE.md`
 - **Environment Variables**: `docs/ENVIRONMENT_VARIABLES.md`
 
+### Admin & Management
+- **Admin Features Review**: `ADMIN_FEATURES_REVIEW.md` - Comprehensive review of admin features and login functionality
+- **Admin Review Summary**: `ADMIN_REVIEW_SUMMARY.md` - Executive summary and quick reference
+- **Admin Setup**: `docs/admin/ADMIN_SETUP_GUIDE.md` - Complete admin setup guide
+- **Master Account**: `MASTER_ACCOUNT_LOGIN_FIX.md` - Login fix documentation
+
 By following these guidelines and leveraging the new AI assistant, we can ensure a consistent and high-quality development process.
