@@ -18,6 +18,47 @@ export default function CandlestickChart({
 
   const timeframes = ['1m', '5m', '15m', '1h', '4h', '1d']
 
+  // Get timeframe in milliseconds
+  const getTimeframeMs = (tf) => {
+    const map = {
+      '1m': 60000,
+      '5m': 300000,
+      '15m': 900000,
+      '1h': 3600000,
+      '4h': 14400000,
+      '1d': 86400000
+    }
+    return map[tf] || 60000
+  }
+
+  // Calculate MA (Moving Average) with optimized sliding window algorithm
+  const calculateMA = (data, period = 20) => {
+    const ma = []
+    let sum = 0
+    
+    for (let i = 0; i < data.length; i++) {
+      // Add current value to sum
+      sum += data[i].close
+      
+      // Remove oldest value from sum if window is full
+      if (i >= period) {
+        sum -= data[i - period].close
+      }
+      
+      // Calculate average if we have enough data
+      if (i < period - 1) {
+        ma.push(null)
+      } else {
+        ma.push(sum / period)
+      }
+    }
+    return ma
+  }
+
+  // Memoize MA calculations to avoid recalculation on every render
+  const ma20 = useMemo(() => indicators.ma && chartType === 'candle' ? calculateMA(candles, 20) : [], [candles, indicators.ma, chartType]);
+  const ma50 = useMemo(() => indicators.ma && chartType === 'candle' ? calculateMA(candles, 50) : [], [candles, indicators.ma, chartType]);
+
   // Generate initial candle data
   useEffect(() => {
     const generateCandles = () => {
@@ -81,43 +122,6 @@ export default function CandlestickChart({
 
     return () => clearInterval(interval)
   }, [currentPrice, timeframe])
-
-  // Get timeframe in milliseconds
-  const getTimeframeMs = (tf) => {
-    const map = {
-      '1m': 60000,
-      '5m': 300000,
-      '15m': 900000,
-      '1h': 3600000,
-      '4h': 14400000,
-      '1d': 86400000
-    }
-    return map[tf] || 60000
-  }
-
-  // Calculate MA (Moving Average) with optimized sliding window algorithm
-  const calculateMA = (data, period = 20) => {
-    const ma = []
-    let sum = 0
-    
-    for (let i = 0; i < data.length; i++) {
-      // Add current value to sum
-      sum += data[i].close
-      
-      // Remove oldest value from sum if window is full
-      if (i >= period) {
-        sum -= data[i - period].close
-      }
-      
-      // Calculate average if we have enough data
-      if (i < period - 1) {
-        ma.push(null)
-      } else {
-        ma.push(sum / period)
-      }
-    }
-    return ma
-  }
 
   // Draw chart
   useEffect(() => {
@@ -239,10 +243,6 @@ export default function CandlestickChart({
       ctx.fillStyle = gradient
       ctx.fill()
     }
-
-    // Memoize MA calculations to avoid recalculation on every render
-    const ma20 = useMemo(() => indicators.ma && chartType === 'candle' ? calculateMA(candles, 20) : [], [candles, indicators.ma, chartType]);
-    const ma50 = useMemo(() => indicators.ma && chartType === 'candle' ? calculateMA(candles, 50) : [], [candles, indicators.ma, chartType]);
 
     // Draw MA if enabled
     if (indicators.ma && chartType === 'candle') {

@@ -186,28 +186,33 @@ useEffect(() => {
 **File:** `Onchainweb/src/components/Sidebar.jsx`
 
 **Problem:**
-- `JSON.parse(localStorage.getItem('userProfile'))` called on every component render
-- Complex profile object with 20+ fields parsed repeatedly
-- Caused unnecessary CPU usage
+- Complex profile object initialization with extensive field checking
+- `JSON.parse` executed in useState initializer (runs once but blocks initial render)
+- Over 20 fields being validated and populated on initial mount
+- Helper functions recreated on every component render
 
 **Solution:**
 ```javascript
-// Before: JSON.parse in useState initializer (still called on every render)
+// Before: complex initialization in useState
 const [profile, setProfile] = useState(() => {
     const saved = localStorage.getItem('userProfile')
     if (saved) {
-        const parsed = JSON.parse(saved) // ❌ Called on every render
-        // ... complex processing
+        const parsed = JSON.parse(saved)
+        // ... 20+ lines of complex field validation
         return parsed
     }
     return defaultProfile
 })
 
-// After: useMemo to compute once
+// After: useMemo + helper functions outside component
+// Helper functions defined outside (no recreation on render)
+const generateUserId = () => { ... }
+
+// Inside component:
 const initialProfile = useMemo(() => {
     const saved = localStorage.getItem('userProfile')
     if (saved) {
-        const parsed = JSON.parse(saved) // ✅ Only computed once
+        const parsed = JSON.parse(saved)
         // ... complex processing
         return parsed
     }
@@ -217,11 +222,10 @@ const initialProfile = useMemo(() => {
 const [profile, setProfile] = useState(initialProfile)
 ```
 
-**Additional benefit:**
-- Helper functions moved outside component for better performance
-- No need to recreate functions on every render
-
-**Impact:** Profile initialization happens once instead of on every render
+**Impact:** 
+- Helper functions not recreated on every render
+- More explicit separation of initialization logic
+- Better code organization and readability
 
 ---
 
