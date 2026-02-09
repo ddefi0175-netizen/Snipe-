@@ -12,8 +12,9 @@ Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
 **Solution**: Increased `chunkSizeWarningLimit` from 1000 KB to 2500 KB in `Onchainweb/vite.config.js`.
 
 **Rationale**:
-- The main bundle size (2,149 KB) is reasonable for a Web3 DeFi application with multiple wallet integrations
-- The codebase custom instructions note that "1000kB warning is normal"
+- The main bundle size (2,149 KB uncompressed, 598 KB gzipped) is reasonable for a Web3 DeFi application with multiple wallet integrations
+- The codebase custom instructions acknowledge that large bundle warnings are expected: "1000kB warning is normal"
+- The actual bundle exceeds the previous 1000 KB threshold, requiring the limit to be increased to 2500 KB
 - This is a warning, not an error, and the gzipped size (598 KB) is acceptable for production
 - Modern browsers and networks can handle this bundle size effectively
 
@@ -54,4 +55,3 @@ cd Onchainweb && npm run build
 ## Related Documentation
 - See custom instructions: "Vite chunking: Manual vendor-react split expected; 1000kB warning is normal"
 - Vercel Build Configuration: https://vercel.com/docs/projects/project-configuration
-
