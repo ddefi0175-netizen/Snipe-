@@ -128,10 +128,12 @@ export default function WalletGate({ onConnect, children }) {
         // For other wallets or if no Web3 provider, simulate connection
         await new Promise(resolve => setTimeout(resolve, 2000))
 
-        // Generate a simulated address
-        address = '0x' + Array.from({length: 40}, () =>
-          Math.floor(Math.random() * 16).toString(16)
-        ).join('')
+        // Generate a simulated address using cryptographically secure randomness
+        const cryptoObj = (typeof window !== 'undefined' && window.crypto) ? window.crypto : crypto
+        const randomBytes = new Uint8Array(20) // 20 bytes = 40 hex characters
+        cryptoObj.getRandomValues(randomBytes)
+        const hex = Array.from(randomBytes, b => b.toString(16).padStart(2, '0')).join('')
+        address = '0x' + hex
       }
 
       if (address) {
