@@ -38,7 +38,7 @@ export default defineConfig({
                 // ... manualChunks and other output options
             },
         },
-        chunkSizeWarningLimit: 1000,
+        chunkSizeWarningLimit: 2500,
         sourcemap: false,
     },
     server: {
