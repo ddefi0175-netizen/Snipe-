@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { formatApiError } from '../lib/errorHandling';
 import { firebaseSignIn, firebaseSignOut, subscribeToUsers, subscribeToDeposits, isFirebaseEnabled, onAuthStateChanged, auth } from '../lib/firebase';
 import { updateUserKYC, processDeposit } from '../services/adminService';
@@ -18,8 +18,9 @@ export default function AdminPanel({ isOpen = true, onClose }) {
     const [allUsers, setAllUsers] = useState([]);
     const [allDeposits, setAllDeposits] = useState([]);
 
-    const pendingKYC = allUsers.filter(u => u.kycStatus === 'pending');
-    const pendingDeposits = allDeposits.filter(d => d.status === 'pending');
+    // Memoize expensive filter operations to prevent recalculation on every render
+    const pendingKYC = useMemo(() => allUsers.filter(u => u.kycStatus === 'pending'), [allUsers]);
+    const pendingDeposits = useMemo(() => allDeposits.filter(d => d.status === 'pending'), [allDeposits]);
 
     const showToast = (message, type = 'info') => {
         setToast({ message, type });
