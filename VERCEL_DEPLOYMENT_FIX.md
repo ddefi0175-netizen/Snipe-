@@ -46,12 +46,29 @@ error: Could not access 'HEAD^'
 1. `Onchainweb/vite.config.js` - Increased chunk size warning limit
 
 ## Verification
-Build now completes successfully without warnings:
+Build completes successfully without warnings:
 ```bash
 cd Onchainweb && npm run build
-# ✓ built in 7.10s (no chunk size warnings)
+# ✓ built in 7.21s (no chunk size warnings)
+# Main chunk: 2,149.00 kB (gzipped: 598.64 kB)
+# No warnings - chunk is below 2500 KB limit
 ```
+
+**Verified on**: 2026-02-09
+- ✅ Build succeeds without chunk size warnings
+- ✅ Main bundle (2,149 KB) is below the 2,500 KB limit
+- ✅ Gzipped size (598 KB) is acceptable for production
+- ✅ All assets generated successfully
 
 ## Related Documentation
 - See custom instructions: "Vite chunking: Manual vendor-react split expected; 1000kB warning is normal"
 - Vercel Build Configuration: https://vercel.com/docs/projects/project-configuration
+
+## Deployment Status
+⚠️ **Note**: This fix is in the `copilot/fix-chunk-size-warning` branch and needs to be merged to `main` for production Vercel deployments to benefit from it.
+
+**Current Status**:
+- ✅ Fix implemented and verified (chunkSizeWarningLimit: 2500 KB)
+- ✅ Local builds complete without warnings
+- ⏳ Awaiting merge to main branch
+- 🎯 Once merged, Vercel deployments from main will no longer show chunk size warnings
