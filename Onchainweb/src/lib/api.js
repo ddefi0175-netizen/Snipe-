@@ -17,7 +17,7 @@ export const userAPI = {
      * @returns {Promise} Rejected promise with error message
      */
     loginByWallet: async (address, username, email, walletType) => {
-        throw new Error('Legacy backend API not available. Using Firebase only.');
+        throw new Error('userAPI.loginByWallet: Legacy backend API not available. Using Firebase only.');
     },
 
     /**
@@ -27,7 +27,7 @@ export const userAPI = {
      * @returns {Promise} Rejected promise with error message
      */
     getByWallet: async (address) => {
-        throw new Error('Legacy backend API not available. Using Firebase only.');
+        throw new Error('userAPI.getByWallet: Legacy backend API not available. Using Firebase only.');
     },
 
     /**
@@ -38,7 +38,7 @@ export const userAPI = {
      * @returns {Promise} Rejected promise with error message
      */
     submitKYC: async (userId, kycData) => {
-        throw new Error('Legacy backend API not available. Using Firebase only.');
+        throw new Error('userAPI.submitKYC: Legacy backend API not available. Using Firebase only.');
     }
 };
 
@@ -50,6 +50,6 @@ export const uploadAPI = {
      * @returns {Promise} Rejected promise with error message
      */
     create: async (uploadData) => {
-        throw new Error('Legacy backend API not available. Using Firebase only.');
+        throw new Error('uploadAPI.create: Legacy backend API not available. Using Firebase only.');
     }
 };
