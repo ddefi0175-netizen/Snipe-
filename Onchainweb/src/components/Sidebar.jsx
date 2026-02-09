@@ -1,5 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { userAPI, uploadAPI } from '../lib/api'
+
+// Helper functions defined outside component for better performance
+const generateUserId = () => {
+  return Math.floor(10000 + Math.random() * 90000).toString()
+}
+
+const generateVerificationCode = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
 
 export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick, onDemoClick, onC2CClick, onBorrowClick, onWalletActionsClick }) {
   const [activeModal, setActiveModal] = useState(null)
@@ -35,18 +44,8 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
     return saved ? JSON.parse(saved) : []
   })
 
-  // Generate random 5-digit UserID (numbers only)
-  const generateUserId = () => {
-    return Math.floor(10000 + Math.random() * 90000).toString()
-  }
-
-  // Generate 6-digit verification code
-  const generateVerificationCode = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString()
-  }
-
-  // Profile & Settings state
-  const [profile, setProfile] = useState(() => {
+  // Memoize profile initialization to prevent repeated JSON.parse on re-renders
+  const initialProfile = useMemo(() => {
     const saved = localStorage.getItem('userProfile')
     if (saved) {
       const parsed = JSON.parse(saved)
@@ -95,7 +94,10 @@ export default function Sidebar({ isOpen, onClose, onFuturesClick, onBinaryClick
       totalTrades: 0,
       totalProfit: 0
     }
-  })
+  }, []); // Empty deps - only compute once
+
+  // Profile & Settings state
+  const [profile, setProfile] = useState(initialProfile)
 
   // Also sync userId with realAccountId in localStorage
   useEffect(() => {

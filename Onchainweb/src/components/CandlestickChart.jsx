@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 
 // Professional Candlestick Chart Component
 export default function CandlestickChart({
@@ -240,11 +240,12 @@ export default function CandlestickChart({
       ctx.fill()
     }
 
+    // Memoize MA calculations to avoid recalculation on every render
+    const ma20 = useMemo(() => indicators.ma && chartType === 'candle' ? calculateMA(candles, 20) : [], [candles, indicators.ma, chartType]);
+    const ma50 = useMemo(() => indicators.ma && chartType === 'candle' ? calculateMA(candles, 50) : [], [candles, indicators.ma, chartType]);
+
     // Draw MA if enabled
     if (indicators.ma && chartType === 'candle') {
-      const ma20 = calculateMA(candles, 20)
-      const ma50 = calculateMA(candles, 50)
-
       // MA 20
       ctx.beginPath()
       ctx.strokeStyle = '#fbbf24'
