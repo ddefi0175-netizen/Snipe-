@@ -4,6 +4,7 @@ import MasterAccountSetup from './MasterAccountSetup.jsx';
 import AdminLogin from './AdminLogin.jsx';
 import { getAdminByEmail, hasMasterAccount } from '../services/adminService.js';
 import { onAuthStateChanged } from '../lib/firebase.js';
+import { getAllowedAdminEmails } from '../lib/adminAuth.js';
 import { logger } from '../utils/logger.js';
 
 /**
@@ -49,6 +50,17 @@ export default function AdminRouteGuard({
         if (user) {
           // User is signed in, verify they're an admin
           try {
+            // Check if email is in the allowlist (security layer)
+            // Note: getAllowedAdminEmails() already returns lowercase emails
+            const allowedEmails = getAllowedAdminEmails();
+            if (allowedEmails.length > 0 && !allowedEmails.includes(user.email.toLowerCase())) {
+              logger.warn('[AdminRouteGuard] User email not in allowlist:', user.email);
+              setAuthState('need_login');
+              setCurrentUser(null);
+              setAdminData(null);
+              return;
+            }
+
             const admin = await getAdminByEmail(user.email);
 
             if (admin) {

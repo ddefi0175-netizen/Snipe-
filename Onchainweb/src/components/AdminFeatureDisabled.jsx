@@ -76,7 +76,14 @@ export default function AdminFeatureDisabled({ isMasterRoute = false }) {
         }}>
           The {isMasterRoute ? 'master admin' : 'admin'} feature is currently disabled on this deployment.
           <br />
-          To enable admin access, please configure your environment variables.
+          To enable admin access, please ensure your <code style={{
+            background: 'rgba(0, 0, 0, 0.3)',
+            padding: '2px 8px',
+            borderRadius: '4px',
+            color: '#fbbf24',
+            fontFamily: 'monospace',
+            fontSize: '13px'
+          }}>.env</code> file is properly configured.
         </p>
 
         {/* Configuration Instructions */}
@@ -113,14 +120,21 @@ export default function AdminFeatureDisabled({ isMasterRoute = false }) {
             listStyle: 'decimal'
           }}>
             <li style={{ marginBottom: '8px' }}>
-              Create or edit <code style={{
+              Copy <code style={{
                 background: 'rgba(0, 0, 0, 0.3)',
                 padding: '2px 8px',
                 borderRadius: '4px',
                 color: '#fbbf24',
                 fontFamily: 'monospace',
                 fontSize: '13px'
-              }}>Onchainweb/.env</code> file
+              }}>Onchainweb/.env.example</code> to <code style={{
+                background: 'rgba(0, 0, 0, 0.3)',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                color: '#fbbf24',
+                fontFamily: 'monospace',
+                fontSize: '13px'
+              }}>Onchainweb/.env</code>
             </li>
             <li style={{ marginBottom: '8px' }}>
               Add <code style={{
@@ -133,7 +147,7 @@ export default function AdminFeatureDisabled({ isMasterRoute = false }) {
               }}>VITE_ENABLE_ADMIN=true</code>
             </li>
             <li style={{ marginBottom: '8px' }}>
-              Configure Firebase Authentication credentials
+              Configure all required Firebase credentials (8 VITE_FIREBASE_* variables)
             </li>
             <li style={{ marginBottom: '8px' }}>
               Set admin email allowlist: <code style={{
@@ -143,7 +157,7 @@ export default function AdminFeatureDisabled({ isMasterRoute = false }) {
                 color: '#fbbf24',
                 fontFamily: 'monospace',
                 fontSize: '13px'
-              }}>VITE_ADMIN_ALLOWLIST=your@email.com</code>
+              }}>VITE_ADMIN_ALLOWLIST=your-email@domain.com</code>
             </li>
             <li>
               Restart the development server: <code style={{
@@ -182,9 +196,10 @@ export default function AdminFeatureDisabled({ isMasterRoute = false }) {
             paddingLeft: '20px',
             lineHeight: '1.8'
           }}>
-            <li><code style={{ fontFamily: 'monospace' }}>MASTER_ACCOUNT_SETUP_GUIDE.md</code></li>
-            <li><code style={{ fontFamily: 'monospace' }}>ADMIN_SYSTEM_SETUP_GUIDE.md</code></li>
+            <li><code style={{ fontFamily: 'monospace' }}>MASTER_ACCOUNT_EXECUTIVE_SUMMARY.md</code></li>
+            <li><code style={{ fontFamily: 'monospace' }}>MASTER_LOGIN_QUICK_START.md</code></li>
             <li><code style={{ fontFamily: 'monospace' }}>Onchainweb/.env.example</code></li>
+            <li><code style={{ fontFamily: 'monospace' }}>docs/admin/ADMIN_SETUP_GUIDE.md</code></li>
           </ul>
         </div>
 

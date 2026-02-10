@@ -18,6 +18,11 @@ const requiredEnvVars = [
   'VITE_WALLETCONNECT_PROJECT_ID'
 ];
 
+const adminEnvVars = [
+  'VITE_ENABLE_ADMIN',
+  'VITE_ADMIN_ALLOWLIST'
+];
+
 /**
  * Validates that all required environment variables are present
  * @returns {Object} - Validation result with valid flag and missing array
@@ -37,6 +42,19 @@ export function validateEnvironment() {
     };
   }
   
+  // Check admin configuration (warning only, not error)
+  if (import.meta.env.VITE_ENABLE_ADMIN === 'true') {
+    const missingAdmin = adminEnvVars.filter(
+      varName => !import.meta.env[varName]
+    );
+    
+    if (missingAdmin.length > 0) {
+      console.warn('Admin feature enabled but missing configuration:', missingAdmin);
+      console.warn('Admin routes may not work properly. Please configure:', 
+        missingAdmin.join(', '));
+    }
+  }
+  
   return { valid: true };
 }
 
@@ -46,4 +64,12 @@ export function validateEnvironment() {
  */
 export function getRequiredEnvVars() {
   return [...requiredEnvVars];
+}
+
+/**
+ * Get a list of admin-related environment variables
+ * @returns {Array<string>} - Array of admin variable names
+ */
+export function getAdminEnvVars() {
+  return [...adminEnvVars];
 }
