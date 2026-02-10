@@ -51,6 +51,7 @@ export default function AdminRouteGuard({
           // User is signed in, verify they're an admin
           try {
             // Check if email is in the allowlist (security layer)
+            // Note: getAllowedAdminEmails() already returns lowercase emails
             const allowedEmails = getAllowedAdminEmails();
             if (allowedEmails.length > 0 && !allowedEmails.includes(user.email.toLowerCase())) {
               logger.warn('[AdminRouteGuard] User email not in allowlist:', user.email);

@@ -157,7 +157,7 @@ export default function AdminFeatureDisabled({ isMasterRoute = false }) {
                 color: '#fbbf24',
                 fontFamily: 'monospace',
                 fontSize: '13px'
-              }}>VITE_ADMIN_ALLOWLIST=master@onchainweb.site</code>
+              }}>VITE_ADMIN_ALLOWLIST=your-email@domain.com</code>
             </li>
             <li>
               Restart the development server: <code style={{
