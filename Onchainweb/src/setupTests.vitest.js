@@ -23,11 +23,11 @@ Object.defineProperty(window, 'matchMedia', {
 
 // Mock IntersectionObserver for components that use it
 global.IntersectionObserver = class IntersectionObserver {
-  constructor() {}
-  disconnect() {}
-  observe() {}
+  constructor() { /* noop - mock observer */ }
+  disconnect() { /* noop */ }
+  observe() { /* noop */ }
   takeRecords() {
     return [];
   }
-  unobserve() {}
+  unobserve() { /* noop */ }
 };

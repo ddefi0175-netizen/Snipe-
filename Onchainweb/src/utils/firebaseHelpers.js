@@ -10,7 +10,8 @@ export const isFirebaseReady = () => {
     return typeof isFirebaseAvailable === 'function'
       ? !!isFirebaseAvailable()
       : !!isFirebaseAvailable;
-  } catch {
+  } catch (error) {
+    console.warn('[firebaseHelpers] Error checking Firebase availability:', error);
     return false;
   }
 };

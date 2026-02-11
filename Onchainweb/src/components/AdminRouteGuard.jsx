@@ -58,7 +58,7 @@ export default function AdminRouteGuard({
             const userEmail = (user.email || '').toLowerCase();
             
             if (allowedEmails.length > 0 && !allowedEmails.includes(userEmail)) {
-              logger.warn('[AdminRouteGuard] User email not in allowlist:', user.email);
+              logger.warn('[AdminRouteGuard] User email not in allowlist:', userEmail);
               setAuthState('need_login');
               setCurrentUser(null);
               setAdminData(null);

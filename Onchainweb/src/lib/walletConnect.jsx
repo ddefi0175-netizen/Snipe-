@@ -116,8 +116,17 @@ const WalletProvider = ({ children }) => {
 
 export const UniversalWalletProvider = ({ children }) => {
     // Return disabled context when not in browser or projectId is missing
-    if (!isBrowser || !projectId || !wagmiConfig) {
-        console.warn('[WalletConnect] Wallet functionality disabled: not in browser environment or projectId missing');
+    if (!isBrowser) {
+        console.warn('[WalletConnect] Wallet functionality disabled: not in browser environment');
+        return (
+            <UniversalWalletContext.Provider value={DISABLED_WALLET_CONTEXT}>
+                {children}
+            </UniversalWalletContext.Provider>
+        );
+    }
+    
+    if (!projectId || !wagmiConfig) {
+        console.warn('[WalletConnect] Wallet functionality disabled: VITE_WALLETCONNECT_PROJECT_ID not configured');
         return (
             <UniversalWalletContext.Provider value={DISABLED_WALLET_CONTEXT}>
                 {children}
