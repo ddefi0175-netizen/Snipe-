@@ -11,7 +11,10 @@
     "clean": "rm -rf dist",
     "deploy:cloudflare": "npm run build:production && wrangler pages deploy dist --project-name=onchainweb",
     "deploy:workers": "cd .. && wrangler deploy",
-    "deploy:all": "npm run deploy:workers && npm run deploy:cloudflare"
+    "deploy:all": "npm run deploy:workers && npm run deploy:cloudflare",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "keywords": [
     "web3",
@@ -51,12 +54,23 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",
+    "@testing-library/jest-dom": "^6.6.0",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.6.0",
     "@vitejs/plugin-react": "^5.1.2",
+    "@vitest/coverage-v8": "^2.1.0",
     "autoprefixer": "^10.4.23",
+    "eslint": "^9.18.0",
+    "eslint-plugin-jsx-a11y": "^6.10.0",
+    "eslint-plugin-react": "^7.37.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-vitest-globals": "^1.5.0",
     "jest": "^30.2.0",
+    "jsdom": "^25.0.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
     "vite": "^5.4.21",
+    "vitest": "^2.1.0",
     "wrangler": "^3.0.0"
   }
 }
