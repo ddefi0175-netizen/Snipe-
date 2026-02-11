@@ -9,11 +9,25 @@ import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
 import { logger } from '../utils/logger.js'
 
 /**
+ * Helper function to safely check if Firebase is available
+ * Handles both boolean and function exports
+ */
+const isFirebaseReady = () => {
+  try {
+    return typeof isFirebaseAvailable === 'function'
+      ? !!isFirebaseAvailable()
+      : !!isFirebaseAvailable;
+  } catch {
+    return false;
+  }
+};
+
+/**
  * Auto-register user when wallet connects
  * @param {string} walletAddress - Connected wallet address
  */
 export const autoRegisterUser = async (walletAddress) => {
-  if (!isFirebaseAvailable) {
+  if (!isFirebaseReady()) {
     logger.log('[WalletService] Firebase not available, skipping auto-registration')
     return
   }
@@ -95,7 +109,7 @@ export const connectWalletWithRegistration = async (walletType, connectFunction)
  * @param {string} walletAddress - User's wallet address
  */
 export const updateUserActivity = async (walletAddress) => {
-  if (!isFirebaseAvailable || !walletAddress) return
+  if (!isFirebaseReady() || !walletAddress) return
 
   try {
     const userRef = doc(db, 'users', walletAddress)
@@ -113,7 +127,7 @@ export const updateUserActivity = async (walletAddress) => {
  * @returns {Promise<Object|null>}
  */
 export const getUserData = async (walletAddress) => {
-  if (!isFirebaseAvailable || !walletAddress) return null
+  if (!isFirebaseReady() || !walletAddress) return null
 
   try {
     const userRef = doc(db, 'users', walletAddress)

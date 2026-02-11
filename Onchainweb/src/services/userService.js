@@ -3,6 +3,20 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, auth, isFirebaseAvailable } from '../lib/firebase';
 
 /**
+ * Helper function to safely check if Firebase is available
+ * Handles both boolean and function exports
+ */
+const isFirebaseReady = () => {
+  try {
+    return typeof isFirebaseAvailable === 'function'
+      ? !!isFirebaseAvailable()
+      : !!isFirebaseAvailable;
+  } catch {
+    return false;
+  }
+};
+
+/**
  * Fetches the current user's profile data.
  * @returns {object|null} The user's profile data or null if not found.
  */
@@ -10,7 +24,7 @@ export const getProfileData = async () => {
     if (!auth.currentUser) return null;
     const userId = auth.currentUser.uid;
 
-    if (!isFirebaseAvailable) {
+    if (!isFirebaseReady()) {
         const users = JSON.parse(localStorage.getItem('users') || '{}');
         return users[userId] || null;
     }
@@ -40,7 +54,7 @@ export const submitKycData = async (kycData) => {
         submittedAt: new Date().toISOString(),
     };
 
-    if (!isFirebaseAvailable) {
+    if (!isFirebaseReady()) {
         const users = JSON.parse(localStorage.getItem('users') || '{}');
         users[userId] = { ...users[userId], ...dataToSubmit };
         localStorage.setItem('users', JSON.stringify(users));
