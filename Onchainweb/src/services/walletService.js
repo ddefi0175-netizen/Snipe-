@@ -4,23 +4,10 @@
  * Automatically registers users in Firestore when they connect their wallet
  */
 
-import { db, isFirebaseAvailable } from '../lib/firebase.js'
+import { db } from '../lib/firebase.js'
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore'
 import { logger } from '../utils/logger.js'
-
-/**
- * Helper function to safely check if Firebase is available
- * Handles both boolean and function exports
- */
-const isFirebaseReady = () => {
-  try {
-    return typeof isFirebaseAvailable === 'function'
-      ? !!isFirebaseAvailable()
-      : !!isFirebaseAvailable;
-  } catch {
-    return false;
-  }
-};
+import { isFirebaseReady } from '../utils/firebaseHelpers.js'
 
 /**
  * Auto-register user when wallet connects

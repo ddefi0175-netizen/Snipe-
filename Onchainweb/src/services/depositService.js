@@ -1,20 +1,7 @@
 
 import { doc, getDoc } from 'firebase/firestore';
-import { db, isFirebaseAvailable } from '../lib/firebase';
-
-/**
- * Helper function to safely check if Firebase is available
- * Handles both boolean and function exports
- */
-const isFirebaseReady = () => {
-  try {
-    return typeof isFirebaseAvailable === 'function'
-      ? !!isFirebaseAvailable()
-      : !!isFirebaseAvailable;
-  } catch {
-    return false;
-  }
-};
+import { db } from '../lib/firebase';
+import { isFirebaseReady } from '../utils/firebaseHelpers';
 
 // Pre-defined, secure deposit addresses for supported networks
 // These can be overridden via environment variables

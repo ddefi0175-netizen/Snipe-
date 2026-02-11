@@ -1,20 +1,7 @@
 
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db, auth, isFirebaseAvailable } from '../lib/firebase';
-
-/**
- * Helper function to safely check if Firebase is available
- * Handles both boolean and function exports
- */
-const isFirebaseReady = () => {
-  try {
-    return typeof isFirebaseAvailable === 'function'
-      ? !!isFirebaseAvailable()
-      : !!isFirebaseAvailable;
-  } catch {
-    return false;
-  }
-};
+import { db, auth } from '../lib/firebase';
+import { isFirebaseReady } from '../utils/firebaseHelpers';
 
 /**
  * Fetches the current user's profile data.

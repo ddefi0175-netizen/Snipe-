@@ -1,22 +1,9 @@
 
 import { doc, updateDoc, runTransaction, getDoc, setDoc, serverTimestamp, collection, getDocs, query, where, limit, onSnapshot, deleteDoc } from 'firebase/firestore';
-import { db, isFirebaseAvailable, auth } from '../lib/firebase';
+import { db, auth } from '../lib/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { formatApiError } from '../lib/errorHandling';
-
-/**
- * Helper function to safely check if Firebase is available
- * Handles both boolean and function exports
- */
-const isFirebaseReady = () => {
-  try {
-    return typeof isFirebaseAvailable === 'function'
-      ? !!isFirebaseAvailable()
-      : !!isFirebaseAvailable;
-  } catch {
-    return false;
-  }
-};
+import { isFirebaseReady } from '../utils/firebaseHelpers';
 
 /**
  * Updates the KYC status for a given user.
