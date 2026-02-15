@@ -1,2 +1,30 @@
 name = "snipe-chat-db"
-# Other configuration settings remain unchanged
+
+[env]
+
+# Add your environment variables here
+  
+
+[build]
+command = "npm install"
+# You can use npm install if you are using npm
+# Or yarn install if you are using yarn 
+
+[trigger]
+crons = ["*/60 * * * *"]
+
+[account]
+# Cloudflare account ID
+id = "your_account_id"
+
+[kv_namespaces]
+[[kv_namespaces]]
+binding = "YOUR_KV_BINDING_NAME"
+id = "YOUR_KV_ID"
+
+[r2_buckets]
+[[r2_buckets]]
+binding = "YOUR_R2_BINDING_NAME"
+bucket_name = "YOUR_BUCKET_NAME"
+
+# Add your other Cloudflare configurations as required
