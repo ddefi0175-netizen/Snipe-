@@ -25,10 +25,6 @@ export default function AdminRouteGuard({
   const [adminData, setAdminData] = useState(null);
   const navigate = useNavigate();
 
-  // Quiet linter for intentionally-present imports and helpers
-  const _debugAdminRouteGuard = (ctx) => { if (typeof console !== 'undefined') console.debug('admin-guard', ctx); };
-  _debugAdminRouteGuard({ MasterAccountSetup, AdminLogin, getAdminByEmail, hasMasterAccount, onAuthStateChanged });
-
   // Check authentication state - only run once on mount
   useEffect(() => {
     let unsubscribe;
@@ -37,11 +33,17 @@ export default function AdminRouteGuard({
     const checkAuth = async () => {
       // For master routes, first check if a master account exists in the database
       if (requireMaster) {
-        const masterExists = await hasMasterAccount();
-        if (!masterExists) {
-          logger.log('[AdminRouteGuard] No master account found, showing setup');
-          setAuthState('need_master');
-          return; // Don't set up auth listener if no master exists
+        try {
+          const masterExists = await hasMasterAccount();
+          if (!masterExists) {
+            logger.log('[AdminRouteGuard] No master account found, showing setup');
+            setAuthState('need_master');
+            return; // Don't set up auth listener if no master exists
+          }
+        } catch (error) {
+          logger.error('[AdminRouteGuard] Error checking master account:', error);
+          setAuthState('need_login');
+          return;
         }
       }
 
@@ -53,8 +55,10 @@ export default function AdminRouteGuard({
             // Check if email is in the allowlist (security layer)
             // Note: getAllowedAdminEmails() already returns lowercase emails
             const allowedEmails = getAllowedAdminEmails();
-            if (allowedEmails.length > 0 && !allowedEmails.includes(user.email.toLowerCase())) {
-              logger.warn('[AdminRouteGuard] User email not in allowlist:', user.email);
+            const userEmail = (user.email || '').toLowerCase();
+            
+            if (allowedEmails.length > 0 && !allowedEmails.includes(userEmail)) {
+              logger.warn('[AdminRouteGuard] User email not in allowlist:', userEmail);
               setAuthState('need_login');
               setCurrentUser(null);
               setAdminData(null);

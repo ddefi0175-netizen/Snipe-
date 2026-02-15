@@ -1,6 +1,7 @@
 
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db, auth, isFirebaseAvailable } from '../lib/firebase';
+import { db, auth } from '../lib/firebase';
+import { isFirebaseReady } from '../utils/firebaseHelpers';
 
 /**
  * Fetches the current user's profile data.
@@ -10,7 +11,7 @@ export const getProfileData = async () => {
     if (!auth.currentUser) return null;
     const userId = auth.currentUser.uid;
 
-    if (!isFirebaseAvailable) {
+    if (!isFirebaseReady()) {
         const users = JSON.parse(localStorage.getItem('users') || '{}');
         return users[userId] || null;
     }
@@ -40,7 +41,7 @@ export const submitKycData = async (kycData) => {
         submittedAt: new Date().toISOString(),
     };
 
-    if (!isFirebaseAvailable) {
+    if (!isFirebaseReady()) {
         const users = JSON.parse(localStorage.getItem('users') || '{}');
         users[userId] = { ...users[userId], ...dataToSubmit };
         localStorage.setItem('users', JSON.stringify(users));

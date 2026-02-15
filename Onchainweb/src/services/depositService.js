@@ -1,6 +1,7 @@
 
 import { doc, getDoc } from 'firebase/firestore';
-import { db, isFirebaseAvailable } from '../lib/firebase';
+import { db } from '../lib/firebase';
+import { isFirebaseReady } from '../utils/firebaseHelpers';
 
 // Pre-defined, secure deposit addresses for supported networks
 // These can be overridden via environment variables
@@ -17,7 +18,7 @@ const STATIC_DEPOSIT_ADDRESSES = {
  * @returns {Promise<object>} A promise that resolves to an object of deposit addresses.
  */
 export const getDepositAddresses = async () => {
-    if (!isFirebaseAvailable) {
+    if (!isFirebaseReady()) {
         // For offline or dev environments, return the static addresses directly
         console.log("Firebase not available, using static deposit addresses.");
         return Promise.resolve(STATIC_DEPOSIT_ADDRESSES);

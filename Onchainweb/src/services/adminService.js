@@ -1,9 +1,9 @@
 
 import { doc, updateDoc, runTransaction, getDoc, setDoc, serverTimestamp, collection, getDocs, query, where, limit, onSnapshot, deleteDoc } from 'firebase/firestore';
-import { db, isFirebaseAvailable, auth } from '../lib/firebase';
+import { db, auth } from '../lib/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { formatApiError } from '../lib/errorHandling';
-
+import { isFirebaseReady } from '../utils/firebaseHelpers';
 
 /**
  * Updates the KYC status for a given user.
@@ -11,7 +11,7 @@ import { formatApiError } from '../lib/errorHandling';
  * @param {string} kycStatus - The new KYC status ('verified', 'rejected').
  */
 export const updateUserKYC = async (userId, kycStatus) => {
-    if (!isFirebaseAvailable) {
+    if (!isFirebaseReady()) {
         // Fallback for localStorage
         try {
             const users = JSON.parse(localStorage.getItem('users') || '{}');
@@ -90,7 +90,7 @@ export const processDeposit = async (depositId, userId, newStatus, amount = 0) =
 };
 
 export const getAdminByEmail = async (email) => {
-    if (!isFirebaseAvailable) {
+    if (!isFirebaseReady()) {
         try {
             const admins = JSON.parse(localStorage.getItem('admins') || '{}');
             return Object.values(admins).find(admin => admin.email === email);
@@ -119,7 +119,7 @@ export const getAdminByEmail = async (email) => {
 };
 
 export const initializeMasterAccount = async (email, password) => {
-    if (!isFirebaseAvailable) {
+    if (!isFirebaseReady()) {
         // Fallback for localStorage
         try {
             const admins = JSON.parse(localStorage.getItem('admins') || '{}');
@@ -162,7 +162,7 @@ export const initializeMasterAccount = async (email, password) => {
 };
 
 export const updateAdminLastLogin = async (adminId) => {
-    if (!isFirebaseAvailable) {
+    if (!isFirebaseReady()) {
         try {
             const admins = JSON.parse(localStorage.getItem('admins') || '{}');
             const admin = Object.values(admins).find(a => a.uid === adminId);
@@ -186,7 +186,7 @@ export const updateAdminLastLogin = async (adminId) => {
 };
 
 export const hasMasterAccount = async () => {
-    if (!isFirebaseAvailable) {
+    if (!isFirebaseReady()) {
         try {
             const admins = JSON.parse(localStorage.getItem('admins') || '{}');
             return Object.values(admins).some(admin => admin.role === 'master');
@@ -207,7 +207,7 @@ export const hasMasterAccount = async () => {
 };
 
 export const createAdminAccount = async (adminData) => {
-    if (!isFirebaseAvailable) {
+    if (!isFirebaseReady()) {
         try {
             const admins = JSON.parse(localStorage.getItem('admins') || '{}');
             const adminId = adminData.email.replace(/[^a-zA-Z0-9]/g, '_');
@@ -245,7 +245,7 @@ export const createAdminAccount = async (adminData) => {
 };
 
 export const subscribeToAdmins = (callback, onError) => {
-    if (!isFirebaseAvailable) {
+    if (!isFirebaseReady()) {
         try {
             const admins = JSON.parse(localStorage.getItem('admins') || '{}');
             callback(Object.values(admins));
@@ -266,7 +266,7 @@ export const subscribeToAdmins = (callback, onError) => {
 };
 
 export const updateAdminAccount = async (adminId, data) => {
-    if (!isFirebaseAvailable) {
+    if (!isFirebaseReady()) {
         try {
             const admins = JSON.parse(localStorage.getItem('admins') || '{}');
             if (admins[adminId]) {
@@ -289,7 +289,7 @@ export const updateAdminAccount = async (adminId, data) => {
 };
 
 export const deleteAdminAccount = async (adminId) => {
-    if (!isFirebaseAvailable) {
+    if (!isFirebaseReady()) {
         try {
             const admins = JSON.parse(localStorage.getItem('admins') || '{}');
             delete admins[adminId];

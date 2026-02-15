@@ -7,6 +7,9 @@ import { formatApiError } from './errorHandling';
 import { saveWalletState, loadWalletState, clearWalletState } from '../services/walletStateService';
 import Toast from '../components/Toast';
 
+// Browser environment check for SSR/test compatibility
+const isBrowser = typeof window !== 'undefined';
+
 const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
 
 const metadata = {
@@ -17,11 +20,28 @@ const metadata = {
 };
 
 const chains = [mainnet, bsc, polygon, arbitrum, optimism, avalanche, fantom];
-const wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata });
 
-createWeb3Modal({ wagmiConfig, projectId, chains });
+// Guard wagmiConfig creation with browser check and projectId validation
+let wagmiConfig;
+if (isBrowser && projectId) {
+  wagmiConfig = defaultWagmiConfig({ chains, projectId, metadata });
+  createWeb3Modal({ wagmiConfig, projectId, chains });
+}
 
-const UniversalWalletContext = createContext();
+// Disabled context fallback for non-browser or missing config
+const DISABLED_WALLET_CONTEXT = {
+  isConnected: false,
+  address: null,
+  chainId: null,
+  connectorType: null,
+  loading: false,
+  connectWallet: () => Promise.reject(new Error('WalletConnect not configured')),
+  disconnectWallet: () => Promise.reject(new Error('WalletConnect not configured')),
+  supportedChains: SUPPORTED_CHAINS,
+  availableWallets: []
+};
+
+const UniversalWalletContext = createContext(DISABLED_WALLET_CONTEXT);
 
 const WalletProvider = ({ children }) => {
     // Get chain directly from useAccount
@@ -86,10 +106,6 @@ const WalletProvider = ({ children }) => {
         }))
     }), [isConnected, address, chain, connector, isConnecting, isDisconnecting, isReconnecting, connect, disconnect, connectors]);
 
-    // Debug refs to quiet eslint for imports and Toast usage
-    const _debugUnused_WalletConnect = (ctx) => { if (typeof console !== 'undefined') console.debug('walletconnect-unused', ctx); };
-    _debugUnused_WalletConnect({ WagmiProvider, Toast });
-
     return (
         <UniversalWalletContext.Provider value={contextValue}>
             {children}
@@ -98,12 +114,33 @@ const WalletProvider = ({ children }) => {
     );
 }
 
-export const UniversalWalletProvider = ({ children }) => (
-    <WagmiProvider config={wagmiConfig}>
-        <WalletProvider>
-            {children}
-        </WalletProvider>
-    </WagmiProvider>
-);
+export const UniversalWalletProvider = ({ children }) => {
+    // Return disabled context when not in browser or projectId is missing
+    if (!isBrowser) {
+        console.warn('[WalletConnect] Wallet functionality disabled: not in browser environment');
+        return (
+            <UniversalWalletContext.Provider value={DISABLED_WALLET_CONTEXT}>
+                {children}
+            </UniversalWalletContext.Provider>
+        );
+    }
+    
+    if (!projectId || !wagmiConfig) {
+        console.warn('[WalletConnect] Wallet functionality disabled: VITE_WALLETCONNECT_PROJECT_ID not configured');
+        return (
+            <UniversalWalletContext.Provider value={DISABLED_WALLET_CONTEXT}>
+                {children}
+            </UniversalWalletContext.Provider>
+        );
+    }
+
+    return (
+        <WagmiProvider config={wagmiConfig}>
+            <WalletProvider>
+                {children}
+            </WalletProvider>
+        </WagmiProvider>
+    );
+};
 
 export const useUniversalWallet = () => useContext(UniversalWalletContext);
