@@ -1,219 +1,30 @@
-# ============================================
-# CLOUDFLARE WORKERS CONFIGURATION
-# ============================================
-# 
-# SETUP INSTRUCTIONS:
-# 
-# 1. Create KV Namespaces (REQUIRED):
-#    wrangler kv:namespace create "CACHE"
-#    wrangler kv:namespace create "CACHE" --preview
-#    
-#    Copy the IDs and replace placeholders below
-#
-# 2. Create R2 Buckets (REQUIRED):
-#    wrangler r2 bucket create onchainweb
-#    wrangler r2 bucket create onchainweb-dev-preview
-#
-# 3. Set Secrets (REQUIRED for production):
-#    wrangler secret put FIREBASE_PRIVATE_KEY
-#    wrangler secret put FIREBASE_CLIENT_EMAIL
-#    wrangler secret put TELEGRAM_BOT_TOKEN
-#
-# 4. GitHub Actions Deployment:
-#    - Configure CLOUDFLARE_API_TOKEN secret in repository
-#    - See SECRETS.md for detailed setup instructions
-#
-# 5. Deploy:
-#    Development: wrangler deploy
-#    Production:  wrangler deploy --env production
-#
-# For detailed setup guide, see: /docs/CLOUDFLARE_WORKERS_SETUP.md
-# For GitHub Actions setup, see: /SECRETS.md
-# ============================================
+name = "snipe-chat-db"
 
-name = "wrangler1createsnipe-chat-db"
-main = "workers/index.js"
-compatibility_date = "2026-01-30"
-# Account ID is public metadata and can be set via:
-# 1. Hardcoded in wrangler.toml (current approach below), OR
-# 2. CLOUDFLARE_ACCOUNT_ID environment variable
-# Note: account_id is NOT a secret and cannot be set via wrangler secret put
-account_id = "eb568c24da7c746c95353226eb665d00"
+[env]
 
-# Node.js compatibility flag for modern Node.js APIs
-# See: https://developers.cloudflare.com/workers/runtime-apis/nodejs
-compatibility_flags = ["nodejs_compat"]
+# Add your environment variables here
+  
 
-# Development mode - deploy to *.workers.dev subdomain
-# Set to false for production with custom routes
-workers_dev = true
+[build]
+command = "npm install"
+# You can use npm install if you are using npm
+# Or yarn install if you are using yarn 
 
+[trigger]
+crons = ["*/60 * * * *"]
+
+[account]
+# Cloudflare account ID
+id = "your_account_id"
+
+[kv_namespaces]
 [[kv_namespaces]]
-binding = "CACHE"
-# KV Namespace ID - should be created via wrangler kv:namespace create
-id = "488840361a874877b2b54506b15f746a"
-# OPTIONAL: Preview namespace (only needed for local 'wrangler dev')
-# Create with: wrangler kv:namespace create "CACHE" --preview
-# Then uncomment and set the preview_id below
-# preview_id = "YOUR_PREVIEW_KV_NAMESPACE_ID"
+binding = "YOUR_KV_BINDING_NAME"
+id = "YOUR_KV_ID"
 
+[r2_buckets]
 [[r2_buckets]]
-binding = "STORAGE"
-# R2 Bucket - should be created via wrangler r2 bucket create
-bucket_name = "onchainweb"
-# OPTIONAL: Preview bucket (only needed for local 'wrangler dev')
-# Create with: wrangler r2 bucket create onchainweb-dev-preview
-# Then uncomment the line below
-# preview_bucket_name = "onchainweb-dev-preview"
+binding = "YOUR_R2_BINDING_NAME"
+bucket_name = "YOUR_BUCKET_NAME"
 
-[vars]
-# Non-sensitive configuration variables
-FIREBASE_PROJECT_ID = "onchainweb-b4b36"
-FIREBASE_DATABASE_URL = "https://onchainweb-b4b36-default-rtdb.asia-southeast1.firebasedatabase.app"
-# SECURITY NOTE: Sensitive tokens should be set via wrangler secrets:
-# wrangler secret put TELEGRAM_BOT_TOKEN
-# wrangler secret put FIREBASE_PRIVATE_KEY
-# For now, placeholder values - REPLACE WITH SECRETS IN PRODUCTION
-TELEGRAM_BOT_TOKEN = "SET_VIA_WRANGLER_SECRET"
-TELEGRAM_USERNAME = "goblin_niko4"
-# R2 public URL - set to your custom domain or R2 public URL
-R2_PUBLIC_URL = "https://storage.onchainweb.app"
-# Allowed CORS origins (comma-separated)
-ALLOWED_ORIGINS = "https://onchainweb.pages.dev,https://www.onchainweb.app"
-
-# Build is handled by GitHub Actions workflow
-# [build]
-# command = "npm install && npm run build"
-
-# ============================================
-# SETUP INSTRUCTIONS
-# ============================================
-# Follow these steps to set up your Cloudflare Workers environment:
-#
-# 1. Create KV namespaces:
-#    wrangler kv:namespace create "CACHE"
-#    wrangler kv:namespace create "CACHE" --preview
-#    Copy the IDs from the output and replace the placeholders above
-#
-# 2. Create R2 buckets:
-#    wrangler r2 bucket create onchainweb
-#    wrangler r2 bucket create onchainweb-dev-preview
-#    Update bucket_name values above if using different names
-#
-# 3. Set secrets (NEVER commit these to version control):
-#    wrangler secret put TELEGRAM_BOT_TOKEN
-#    wrangler secret put FIREBASE_PRIVATE_KEY
-#    wrangler secret put FIREBASE_API_KEY
-#
-# 4. (OPTIONAL) Set up preview environments for local development:
-#    - Uncomment preview_id in [[kv_namespaces]] section
-#    - Uncomment preview_bucket_name in [[r2_buckets]] section
-#    - Create preview resources with 'wrangler kv:namespace create "CACHE" --preview'
-#
-# 5. Deploy to development:
-#    wrangler deploy
-#
-# 6. (OPTIONAL) Deploy to staging (if configured):
-#    Uncomment [env.staging] section first
-#    wrangler deploy --env staging
-#
-# 7. (OPTIONAL) Deploy to production (if configured):
-#    Uncomment [env.production] section first
-#    wrangler deploy --env production
-#
-# IMPORTANT NOTES FOR PREVIEW ENVIRONMENTS:
-# ========================================
-# - Preview environments are ONLY needed for local development with 'wrangler dev'
-# - GitHub Actions deployment uses PRODUCTION values, NOT preview values
-# - If you're only deploying via GitHub Actions, you can leave preview placeholders as-is
-# - Only create preview resources if you plan to use 'wrangler dev' locally
-#
-# For more information, see: https://developers.cloudflare.com/workers/
-# ============================================
-
-# ============================================
-# Staging Environment (OPTIONAL - Currently Disabled)
-# ============================================
-# Uncomment and configure when ready to set up staging environment
-#
-# [env.staging]
-# name = "snipe-onchainweb-staging"
-# workers_dev = true
-# vars = { ENVIRONMENT = "staging", DEBUG = "true" }
-#
-# # Staging-specific KV namespace
-# [[env.staging.kv_namespaces]]
-# binding = "CACHE"
-# # Create with: wrangler kv:namespace create "CACHE" --env staging
-# id = "YOUR_STAGING_KV_NAMESPACE_ID"
-#
-# # Staging-specific R2 bucket
-# [[env.staging.r2_buckets]]
-# binding = "STORAGE"
-# bucket_name = "onchainweb-staging"
-
-# ============================================
-# Production Environment (OPTIONAL - Currently Disabled)
-# ============================================
-# Uncomment and configure when ready to set up production environment
-#
-# [env.production]
-# name = "snipe-onchainweb-production"
-# workers_dev = false  # Disable *.workers.dev in production
-# vars = { ENVIRONMENT = "production", DEBUG = "false" }
-#
-# # Production-specific KV namespace
-# [[env.production.kv_namespaces]]
-# binding = "CACHE"
-# # Create with: wrangler kv:namespace create "CACHE" --env production
-# id = "YOUR_PRODUCTION_KV_NAMESPACE_ID"
-#
-# # Production-specific R2 bucket
-# [[env.production.r2_buckets]]
-# binding = "STORAGE"
-# bucket_name = "onchainweb-production"
-#
-# # Production routes - configure for custom domain
-# # routes = [
-# #   { pattern = "api.onchainweb.app/*", custom_domain = true }
-# # ]
-
-# Cloudflare Pages configuration
-pages_build_output_dir = "Onchainweb/dist"
-
-# D1 Database binding (legacy - kept for compatibility)
-[[d1_databases]]
-binding = "DB"
-database_name = "onchainweb"
-database_id = "e3f277bd-092a-41d6-a477-4521200c79fe"
-
-# ============================================
-# Observability & Monitoring
-# ============================================
-[observability]
-enabled = true
-head_sampling_rate = 1.0
-
-# NOTE: observability.logs is supported in Wrangler 4.x+
-# This will generate a warning in Wrangler 3.x but won't cause deployment failures
-# The configuration is kept for forward compatibility
-[observability.logs]
-enabled = true
-head_sampling_rate = 1.0
-persist = true
-invocation_logs = true
-
-# ============================================
-# Routes Configuration (for production custom domains)
-# ============================================
-# Uncomment and configure for custom domain routing
-# routes = [
-#   { pattern = "api.onchainweb.app/*", custom_domain = true },
-#   { pattern = "onchainweb.app/api/*", zone_name = "onchainweb.app" }
-# ]
-#
-# For multiple domains:
-# routes = [
-#   { pattern = "api.domain1.com/*", zone_name = "domain1.com" },
-#   { pattern = "api.domain2.com/*", zone_name = "domain2.com" }
-# ]
+# Add your other Cloudflare configurations as required
